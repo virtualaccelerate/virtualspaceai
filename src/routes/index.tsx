@@ -33,7 +33,7 @@ function Header() {
 }
 
 type Tile = {
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label?: string;
   featured?: "warm" | "cool" | "mint";
   title?: string;
