@@ -117,12 +117,12 @@ function Header() {
                 transition={{ duration: 0.2 }}
                 className="glass-strong absolute left-0 mt-3 w-40 rounded-2xl p-2 z-50"
               >
-                <a href="#mentors" onClick={() => setLearnOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition">
+                <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
                   {t("nav.mentors")}
-                </a>
-                <a href="#courses" onClick={() => setLearnOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition">
+                </span>
+                <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
                   {t("nav.courses")}
-                </a>
+                </span>
               </motion.div>
             )}
           </div>
