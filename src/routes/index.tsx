@@ -54,6 +54,30 @@ function LangSwitcher() {
   );
 }
 
+function ThemeToggle() {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  useEffect(() => {
+    const saved = (localStorage.getItem("theme") as "dark" | "light" | null) ?? "dark";
+    setTheme(saved);
+    document.documentElement.classList.toggle("light", saved === "light");
+  }, []);
+  const toggle = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    document.documentElement.classList.toggle("light", next === "light");
+  };
+  return (
+    <button
+      onClick={toggle}
+      aria-label="Toggle theme"
+      className="glass inline-flex items-center justify-center rounded-full h-9 w-9 text-white/90 hover:text-white transition"
+    >
+      {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
+
 function Header() {
   const { t } = useTranslation();
   return (
