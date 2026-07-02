@@ -662,21 +662,7 @@ function Landing() {
             </h2>
             <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 
-            <form
-              onSubmit={(e) => { e.preventDefault(); alert(t("cta.thanks")); }}
-              className="relative mt-10 max-w-xl mx-auto grid gap-3"
-            >
-              <input required placeholder={t("cta.name")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <input required type="text" placeholder={t("cta.contact")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <input placeholder={t("cta.company")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <button type="submit"
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
-                {t("cta.submit")} <ArrowRight className="h-4 w-4" />
-              </button>
-            </form>
+            <DemoForm />
 
             <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/50">
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note1")}</span>
