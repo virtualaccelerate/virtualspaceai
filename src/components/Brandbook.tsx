@@ -77,7 +77,7 @@ function OneWorkspace() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
         <div className="grid md:grid-cols-2 gap-10 sm:gap-16 items-center">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
-            <SectionHeader number="01" label="Architecture" title="One workspace." accent="Everything connected." />
+            <SectionHeader number="" label="" title="One workspace." accent="Everything connected." />
             <p className="mt-6 text-white/60 leading-relaxed max-w-md">
               Teams, tools, workflows and AI agents in one operating space.
             </p>
