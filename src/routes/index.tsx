@@ -139,9 +139,9 @@ function Header() {
 
         <div className="flex items-center gap-2">
           <div className="hidden lg:flex items-center gap-3 text-sm">
-            <a href="#login" className="text-white/70 hover:text-white transition whitespace-nowrap">
+            <span className="text-white/40 cursor-default whitespace-nowrap">
               {t("nav.login")}
-            </a>
+            </span>
           </div>
 
           <ThemeToggle />
