@@ -1,7 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
 
 const demoRequestSchema = z.object({
   name: z.string().trim().min(1, "Name required").max(120),
@@ -18,16 +16,12 @@ const demoRequestSchema = z.object({
 export const submitDemoRequest = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => demoRequestSchema.parse(input))
   .handler(async ({ data }) => {
-    const SUPABASE_URL = process.env.SUPABASE_URL!;
-    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-    const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-    });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: inserted, error } = await supabase
+    const { data: inserted, error } = await supabaseAdmin
       .from("demo_requests")
       .insert({
         name: data.name,
@@ -42,6 +36,7 @@ export const submitDemoRequest = createServerFn({ method: "POST" })
       console.error("[demo_requests] insert failed", error);
       throw new Error("Failed to save demo request");
     }
+
 
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       const escape = (s: string) =>
