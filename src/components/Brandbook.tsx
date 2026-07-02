@@ -9,12 +9,15 @@ const fadeUp = {
 };
 
 function SectionHeader({ number, label, title, accent }: { number: string; label: string; title: string; accent?: string }) {
+  const hasEyebrow = number || label;
   return (
     <div className="max-w-3xl">
-      <p className="text-xs font-mono uppercase tracking-[0.3em] text-primary min-h-[1em]">
-        {number && <span className="opacity-60">{number}.</span>} {label}
-      </p>
-      <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
+      {hasEyebrow && (
+        <p className="text-xs font-mono uppercase tracking-[0.3em] text-primary mb-4">
+          {number && <span className="opacity-60">{number}.</span>} {label}
+        </p>
+      )}
+      <h2 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
         {title}{" "}
         {accent && <span className="grad-accent">{accent}</span>}
       </h2>
