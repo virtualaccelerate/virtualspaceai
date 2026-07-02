@@ -229,7 +229,7 @@ function Landing() {
     document.documentElement.lang = i18n.language?.split("-")[0] ?? "en";
   }, [i18n.language]);
 
-  const valueCards = [
+  const benefitCards = [
     { key: "money", icon: PiggyBank },
     { key: "time", icon: Clock },
     { key: "auto", icon: Workflow },
