@@ -101,6 +101,20 @@ const resources = {
         thanks: "Thanks! We'll reach out within 24 hours.",
         note1: "No card required", note2: "24h reply", note3: "NDA on request",
       },
+      bookDemoPage: {
+        title: "Book a Demo",
+        subtitle: "See how Virtual Space fits your workflows and helps your team work faster with AI.",
+        cta: "Book a Demo",
+        sectionTitle: "What's in the Demo?",
+        sectionSubtitle: "What you'll see",
+        items: [
+          { title: "AI Agents", body: "Create AI agents for sales, HR, operations, support, and analytics." },
+          { title: "Workflow Automation", body: "Turn repetitive tasks into automated workflows." },
+          { title: "Unified Workspace", body: "Manage projects, tasks, databases, and documents in one place." },
+          { title: "Personalized Use Cases", body: "Discover how AI can improve your organization's processes." },
+          { title: "Implementation Plan", body: "Receive a practical roadmap for getting started." },
+        ],
+      },
     },
   },
   ru: {

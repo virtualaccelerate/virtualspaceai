@@ -91,7 +91,7 @@ function Header() {
   const otherLinks = [
     { href: "#product", label: t("nav.product") },
     { href: "#price", label: t("nav.pricing") },
-    { href: "#demo", label: t("nav.bookDemo") },
+    { href: "/book-demo", label: t("nav.bookDemo") },
   ];
 
   return (
