@@ -102,7 +102,8 @@ function Header() {
 function BookDemoPage() {
   const { t } = useTranslation();
 
-  const items = t("bookDemoPage.items", { returnObjects: true }) as Array<{ title: string; body: string }>;
+  const rawItems = t("bookDemoPage.items", { returnObjects: true });
+  const items = Array.isArray(rawItems) ? (rawItems as Array<{ title: string; body: string }>) : [];
 
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
