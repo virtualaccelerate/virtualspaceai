@@ -16,8 +16,37 @@ import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
 
+const SITE_URL = "https://virtualspaceai.lovable.app";
+const OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce";
+
 export const Route = createFileRoute("/")({
   component: Landing,
+  head: () => ({
+    meta: [
+      { title: "Virtual Space — AI-agentic workspace for business" },
+      { name: "description", content: "One workspace for your team, tools, and AI agents. Connect apps, automate workflows, and ship faster with AI at the center of your business." },
+      { property: "og:title", content: "Virtual Space — AI-agentic workspace for business" },
+      { property: "og:description", content: "One workspace for your team, tools, and AI agents. Connect apps, automate workflows, and ship faster with AI at the center of your business." },
+      { property: "og:url", content: SITE_URL + "/" },
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:image", content: OG_IMAGE },
+    ],
+    links: [{ rel: "canonical", href: SITE_URL + "/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Virtual Space",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        url: SITE_URL,
+        description: "AI-agentic workspace that connects teams, tools, and AI agents to automate business processes.",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      }),
+    }],
+  }),
 });
 
 const fadeUp = {
