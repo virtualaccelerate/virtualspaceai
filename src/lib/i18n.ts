@@ -21,7 +21,7 @@ const resources = {
         tagline: "Start today. No setup required.",
       },
       newEra: {
-        eyebrow: "The shift",
+        eyebrow: "",
         title: "New era for business",
         titleAccent: "with AI agents.",
         body1: "Teams no longer manage every routine task by hand. AI agents organize, analyze and automate — all inside one workspace.",
@@ -135,7 +135,7 @@ const resources = {
         tagline: "Начните сегодня. Без сложной настройки.",
       },
       newEra: {
-        eyebrow: "Сдвиг",
+        eyebrow: "",
         title: "Новая эра для бизнеса",
         titleAccent: "с AI-агентами.",
         body1: "Командам больше не нужно вручную вести каждую рутину. AI-агенты организуют, анализируют и автоматизируют — в одном пространстве.",
@@ -249,7 +249,7 @@ const resources = {
         tagline: "Empieza hoy. Sin configuración compleja.",
       },
       newEra: {
-        eyebrow: "El cambio",
+        eyebrow: "",
         title: "Nueva era para los negocios",
         titleAccent: "con agentes de IA.",
         body1: "Los equipos ya no gestionan cada tarea manualmente. Los agentes organizan, analizan y automatizan — todo en un espacio.",
@@ -343,7 +343,7 @@ const resources = {
         tagline: "Starte heute. Keine komplexe Einrichtung.",
       },
       newEra: {
-        eyebrow: "Der Wandel",
+        eyebrow: "",
         title: "Neue Ära für Unternehmen",
         titleAccent: "mit KI-Agenten.",
         body1: "Teams müssen nicht mehr jede Routine manuell erledigen. KI-Agenten organisieren, analysieren und automatisieren — in einem Workspace.",
@@ -437,7 +437,7 @@ const resources = {
         tagline: "Commencez aujourd'hui. Sans configuration complexe.",
       },
       newEra: {
-        eyebrow: "Le tournant",
+        eyebrow: "",
         title: "Nouvelle ère pour les entreprises",
         titleAccent: "avec les agents IA.",
         body1: "Les équipes ne gèrent plus chaque routine à la main. Les agents IA organisent, analysent et automatisent — dans un seul espace.",
