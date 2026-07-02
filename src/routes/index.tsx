@@ -95,7 +95,7 @@ function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
+    <header suppressHydrationWarning className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
       <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
         <a href="#top" className="flex items-center gap-2 shrink-0">
           <VirtualSpaceLogo className="text-primary" size={28} />
@@ -544,7 +544,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("benefits.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("benefits.title")} <em className="italic grad-accent">{t("benefits.titleAccent")}</em>
+              {t("benefits.title")} <span className="grad-accent">{t("benefits.titleAccent")}</span>
             </h2>
           </motion.div>
           <motion.div
