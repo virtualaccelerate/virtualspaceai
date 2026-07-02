@@ -343,7 +343,7 @@ const resources = {
         tagline: "Starte heute. Keine komplexe Einrichtung.",
       },
       newEra: {
-        eyebrow: "Der Wandel",
+        eyebrow: "",
         title: "Neue Ära für Unternehmen",
         titleAccent: "mit KI-Agenten.",
         body1: "Teams müssen nicht mehr jede Routine manuell erledigen. KI-Agenten organisieren, analysieren und automatisieren — in einem Workspace.",
@@ -437,7 +437,7 @@ const resources = {
         tagline: "Commencez aujourd'hui. Sans configuration complexe.",
       },
       newEra: {
-        eyebrow: "Le tournant",
+        eyebrow: "",
         title: "Nouvelle ère pour les entreprises",
         titleAccent: "avec les agents IA.",
         body1: "Les équipes ne gèrent plus chaque routine à la main. Les agents IA organisent, analysent et automatisent — dans un seul espace.",
