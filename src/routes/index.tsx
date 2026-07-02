@@ -460,7 +460,7 @@ function Landing() {
           <motion.div
             initial="hidden" whileInView="show" viewport={{ once: true, margin: "-60px" }}
             variants={{ show: { transition: { staggerChildren: 0.12 } } }}
-            className="mt-12 sm:mt-16 grid md:grid-cols-3 gap-4 sm:gap-6"
+            className="mt-12 sm:mt-16 grid md:grid-cols-2 gap-4 sm:gap-6"
           >
             <GlassCard
               tag={t("features.kb.tag")}
@@ -474,20 +474,6 @@ function Landing() {
               <ChatBubble who="@Brain" time="9:12" accent>
                 Onboarding v3.2 — <span className="text-primary">/docs/eng-onboarding</span>. Includes access map + first-week checklist.
               </ChatBubble>
-            </GlassCard>
-
-            <GlassCard
-              tag={t("features.owner.tag")}
-              title={t("features.owner.title")}
-              body={t("features.owner.body")}
-              icon={Brain}
-              gradient="radial-gradient(circle, oklch(0.82 0.15 135 / 0.75), transparent 70%)"
-            >
-              <div className="glass rounded-2xl p-4 space-y-2 text-xs sm:text-sm">
-                <div className="flex justify-between text-white/60"><span>MRR</span><span className="text-white font-semibold">$142k <span className="text-[oklch(0.75_0.2_150)]">+8%</span></span></div>
-                <div className="flex justify-between text-white/60"><span>Pipeline</span><span className="text-white font-semibold">$610k</span></div>
-                <div className="flex justify-between text-white/60"><span>Needs you</span><span className="text-primary font-semibold">3 items</span></div>
-              </div>
             </GlassCard>
 
             <GlassCard
