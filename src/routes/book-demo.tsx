@@ -9,13 +9,20 @@ import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
 
+const SITE_URL = "https://virtualspaceai.lovable.app";
+
 export const Route = createFileRoute("/book-demo")({
   component: BookDemoPage,
   head: () => ({
     meta: [
       { title: "Book a Demo — Virtual Space" },
-      { name: "description", content: "See how Virtual Space fits your workflows and helps your team work faster with AI." },
+      { name: "description", content: "Book a live demo of Virtual Space. See how AI agents fit your workflows and help your team ship faster." },
+      { property: "og:title", content: "Book a Demo — Virtual Space" },
+      { property: "og:description", content: "Book a live demo of Virtual Space. See how AI agents fit your workflows and help your team ship faster." },
+      { property: "og:url", content: SITE_URL + "/book-demo" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: SITE_URL + "/book-demo" }],
   }),
 });
 
