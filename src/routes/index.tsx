@@ -271,9 +271,9 @@ function Landing() {
   ] as const;
 
   const audience = [
+    { key: "businesses", icon: Building2, gradient: "linear-gradient(135deg, oklch(0.7 0.14 145), oklch(0.9 0.03 150))" },
     { key: "startups", icon: Rocket, gradient: "linear-gradient(135deg, oklch(0.62 0.18 155), oklch(0.75 0.15 130))" },
-    { key: "entrepreneurs", icon: Building2, gradient: "linear-gradient(135deg, oklch(0.7 0.14 145), oklch(0.9 0.03 150))" },
-    { key: "ngo", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.16 165), oklch(0.72 0.12 180))" },
+    { key: "ngos", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.16 165), oklch(0.72 0.12 180))" },
   ] as const;
 
   return (
@@ -583,20 +583,32 @@ function Landing() {
             variants={{ show: { transition: { staggerChildren: 0.1 } } }}
             className="mt-12 grid md:grid-cols-3 gap-4 sm:gap-6"
           >
-            {audience.map((a) => (
-              <motion.div
-                key={a.key} variants={fadeUp}
-                className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 min-h-[300px] flex flex-col"
-              >
-                <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl" style={{ background: a.gradient }} />
-                <a.icon className="relative h-8 w-8 text-white" strokeWidth={1.5} />
-                <div className="relative mt-auto">
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">{t(`audience.${a.key}.tag`)}</p>
-                  <h3 className="mt-2 font-display text-4xl text-white">{t(`audience.${a.key}.title`)}</h3>
-                  <p className="mt-3 text-white/70 text-sm sm:text-base">{t(`audience.${a.key}.body`)}</p>
-                </div>
-              </motion.div>
-            ))}
+            {audience.map((a) => {
+              const bestFor = t(`audience.${a.key}.bestFor`, { returnObjects: true }) as string[];
+              return (
+                <motion.div
+                  key={a.key} variants={fadeUp}
+                  className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col"
+                >
+                  <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl" style={{ background: a.gradient }} />
+                  <a.icon className="relative h-8 w-8 text-white" strokeWidth={1.5} />
+                  <div className="relative mt-6">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">{t(`audience.${a.key}.tag`)}</p>
+                    <h3 className="mt-2 font-display text-3xl sm:text-4xl text-white">{t(`audience.${a.key}.title`)}</h3>
+                    <p className="mt-3 text-white/70 text-sm sm:text-base leading-relaxed">{t(`audience.${a.key}.desc`)}</p>
+                    <p className="mt-4 text-xs uppercase tracking-wider text-white/50">{t(`audience.${a.key}.bestForLabel`)}</p>
+                    <ul className="mt-2 space-y-1.5">
+                      {bestFor.map((item, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </section>
