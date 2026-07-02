@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
+import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
 export const Route = createFileRoute("/")({
   component: Landing,
