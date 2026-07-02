@@ -421,6 +421,8 @@ function Landing() {
         </div>
       </section>
 
+      
+
       {/* NEW ERA */}
       <section id="new-era" className="relative">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
