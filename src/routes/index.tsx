@@ -382,7 +382,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("features.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("features.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("features.titleAccent")}</em>
+              {t("features.title")} <em className="italic grad-accent">{t("features.titleAccent")}</em>
             </h2>
           </motion.div>
 
@@ -453,7 +453,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("value.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("value.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("value.titleAccent")}</em>
+              {t("value.title")} <em className="italic grad-accent">{t("value.titleAccent")}</em>
             </h2>
           </motion.div>
           <motion.div
@@ -481,7 +481,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("audience.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("audience.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("audience.titleAccent")}</em>
+              {t("audience.title")} <em className="italic grad-accent">{t("audience.titleAccent")}</em>
             </h2>
           </motion.div>
           <motion.div
@@ -519,7 +519,7 @@ function Landing() {
             <div className="absolute inset-0 opacity-40 pointer-events-none"
               style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
             <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.95_0.02_150)] to-[oklch(0.8_0.16_140)] bg-clip-text text-transparent">{t("cta.title2")}</em>
+              {t("cta.title1")} <em className="italic grad-accent">{t("cta.title2")}</em>
             </h2>
             <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 

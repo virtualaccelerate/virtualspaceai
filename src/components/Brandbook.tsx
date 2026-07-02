@@ -20,7 +20,7 @@ function SectionHeader({ number, label, title, accent }: { number: string; label
       <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
         {title}{" "}
         {accent && (
-          <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">
+          <em className="italic grad-accent">
             {accent}
           </em>
         )}
