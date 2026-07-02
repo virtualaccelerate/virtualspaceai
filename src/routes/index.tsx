@@ -559,6 +559,31 @@ function Landing() {
 
       <Brandbook />
 
+      {/* PRICING TEASER */}
+      <section id="pricing" className="relative">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
+            className="text-center"
+          >
+            <h2 className="font-display text-3xl sm:text-5xl leading-tight text-white">
+              {t("pricingTeaser.title")}
+            </h2>
+            <p className="mt-5 text-base sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
+              {t("pricingTeaser.subtitle")}
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a href="#price" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
+                {t("pricingTeaser.cta")} <ArrowRight className="h-4 w-4" />
+              </a>
+              <a href="#demo" className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition">
+                {t("pricingTeaser.cta2")}
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section id="demo" className="relative">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
