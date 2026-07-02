@@ -598,13 +598,80 @@ function Landing() {
         </div>
       </section>
 
+      {/* FINAL CTA */}
+      <section className="relative">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
+            className="glass-strong rounded-[32px] p-6 sm:p-12 text-center relative overflow-hidden"
+          >
+            <div className="absolute inset-0 opacity-40 pointer-events-none"
+              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
+            <h2 className="relative font-display text-3xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
+              {t("finalCta.title")}
+            </h2>
+            <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">
+              {t("finalCta.subtitle")}
+            </p>
+            <div className="relative mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a href="#demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
+                {t("finalCta.cta")} <ArrowRight className="h-4 w-4" />
+              </a>
+              <a href="/book-demo" className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition">
+                {t("finalCta.cta2")}
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       <footer className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
-          <div className="flex items-center gap-2">
-            <VirtualSpaceLogo className="text-primary" size={22} />
-            <span className="font-display font-extrabold tracking-tight text-base text-white">Virtual Space</span>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2">
+                <VirtualSpaceLogo className="text-primary" size={22} />
+                <span className="font-display font-extrabold tracking-tight text-base text-white">Virtual Space</span>
+              </div>
+              <p className="mt-3 text-sm text-white/50 leading-relaxed">{t("footer.tagline")}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.productLabel")}</p>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li><span className="hover:text-white transition cursor-default">Workspace</span></li>
+                <li><span className="hover:text-white transition cursor-default">AI Agents</span></li>
+                <li><span className="hover:text-white transition cursor-default">Automation</span></li>
+                <li><span className="hover:text-white transition cursor-default">Analytics</span></li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.learnLabel")}</p>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li><span className="hover:text-white transition cursor-default">{t("nav.mentors")}</span></li>
+                <li><span className="hover:text-white transition cursor-default">{t("nav.courses")}</span></li>
+                <li><span className="hover:text-white transition cursor-default">{t("footer.resources")}</span></li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.companyLabel")}</p>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li><a href="#price" className="hover:text-white transition">{t("nav.pricing")}</a></li>
+                <li><a href="/book-demo" className="hover:text-white transition">{t("nav.bookDemo")}</a></li>
+                <li><span className="hover:text-white transition cursor-default">{t("footer.contact")}</span></li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.accountLabel")}</p>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li><span className="hover:text-white transition cursor-default">{t("nav.login")}</span></li>
+                <li><span className="hover:text-white transition cursor-default">{t("nav.signup")}</span></li>
+              </ul>
+            </div>
           </div>
-          <p>© {new Date().getFullYear()} Virtual Space. All rights reserved.</p>
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
+            <p>{t("footer.copyright")}</p>
+            <p>{t("footer.powered")}</p>
+          </div>
         </div>
       </footer>
     </div>
