@@ -507,65 +507,6 @@ function Landing() {
         </div>
       </section>
 
-      {/* FEATURES — 3 glass cards */}
-      <section id="learn" className="relative">
-
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
-          <motion.div
-            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}
-            className="max-w-3xl"
-          >
-            <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("features.eyebrow")}</p>
-            <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("features.title")} <span className="grad-accent">{t("features.titleAccent")}</span>
-            </h2>
-          </motion.div>
-
-          <motion.div
-            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-60px" }}
-            variants={{ show: { transition: { staggerChildren: 0.12 } } }}
-            className="mt-12 sm:mt-16 grid md:grid-cols-2 gap-4 sm:gap-6"
-          >
-            <GlassCard
-              tag={t("features.kb.tag")}
-              title={t("features.kb.title")}
-              body={t("features.kb.body")}
-              icon={BookOpen}
-              gradient="radial-gradient(circle, oklch(0.72 0.18 150 / 0.85), transparent 70%)"
-            >
-              <ChatBubble who="Alex" time="9:12">Where's the onboarding doc for engineers?</ChatBubble>
-              <div className="h-2" />
-              <ChatBubble who="@Brain" time="9:12" accent>
-                Onboarding v3.2 — <span className="text-primary">/docs/eng-onboarding</span>. Includes access map + first-week checklist.
-              </ChatBubble>
-            </GlassCard>
-
-            <GlassCard
-              tag={t("features.reminders.tag")}
-              title={t("features.reminders.title")}
-              body={t("features.reminders.body")}
-              icon={BellRing}
-              gradient="radial-gradient(circle, oklch(0.95 0.02 150 / 0.7), transparent 70%)"
-            >
-              <div className="glass rounded-2xl p-4 space-y-3 text-xs sm:text-sm">
-                <div className="flex items-start gap-2">
-                  <BellRing className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-white/90 font-medium">Follow up: Acme Corp</div>
-                    <div className="text-white/50">No reply for 3 days · Deal $24k</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-[oklch(0.75_0.2_150)] mt-0.5 shrink-0" />
-                  <div className="text-white/70">Sent by agent · 8:00am</div>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        </div>
-      </section>
-
-
       <AnimatedTaskTable />
 
       {/* AUDIENCE */}
