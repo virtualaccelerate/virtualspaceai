@@ -408,7 +408,7 @@ function Landing() {
                   {t("newEra.eyebrow")}
                 </p>
                 <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
-                  {t("newEra.title")} <em className="italic grad-accent">{t("newEra.titleAccent")}</em>
+                  {t("newEra.title")} <span className="grad-accent">{t("newEra.titleAccent")}</span>
                 </h2>
                 <p className="mt-6 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl">
                   {t("newEra.body1")}
