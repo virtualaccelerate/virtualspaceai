@@ -168,12 +168,12 @@ function Header() {
                     </button>
                     {mobileLearnOpen && (
                       <div className="flex flex-col gap-2 mt-2 ml-4">
-                        <a href="#mentors" onClick={() => setMobileOpen(false)} className="text-base text-white/70 hover:text-white transition">
+                        <span className="text-base text-white/40 cursor-default">
                           {t("nav.mentors")}
-                        </a>
-                        <a href="#courses" onClick={() => setMobileOpen(false)} className="text-base text-white/70 hover:text-white transition">
+                        </span>
+                        <span className="text-base text-white/40 cursor-default">
                           {t("nav.courses")}
-                        </a>
+                        </span>
                       </div>
                     )}
                   </div>
