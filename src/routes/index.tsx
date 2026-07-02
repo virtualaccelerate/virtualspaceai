@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
+import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -84,8 +85,8 @@ function Header() {
     <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
       <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
         <a href="#top" className="flex items-center gap-2 shrink-0">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[oklch(0.7_0.16_155)] via-[oklch(0.75_0.18_130)] to-[oklch(0.95_0.02_150)] shadow-[0_0_20px_oklch(0.7_0.18_155_/_0.45)]" />
-          <span className="font-display text-xl text-white">Agentix</span>
+          <VirtualSpaceLogo className="text-primary" size={28} />
+          <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
         </a>
         <nav className="hidden md:flex items-center gap-7 text-sm">
           <a href="#learn" className="text-white/70 hover:text-white transition">{t("nav.learn")}</a>
@@ -403,10 +404,10 @@ function Landing() {
       <footer className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-md bg-gradient-to-br from-[oklch(0.7_0.16_155)] to-[oklch(0.95_0.02_150)]" />
-            <span className="font-display text-lg text-white">Agentix</span>
+            <VirtualSpaceLogo className="text-primary" size={22} />
+            <span className="font-display font-extrabold tracking-tight text-base text-white">Virtual Space</span>
           </div>
-          <p>© {new Date().getFullYear()} Agentix. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Virtual Space. All rights reserved.</p>
         </div>
       </footer>
     </div>
