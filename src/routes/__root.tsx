@@ -86,8 +86,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Virtual Space — AI-agentic workspace for business" },
       { name: "twitter:description", content: "One workspace for your team, tools, and AI agents. Connect everything. Automate workflows. Move faster with intelligence at the center." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
