@@ -159,7 +159,7 @@ html.light .focus\:ring-primary\/50:focus { --tw-ring-color: oklch(0.72 0.22 138
   color: transparent;
 }
 html.light .grad-accent {
-  background-image: linear-gradient(90deg, oklch(0.55 0.20 145), oklch(0.68 0.22 138));
+  background-image: linear-gradient(90deg, oklch(0.28 0.14 145), oklch(0.38 0.18 138));
 }
 
 @keyframes float-slow {
