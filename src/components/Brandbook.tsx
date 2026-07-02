@@ -11,8 +11,8 @@ const fadeUp = {
 function SectionHeader({ number, label, title, accent }: { number: string; label: string; title: string; accent?: string }) {
   return (
     <div className="max-w-3xl">
-      <p className="text-xs font-mono uppercase tracking-[0.3em] text-primary">
-        <span className="opacity-60">{number}.</span> {label}
+      <p className="text-xs font-mono uppercase tracking-[0.3em] text-primary min-h-[1em]">
+        {number && <span className="opacity-60">{number}.</span>} {label}
       </p>
       <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
         {title}{" "}
@@ -77,7 +77,7 @@ function OneWorkspace() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
         <div className="grid md:grid-cols-2 gap-10 sm:gap-16 items-center">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
-            <SectionHeader number="01" label="Architecture" title="One workspace." accent="Everything connected." />
+            <SectionHeader number="" label="" title="One workspace." accent="Everything connected." />
             <p className="mt-6 text-white/60 leading-relaxed max-w-md">
               Teams, tools, workflows and AI agents in one operating space.
             </p>
@@ -109,7 +109,7 @@ function VoiceKeywords() {
   return (
     <section className="relative">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
-        <SectionHeader number="02" label="Tone of Voice" title="Smart," accent="but human." />
+        <SectionHeader number="" label="" title="Smart," accent="but human." />
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {tone.map((t) => (
             <div key={t.title} className="glass rounded-2xl p-5">
