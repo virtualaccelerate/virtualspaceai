@@ -541,7 +541,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("audience.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("audience.title")} <em className="italic grad-accent">{t("audience.titleAccent")}</em>
+              {t("audience.title")} <span className="grad-accent">{t("audience.titleAccent")}</span>
             </h2>
           </motion.div>
           <motion.div
