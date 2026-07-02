@@ -109,7 +109,7 @@ function VoiceKeywords() {
   return (
     <section className="relative">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
-        <SectionHeader number="02" label="Tone of Voice" title="Smart," accent="but human." />
+        <SectionHeader number="" label="" title="Smart," accent="but human." />
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {tone.map((t) => (
             <div key={t.title} className="glass rounded-2xl p-5">
