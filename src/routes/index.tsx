@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
   Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
   HeartHandshake, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown, Loader2,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
@@ -13,6 +14,7 @@ import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
+import { submitDemoRequest } from "@/lib/demo-request.functions";
 
 export const Route = createFileRoute("/")({
   component: Landing,
