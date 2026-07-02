@@ -139,6 +139,7 @@ html.light .text-white\/70 { color: oklch(0.30 0.02 240 / 0.82); }
 html.light .text-white\/60 { color: oklch(0.36 0.02 240 / 0.78); }
 html.light .text-white\/50 { color: oklch(0.42 0.02 240 / 0.72); }
 html.light .text-white\/40 { color: oklch(0.48 0.02 240 / 0.62); }
+html.light .text-white\/75 { color: oklch(0.28 0.02 240 / 0.86); }
 html.light .placeholder\:text-white\/40::placeholder { color: oklch(0.48 0.02 240 / 0.7); }
 html.light .bg-white\/10 { background-color: oklch(0.19 0.02 240 / 0.06); }
 html.light .bg-white\/20 { background-color: oklch(0.19 0.02 240 / 0.1); }
@@ -149,6 +150,7 @@ html.light .bg-white { background-color: oklch(0.72 0.22 138); color: oklch(0.99
 html.light .text-black { color: oklch(0.99 0 0); }
 html.light .hover\:bg-white\/90:hover { background-color: oklch(0.66 0.22 138); }
 html.light .placeholder\:text-white\/40::placeholder { color: oklch(0.42 0.02 240 / 0.65); }
+html.light .placeholder\:text-white\/30::placeholder { color: oklch(0.54 0.02 240 / 0.55); }
 html.light .focus\:ring-primary\/50:focus { --tw-ring-color: oklch(0.72 0.22 138 / 0.5); }
 
 /* Adaptive accent gradient text — bright greens on dark, deep greens on light */
