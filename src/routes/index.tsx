@@ -60,7 +60,7 @@ function Header() {
     <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
       <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
         <a href="#top" className="flex items-center gap-2 shrink-0">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[oklch(0.72_0.2_300)] via-[oklch(0.65_0.22_340)] to-[oklch(0.75_0.18_60)] shadow-[0_0_20px_oklch(0.7_0.2_300_/_0.5)]" />
+          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[oklch(0.7_0.16_155)] via-[oklch(0.75_0.18_130)] to-[oklch(0.95_0.02_150)] shadow-[0_0_20px_oklch(0.7_0.18_155_/_0.45)]" />
           <span className="font-display text-xl text-white">Agentix</span>
         </a>
         <nav className="hidden md:flex items-center gap-7 text-sm">
@@ -114,7 +114,7 @@ function ChatBubble({ who, time, children, accent }: { who: string; time: string
   return (
     <div className={`glass rounded-2xl p-3 sm:p-4 ${accent ? "border-primary/30" : ""}`}>
       <div className="flex items-center gap-2 text-xs text-white/70">
-        <div className={`h-6 w-6 rounded-full ${accent ? "bg-gradient-to-br from-primary to-[oklch(0.7_0.2_340)]" : "bg-white/20"}`} />
+        <div className={`h-6 w-6 rounded-full ${accent ? "bg-gradient-to-br from-primary to-[oklch(0.75_0.18_140)]" : "bg-white/20"}`} />
         <span className="font-medium text-white/90">{who}</span>
         <span className="text-white/40">{time}</span>
       </div>
@@ -137,9 +137,9 @@ function Landing() {
   ] as const;
 
   const audience = [
-    { key: "startups", icon: Rocket, gradient: "linear-gradient(135deg, oklch(0.6 0.25 295), oklch(0.55 0.22 340))" },
-    { key: "entrepreneurs", icon: Building2, gradient: "linear-gradient(135deg, oklch(0.6 0.22 20), oklch(0.6 0.2 60))" },
-    { key: "ngo", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.2 180), oklch(0.6 0.2 220))" },
+    { key: "startups", icon: Rocket, gradient: "linear-gradient(135deg, oklch(0.62 0.18 155), oklch(0.75 0.15 130))" },
+    { key: "entrepreneurs", icon: Building2, gradient: "linear-gradient(135deg, oklch(0.7 0.14 145), oklch(0.9 0.03 150))" },
+    { key: "ngo", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.16 165), oklch(0.72 0.12 180))" },
   ] as const;
 
   return (
@@ -159,7 +159,7 @@ function Landing() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}
             className="mt-6 font-display text-[44px] sm:text-6xl md:text-7xl lg:text-[92px] leading-[1.02] text-white"
           >
-            {t("hero.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] via-[oklch(0.75_0.22_340)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("hero.title2")}</em>
+            {t("hero.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] via-[oklch(0.85_0.15_135)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("hero.title2")}</em>
             <br /> {t("hero.title3")}
           </motion.h1>
           <motion.p
@@ -172,7 +172,7 @@ function Landing() {
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
             className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <a href="#demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-3.5 text-sm font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.9_0.1_300_/_0.6)]">
+            <a href="#demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-3.5 text-sm font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
               {t("hero.cta")} <ArrowRight className="h-4 w-4" />
             </a>
             <a href="#learn" className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition">
@@ -211,7 +211,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("features.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("features.title")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("features.titleAccent")}</em>
+              {t("features.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("features.titleAccent")}</em>
             </h2>
           </motion.div>
 
@@ -225,7 +225,7 @@ function Landing() {
               title={t("features.kb.title")}
               body={t("features.kb.body")}
               icon={BookOpen}
-              gradient="radial-gradient(circle, oklch(0.7 0.2 295 / 0.9), transparent 70%)"
+              gradient="radial-gradient(circle, oklch(0.72 0.18 150 / 0.85), transparent 70%)"
             >
               <ChatBubble who="Alex" time="9:12">Where's the onboarding doc for engineers?</ChatBubble>
               <div className="h-2" />
@@ -239,7 +239,7 @@ function Landing() {
               title={t("features.owner.title")}
               body={t("features.owner.body")}
               icon={Brain}
-              gradient="radial-gradient(circle, oklch(0.7 0.22 340 / 0.9), transparent 70%)"
+              gradient="radial-gradient(circle, oklch(0.82 0.15 135 / 0.75), transparent 70%)"
             >
               <div className="glass rounded-2xl p-4 space-y-2 text-xs sm:text-sm">
                 <div className="flex justify-between text-white/60"><span>MRR</span><span className="text-white font-semibold">$142k <span className="text-[oklch(0.75_0.2_150)]">+8%</span></span></div>
@@ -253,7 +253,7 @@ function Landing() {
               title={t("features.reminders.title")}
               body={t("features.reminders.body")}
               icon={BellRing}
-              gradient="radial-gradient(circle, oklch(0.7 0.18 60 / 0.9), transparent 70%)"
+              gradient="radial-gradient(circle, oklch(0.95 0.02 150 / 0.7), transparent 70%)"
             >
               <div className="glass rounded-2xl p-4 space-y-3 text-xs sm:text-sm">
                 <div className="flex items-start gap-2">
@@ -282,7 +282,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("value.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("value.title")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("value.titleAccent")}</em>
+              {t("value.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("value.titleAccent")}</em>
             </h2>
           </motion.div>
           <motion.div
@@ -310,7 +310,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("audience.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("audience.title")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("audience.titleAccent")}</em>
+              {t("audience.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("audience.titleAccent")}</em>
             </h2>
           </motion.div>
           <motion.div
@@ -344,9 +344,9 @@ function Landing() {
             className="glass-strong rounded-[32px] p-6 sm:p-12 text-center relative overflow-hidden"
           >
             <div className="absolute inset-0 opacity-40 pointer-events-none"
-              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.7 0.22 300 / 0.5), transparent 70%)" }} />
+              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
             <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.85_0.15_60)] to-[oklch(0.8_0.2_340)] bg-clip-text text-transparent">{t("cta.title2")}</em>
+              {t("cta.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.95_0.02_150)] to-[oklch(0.8_0.16_140)] bg-clip-text text-transparent">{t("cta.title2")}</em>
             </h2>
             <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 
@@ -361,7 +361,7 @@ function Landing() {
               <input placeholder={t("cta.company")}
                 className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
               <button type="submit"
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.9_0.1_300_/_0.6)]">
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
                 {t("cta.submit")} <ArrowRight className="h-4 w-4" />
               </button>
             </form>
@@ -378,7 +378,7 @@ function Landing() {
       <footer className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-md bg-gradient-to-br from-[oklch(0.72_0.2_300)] to-[oklch(0.75_0.18_60)]" />
+            <div className="h-6 w-6 rounded-md bg-gradient-to-br from-[oklch(0.7_0.16_155)] to-[oklch(0.95_0.02_150)]" />
             <span className="font-display text-lg text-white">Agentix</span>
           </div>
           <p>© {new Date().getFullYear()} Agentix. All rights reserved.</p>
