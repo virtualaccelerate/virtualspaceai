@@ -1,262 +1,385 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import {
-  Search, Bot, Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
-  HeartHandshake, Sparkles, MessageSquare, Calendar, BarChart3, Mail,
-  ShieldCheck, ArrowRight, CheckCircle2,
+  Bot, Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
+  HeartHandshake, Sparkles, Brain, BellRing, BookOpen,
+  ArrowRight, CheckCircle2, Globe, Check,
 } from "lucide-react";
+import "@/lib/i18n";
+import { LANGUAGES } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-function Header() {
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const } },
+};
+
+function LangSwitcher() {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const current = LANGUAGES.find((l) => i18n.language?.startsWith(l.code)) ?? LANGUAGES[0];
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
-      <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
-        <a href="#top" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[oklch(0.7_0.2_300)] via-[oklch(0.65_0.22_20)] to-[oklch(0.75_0.18_60)]" />
-          <span className="font-display text-2xl">Agentix</span>
-        </a>
-        <nav className="hidden md:flex items-center gap-8 text-sm">
-          <a href="#learn" className="text-muted-foreground hover:text-foreground">Learn</a>
-          <a href="#price" className="text-muted-foreground hover:text-foreground">Price</a>
-        </nav>
-        <a
-          href="#demo"
-          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 transition"
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium text-white/90 hover:text-white transition"
+        aria-label="Language"
+      >
+        <Globe className="h-3.5 w-3.5" />
+        {current.label}
+      </button>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+          className="glass-strong absolute right-0 mt-2 w-32 rounded-2xl p-1.5 z-50"
         >
-          Get Demo <ArrowRight className="h-4 w-4" />
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              onClick={() => { i18n.changeLanguage(l.code); setOpen(false); }}
+              className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-sm text-white/85 hover:bg-white/10 transition"
+            >
+              {l.label}
+              {l.code === current.code && <Check className="h-3.5 w-3.5 text-primary" />}
+            </button>
+          ))}
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function Header() {
+  const { t } = useTranslation();
+  return (
+    <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
+      <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
+        <a href="#top" className="flex items-center gap-2 shrink-0">
+          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[oklch(0.72_0.2_300)] via-[oklch(0.65_0.22_340)] to-[oklch(0.75_0.18_60)] shadow-[0_0_20px_oklch(0.7_0.2_300_/_0.5)]" />
+          <span className="font-display text-xl text-white">Agentix</span>
         </a>
+        <nav className="hidden md:flex items-center gap-7 text-sm">
+          <a href="#learn" className="text-white/70 hover:text-white transition">{t("nav.learn")}</a>
+          <a href="#price" className="text-white/70 hover:text-white transition">{t("nav.price")}</a>
+        </nav>
+        <div className="flex items-center gap-2">
+          <LangSwitcher />
+          <a
+            href="#demo"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white text-black px-4 py-2 text-xs font-semibold hover:bg-white/90 transition"
+          >
+            {t("nav.demo")} <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        </div>
       </div>
     </header>
   );
 }
 
-type Tile = {
-  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  label?: string;
-  featured?: "warm" | "cool" | "mint";
-  title?: string;
-  desc?: string;
-};
-
-function TileGrid({ items }: { items: Tile[] }) {
+function GlassCard({
+  tag, title, body, icon: Icon, children, gradient,
+}: {
+  tag: string; title: string; body: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children?: React.ReactNode; gradient: string;
+}) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 border-t border-l border-border/70">
-      {items.map((t, i) => {
-        if (t.featured) {
-          const bg =
-            t.featured === "warm" ? "bg-tile-warm" :
-            t.featured === "cool" ? "bg-tile-cool" : "bg-tile-mint";
-          return (
-            <div
-              key={i}
-              className={`${bg} col-span-2 row-span-2 border-r border-b border-border/70 p-8 flex flex-col justify-between min-h-[280px] relative overflow-hidden`}
-            >
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-2">
-                  <div className="h-8 w-40 rounded-md bg-white/70 shadow-sm" />
-                  <div className="h-8 w-16 rounded-md bg-white/50" />
-                </div>
-                <div className="h-2 w-3/4 rounded bg-white/60" />
-                <div className="h-2 w-1/2 rounded bg-white/50" />
-                <div className="h-2 w-2/3 rounded bg-white/40" />
-              </div>
-              <div className="flex items-center gap-3">
-                {t.icon ? <t.icon className="h-8 w-8" /> : null}
-                <span className="font-display text-3xl">{t.title}</span>
-              </div>
-            </div>
-          );
-        }
-        const Icon = t.icon!;
-        return (
-          <div
-            key={i}
-            className="border-r border-b border-border/70 aspect-square flex flex-col items-center justify-center gap-3 p-4 hover:bg-secondary/60 transition"
-          >
-            <Icon className="h-7 w-7 text-foreground/80" strokeWidth={1.5} />
-            <span className="text-sm text-center text-foreground/80 leading-tight">{t.label}</span>
-          </div>
-        );
-      })}
+    <motion.div
+      variants={fadeUp}
+      className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 min-h-[420px] flex flex-col"
+    >
+      <div
+        className="absolute -top-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl pointer-events-none"
+        style={{ background: gradient }}
+      />
+      <div className="relative flex items-center gap-2 text-[10px] sm:text-xs font-mono tracking-[0.2em] text-primary uppercase">
+        <Icon className="h-4 w-4" />
+        {tag}
+      </div>
+      <h3 className="relative mt-4 font-display text-3xl sm:text-4xl text-white leading-tight">
+        {title}
+      </h3>
+      <p className="relative mt-3 text-sm sm:text-base text-white/60 leading-relaxed">{body}</p>
+      <div className="relative mt-auto pt-6">{children}</div>
+    </motion.div>
+  );
+}
+
+function ChatBubble({ who, time, children, accent }: { who: string; time: string; children: React.ReactNode; accent?: boolean }) {
+  return (
+    <div className={`glass rounded-2xl p-3 sm:p-4 ${accent ? "border-primary/30" : ""}`}>
+      <div className="flex items-center gap-2 text-xs text-white/70">
+        <div className={`h-6 w-6 rounded-full ${accent ? "bg-gradient-to-br from-primary to-[oklch(0.7_0.2_340)]" : "bg-white/20"}`} />
+        <span className="font-medium text-white/90">{who}</span>
+        <span className="text-white/40">{time}</span>
+      </div>
+      <div className="mt-2 text-xs sm:text-sm text-white/80 leading-relaxed">{children}</div>
     </div>
   );
 }
 
 function Landing() {
-  const tiles: Tile[] = [
-    { icon: Search, label: "Smart Search" },
-    { icon: Bot, label: "AI Agents" },
-    { icon: MessageSquare, label: "Chat Ops" },
-    { icon: Calendar, label: "Scheduling" },
-    { icon: Mail, label: "Email Bot" },
-    { icon: BarChart3, label: "Analytics" },
+  const { t, i18n } = useTranslation();
 
-    { icon: Sparkles, label: "Reporting" },
-    { icon: Workflow, label: "Workflows" },
-    { featured: "warm", title: "Automations", icon: Zap },
-    { featured: "cool", title: "Agents", icon: Bot },
-    { icon: ShieldCheck, label: "Guardrails" },
-    { icon: Clock, label: "24/7 Uptime" },
+  useEffect(() => {
+    document.documentElement.lang = i18n.language?.split("-")[0] ?? "en";
+  }, [i18n.language]);
 
-    { icon: PiggyBank, label: "Cost Cuts" },
-    { icon: Rocket, label: "Fast Deploy" },
-    { icon: Building2, label: "CRM Sync" },
-    { icon: HeartHandshake, label: "Support" },
-  ];
+  const valueCards = [
+    { key: "money", icon: PiggyBank },
+    { key: "time", icon: Clock },
+    { key: "auto", icon: Workflow },
+  ] as const;
+
+  const audience = [
+    { key: "startups", icon: Rocket, gradient: "linear-gradient(135deg, oklch(0.6 0.25 295), oklch(0.55 0.22 340))" },
+    { key: "entrepreneurs", icon: Building2, gradient: "linear-gradient(135deg, oklch(0.6 0.22 20), oklch(0.6 0.2 60))" },
+    { key: "ngo", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.2 180), oklch(0.6 0.2 220))" },
+  ] as const;
 
   return (
-    <div id="top" className="min-h-screen">
+    <div id="top" className="min-h-screen text-white overflow-hidden">
       <Header />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 opacity-60"
-          style={{
-            background:
-              "radial-gradient(60% 50% at 20% 10%, oklch(0.9 0.08 60 / 0.5), transparent), radial-gradient(50% 40% at 80% 20%, oklch(0.9 0.08 300 / 0.5), transparent), radial-gradient(60% 50% at 50% 90%, oklch(0.9 0.08 160 / 0.4), transparent)"
-          }}
-        />
-        <div className="mx-auto max-w-7xl px-6 pt-20 pb-10 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-1.5 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5" /> AI Agentic Workspace
-          </div>
-          <h1 className="mt-6 font-display text-5xl md:text-7xl lg:text-8xl leading-[1.02]">
-            A <em className="italic text-[oklch(0.55_0.2_300)]">new era</em> for business
-            <br /> with AI agents.
-          </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
-            One workspace where autonomous agents handle operations, sales and support —
-            around the clock, without burning out.
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <a href="#demo" className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:opacity-90">
-              Get a demo <ArrowRight className="h-4 w-4" />
+      {/* HERO */}
+      <section className="relative">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-24 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+            className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-white/80"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-primary" /> {t("hero.badge")}
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}
+            className="mt-6 font-display text-[44px] sm:text-6xl md:text-7xl lg:text-[92px] leading-[1.02] text-white"
+          >
+            {t("hero.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] via-[oklch(0.75_0.22_340)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("hero.title2")}</em>
+            <br /> {t("hero.title3")}
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-6 max-w-2xl mx-auto text-base sm:text-lg text-white/60"
+          >
+            {t("hero.subtitle")}
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
+            <a href="#demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-3.5 text-sm font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.9_0.1_300_/_0.6)]">
+              {t("hero.cta")} <ArrowRight className="h-4 w-4" />
             </a>
-            <a href="#learn" className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-6 py-3 text-sm font-medium hover:bg-accent">
-              Learn more
+            <a href="#learn" className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition">
+              {t("hero.learn")}
             </a>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* Tile grid */}
-        <div id="learn" className="mx-auto max-w-7xl px-6 pb-24">
-          <TileGrid items={tiles} />
-        </div>
-      </section>
-
-      {/* Value props */}
-      <section className="border-t border-border bg-secondary/40">
-        <div className="mx-auto max-w-7xl px-6 py-24">
-          <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-widest text-muted-foreground">Why teams switch</p>
-            <h2 className="mt-3 font-display text-4xl md:text-6xl leading-tight">
-              Save money. Save time. <em className="italic text-[oklch(0.55_0.2_300)]">Ship faster.</em>
-            </h2>
-          </div>
-          <div className="mt-14 grid md:grid-cols-3 gap-6">
-            {[
-              { icon: PiggyBank, title: "Save money", desc: "Replace repetitive human hours with agents that cost cents to run — cut operating costs up to 70%." },
-              { icon: Clock, title: "Save time · 24/7", desc: "Agents work while you sleep. No shifts, no breaks — customers get answers in seconds, always." },
-              { icon: Workflow, title: "Automations", desc: "Compose multi-step workflows across your tools with no code. Trigger, decide, act, report." },
-            ].map((c) => (
-              <div key={c.title} className="rounded-2xl bg-background border border-border p-8 hover:shadow-lg transition">
-                <c.icon className="h-8 w-8 text-[oklch(0.55_0.2_300)]" strokeWidth={1.5} />
-                <h3 className="mt-6 text-2xl">{c.title}</h3>
-                <p className="mt-3 text-muted-foreground leading-relaxed">{c.desc}</p>
+          {/* Floating glass preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.5 }}
+            className="relative mt-16 sm:mt-24 mx-auto max-w-4xl"
+          >
+            <div className="glass-strong rounded-3xl p-4 sm:p-6 float-slow">
+              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
+                <ChatBubble who="Zach" time="4:01pm">
+                  <span className="text-primary">@Brain</span> pull last week's campaign stats.
+                </ChatBubble>
+                <ChatBubble who="Agent" time="4:02pm" accent>
+                  Here are Q3 highlights — CTR ↑ 24%, CAC ↓ 12%.
+                </ChatBubble>
+                <ChatBubble who="Maggie" time="4:03pm">
+                  Where's the spring campaign logo?
+                </ChatBubble>
               </div>
-            ))}
-          </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Who is it for */}
-      <section id="price" className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-6 py-24">
-          <div className="text-center max-w-3xl mx-auto">
-            <p className="text-sm uppercase tracking-widest text-muted-foreground">Who it's for</p>
-            <h2 className="mt-3 font-display text-4xl md:text-6xl leading-tight">
-              Built for teams that <em className="italic text-[oklch(0.55_0.2_300)]">move</em>.
+      {/* FEATURES — 3 glass cards */}
+      <section id="learn" className="relative">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}
+            className="max-w-3xl"
+          >
+            <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("features.eyebrow")}</p>
+            <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
+              {t("features.title")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("features.titleAccent")}</em>
             </h2>
-          </div>
+          </motion.div>
 
-          <div className="mt-14 grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Rocket,
-                tag: "Startups",
-                title: "Стартапам",
-                desc: "Do the work of a 20-person team from day one. Ship product, not process.",
-                bg: "bg-tile-cool",
-              },
-              {
-                icon: Building2,
-                tag: "Entrepreneurs",
-                title: "Предпринимателям",
-                desc: "Run sales, support and ops solo. Agents handle the repeatable, you handle the vision.",
-                bg: "bg-tile-warm",
-              },
-              {
-                icon: HeartHandshake,
-                tag: "NGOs · НПО",
-                title: "НПО",
-                desc: "Amplify impact with limited resources. Automate donor comms, reporting and outreach.",
-                bg: "bg-tile-mint",
-              },
-            ].map((c) => (
-              <div key={c.tag} className={`${c.bg} rounded-3xl p-8 border border-border/60 flex flex-col min-h-[320px]`}>
-                <c.icon className="h-8 w-8" strokeWidth={1.5} />
-                <div className="mt-auto">
-                  <p className="text-xs uppercase tracking-widest text-foreground/60">{c.tag}</p>
-                  <h3 className="mt-2 font-display text-4xl">{c.title}</h3>
-                  <p className="mt-3 text-foreground/70">{c.desc}</p>
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-60px" }}
+            variants={{ show: { transition: { staggerChildren: 0.12 } } }}
+            className="mt-12 sm:mt-16 grid md:grid-cols-3 gap-4 sm:gap-6"
+          >
+            <GlassCard
+              tag={t("features.kb.tag")}
+              title={t("features.kb.title")}
+              body={t("features.kb.body")}
+              icon={BookOpen}
+              gradient="radial-gradient(circle, oklch(0.7 0.2 295 / 0.9), transparent 70%)"
+            >
+              <ChatBubble who="Alex" time="9:12">Where's the onboarding doc for engineers?</ChatBubble>
+              <div className="h-2" />
+              <ChatBubble who="@Brain" time="9:12" accent>
+                Onboarding v3.2 — <span className="text-primary">/docs/eng-onboarding</span>. Includes access map + first-week checklist.
+              </ChatBubble>
+            </GlassCard>
+
+            <GlassCard
+              tag={t("features.owner.tag")}
+              title={t("features.owner.title")}
+              body={t("features.owner.body")}
+              icon={Brain}
+              gradient="radial-gradient(circle, oklch(0.7 0.22 340 / 0.9), transparent 70%)"
+            >
+              <div className="glass rounded-2xl p-4 space-y-2 text-xs sm:text-sm">
+                <div className="flex justify-between text-white/60"><span>MRR</span><span className="text-white font-semibold">$142k <span className="text-[oklch(0.75_0.2_150)]">+8%</span></span></div>
+                <div className="flex justify-between text-white/60"><span>Pipeline</span><span className="text-white font-semibold">$610k</span></div>
+                <div className="flex justify-between text-white/60"><span>Needs you</span><span className="text-primary font-semibold">3 items</span></div>
+              </div>
+            </GlassCard>
+
+            <GlassCard
+              tag={t("features.reminders.tag")}
+              title={t("features.reminders.title")}
+              body={t("features.reminders.body")}
+              icon={BellRing}
+              gradient="radial-gradient(circle, oklch(0.7 0.18 60 / 0.9), transparent 70%)"
+            >
+              <div className="glass rounded-2xl p-4 space-y-3 text-xs sm:text-sm">
+                <div className="flex items-start gap-2">
+                  <BellRing className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <div className="text-white/90 font-medium">Follow up: Acme Corp</div>
+                    <div className="text-white/50">No reply for 3 days · Deal $24k</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-[oklch(0.75_0.2_150)] mt-0.5 shrink-0" />
+                  <div className="text-white/70">Sent by agent · 8:00am</div>
                 </div>
               </div>
+            </GlassCard>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* VALUE */}
+      <section className="relative">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
+            className="max-w-3xl"
+          >
+            <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("value.eyebrow")}</p>
+            <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
+              {t("value.title")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("value.titleAccent")}</em>
+            </h2>
+          </motion.div>
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true }}
+            variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+            className="mt-12 grid md:grid-cols-3 gap-4 sm:gap-6"
+          >
+            {valueCards.map((c) => (
+              <motion.div key={c.key} variants={fadeUp} className="glass rounded-3xl p-6 sm:p-8 hover:bg-white/10 transition">
+                <c.icon className="h-8 w-8 text-primary" strokeWidth={1.5} />
+                <h3 className="mt-6 text-2xl text-white">{t(`value.cards.${c.key}.title`)}</h3>
+                <p className="mt-3 text-white/60 leading-relaxed text-sm sm:text-base">{t(`value.cards.${c.key}.body`)}</p>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* AUDIENCE */}
+      <section id="price" className="relative">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("audience.eyebrow")}</p>
+            <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
+              {t("audience.title")} <em className="italic bg-gradient-to-r from-[oklch(0.8_0.2_300)] to-[oklch(0.8_0.18_60)] bg-clip-text text-transparent">{t("audience.titleAccent")}</em>
+            </h2>
+          </motion.div>
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true }}
+            variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+            className="mt-12 grid md:grid-cols-3 gap-4 sm:gap-6"
+          >
+            {audience.map((a) => (
+              <motion.div
+                key={a.key} variants={fadeUp}
+                className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 min-h-[300px] flex flex-col"
+              >
+                <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl" style={{ background: a.gradient }} />
+                <a.icon className="relative h-8 w-8 text-white" strokeWidth={1.5} />
+                <div className="relative mt-auto">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">{t(`audience.${a.key}.tag`)}</p>
+                  <h3 className="mt-2 font-display text-4xl text-white">{t(`audience.${a.key}.title`)}</h3>
+                  <p className="mt-3 text-white/70 text-sm sm:text-base">{t(`audience.${a.key}.body`)}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
       {/* CTA */}
-      <section id="demo" className="border-t border-border bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-5xl px-6 py-24 text-center">
-          <h2 className="font-display text-5xl md:text-7xl leading-[1.05]">
-            Оставьте заявку <em className="italic text-[oklch(0.85_0.15_60)]">на демо</em>
-          </h2>
-          <p className="mt-5 text-lg text-primary-foreground/70 max-w-xl mx-auto">
-            30 минут — покажем, как агенты закроют 3 самые дорогие задачи вашего бизнеса.
-          </p>
-
-          <form
-            onSubmit={(e) => { e.preventDefault(); alert("Спасибо! Мы свяжемся в течение 24 часов."); }}
-            className="mt-10 max-w-xl mx-auto grid gap-3"
+      <section id="demo" className="relative">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
+            className="glass-strong rounded-[32px] p-6 sm:p-12 text-center relative overflow-hidden"
           >
-            <input required placeholder="Ваше имя"
-              className="w-full rounded-full bg-white/10 border border-white/15 px-5 py-4 placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/40" />
-            <input required type="email" placeholder="Email или Telegram"
-              className="w-full rounded-full bg-white/10 border border-white/15 px-5 py-4 placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/40" />
-            <input placeholder="Компания (необязательно)"
-              className="w-full rounded-full bg-white/10 border border-white/15 px-5 py-4 placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/40" />
-            <button type="submit"
-              className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-primary px-6 py-4 font-medium hover:bg-white/90">
-              Запросить демо <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
+            <div className="absolute inset-0 opacity-40 pointer-events-none"
+              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.7 0.22 300 / 0.5), transparent 70%)" }} />
+            <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
+              {t("cta.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.85_0.15_60)] to-[oklch(0.8_0.2_340)] bg-clip-text text-transparent">{t("cta.title2")}</em>
+            </h2>
+            <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-primary-foreground/60">
-            <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Без карты</span>
-            <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Ответ за 24 часа</span>
-            <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> NDA по запросу</span>
-          </div>
+            <form
+              onSubmit={(e) => { e.preventDefault(); alert(t("cta.thanks")); }}
+              className="relative mt-10 max-w-xl mx-auto grid gap-3"
+            >
+              <input required placeholder={t("cta.name")}
+                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input required type="text" placeholder={t("cta.contact")}
+                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input placeholder={t("cta.company")}
+                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <button type="submit"
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.9_0.1_300_/_0.6)]">
+                {t("cta.submit")} <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+
+            <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/50">
+              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note1")}</span>
+              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note2")}</span>
+              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note3")}</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+      <footer className="border-t border-white/10">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-md bg-gradient-to-br from-[oklch(0.7_0.2_300)] to-[oklch(0.75_0.18_60)]" />
-            <span className="font-display text-lg text-foreground">Agentix</span>
+            <div className="h-6 w-6 rounded-md bg-gradient-to-br from-[oklch(0.72_0.2_300)] to-[oklch(0.75_0.18_60)]" />
+            <span className="font-display text-lg text-white">Agentix</span>
           </div>
           <p>© {new Date().getFullYear()} Agentix. All rights reserved.</p>
         </div>
