@@ -579,7 +579,7 @@ function Landing() {
             <div className="absolute inset-0 opacity-40 pointer-events-none"
               style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
             <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <em className="italic grad-accent">{t("cta.title2")}</em>
+              {t("cta.title1")} <span className="grad-accent">{t("cta.title2")}</span>
             </h2>
             <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 
