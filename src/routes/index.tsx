@@ -323,7 +323,7 @@ function Landing() {
                   {t("hero.cta")} <ArrowRight className="h-4 w-4" />
                 </a>
                 <a
-                  href="#demo"
+                  href="/book-demo"
                   className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition"
                 >
                   {t("hero.cta2")}
