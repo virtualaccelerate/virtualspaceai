@@ -271,9 +271,9 @@ function Landing() {
   ] as const;
 
   const audience = [
+    { key: "businesses", icon: Building2, gradient: "linear-gradient(135deg, oklch(0.7 0.14 145), oklch(0.9 0.03 150))" },
     { key: "startups", icon: Rocket, gradient: "linear-gradient(135deg, oklch(0.62 0.18 155), oklch(0.75 0.15 130))" },
-    { key: "entrepreneurs", icon: Building2, gradient: "linear-gradient(135deg, oklch(0.7 0.14 145), oklch(0.9 0.03 150))" },
-    { key: "ngo", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.16 165), oklch(0.72 0.12 180))" },
+    { key: "ngos", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.16 165), oklch(0.72 0.12 180))" },
   ] as const;
 
   return (
