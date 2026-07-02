@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
   Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
   HeartHandshake, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown, Loader2,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
@@ -13,6 +14,7 @@ import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
+import { submitDemoRequest } from "@/lib/demo-request.functions";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -256,6 +258,68 @@ function ChatBubble({ who, time, children, accent }: { who: string; time: string
     </div>
   );
 }
+
+function DemoForm() {
+  const { t, i18n } = useTranslation();
+  const submit = useServerFn(submitDemoRequest);
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [company, setCompany] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !contact.trim() || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await submit({
+        data: {
+          name: name.trim(),
+          contact: contact.trim(),
+          company: company.trim() || undefined,
+          language: i18n.language,
+        },
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="relative mt-10 max-w-xl mx-auto glass rounded-2xl p-6 text-center">
+        <div className="mx-auto h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+          <Check className="h-5 w-5 text-primary" />
+        </div>
+        <p className="text-white font-medium">{t("cta.thanks")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="relative mt-10 max-w-xl mx-auto grid gap-3">
+      <input required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("cta.name")}
+        className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+      <input required type="text" maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("cta.contact")}
+        className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+      <input maxLength={200} value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t("cta.company")}
+        className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+      {error && <p className="text-xs text-destructive text-left px-2">{error}</p>}
+      <button type="submit" disabled={loading}
+        className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)] disabled:opacity-60 disabled:cursor-not-allowed">
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t("cta.submit")} <ArrowRight className="h-4 w-4" /></>}
+      </button>
+    </form>
+  );
+}
+
 
 function Landing() {
   const { t, i18n } = useTranslation();
@@ -598,21 +662,7 @@ function Landing() {
             </h2>
             <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 
-            <form
-              onSubmit={(e) => { e.preventDefault(); alert(t("cta.thanks")); }}
-              className="relative mt-10 max-w-xl mx-auto grid gap-3"
-            >
-              <input required placeholder={t("cta.name")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <input required type="text" placeholder={t("cta.contact")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <input placeholder={t("cta.company")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <button type="submit"
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
-                {t("cta.submit")} <ArrowRight className="h-4 w-4" />
-              </button>
-            </form>
+            <DemoForm />
 
             <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/50">
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note1")}</span>
