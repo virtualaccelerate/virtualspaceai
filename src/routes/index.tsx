@@ -373,8 +373,65 @@ function Landing() {
         </div>
       </section>
 
+      {/* NEW ERA */}
+      <section id="new-era" className="relative">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}
+            className="glass-strong rounded-[32px] p-6 sm:p-12 md:p-16 relative overflow-hidden"
+          >
+            <div
+              className="absolute -top-32 -left-32 h-80 w-80 rounded-full opacity-40 blur-3xl pointer-events-none"
+              style={{ background: "radial-gradient(circle, oklch(0.80 0.22 138 / 0.7), transparent 70%)" }}
+            />
+            <div
+              className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full opacity-30 blur-3xl pointer-events-none"
+              style={{ background: "radial-gradient(circle, oklch(0.91 0.16 138 / 0.6), transparent 70%)" }}
+            />
+            <div className="relative grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-16 items-center">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-primary/90 font-mono">
+                  {t("newEra.eyebrow")}
+                </p>
+                <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
+                  {t("newEra.title")} <em className="italic grad-accent">{t("newEra.titleAccent")}</em>
+                </h2>
+                <p className="mt-6 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl">
+                  {t("newEra.body1")}
+                </p>
+                <p className="mt-4 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl">
+                  {t("newEra.body2")}
+                </p>
+                <div className="mt-8 grid sm:grid-cols-3 gap-3">
+                  {[
+                    { icon: Brain, label: t("newEra.pill1") },
+                    { icon: Zap, label: t("newEra.pill2") },
+                    { icon: Workflow, label: t("newEra.pill3") },
+                  ].map((p, i) => (
+                    <div key={i} className="glass rounded-2xl px-4 py-3 flex items-center gap-2.5">
+                      <p.icon className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
+                      <span className="text-sm text-white/85">{p.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="relative flex items-center justify-center">
+                <div className="relative w-full max-w-[380px] aspect-square">
+                  <div className="absolute inset-0 rounded-full opacity-30 blur-3xl"
+                    style={{ background: "radial-gradient(circle, #73D94F, transparent 60%)" }} />
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <VirtualSpaceLogo size={280} className="text-primary" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* FEATURES — 3 glass cards */}
       <section id="learn" className="relative">
+
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
           <motion.div
             initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}
@@ -382,7 +439,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("features.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("features.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("features.titleAccent")}</em>
+              {t("features.title")} <em className="italic grad-accent">{t("features.titleAccent")}</em>
             </h2>
           </motion.div>
 
@@ -453,7 +510,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("value.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("value.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("value.titleAccent")}</em>
+              {t("value.title")} <em className="italic grad-accent">{t("value.titleAccent")}</em>
             </h2>
           </motion.div>
           <motion.div
@@ -481,7 +538,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("audience.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("audience.title")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("audience.titleAccent")}</em>
+              {t("audience.title")} <em className="italic grad-accent">{t("audience.titleAccent")}</em>
             </h2>
           </motion.div>
           <motion.div
@@ -519,7 +576,7 @@ function Landing() {
             <div className="absolute inset-0 opacity-40 pointer-events-none"
               style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
             <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.95_0.02_150)] to-[oklch(0.8_0.16_140)] bg-clip-text text-transparent">{t("cta.title2")}</em>
+              {t("cta.title1")} <em className="italic grad-accent">{t("cta.title2")}</em>
             </h2>
             <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 

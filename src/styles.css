@@ -148,6 +148,19 @@ html.light .hover\:bg-white\/10:hover { background-color: oklch(0.19 0.02 240 / 
 html.light .bg-white { background-color: oklch(0.72 0.22 138); color: oklch(0.99 0 0); }
 html.light .text-black { color: oklch(0.99 0 0); }
 html.light .hover\:bg-white\/90:hover { background-color: oklch(0.66 0.22 138); }
+html.light .placeholder\:text-white\/40::placeholder { color: oklch(0.42 0.02 240 / 0.65); }
+html.light .focus\:ring-primary\/50:focus { --tw-ring-color: oklch(0.72 0.22 138 / 0.5); }
+
+/* Adaptive accent gradient text — bright greens on dark, deep greens on light */
+.grad-accent {
+  background-image: linear-gradient(90deg, oklch(0.78 0.17 155), oklch(0.98 0.01 150));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+html.light .grad-accent {
+  background-image: linear-gradient(90deg, oklch(0.55 0.20 145), oklch(0.68 0.22 138));
+}
 
 @keyframes float-slow {
   0%, 100% { transform: translateY(0px); }
