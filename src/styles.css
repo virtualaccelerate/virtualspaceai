@@ -32,22 +32,61 @@
 
 :root {
   --radius: 1rem;
-  --background: oklch(0.14 0.02 275);
-  --foreground: oklch(0.98 0.005 260);
-  --card: oklch(0.18 0.02 275);
-  --card-foreground: oklch(0.98 0.005 260);
-  --primary: oklch(0.72 0.19 295);
-  --primary-foreground: oklch(0.12 0.02 275);
-  --secondary: oklch(0.24 0.03 275);
-  --secondary-foreground: oklch(0.98 0.005 260);
-  --muted: oklch(0.22 0.02 275);
-  --muted-foreground: oklch(0.68 0.03 275);
-  --accent: oklch(0.28 0.05 295);
+  --background: oklch(0.14 0.02 160);
+  --foreground: oklch(0.98 0.005 160);
+  --card: oklch(0.18 0.02 160);
+  --card-foreground: oklch(0.98 0.005 160);
+  --primary: oklch(0.72 0.17 150);
+  --primary-foreground: oklch(0.12 0.02 160);
+  --secondary: oklch(0.24 0.03 160);
+  --secondary-foreground: oklch(0.98 0.005 160);
+  --muted: oklch(0.22 0.02 160);
+  --muted-foreground: oklch(0.68 0.03 160);
+  --accent: oklch(0.28 0.05 150);
   --accent-foreground: oklch(0.98 0 0);
-  --border: oklch(0.32 0.02 275 / 0.5);
-  --ring: oklch(0.72 0.19 295);
-  --brand: oklch(0.72 0.19 295);
+  --border: oklch(0.32 0.02 160 / 0.5);
+  --ring: oklch(0.72 0.17 150);
+  --brand: oklch(0.72 0.17 150);
   --brand-foreground: oklch(0.99 0 0);
+
+  --glass-tint: white;
+  --glass-bg-1: 6%;
+  --glass-bg-2: 10%;
+  --glass-border-1: 10%;
+  --glass-border-2: 14%;
+  --glass-inset-1: 8%;
+  --glass-inset-2: 12%;
+  --glass-shadow: oklch(0.1 0.05 160 / 0.6);
+  --glass-shadow-strong: oklch(0.1 0.05 160 / 0.7);
+}
+
+html.light {
+  --background: oklch(0.99 0.005 150);
+  --foreground: oklch(0.18 0.03 155);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.03 155);
+  --primary: oklch(0.62 0.17 150);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.01 150);
+  --secondary-foreground: oklch(0.18 0.03 155);
+  --muted: oklch(0.96 0.01 150);
+  --muted-foreground: oklch(0.45 0.03 155);
+  --accent: oklch(0.94 0.04 150);
+  --accent-foreground: oklch(0.18 0.03 155);
+  --border: oklch(0.15 0.02 155 / 0.12);
+  --ring: oklch(0.62 0.17 150);
+  --brand: oklch(0.62 0.17 150);
+  --brand-foreground: oklch(0.99 0 0);
+
+  --glass-tint: black;
+  --glass-bg-1: 3%;
+  --glass-bg-2: 5%;
+  --glass-border-1: 6%;
+  --glass-border-2: 10%;
+  --glass-inset-1: 40%;
+  --glass-inset-2: 60%;
+  --glass-shadow: oklch(0.35 0.08 155 / 0.12);
+  --glass-shadow-strong: oklch(0.35 0.08 155 / 0.18);
 }
 
 @layer base {
