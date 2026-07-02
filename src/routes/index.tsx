@@ -95,7 +95,7 @@ function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
+    <header suppressHydrationWarning className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
       <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
         <a href="#top" className="flex items-center gap-2 shrink-0">
           <VirtualSpaceLogo className="text-primary" size={28} />
@@ -544,7 +544,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("benefits.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("benefits.title")} <em className="italic grad-accent">{t("benefits.titleAccent")}</em>
+              {t("benefits.title")} <span className="grad-accent">{t("benefits.titleAccent")}</span>
             </h2>
           </motion.div>
           <motion.div
@@ -614,54 +614,110 @@ function Landing() {
         </div>
       </section>
 
-      <Brandbook />
-
-      {/* CTA */}
-      <section id="demo" className="relative">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
+      {/* PRICING TEASER */}
+      <section id="pricing" className="relative">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
           <motion.div
-            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
+            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}
             className="glass-strong rounded-[32px] p-6 sm:p-12 text-center relative overflow-hidden"
           >
-            <div className="absolute inset-0 opacity-40 pointer-events-none"
-              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
-            <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <span className="grad-accent">{t("cta.title2")}</span>
+            <div className="absolute inset-0 opacity-30 pointer-events-none"
+              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.4), transparent 70%)" }} />
+            <h2 className="relative font-display text-3xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
+              {t("pricingTeaser.title")}
             </h2>
-            <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
-
-            <form
-              onSubmit={(e) => { e.preventDefault(); alert(t("cta.thanks")); }}
-              className="relative mt-10 max-w-xl mx-auto grid gap-3"
-            >
-              <input required placeholder={t("cta.name")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <input required type="text" placeholder={t("cta.contact")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <input placeholder={t("cta.company")}
-                className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              <button type="submit"
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
-                {t("cta.submit")} <ArrowRight className="h-4 w-4" />
-              </button>
-            </form>
-
-            <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/50">
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note1")}</span>
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note2")}</span>
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note3")}</span>
+            <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
+              {t("pricingTeaser.body")}
+            </p>
+            <div className="relative mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href="#price"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
+              >
+                {t("pricingTeaser.cta")} <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="#top"
+                className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition"
+              >
+                {t("pricingTeaser.cta2")}
+              </a>
             </div>
           </motion.div>
         </div>
       </section>
 
+      {/* FINAL CTA */}
+      <section id="demo" className="relative">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={fadeUp}
+            className="text-center"
+          >
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
+              {t("finalCta.title")}
+            </h2>
+            <p className="mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto leading-relaxed">
+              {t("finalCta.body")}
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href="#top"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
+              >
+                {t("finalCta.cta")} <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="/book-demo"
+                className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition"
+              >
+                {t("finalCta.cta2")}
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
       <footer className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
-          <div className="flex items-center gap-2">
-            <VirtualSpaceLogo className="text-primary" size={22} />
-            <span className="font-display font-extrabold tracking-tight text-base text-white">Virtual Space</span>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2">
+                <VirtualSpaceLogo className="text-primary" size={24} />
+                <span className="font-display font-extrabold tracking-tight text-base text-white">Virtual Space</span>
+              </div>
+              <p className="mt-3 text-sm text-white/50 leading-relaxed max-w-[200px]">{t("footer.desc")}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.product")}</p>
+              <ul className="space-y-2.5">
+                {(t("footer.productLinks", { returnObjects: true }) as string[]).map((l, i) => (
+                  <li key={i}><span className="text-sm text-white/60 hover:text-white/90 transition cursor-default">{l}</span></li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.learn")}</p>
+              <ul className="space-y-2.5">
+                {(t("footer.learnLinks", { returnObjects: true }) as string[]).map((l, i) => (
+                  <li key={i}><span className="text-sm text-white/60 hover:text-white/90 transition cursor-default">{l}</span></li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.company")}</p>
+              <ul className="space-y-2.5">
+                {(t("footer.companyLinks", { returnObjects: true }) as string[]).map((l, i) => (
+                  <li key={i}><span className="text-sm text-white/60 hover:text-white/90 transition cursor-default">{l}</span></li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <p>© {new Date().getFullYear()} Virtual Space. All rights reserved.</p>
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
+            <p>{t("footer.copyright")}</p>
+            <p>{t("footer.powered")}</p>
+          </div>
         </div>
       </footer>
     </div>
