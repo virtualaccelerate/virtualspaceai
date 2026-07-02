@@ -92,6 +92,7 @@ function Header() {
           <a href="#price" className="text-white/70 hover:text-white transition">{t("nav.price")}</a>
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <LangSwitcher />
           <a
             href="#demo"
