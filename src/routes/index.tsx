@@ -247,57 +247,129 @@ function Landing() {
 
       {/* HERO */}
       <section className="relative">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-24 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-            className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-white/80"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-primary" /> {t("hero.badge")}
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}
-            className="mt-6 font-display text-[44px] sm:text-6xl md:text-7xl lg:text-[92px] leading-[1.02] text-white"
-          >
-            {t("hero.title1")} <em className="italic bg-gradient-to-r from-[oklch(0.78_0.17_155)] via-[oklch(0.85_0.15_135)] to-[oklch(0.98_0.01_150)] bg-clip-text text-transparent">{t("hero.title2")}</em>
-            <br /> {t("hero.title3")}
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-6 max-w-2xl mx-auto text-base sm:text-lg text-white/60"
-          >
-            {t("hero.subtitle")}
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
-            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
-          >
-            <a href="#demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-3.5 text-sm font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]">
-              {t("hero.cta")} <ArrowRight className="h-4 w-4" />
-            </a>
-            <a href="#learn" className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition">
-              {t("hero.learn")}
-            </a>
-          </motion.div>
-
-          {/* Floating glass preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.5 }}
-            className="relative mt-16 sm:mt-24 mx-auto max-w-4xl"
-          >
-            <div className="glass-strong rounded-3xl p-4 sm:p-6 float-slow">
-              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
-                <ChatBubble who="Zach" time="4:01pm">
-                  <span className="text-primary">@Brain</span> pull last week's campaign stats.
-                </ChatBubble>
-                <ChatBubble who="Agent" time="4:02pm" accent>
-                  Here are Q3 highlights — CTR ↑ 24%, CAC ↓ 12%.
-                </ChatBubble>
-                <ChatBubble who="Maggie" time="4:03pm">
-                  Where's the spring campaign logo?
-                </ChatBubble>
-              </div>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-24">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: Copy */}
+            <div className="text-center lg:text-left">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[56px] leading-[1.1] text-white"
+              >
+                {t("hero.title")}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.25 }}
+                className="mt-5 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl mx-auto lg:mx-0"
+              >
+                {t("hero.subtitle")}
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.35 }}
+                className="mt-4 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl mx-auto lg:mx-0"
+              >
+                {t("hero.subtitle2")}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.45 }}
+                className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
+              >
+                <a
+                  href="#demo"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
+                >
+                  {t("hero.cta")} <ArrowRight className="h-4 w-4" />
+                </a>
+                <a
+                  href="#demo"
+                  className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition"
+                >
+                  {t("hero.cta2")}
+                </a>
+              </motion.div>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.55 }}
+                className="mt-6 text-sm text-white/40 max-w-xl mx-auto lg:mx-0"
+              >
+                {t("hero.tagline")}
+              </motion.p>
             </div>
-          </motion.div>
+
+            {/* Right: Orbital visual */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+              className="relative hidden lg:flex items-center justify-center"
+            >
+              <div className="relative w-full max-w-[480px] aspect-square">
+                <svg viewBox="0 0 400 400" className="w-full h-full">
+                  {/* Rings */}
+                  <circle cx="200" cy="200" r="190" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                  <circle cx="200" cy="200" r="140" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                  <circle cx="200" cy="200" r="90" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                  {/* Outer dots */}
+                  {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
+                    const rad = (angle * Math.PI) / 180;
+                    return (
+                      <circle
+                        key={`o-${angle}`}
+                        cx={200 + 190 * Math.cos(rad)}
+                        cy={200 + 190 * Math.sin(rad)}
+                        r="5"
+                        fill="#73D94F"
+                        opacity="0.8"
+                      />
+                    );
+                  })}
+                  {/* Middle dots */}
+                  {[22.5, 112.5, 202.5, 292.5].map((angle) => {
+                    const rad = (angle * Math.PI) / 180;
+                    return (
+                      <circle
+                        key={`m-${angle}`}
+                        cx={200 + 140 * Math.cos(rad)}
+                        cy={200 + 140 * Math.sin(rad)}
+                        r="4"
+                        fill="#B8F28A"
+                        opacity="0.9"
+                      />
+                    );
+                  })}
+                  {/* Inner dots */}
+                  {[0, 120, 240].map((angle) => {
+                    const rad = (angle * Math.PI) / 180;
+                    return (
+                      <circle
+                        key={`i-${angle}`}
+                        cx={200 + 90 * Math.cos(rad)}
+                        cy={200 + 90 * Math.sin(rad)}
+                        r="3"
+                        fill="#73D94F"
+                        opacity="0.7"
+                      />
+                    );
+                  })}
+                  {/* Center glow */}
+                  <circle cx="200" cy="200" r="40" fill="rgba(115,217,79,0.15)" />
+                  <circle cx="200" cy="200" r="25" fill="rgba(115,217,79,0.25)" />
+                  <circle cx="200" cy="200" r="12" fill="#73D94F" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <VirtualSpaceLogo size={48} className="text-white" />
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
