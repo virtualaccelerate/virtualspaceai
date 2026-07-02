@@ -83,6 +83,17 @@ function ThemeToggle() {
 
 function Header() {
   const { t } = useTranslation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: "#learn", label: t("nav.learn") },
+    { href: "#mentors", label: t("nav.mentors") },
+    { href: "#courses", label: t("nav.courses") },
+    { href: "#product", label: t("nav.product") },
+    { href: "#price", label: t("nav.pricing") },
+    { href: "#demo", label: t("nav.bookDemo") },
+  ];
+
   return (
     <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
       <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
@@ -90,18 +101,78 @@ function Header() {
           <VirtualSpaceLogo className="text-primary" size={28} />
           <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
         </a>
-        <nav className="hidden md:flex items-center gap-7 text-sm">
-          <a href="#learn" className="text-white/70 hover:text-white transition">{t("nav.learn")}</a>
-          <a href="#price" className="text-white/70 hover:text-white transition">{t("nav.price")}</a>
+
+        <nav className="hidden lg:flex items-center gap-5 text-sm">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-white/70 hover:text-white transition whitespace-nowrap"
+            >
+              {link.label}
+            </a>
+          ))}
         </nav>
+
         <div className="flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-3 text-sm">
+            <a href="#login" className="text-white/70 hover:text-white transition whitespace-nowrap">
+              {t("nav.login")}
+            </a>
+            <a href="#signup" className="text-white/70 hover:text-white transition whitespace-nowrap">
+              {t("nav.signup")}
+            </a>
+          </div>
+
           <ThemeToggle />
           <LangSwitcher />
+
+          <div className="lg:hidden">
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <button
+                  aria-label="Menu"
+                  className="glass inline-flex items-center justify-center rounded-full h-9 w-9 text-white/90 hover:text-white transition"
+                >
+                  <Menu className="h-4 w-4" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="glass-strong w-[300px] border-white/10">
+                <nav className="flex flex-col gap-4 mt-8">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-lg text-white/80 hover:text-white transition"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                  <hr className="border-white/10 my-2" />
+                  <a href="#login" onClick={() => setMobileOpen(false)} className="text-lg text-white/80 hover:text-white transition">
+                    {t("nav.login")}
+                  </a>
+                  <a href="#signup" onClick={() => setMobileOpen(false)} className="text-lg text-white/80 hover:text-white transition">
+                    {t("nav.signup")}
+                  </a>
+                  <a
+                    href="#demo"
+                    onClick={() => setMobileOpen(false)}
+                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:bg-primary/90 transition"
+                  >
+                    {t("nav.cta")}
+                  </a>
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+
           <a
             href="#demo"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white text-black px-4 py-2 text-xs font-semibold hover:bg-white/90 transition"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition"
           >
-            {t("nav.demo")} <ArrowRight className="h-3.5 w-3.5" />
+            {t("nav.cta")}
           </a>
         </div>
       </div>
