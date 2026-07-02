@@ -340,14 +340,26 @@ const resources = {
         owner: { tag: "ZWEITES GEHIRN DES INHABERS", title: "Alles, was der Gründer braucht — in einem Feed.", body: "Kennzahlen, Entscheidungen, Notizen. Agenten fassen das Business jeden Morgen zusammen." },
         reminders: { tag: "SMARTE ERINNERUNGEN", title: "Kein Follow-up geht mehr verloren.", body: "Agenten beobachten Gespräche und Deals und stupsen zur richtigen Zeit die richtige Person an." },
       },
-      value: {
-        eyebrow: "Warum Teams wechseln",
-        title: "Geld und Zeit sparen.",
-        titleAccent: "Schneller liefern.",
+      benefits: {
+        eyebrow: "Vorteile",
+        title: "Geld sparen. Zeit sparen.",
+        titleAccent: "Prozesse automatisieren.",
         cards: {
-          money: { title: "Geld sparen", body: "Ersetzt repetitive Stunden durch Agenten für Cent-Beträge — bis zu 70% weniger Kosten." },
-          time: { title: "24/7 Uptime", body: "Agenten arbeiten, während ihr schlaft. Kunden bekommen Antworten in Sekunden." },
-          auto: { title: "Automatisierungen", body: "Mehrstufige Workflows ohne Code zwischen euren Tools. Auslösen, entscheiden, handeln." },
+          money: {
+            title: "Geld sparen",
+            body1: "Senken Sie die Kosten manueller Abläufe, indem Sie repetitive Aufgaben, interne Koordination, Berichterstattung, Kunden-Follow-ups, Dokumentenverarbeitung und Datenorganisation automatisieren.",
+            body2: "Anstatt mehr Personal für Routinearbeit einzustellen, kann Ihr Team KI-Agenten nutzen, um tägliche Geschäftsprozesse zu unterstützen und menschliches Talent auf Strategie, Vertrieb, Kreativität und Entscheidungsfindung zu konzentrieren.",
+          },
+          time: {
+            title: "Zeit sparen",
+            body1: "KI-Agenten übernehmen zeitaufwändige Aufgaben wie das Sammeln von Informationen, das Erstellen von Zusammenfassungen, die Aktualisierung von Datenbanken, die Generierung von Berichten, die Analyse von Eingaben und die Fortschrittsverfolgung.",
+            body2: "Ihr Team verbringt weniger Zeit mit dem Wechsel zwischen Tools und mehr Zeit mit dem, was wirklich zählt.",
+          },
+          auto: {
+            title: "Prozesse automatisieren",
+            body1: "Virtual Space hilft Ihnen, alltägliche Geschäftsworkflows in automatisierte Systeme zu verwandeln.",
+            body2: "Von Vertriebspipelines und HR-Aufgaben bis hin zu Analytik, Kundensupport, Betrieb und internem Wissensmanagement — KI-Agenten können Ihre Geschäftsprozesse von Anfang bis Ende unterstützen.",
+          },
         },
       },
       audience: {
@@ -417,14 +429,26 @@ const resources = {
         owner: { tag: "SECOND CERVEAU DU DIRIGEANT", title: "Tout ce dont le fondateur a besoin — dans un seul fil.", body: "Métriques, décisions, notes, priorités. Les agents résument l'activité chaque matin." },
         reminders: { tag: "RAPPELS INTELLIGENTS", title: "Ne ratez plus jamais un suivi.", body: "Les agents surveillent conversations et deals et alertent la bonne personne au bon moment." },
       },
-      value: {
-        eyebrow: "Pourquoi ils changent",
-        title: "Économisez argent et temps.",
-        titleAccent: "Avancez plus vite.",
+      benefits: {
+        eyebrow: "Avantages",
+        title: "Économisez de l'argent et du temps.",
+        titleAccent: "Automatisez les processus.",
         cards: {
-          money: { title: "Économies", body: "Remplacez les heures répétitives par des agents à quelques centimes — jusqu'à 70% de coûts en moins." },
-          time: { title: "24/7 sans pause", body: "Les agents travaillent pendant que vous dormez. Vos clients ont une réponse en secondes." },
-          auto: { title: "Automatisations", body: "Composez des workflows multi-étapes sans code. Déclencher, décider, agir, reporter." },
+          money: {
+            title: "Économisez de l'argent",
+            body1: "Réduisez le coût des opérations manuelles en automatisant les tâches répétitives, la coordination interne, les rapports, le suivi client, le traitement des documents et l'organisation des données.",
+            body2: "Au lieu d'embaucher plus de personnel pour le travail routinier, votre équipe peut utiliser des agents IA pour soutenir les processus commerciaux quotidiens et concentrer les talents humains sur la stratégie, les ventes, la créativité et la prise de décision.",
+          },
+          time: {
+            title: "Gagnez du temps",
+            body1: "Les agents IA peuvent gérer des tâches chronophages telles que la collecte d'informations, la préparation de résumés, la mise à jour de bases de données, la génération de rapports, l'analyse de données et le suivi des progrès.",
+            body2: "Votre équipe passe moins de temps à changer d'outils et plus de temps à agir sur ce qui compte.",
+          },
+          auto: {
+            title: "Automatisez les processus",
+            body1: "Virtual Space vous aide à transformer les flux de travail quotidiens en systèmes automatisés.",
+            body2: "Des pipelines de vente et des tâches RH à l'analytique, le support client, les opérations et la gestion des connaissances internes — les agents IA peuvent soutenir vos processus commerciaux de A à Z.",
+          },
         },
       },
       audience: {
