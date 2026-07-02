@@ -501,16 +501,16 @@ function Landing() {
         </div>
       </section>
 
-      {/* VALUE */}
-      <section className="relative">
+      {/* BENEFITS */}
+      <section id="benefits" className="relative">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
           <motion.div
             initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
             className="max-w-3xl"
           >
-            <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("value.eyebrow")}</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("benefits.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("value.title")} <em className="italic grad-accent">{t("value.titleAccent")}</em>
+              {t("benefits.title")} <em className="italic grad-accent">{t("benefits.titleAccent")}</em>
             </h2>
           </motion.div>
           <motion.div
@@ -518,11 +518,12 @@ function Landing() {
             variants={{ show: { transition: { staggerChildren: 0.1 } } }}
             className="mt-12 grid md:grid-cols-3 gap-4 sm:gap-6"
           >
-            {valueCards.map((c) => (
+            {benefitCards.map((c) => (
               <motion.div key={c.key} variants={fadeUp} className="glass rounded-3xl p-6 sm:p-8 hover:bg-white/10 transition">
                 <c.icon className="h-8 w-8 text-primary" strokeWidth={1.5} />
-                <h3 className="mt-6 text-2xl text-white">{t(`value.cards.${c.key}.title`)}</h3>
-                <p className="mt-3 text-white/60 leading-relaxed text-sm sm:text-base">{t(`value.cards.${c.key}.body`)}</p>
+                <h3 className="mt-6 text-2xl text-white">{t(`benefits.cards.${c.key}.title`)}</h3>
+                <p className="mt-3 text-white/60 leading-relaxed text-sm sm:text-base">{t(`benefits.cards.${c.key}.body1`)}</p>
+                <p className="mt-3 text-white/60 leading-relaxed text-sm sm:text-base">{t(`benefits.cards.${c.key}.body2`)}</p>
               </motion.div>
             ))}
           </motion.div>
