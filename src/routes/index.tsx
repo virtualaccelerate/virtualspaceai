@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import {
   Bot, Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
   HeartHandshake, Sparkles, Brain, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/")({
   component: Landing,
