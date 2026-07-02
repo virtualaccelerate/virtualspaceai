@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import {
   Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
   HeartHandshake, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
