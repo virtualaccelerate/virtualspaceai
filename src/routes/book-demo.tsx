@@ -99,81 +99,6 @@ function Header() {
   );
 }
 
-function DemoForm() {
-  const [sent, setSent] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
-
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSent(true);
-  };
-
-  if (sent) {
-    return (
-      <div className="glass-strong rounded-3xl p-8 sm:p-12 text-center">
-        <div className="mx-auto h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-          <Check className="h-6 w-6 text-primary" />
-        </div>
-        <h3 className="font-display text-2xl text-white">Thanks, {form.name || "there"}!</h3>
-        <p className="mt-2 text-white/60">We'll reach out to {form.email} shortly to schedule your demo.</p>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="glass-strong rounded-3xl p-6 sm:p-10 space-y-4">
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Name</label>
-          <input
-            required
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 transition"
-            placeholder="Your full name"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Email</label>
-          <input
-            required
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 transition"
-            placeholder="you@company.com"
-          />
-        </div>
-      </div>
-      <div>
-        <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Company</label>
-        <input
-          value={form.company}
-          onChange={(e) => setForm({ ...form, company: e.target.value })}
-          className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 transition"
-          placeholder="Company name"
-        />
-      </div>
-      <div>
-        <label className="text-xs font-medium text-white/60 uppercase tracking-wide">What are you looking to automate?</label>
-        <textarea
-          rows={4}
-          value={form.message}
-          onChange={(e) => setForm({ ...form, message: e.target.value })}
-          className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 transition resize-none"
-          placeholder="Tell us about your workflows, team size, goals..."
-        />
-      </div>
-      <button
-        type="submit"
-        className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
-      >
-        Book my demo <ArrowRight className="h-4 w-4" />
-      </button>
-    </form>
-  );
-}
-
 function BookDemoPage() {
   const { t } = useTranslation();
 
@@ -184,7 +109,7 @@ function BookDemoPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative px-4 sm:px-6 pt-16 sm:pt-20 pb-8 sm:pb-12">
+      <section className="relative px-4 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-20">
         <div className="mx-auto max-w-3xl text-center">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
@@ -193,19 +118,25 @@ function BookDemoPage() {
             <p className="mt-6 text-white/60 leading-relaxed max-w-xl mx-auto">
               {t("bookDemoPage.subtitle")}
             </p>
+            <a
+              href="mailto:hello@virtualspace.ai?subject=Demo%20Request"
+              className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
+            >
+              {t("bookDemoPage.cta")} <ArrowRight className="h-4 w-4" />
+            </a>
           </motion.div>
         </div>
       </section>
 
-      {/* What's in the Demo — shown BEFORE the form */}
-      <section className="relative px-4 sm:px-6 py-10 sm:py-14">
+      {/* What's in the Demo */}
+      <section className="relative px-4 sm:px-6 py-12 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <motion.div
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
             variants={fadeUp}
-            className="text-center mb-10"
+            className="text-center mb-12"
           >
             <h2 className="font-display text-3xl sm:text-4xl text-white">{t("bookDemoPage.sectionTitle")}</h2>
             <p className="mt-3 text-white/60">{t("bookDemoPage.sectionSubtitle")}</p>
@@ -233,25 +164,6 @@ function BookDemoPage() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Form section */}
-      <section className="relative px-4 sm:px-6 py-12 sm:py-20">
-        <div className="mx-auto max-w-2xl">
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="text-center mb-8"
-          >
-            <h2 className="font-display text-3xl sm:text-4xl text-white">Request your demo</h2>
-            <p className="mt-3 text-white/60">Fill in a few details — we'll get back within one business day.</p>
-          </motion.div>
-          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
-            <DemoForm />
-          </motion.div>
         </div>
       </section>
     </div>
