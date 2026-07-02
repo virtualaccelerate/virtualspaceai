@@ -104,13 +104,24 @@ function BookDemoPage() {
 
   const items = t("bookDemoPage.items", { returnObjects: true }) as Array<{ title: string; body: string }>;
 
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [company, setCompany] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !contact.trim()) return;
+    setSubmitted(true);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
-      {/* Hero */}
+      {/* Hero + Demo Block */}
       <section className="relative px-4 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-20">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-5xl text-center">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
               {t("bookDemoPage.title")}
@@ -118,52 +129,105 @@ function BookDemoPage() {
             <p className="mt-6 text-white/60 leading-relaxed max-w-xl mx-auto">
               {t("bookDemoPage.subtitle")}
             </p>
-            <a
-              href="mailto:hello@virtualspace.ai?subject=Demo%20Request"
-              className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
-            >
-              {t("bookDemoPage.cta")} <ArrowRight className="h-4 w-4" />
-            </a>
           </motion.div>
-        </div>
-      </section>
 
-      {/* What's in the Demo */}
-      <section className="relative px-4 sm:px-6 py-12 sm:py-20">
-        <div className="mx-auto max-w-5xl">
           <motion.div
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
             variants={fadeUp}
-            className="text-center mb-12"
+            className="mt-10 glass-strong rounded-3xl p-6 sm:p-10 text-left"
           >
-            <h2 className="font-display text-3xl sm:text-4xl text-white">{t("bookDemoPage.sectionTitle")}</h2>
-            <p className="mt-3 text-white/60">{t("bookDemoPage.sectionSubtitle")}</p>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {items.map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="glass rounded-2xl p-6 sm:p-8"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 flex-shrink-0 h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Check className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">{item.title}</h3>
-                    <p className="mt-1 text-sm text-white/60 leading-relaxed">{item.body}</p>
-                  </div>
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-10">
+              {/* Left: What's in the Demo */}
+              <div>
+                <h2 className="font-display text-xl sm:text-2xl text-white mb-6">{t("bookDemoPage.sectionTitle")}</h2>
+                <div className="space-y-4">
+                  {items.map((item, i) => (
+                    <motion.div
+                      key={item.title}
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.08, duration: 0.4 }}
+                      className="flex items-start gap-3"
+                    >
+                      <div className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Check className="h-3 w-3 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white text-sm">{item.title}</h3>
+                        <p className="text-sm text-white/60 leading-relaxed">{item.body}</p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+
+              {/* Right: Form */}
+              <div>
+                <h2 className="font-display text-xl sm:text-2xl text-white mb-6">{t("cta.title1")} {t("cta.title2")}</h2>
+                {submitted ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass rounded-2xl p-6 text-center"
+                  >
+                    <div className="mx-auto h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+                      <Check className="h-5 w-5 text-primary" />
+                    </div>
+                    <p className="text-white font-medium">{t("cta.thanks")}</p>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-white/70 mb-1.5">{t("cta.name")}</label>
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        placeholder={t("cta.name")}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-white/70 mb-1.5">{t("cta.contact")}</label>
+                      <input
+                        type="text"
+                        required
+                        value={contact}
+                        onChange={(e) => setContact(e.target.value)}
+                        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        placeholder={t("cta.contact")}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-white/70 mb-1.5">{t("cta.company")}</label>
+                      <input
+                        type="text"
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        placeholder={t("cta.company")}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
+                    >
+                      {t("cta.submit")} <ArrowRight className="h-4 w-4" />
+                    </button>
+                    <div className="flex items-center justify-center gap-4 pt-1">
+                      <span className="text-[11px] text-white/40">{t("cta.note1")}</span>
+                      <span className="text-[11px] text-white/40">{t("cta.note2")}</span>
+                      <span className="text-[11px] text-white/40">{t("cta.note3")}</span>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>
