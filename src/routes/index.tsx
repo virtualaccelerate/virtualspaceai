@@ -10,6 +10,7 @@ import {
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
+import { Brandbook } from "@/components/Brandbook";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -361,6 +362,8 @@ function Landing() {
           </motion.div>
         </div>
       </section>
+
+      <Brandbook />
 
       {/* CTA */}
       <section id="demo" className="relative">
