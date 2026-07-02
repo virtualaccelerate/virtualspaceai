@@ -198,7 +198,6 @@ export function AnimatedTaskTable() {
                                   scale: 1,
                                 }
                           }
-                          transitionEnd={{}}
                           style={{
                             transition:
                               "background-color 0.6s ease, color 0.6s ease, box-shadow 0.6s ease",
