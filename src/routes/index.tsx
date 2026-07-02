@@ -89,7 +89,7 @@ function Header() {
   const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
 
   const otherLinks = [
-    { href: "#product", label: t("nav.product") },
+    { href: "#benefits", label: t("nav.product") },
     { href: "#price", label: t("nav.pricing") },
     { href: "/book-demo", label: t("nav.bookDemo") },
   ];
@@ -117,12 +117,12 @@ function Header() {
                 transition={{ duration: 0.2 }}
                 className="glass-strong absolute left-0 mt-3 w-40 rounded-2xl p-2 z-50"
               >
-                <a href="#mentors" onClick={() => setLearnOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition">
+                <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
                   {t("nav.mentors")}
-                </a>
-                <a href="#courses" onClick={() => setLearnOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition">
+                </span>
+                <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
                   {t("nav.courses")}
-                </a>
+                </span>
               </motion.div>
             )}
           </div>
@@ -139,9 +139,9 @@ function Header() {
 
         <div className="flex items-center gap-2">
           <div className="hidden lg:flex items-center gap-3 text-sm">
-            <a href="#login" className="text-white/70 hover:text-white transition whitespace-nowrap">
+            <span className="text-white/40 cursor-default whitespace-nowrap">
               {t("nav.login")}
-            </a>
+            </span>
           </div>
 
           <ThemeToggle />
@@ -168,12 +168,12 @@ function Header() {
                     </button>
                     {mobileLearnOpen && (
                       <div className="flex flex-col gap-2 mt-2 ml-4">
-                        <a href="#mentors" onClick={() => setMobileOpen(false)} className="text-base text-white/70 hover:text-white transition">
+                        <span className="text-base text-white/40 cursor-default">
                           {t("nav.mentors")}
-                        </a>
-                        <a href="#courses" onClick={() => setMobileOpen(false)} className="text-base text-white/70 hover:text-white transition">
+                        </span>
+                        <span className="text-base text-white/40 cursor-default">
                           {t("nav.courses")}
-                        </a>
+                        </span>
                       </div>
                     )}
                   </div>
@@ -188,9 +188,9 @@ function Header() {
                     </a>
                   ))}
                   <hr className="border-white/10 my-2" />
-                  <a href="#login" onClick={() => setMobileOpen(false)} className="text-lg text-white/80 hover:text-white transition">
+                  <span className="text-lg text-white/40 cursor-default">
                     {t("nav.login")}
-                  </a>
+                  </span>
                   <a
                     href="#demo"
                     onClick={() => setMobileOpen(false)}
