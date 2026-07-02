@@ -259,6 +259,68 @@ function ChatBubble({ who, time, children, accent }: { who: string; time: string
   );
 }
 
+function DemoForm() {
+  const { t, i18n } = useTranslation();
+  const submit = useServerFn(submitDemoRequest);
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [company, setCompany] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !contact.trim() || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await submit({
+        data: {
+          name: name.trim(),
+          contact: contact.trim(),
+          company: company.trim() || undefined,
+          language: i18n.language,
+        },
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="relative mt-10 max-w-xl mx-auto glass rounded-2xl p-6 text-center">
+        <div className="mx-auto h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+          <Check className="h-5 w-5 text-primary" />
+        </div>
+        <p className="text-white font-medium">{t("cta.thanks")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="relative mt-10 max-w-xl mx-auto grid gap-3">
+      <input required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("cta.name")}
+        className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+      <input required type="text" maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("cta.contact")}
+        className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+      <input maxLength={200} value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t("cta.company")}
+        className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+      {error && <p className="text-xs text-destructive text-left px-2">{error}</p>}
+      <button type="submit" disabled={loading}
+        className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)] disabled:opacity-60 disabled:cursor-not-allowed">
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t("cta.submit")} <ArrowRight className="h-4 w-4" /></>}
+      </button>
+    </form>
+  );
+}
+
+
 function Landing() {
   const { t, i18n } = useTranslation();
 
