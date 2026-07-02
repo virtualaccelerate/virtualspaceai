@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
-  Bot, Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
-  HeartHandshake, Sparkles, Brain, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu,
+  Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
+  HeartHandshake, BellRing, BookOpen,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
@@ -408,7 +408,7 @@ function Landing() {
                   {t("newEra.eyebrow")}
                 </p>
                 <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] text-white">
-                  {t("newEra.title")} <em className="italic grad-accent">{t("newEra.titleAccent")}</em>
+                  {t("newEra.title")} <span className="grad-accent">{t("newEra.titleAccent")}</span>
                 </h2>
                 <p className="mt-6 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl">
                   {t("newEra.body1")}
@@ -453,14 +453,14 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("features.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("features.title")} <em className="italic grad-accent">{t("features.titleAccent")}</em>
+              {t("features.title")} <span className="grad-accent">{t("features.titleAccent")}</span>
             </h2>
           </motion.div>
 
           <motion.div
             initial="hidden" whileInView="show" viewport={{ once: true, margin: "-60px" }}
             variants={{ show: { transition: { staggerChildren: 0.12 } } }}
-            className="mt-12 sm:mt-16 grid md:grid-cols-3 gap-4 sm:gap-6"
+            className="mt-12 sm:mt-16 grid md:grid-cols-2 gap-4 sm:gap-6"
           >
             <GlassCard
               tag={t("features.kb.tag")}
@@ -474,20 +474,6 @@ function Landing() {
               <ChatBubble who="@Brain" time="9:12" accent>
                 Onboarding v3.2 — <span className="text-primary">/docs/eng-onboarding</span>. Includes access map + first-week checklist.
               </ChatBubble>
-            </GlassCard>
-
-            <GlassCard
-              tag={t("features.owner.tag")}
-              title={t("features.owner.title")}
-              body={t("features.owner.body")}
-              icon={Brain}
-              gradient="radial-gradient(circle, oklch(0.82 0.15 135 / 0.75), transparent 70%)"
-            >
-              <div className="glass rounded-2xl p-4 space-y-2 text-xs sm:text-sm">
-                <div className="flex justify-between text-white/60"><span>MRR</span><span className="text-white font-semibold">$142k <span className="text-[oklch(0.75_0.2_150)]">+8%</span></span></div>
-                <div className="flex justify-between text-white/60"><span>Pipeline</span><span className="text-white font-semibold">$610k</span></div>
-                <div className="flex justify-between text-white/60"><span>Needs you</span><span className="text-primary font-semibold">3 items</span></div>
-              </div>
             </GlassCard>
 
             <GlassCard
@@ -555,7 +541,7 @@ function Landing() {
           >
             <p className="text-xs uppercase tracking-[0.25em] text-primary/80">{t("audience.eyebrow")}</p>
             <h2 className="mt-4 font-display text-4xl sm:text-6xl leading-tight text-white">
-              {t("audience.title")} <em className="italic grad-accent">{t("audience.titleAccent")}</em>
+              {t("audience.title")} <span className="grad-accent">{t("audience.titleAccent")}</span>
             </h2>
           </motion.div>
           <motion.div
@@ -593,7 +579,7 @@ function Landing() {
             <div className="absolute inset-0 opacity-40 pointer-events-none"
               style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
             <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <em className="italic grad-accent">{t("cta.title2")}</em>
+              {t("cta.title1")} <span className="grad-accent">{t("cta.title2")}</span>
             </h2>
             <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
 
