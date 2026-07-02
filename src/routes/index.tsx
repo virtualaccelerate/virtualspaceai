@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
-  Bot, Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
-  HeartHandshake, Sparkles, Brain, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu,
+  Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
+  HeartHandshake, BellRing, BookOpen,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
