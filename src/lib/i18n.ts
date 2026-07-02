@@ -21,7 +21,7 @@ const resources = {
         tagline: "Start today. No setup required.",
       },
       newEra: {
-        eyebrow: "The shift",
+        eyebrow: "",
         title: "New era for business",
         titleAccent: "with AI agents.",
         body1: "Teams no longer manage every routine task by hand. AI agents organize, analyze and automate — all inside one workspace.",
@@ -135,7 +135,7 @@ const resources = {
         tagline: "Начните сегодня. Без сложной настройки.",
       },
       newEra: {
-        eyebrow: "Сдвиг",
+        eyebrow: "",
         title: "Новая эра для бизнеса",
         titleAccent: "с AI-агентами.",
         body1: "Командам больше не нужно вручную вести каждую рутину. AI-агенты организуют, анализируют и автоматизируют — в одном пространстве.",
@@ -249,7 +249,7 @@ const resources = {
         tagline: "Empieza hoy. Sin configuración compleja.",
       },
       newEra: {
-        eyebrow: "El cambio",
+        eyebrow: "",
         title: "Nueva era para los negocios",
         titleAccent: "con agentes de IA.",
         body1: "Los equipos ya no gestionan cada tarea manualmente. Los agentes organizan, analizan y automatizan — todo en un espacio.",
