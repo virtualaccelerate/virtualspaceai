@@ -89,7 +89,7 @@ function Header() {
   const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
 
   const otherLinks = [
-    { href: "#product", label: t("nav.product") },
+    { href: "#benefits", label: t("nav.product") },
     { href: "#price", label: t("nav.pricing") },
     { href: "/book-demo", label: t("nav.bookDemo") },
   ];
