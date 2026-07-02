@@ -11,6 +11,7 @@ import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
+import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/")({
@@ -529,6 +530,8 @@ function Landing() {
           </motion.div>
         </div>
       </section>
+
+      <AnimatedTaskTable />
 
       {/* AUDIENCE */}
       <section id="price" className="relative">
