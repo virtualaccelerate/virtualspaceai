@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import {
   Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
   HeartHandshake, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
@@ -85,11 +85,10 @@ function ThemeToggle() {
 function Header() {
   const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [learnOpen, setLearnOpen] = useState(false);
+  const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
 
-  const navLinks = [
-    { href: "#learn", label: t("nav.learn") },
-    { href: "#mentors", label: t("nav.mentors") },
-    { href: "#courses", label: t("nav.courses") },
+  const otherLinks = [
     { href: "#product", label: t("nav.product") },
     { href: "#price", label: t("nav.pricing") },
     { href: "#demo", label: t("nav.bookDemo") },
@@ -104,7 +103,30 @@ function Header() {
         </a>
 
         <nav className="hidden lg:flex items-center gap-5 text-sm">
-          {navLinks.map((link) => (
+          <div className="relative">
+            <button
+              onClick={() => setLearnOpen((o) => !o)}
+              className="text-white/70 hover:text-white transition whitespace-nowrap flex items-center gap-1"
+            >
+              {t("nav.learn")} <ChevronDown className={`h-3 w-3 transition-transform ${learnOpen ? "rotate-180" : ""}`} />
+            </button>
+            {learnOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="glass-strong absolute left-0 mt-3 w-40 rounded-2xl p-2 z-50"
+              >
+                <a href="#mentors" onClick={() => setLearnOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition">
+                  {t("nav.mentors")}
+                </a>
+                <a href="#courses" onClick={() => setLearnOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition">
+                  {t("nav.courses")}
+                </a>
+              </motion.div>
+            )}
+          </div>
+          {otherLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -119,9 +141,6 @@ function Header() {
           <div className="hidden lg:flex items-center gap-3 text-sm">
             <a href="#login" className="text-white/70 hover:text-white transition whitespace-nowrap">
               {t("nav.login")}
-            </a>
-            <a href="#signup" className="text-white/70 hover:text-white transition whitespace-nowrap">
-              {t("nav.signup")}
             </a>
           </div>
 
@@ -140,7 +159,25 @@ function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="glass-strong w-[300px] border-white/10">
                 <nav className="flex flex-col gap-4 mt-8">
-                  {navLinks.map((link) => (
+                  <div>
+                    <button
+                      onClick={() => setMobileLearnOpen((o) => !o)}
+                      className="text-lg text-white/80 hover:text-white transition flex items-center gap-1"
+                    >
+                      {t("nav.learn")} <ChevronDown className={`h-4 w-4 transition-transform ${mobileLearnOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {mobileLearnOpen && (
+                      <div className="flex flex-col gap-2 mt-2 ml-4">
+                        <a href="#mentors" onClick={() => setMobileOpen(false)} className="text-base text-white/70 hover:text-white transition">
+                          {t("nav.mentors")}
+                        </a>
+                        <a href="#courses" onClick={() => setMobileOpen(false)} className="text-base text-white/70 hover:text-white transition">
+                          {t("nav.courses")}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  {otherLinks.map((link) => (
                     <a
                       key={link.href}
                       href={link.href}
@@ -153,9 +190,6 @@ function Header() {
                   <hr className="border-white/10 my-2" />
                   <a href="#login" onClick={() => setMobileOpen(false)} className="text-lg text-white/80 hover:text-white transition">
                     {t("nav.login")}
-                  </a>
-                  <a href="#signup" onClick={() => setMobileOpen(false)} className="text-lg text-white/80 hover:text-white transition">
-                    {t("nav.signup")}
                   </a>
                   <a
                     href="#demo"
