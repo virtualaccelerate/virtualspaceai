@@ -584,7 +584,8 @@ function Landing() {
             className="mt-12 grid md:grid-cols-3 gap-4 sm:gap-6"
           >
             {audience.map((a) => {
-              const bestFor = t(`audience.${a.key}.bestFor`, { returnObjects: true }) as string[];
+              const bestForRaw = t(`audience.${a.key}.bestFor`, { returnObjects: true });
+              const bestFor = Array.isArray(bestForRaw) ? bestForRaw : [];
               return (
                 <motion.div
                   key={a.key} variants={fadeUp}
