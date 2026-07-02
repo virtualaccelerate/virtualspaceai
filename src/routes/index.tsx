@@ -404,10 +404,10 @@ function Landing() {
       <footer className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-md bg-gradient-to-br from-[oklch(0.7_0.16_155)] to-[oklch(0.95_0.02_150)]" />
-            <span className="font-display text-lg text-white">Agentix</span>
+            <VirtualSpaceLogo className="text-primary" size={22} />
+            <span className="font-display font-extrabold tracking-tight text-base text-white">Virtual Space</span>
           </div>
-          <p>© {new Date().getFullYear()} Agentix. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Virtual Space. All rights reserved.</p>
         </div>
       </footer>
     </div>
