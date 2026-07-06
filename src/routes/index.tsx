@@ -767,8 +767,8 @@ function Landing() {
             <div>
               <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.accountLabel")}</p>
               <ul className="space-y-2 text-sm text-white/60">
-                <li><span className="hover:text-white transition cursor-default">{t("nav.login")}</span></li>
-                <li><span className="hover:text-white transition cursor-default">{t("nav.signup")}</span></li>
+                <li><Link to="/auth" className="hover:text-white transition">{t("nav.login")}</Link></li>
+                <li><Link to="/auth" className="hover:text-white transition">{t("nav.signup")}</Link></li>
               </ul>
             </div>
           </div>
