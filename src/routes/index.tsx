@@ -15,6 +15,8 @@ import { Brandbook } from "@/components/Brandbook";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
+import vaLogoAsset from "@/assets/Logo_White_1.png.asset.json";
+
 
 const SITE_URL = "https://virtualspaceai.lovable.app";
 const OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce";
@@ -128,9 +130,19 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
       <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
-        <a href="#top" className="flex items-center gap-2 shrink-0">
-          <VirtualSpaceLogo className="text-primary" size={28} />
-          <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
+        <a href="#top" className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <VirtualSpaceLogo className="text-primary" size={28} />
+            <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
+          </div>
+          <div className="flex flex-col items-start pl-2 sm:pl-3 border-l border-white/15">
+            <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/40 leading-none">Powered by</span>
+            <img
+              src={vaLogoAsset.url}
+              alt="Virtual Accelerate"
+              className="h-3.5 sm:h-5 w-auto mt-0.5 rounded"
+            />
+          </div>
         </a>
 
         <nav className="hidden lg:flex items-center gap-5 text-sm">
@@ -729,6 +741,20 @@ function Landing() {
         </div>
       </section>
 
+      {/* POWERED BY */}
+      <section className="relative">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-12 text-center">
+          <div className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4">
+            <span className="text-xs uppercase tracking-wider text-white/50">Powered by</span>
+            <img
+              src={vaLogoAsset.url}
+              alt="Virtual Accelerate"
+              className="h-7 sm:h-8 w-auto rounded"
+            />
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
@@ -772,9 +798,8 @@ function Landing() {
               </ul>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-white/40">
             <p>{t("footer.copyright")}</p>
-            <p>{t("footer.powered")}</p>
           </div>
         </div>
       </footer>
