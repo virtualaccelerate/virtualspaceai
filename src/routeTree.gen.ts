@@ -15,7 +15,13 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
+import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticated/app.docs'
+import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
+import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
+import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -46,9 +52,40 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
+  id: '/time',
+  path: '/time',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppClientsRoute = AuthenticatedAppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppAnalyticsRoute =
+  AuthenticatedAppAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppAgentsRoute = AuthenticatedAppAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 
@@ -58,7 +95,13 @@ export interface FileRoutesByFullPath {
   '/book-demo': typeof BookDemoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/app/agents': typeof AuthenticatedAppAgentsRoute
+  '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/clients': typeof AuthenticatedAppClientsRoute
+  '/app/docs': typeof AuthenticatedAppDocsRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -66,7 +109,13 @@ export interface FileRoutesByTo {
   '/book-demo': typeof BookDemoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/app/agents': typeof AuthenticatedAppAgentsRoute
+  '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/clients': typeof AuthenticatedAppClientsRoute
+  '/app/docs': typeof AuthenticatedAppDocsRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -76,7 +125,13 @@ export interface FileRoutesById {
   '/book-demo': typeof BookDemoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/app/agents': typeof AuthenticatedAppAgentsRoute
+  '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
+  '/_authenticated/app/docs': typeof AuthenticatedAppDocsRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,9 +141,27 @@ export interface FileRouteTypes {
     | '/book-demo'
     | '/sitemap.xml'
     | '/app'
+    | '/app/agents'
+    | '/app/analytics'
+    | '/app/clients'
+    | '/app/docs'
     | '/app/profile'
+    | '/app/tasks'
+    | '/app/time'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/book-demo' | '/sitemap.xml' | '/app' | '/app/profile'
+  to:
+    | '/'
+    | '/auth'
+    | '/book-demo'
+    | '/sitemap.xml'
+    | '/app'
+    | '/app/agents'
+    | '/app/analytics'
+    | '/app/clients'
+    | '/app/docs'
+    | '/app/profile'
+    | '/app/tasks'
+    | '/app/time'
   id:
     | '__root__'
     | '/'
@@ -97,7 +170,13 @@ export interface FileRouteTypes {
     | '/book-demo'
     | '/sitemap.xml'
     | '/_authenticated/app'
+    | '/_authenticated/app/agents'
+    | '/_authenticated/app/analytics'
+    | '/_authenticated/app/clients'
+    | '/_authenticated/app/docs'
     | '/_authenticated/app/profile'
+    | '/_authenticated/app/tasks'
+    | '/_authenticated/app/time'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -152,6 +231,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/time': {
+      id: '/_authenticated/app/time'
+      path: '/time'
+      fullPath: '/app/time'
+      preLoaderRoute: typeof AuthenticatedAppTimeRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/tasks': {
+      id: '/_authenticated/app/tasks'
+      path: '/tasks'
+      fullPath: '/app/tasks'
+      preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/profile': {
       id: '/_authenticated/app/profile'
       path: '/profile'
@@ -159,15 +252,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/docs': {
+      id: '/_authenticated/app/docs'
+      path: '/docs'
+      fullPath: '/app/docs'
+      preLoaderRoute: typeof AuthenticatedAppDocsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/clients': {
+      id: '/_authenticated/app/clients'
+      path: '/clients'
+      fullPath: '/app/clients'
+      preLoaderRoute: typeof AuthenticatedAppClientsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/analytics': {
+      id: '/_authenticated/app/analytics'
+      path: '/analytics'
+      fullPath: '/app/analytics'
+      preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/agents': {
+      id: '/_authenticated/app/agents'
+      path: '/agents'
+      fullPath: '/app/agents'
+      preLoaderRoute: typeof AuthenticatedAppAgentsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppAgentsRoute: typeof AuthenticatedAppAgentsRoute
+  AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
+  AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
+  AuthenticatedAppDocsRoute: typeof AuthenticatedAppDocsRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
+  AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppAgentsRoute: AuthenticatedAppAgentsRoute,
+  AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
+  AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
+  AuthenticatedAppDocsRoute: AuthenticatedAppDocsRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
+  AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
