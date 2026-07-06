@@ -782,7 +782,7 @@ if (!i18n.isInitialized) {
     supportedLngs: ["en", "ru", "es", "de", "fr"],
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
-    initImmediate: false,
+    
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],
       caches: ["localStorage"],
