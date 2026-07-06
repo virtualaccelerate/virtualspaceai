@@ -84,7 +84,7 @@ export function AnimatedTaskTable() {
     const pickRandom = () => {
       const next = new Set<string>();
       // pick 1-2 active per department
-      TASKS.forEach((row, dIdx) => {
+      tasks.forEach((row, dIdx) => {
         const count = 1 + Math.floor(Math.random() * 2);
         const indices = new Set<number>();
         while (indices.size < count) {
@@ -174,7 +174,7 @@ export function AnimatedTaskTable() {
                     {dept}
                   </span>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {TASKS[deptIdx]?.map((label, taskIdx) => {
+                    {tasks[deptIdx]?.map((label, taskIdx) => {
                       const key = `${deptIdx}-${taskIdx}`;
                       const isActive = activeKeys.has(key);
                       return (
