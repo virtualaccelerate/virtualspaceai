@@ -447,6 +447,34 @@ const resources = {
         contact: "Contacto",
         copyright: "© Virtual Space. Todos los derechos reservados.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Espacio", aiAgents: "Agentes IA", automation: "Automatización", analytics: "Analítica" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "Un espacio.",
+          accent: "Todo conectado.",
+          desc: "Equipos, herramientas, flujos y agentes IA en un solo espacio operativo.",
+          bullets: ["Agentes IA en el centro", "Equipo, Tareas, Herramientas y Datos en órbita", "Una capa conectada"],
+          orbit: { ai: "Agentes IA", tasks: "Tareas", data: "Datos", tools: "Herramientas", team: "Equipo" },
+        },
+        tone: {
+          title: "Inteligente,",
+          accent: "pero humano.",
+          items: [
+            { title: "Claro antes que complejo", body: "Explicamos con simplicidad." },
+            { title: "Enfoque en el negocio", body: "Nos centramos en resultados reales." },
+            { title: "Confianza serena", body: "Fiable y profesional." },
+            { title: "Inteligente pero humano", body: "La IA potencia, las personas lideran." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Limpieza de logs", "Flujo ETL", "Validación", "Cifrado", "Backup"],
+          ["Scoring de leads", "Contacto", "Seguimiento", "Reuniones", "Cierre"],
+          ["KPIs", "Insights", "Previsión", "Auditoría", "Visualización"],
+          ["Inventario", "Logística", "Compras", "Cumplimiento", "Despacho"],
+        ],
       },
     },
   },
