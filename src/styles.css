@@ -153,6 +153,10 @@ html.light .placeholder\:text-white\/40::placeholder { color: oklch(0.42 0.02 24
 html.light .placeholder\:text-white\/30::placeholder { color: oklch(0.54 0.02 240 / 0.55); }
 html.light .focus\:ring-primary\/50:focus { --tw-ring-color: oklch(0.72 0.22 138 / 0.5); }
 
+/* Theme-aware Virtual Accelerate logo: dark vs light variants */
+html.light .va-logo-dark { display: none !important; }
+html:not(.light) .va-logo-light { display: none !important; }
+
 /* Adaptive accent gradient text — bright greens on dark, deep greens on light */
 .grad-accent {
   background-image: linear-gradient(90deg, oklch(0.78 0.17 155), oklch(0.98 0.01 150));
