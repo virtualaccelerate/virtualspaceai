@@ -15,7 +15,8 @@ import { Brandbook } from "@/components/Brandbook";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
-import vaLogoAsset from "@/assets/Untitled_design_21.png.asset.json";
+import vaLogoDark from "@/assets/Untitled_design_21.png.asset.json";
+import vaLogoLight from "@/assets/Untitled_design_22.png.asset.json";
 
 
 const SITE_URL = "https://virtualspaceai.lovable.app";
@@ -138,9 +139,14 @@ function Header() {
           <div className="flex flex-col items-start pl-2 sm:pl-3 border-l border-white/15">
             <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/40 leading-none">Powered by</span>
             <img
-              src={vaLogoAsset.url}
+              src={vaLogoDark.url}
               alt="Virtual Accelerate"
-              className="h-3.5 sm:h-5 w-auto mt-0.5 rounded"
+              className="va-logo-dark h-3.5 sm:h-5 w-auto mt-0.5 rounded"
+            />
+            <img
+              src={vaLogoLight.url}
+              alt="Virtual Accelerate"
+              className="va-logo-light h-3.5 sm:h-5 w-auto mt-0.5"
             />
           </div>
         </a>
@@ -747,9 +753,14 @@ function Landing() {
           <div className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4">
             <span className="text-xs uppercase tracking-wider text-white/50">Powered by</span>
             <img
-              src={vaLogoAsset.url}
+              src={vaLogoDark.url}
               alt="Virtual Accelerate"
-              className="h-7 sm:h-8 w-auto rounded"
+              className="va-logo-dark h-7 sm:h-8 w-auto rounded"
+            />
+            <img
+              src={vaLogoLight.url}
+              alt="Virtual Accelerate"
+              className="va-logo-light h-7 sm:h-8 w-auto"
             />
           </div>
         </div>
