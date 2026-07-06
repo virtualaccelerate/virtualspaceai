@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { Bot, LayoutGrid, Users, BarChart3, ListChecks } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
 const fadeUp = {
@@ -27,12 +28,13 @@ function SectionHeader({ number, label, title, accent }: { number: string; label
 
 /* 01 · ONE WORKSPACE — orbital diagram */
 function OrbitDiagram() {
+  const { t } = useTranslation();
   const nodes = [
-    { icon: Bot, label: "AI Agents", angle: -90 },
-    { icon: ListChecks, label: "Tasks", angle: -18 },
-    { icon: BarChart3, label: "Data", angle: 54 },
-    { icon: LayoutGrid, label: "Tools", angle: 126 },
-    { icon: Users, label: "Team", angle: 198 },
+    { icon: Bot, label: t("brandbook.oneWorkspace.orbit.ai"), angle: -90 },
+    { icon: ListChecks, label: t("brandbook.oneWorkspace.orbit.tasks"), angle: -18 },
+    { icon: BarChart3, label: t("brandbook.oneWorkspace.orbit.data"), angle: 54 },
+    { icon: LayoutGrid, label: t("brandbook.oneWorkspace.orbit.tools"), angle: 126 },
+    { icon: Users, label: t("brandbook.oneWorkspace.orbit.team"), angle: 198 },
   ];
   return (
     <div className="relative aspect-square w-full max-w-[520px] mx-auto">
@@ -75,17 +77,20 @@ function OrbitDiagram() {
 }
 
 function OneWorkspace() {
+  const { t } = useTranslation();
+  const rawBullets = t("brandbook.oneWorkspace.bullets", { returnObjects: true });
+  const bullets = Array.isArray(rawBullets) ? (rawBullets as string[]) : [];
   return (
     <section className="relative">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
         <div className="grid md:grid-cols-2 gap-10 sm:gap-16 items-center">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
-            <SectionHeader number="" label="" title="One workspace." accent="Everything connected." />
+            <SectionHeader number="" label="" title={t("brandbook.oneWorkspace.title")} accent={t("brandbook.oneWorkspace.accent")} />
             <p className="mt-6 text-white/60 leading-relaxed max-w-md">
-              Teams, tools, workflows and AI agents in one operating space.
+              {t("brandbook.oneWorkspace.desc")}
             </p>
             <ul className="mt-8 space-y-3 text-sm text-white/75">
-              {["AI Agents at the core", "Team, Tasks, Tools & Data in orbit", "One connected layer"].map((x) => (
+              {bullets.map((x) => (
                 <li key={x} className="flex items-center gap-3">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" /> {x}
                 </li>
@@ -103,24 +108,21 @@ function OneWorkspace() {
 
 /* 02 · TONE OF VOICE */
 function VoiceKeywords() {
-  const tone = [
-    { title: "Clear over complex", body: "We explain things simply." },
-    { title: "Business-first", body: "We focus on real outcomes." },
-    { title: "Calm confidence", body: "Reliable and professional." },
-    { title: "Smart but human", body: "AI empowers, people lead." },
-  ];
+  const { t } = useTranslation();
+  const rawTone = t("brandbook.tone.items", { returnObjects: true });
+  const tone = Array.isArray(rawTone) ? (rawTone as Array<{ title: string; body: string }>) : [];
   return (
     <section className="relative">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
-        <SectionHeader number="" label="" title="Smart," accent="but human." />
+        <SectionHeader number="" label="" title={t("brandbook.tone.title")} accent={t("brandbook.tone.accent")} />
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {tone.map((t) => (
-            <div key={t.title} className="glass rounded-2xl p-5">
+          {tone.map((item) => (
+            <div key={item.title} className="glass rounded-2xl p-5">
               <div className="flex items-center gap-2 text-primary">
                 <Sparkles className="h-4 w-4" />
-                <p className="font-semibold text-white">{t.title}</p>
+                <p className="font-semibold text-white">{item.title}</p>
               </div>
-              <p className="mt-2 text-sm text-white/60">{t.body}</p>
+              <p className="mt-2 text-sm text-white/60">{item.body}</p>
             </div>
           ))}
         </div>

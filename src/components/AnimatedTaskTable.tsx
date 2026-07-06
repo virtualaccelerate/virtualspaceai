@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 type Lang = "en" | "ru" | "es" | "de" | "fr";
@@ -60,7 +60,7 @@ const COPY: Record<Lang, {
   },
 };
 
-const TASKS: string[][] = [
+const FALLBACK_TASKS: string[][] = [
   ["Cleaning Logs", "ETL Flow", "Validation", "Encryption", "Backup"],
   ["Lead Scoring", "Outreach", "Follow-up", "Meeting Set", "Closing Docs"],
   ["KPI Tracking", "Insight Gen", "Forecasting", "Audit", "Visualizer"],
@@ -68,9 +68,14 @@ const TASKS: string[][] = [
 ];
 
 export function AnimatedTaskTable() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const langCode = (i18n.language?.split("-")[0] ?? "en") as Lang;
   const copy = COPY[langCode] ?? COPY.en;
+
+  const tasks = useMemo<string[][]>(() => {
+    const raw = t("taskTable.tasks", { returnObjects: true });
+    return Array.isArray(raw) ? (raw as string[][]) : FALLBACK_TASKS;
+  }, [t, i18n.language]);
 
   // Random active tasks that cycle
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
@@ -79,7 +84,7 @@ export function AnimatedTaskTable() {
     const pickRandom = () => {
       const next = new Set<string>();
       // pick 1-2 active per department
-      TASKS.forEach((row, dIdx) => {
+      tasks.forEach((row, dIdx) => {
         const count = 1 + Math.floor(Math.random() * 2);
         const indices = new Set<number>();
         while (indices.size < count) {
@@ -92,7 +97,7 @@ export function AnimatedTaskTable() {
     pickRandom();
     const id = setInterval(pickRandom, 1400);
     return () => clearInterval(id);
-  }, []);
+  }, [tasks]);
 
   return (
     <section id="tasks" className="relative">
@@ -169,7 +174,7 @@ export function AnimatedTaskTable() {
                     {dept}
                   </span>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {TASKS[deptIdx]?.map((label, taskIdx) => {
+                    {tasks[deptIdx]?.map((label, taskIdx) => {
                       const key = `${deptIdx}-${taskIdx}`;
                       const isActive = activeKeys.has(key);
                       return (

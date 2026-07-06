@@ -742,10 +742,10 @@ function Landing() {
             <div>
               <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.productLabel")}</p>
               <ul className="space-y-2 text-sm text-white/60">
-                <li><span className="hover:text-white transition cursor-default">Workspace</span></li>
-                <li><span className="hover:text-white transition cursor-default">AI Agents</span></li>
-                <li><span className="hover:text-white transition cursor-default">Automation</span></li>
-                <li><span className="hover:text-white transition cursor-default">Analytics</span></li>
+                <li><span className="hover:text-white transition cursor-default">{t("footer.productItems.workspace")}</span></li>
+                <li><span className="hover:text-white transition cursor-default">{t("footer.productItems.aiAgents")}</span></li>
+                <li><span className="hover:text-white transition cursor-default">{t("footer.productItems.automation")}</span></li>
+                <li><span className="hover:text-white transition cursor-default">{t("footer.productItems.analytics")}</span></li>
               </ul>
             </div>
             <div>

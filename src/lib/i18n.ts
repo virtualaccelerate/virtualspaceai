@@ -137,6 +137,34 @@ const resources = {
         contact: "Contact",
         copyright: "© Virtual Space. All rights reserved.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Workspace", aiAgents: "AI Agents", automation: "Automation", analytics: "Analytics" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "One workspace.",
+          accent: "Everything connected.",
+          desc: "Teams, tools, workflows and AI agents in one operating space.",
+          bullets: ["AI Agents at the core", "Team, Tasks, Tools & Data in orbit", "One connected layer"],
+          orbit: { ai: "AI Agents", tasks: "Tasks", data: "Data", tools: "Tools", team: "Team" },
+        },
+        tone: {
+          title: "Smart,",
+          accent: "but human.",
+          items: [
+            { title: "Clear over complex", body: "We explain things simply." },
+            { title: "Business-first", body: "We focus on real outcomes." },
+            { title: "Calm confidence", body: "Reliable and professional." },
+            { title: "Smart but human", body: "AI empowers, people lead." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Cleaning Logs", "ETL Flow", "Validation", "Encryption", "Backup"],
+          ["Lead Scoring", "Outreach", "Follow-up", "Meeting Set", "Closing Docs"],
+          ["KPI Tracking", "Insight Gen", "Forecasting", "Audit", "Visualizer"],
+          ["Inventory", "Logistics", "Procurement", "Compliance", "Dispatch"],
+        ],
       },
     },
   },
@@ -274,6 +302,34 @@ const resources = {
         contact: "Контакты",
         copyright: "© Virtual Space. Все права защищены.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Пространство", aiAgents: "ИИ-агенты", automation: "Автоматизация", analytics: "Аналитика" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "Одно пространство.",
+          accent: "Всё связано.",
+          desc: "Команды, инструменты, процессы и ИИ-агенты в одном рабочем пространстве.",
+          bullets: ["ИИ-агенты в центре", "Команда, задачи, инструменты и данные на орбите", "Один связанный слой"],
+          orbit: { ai: "ИИ-агенты", tasks: "Задачи", data: "Данные", tools: "Инструменты", team: "Команда" },
+        },
+        tone: {
+          title: "Умно,",
+          accent: "но по-человечески.",
+          items: [
+            { title: "Просто о сложном", body: "Объясняем понятно." },
+            { title: "Ориентир на бизнес", body: "Фокус на реальных результатах." },
+            { title: "Спокойная уверенность", body: "Надёжно и профессионально." },
+            { title: "Умно, но по-человечески", body: "ИИ помогает — решают люди." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Очистка логов", "ETL-поток", "Валидация", "Шифрование", "Бэкап"],
+          ["Скоринг лидов", "Аутрич", "Follow-up", "Встреча", "Закрытие"],
+          ["KPI-трекинг", "Инсайты", "Прогноз", "Аудит", "Визуализация"],
+          ["Склад", "Логистика", "Закупки", "Комплаенс", "Отгрузка"],
+        ],
       },
     },
   },
@@ -391,6 +447,34 @@ const resources = {
         contact: "Contacto",
         copyright: "© Virtual Space. Todos los derechos reservados.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Espacio", aiAgents: "Agentes IA", automation: "Automatización", analytics: "Analítica" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "Un espacio.",
+          accent: "Todo conectado.",
+          desc: "Equipos, herramientas, flujos y agentes IA en un solo espacio operativo.",
+          bullets: ["Agentes IA en el centro", "Equipo, Tareas, Herramientas y Datos en órbita", "Una capa conectada"],
+          orbit: { ai: "Agentes IA", tasks: "Tareas", data: "Datos", tools: "Herramientas", team: "Equipo" },
+        },
+        tone: {
+          title: "Inteligente,",
+          accent: "pero humano.",
+          items: [
+            { title: "Claro antes que complejo", body: "Explicamos con simplicidad." },
+            { title: "Enfoque en el negocio", body: "Nos centramos en resultados reales." },
+            { title: "Confianza serena", body: "Fiable y profesional." },
+            { title: "Inteligente pero humano", body: "La IA potencia, las personas lideran." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Limpieza de logs", "Flujo ETL", "Validación", "Cifrado", "Backup"],
+          ["Scoring de leads", "Contacto", "Seguimiento", "Reuniones", "Cierre"],
+          ["KPIs", "Insights", "Previsión", "Auditoría", "Visualización"],
+          ["Inventario", "Logística", "Compras", "Cumplimiento", "Despacho"],
+        ],
       },
     },
   },
@@ -508,6 +592,34 @@ const resources = {
         contact: "Kontakt",
         copyright: "© Virtual Space. Alle Rechte vorbehalten.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Workspace", aiAgents: "KI-Agenten", automation: "Automatisierung", analytics: "Analytik" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "Ein Workspace.",
+          accent: "Alles verbunden.",
+          desc: "Teams, Tools, Workflows und KI-Agenten in einem Betriebsraum.",
+          bullets: ["KI-Agenten im Zentrum", "Team, Aufgaben, Tools & Daten im Orbit", "Eine verbundene Ebene"],
+          orbit: { ai: "KI-Agenten", tasks: "Aufgaben", data: "Daten", tools: "Tools", team: "Team" },
+        },
+        tone: {
+          title: "Smart,",
+          accent: "aber menschlich.",
+          items: [
+            { title: "Klar statt komplex", body: "Wir erklären es einfach." },
+            { title: "Business zuerst", body: "Wir fokussieren auf echte Ergebnisse." },
+            { title: "Ruhige Souveränität", body: "Zuverlässig und professionell." },
+            { title: "Smart, aber menschlich", body: "KI unterstützt, Menschen führen." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Log-Bereinigung", "ETL-Flow", "Validierung", "Verschlüsselung", "Backup"],
+          ["Lead-Scoring", "Outreach", "Follow-up", "Termin", "Abschluss"],
+          ["KPI-Tracking", "Insights", "Prognose", "Audit", "Visualisierung"],
+          ["Lager", "Logistik", "Einkauf", "Compliance", "Versand"],
+        ],
       },
     },
   },
@@ -625,6 +737,34 @@ const resources = {
         contact: "Contact",
         copyright: "© Virtual Space. Tous droits réservés.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Espace", aiAgents: "Agents IA", automation: "Automatisation", analytics: "Analytique" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "Un espace.",
+          accent: "Tout connecté.",
+          desc: "Équipes, outils, workflows et agents IA dans un seul espace opérationnel.",
+          bullets: ["Agents IA au cœur", "Équipe, Tâches, Outils & Données en orbite", "Une couche connectée"],
+          orbit: { ai: "Agents IA", tasks: "Tâches", data: "Données", tools: "Outils", team: "Équipe" },
+        },
+        tone: {
+          title: "Intelligent,",
+          accent: "mais humain.",
+          items: [
+            { title: "Clair plutôt que complexe", body: "On explique simplement." },
+            { title: "Business d'abord", body: "On vise des résultats concrets." },
+            { title: "Confiance calme", body: "Fiable et professionnel." },
+            { title: "Intelligent mais humain", body: "L'IA soutient, l'humain décide." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Nettoyage logs", "Flux ETL", "Validation", "Chiffrement", "Sauvegarde"],
+          ["Scoring leads", "Prospection", "Suivi", "Rendez-vous", "Clôture"],
+          ["Suivi KPI", "Insights", "Prévision", "Audit", "Visualisation"],
+          ["Stock", "Logistique", "Achats", "Conformité", "Expédition"],
+        ],
       },
     },
   },
