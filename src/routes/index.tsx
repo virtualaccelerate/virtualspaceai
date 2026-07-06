@@ -76,7 +76,7 @@ function LangSwitcher() {
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
-              onClick={() => { i18n.changeLanguage(l.code); setOpen(false); }}
+              onClick={() => { i18n.changeLanguage(l.code); try { localStorage.setItem("i18nextLng", l.code); } catch {} setOpen(false); }}
               className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-sm text-white/85 hover:bg-white/10 transition"
             >
               {l.label}
