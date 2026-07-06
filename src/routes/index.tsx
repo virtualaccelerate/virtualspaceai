@@ -741,6 +741,20 @@ function Landing() {
         </div>
       </section>
 
+      {/* POWERED BY */}
+      <section className="relative">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-12 text-center">
+          <div className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4">
+            <span className="text-xs uppercase tracking-wider text-white/50">Powered by</span>
+            <img
+              src={vaLogoAsset.url}
+              alt="Virtual Accelerate"
+              className="h-7 sm:h-8 w-auto rounded"
+            />
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
