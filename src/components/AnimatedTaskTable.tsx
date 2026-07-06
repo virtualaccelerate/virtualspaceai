@@ -60,7 +60,7 @@ const COPY: Record<Lang, {
   },
 };
 
-const TASKS: string[][] = [
+const FALLBACK_TASKS: string[][] = [
   ["Cleaning Logs", "ETL Flow", "Validation", "Encryption", "Backup"],
   ["Lead Scoring", "Outreach", "Follow-up", "Meeting Set", "Closing Docs"],
   ["KPI Tracking", "Insight Gen", "Forecasting", "Audit", "Visualizer"],
@@ -68,9 +68,14 @@ const TASKS: string[][] = [
 ];
 
 export function AnimatedTaskTable() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const langCode = (i18n.language?.split("-")[0] ?? "en") as Lang;
   const copy = COPY[langCode] ?? COPY.en;
+
+  const tasks = useMemo<string[][]>(() => {
+    const raw = t("taskTable.tasks", { returnObjects: true });
+    return Array.isArray(raw) ? (raw as string[][]) : FALLBACK_TASKS;
+  }, [t, i18n.language]);
 
   // Random active tasks that cycle
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
