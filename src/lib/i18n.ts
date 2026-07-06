@@ -773,19 +773,21 @@ const resources = {
 };
 
 if (!i18n.isInitialized) {
-  i18n
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-      resources,
-      fallbackLng: "en",
-      supportedLngs: ["en", "ru", "es", "de", "fr"],
-      interpolation: { escapeValue: false },
-      detection: {
-        order: ["localStorage", "navigator", "htmlTag"],
-        caches: ["localStorage"],
-      },
-    });
+  const chain = i18n.use(initReactI18next);
+  if (isBrowser) chain.use(LanguageDetector);
+  chain.init({
+    resources,
+    lng: isBrowser ? undefined : "en",
+    fallbackLng: "en",
+    supportedLngs: ["en", "ru", "es", "de", "fr"],
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+    initImmediate: false,
+    detection: {
+      order: ["localStorage", "navigator", "htmlTag"],
+      caches: ["localStorage"],
+    },
+  });
 }
 
 export const LANGUAGES = [
