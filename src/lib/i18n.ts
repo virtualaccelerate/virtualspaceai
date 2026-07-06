@@ -137,6 +137,34 @@ const resources = {
         contact: "Contact",
         copyright: "© Virtual Space. All rights reserved.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Workspace", aiAgents: "AI Agents", automation: "Automation", analytics: "Analytics" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "One workspace.",
+          accent: "Everything connected.",
+          desc: "Teams, tools, workflows and AI agents in one operating space.",
+          bullets: ["AI Agents at the core", "Team, Tasks, Tools & Data in orbit", "One connected layer"],
+          orbit: { ai: "AI Agents", tasks: "Tasks", data: "Data", tools: "Tools", team: "Team" },
+        },
+        tone: {
+          title: "Smart,",
+          accent: "but human.",
+          items: [
+            { title: "Clear over complex", body: "We explain things simply." },
+            { title: "Business-first", body: "We focus on real outcomes." },
+            { title: "Calm confidence", body: "Reliable and professional." },
+            { title: "Smart but human", body: "AI empowers, people lead." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Cleaning Logs", "ETL Flow", "Validation", "Encryption", "Backup"],
+          ["Lead Scoring", "Outreach", "Follow-up", "Meeting Set", "Closing Docs"],
+          ["KPI Tracking", "Insight Gen", "Forecasting", "Audit", "Visualizer"],
+          ["Inventory", "Logistics", "Procurement", "Compliance", "Dispatch"],
+        ],
       },
     },
   },
