@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
@@ -76,7 +76,7 @@ function LangSwitcher() {
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
-              onClick={() => { i18n.changeLanguage(l.code); setOpen(false); }}
+              onClick={() => { i18n.changeLanguage(l.code); try { localStorage.setItem("i18nextLng", l.code); } catch {} setOpen(false); }}
               className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-sm text-white/85 hover:bg-white/10 transition"
             >
               {l.label}
@@ -170,9 +170,9 @@ function Header() {
 
         <div className="flex items-center gap-2">
           <div className="hidden lg:flex items-center gap-3 text-sm">
-            <span className="text-white/40 cursor-default whitespace-nowrap">
+            <Link to="/auth" className="text-white/70 hover:text-white transition whitespace-nowrap">
               {t("nav.login")}
-            </span>
+            </Link>
           </div>
 
           <ThemeToggle />
@@ -219,9 +219,9 @@ function Header() {
                     </a>
                   ))}
                   <hr className="border-white/10 my-2" />
-                  <span className="text-lg text-white/40 cursor-default">
+                  <Link to="/auth" onClick={() => setMobileOpen(false)} className="text-lg text-white/80 hover:text-white transition">
                     {t("nav.login")}
-                  </span>
+                  </Link>
                   <a
                     href="#demo"
                     onClick={() => setMobileOpen(false)}
@@ -767,8 +767,8 @@ function Landing() {
             <div>
               <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.accountLabel")}</p>
               <ul className="space-y-2 text-sm text-white/60">
-                <li><span className="hover:text-white transition cursor-default">{t("nav.login")}</span></li>
-                <li><span className="hover:text-white transition cursor-default">{t("nav.signup")}</span></li>
+                <li><Link to="/auth" className="hover:text-white transition">{t("nav.login")}</Link></li>
+                <li><Link to="/auth" className="hover:text-white transition">{t("nav.signup")}</Link></li>
               </ul>
             </div>
           </div>
