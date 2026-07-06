@@ -219,9 +219,9 @@ function Header() {
                     </a>
                   ))}
                   <hr className="border-white/10 my-2" />
-                  <span className="text-lg text-white/40 cursor-default">
+                  <Link to="/auth" onClick={() => setMobileOpen(false)} className="text-lg text-white/80 hover:text-white transition">
                     {t("nav.login")}
-                  </span>
+                  </Link>
                   <a
                     href="#demo"
                     onClick={() => setMobileOpen(false)}
