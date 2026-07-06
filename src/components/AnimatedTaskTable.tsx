@@ -97,7 +97,7 @@ export function AnimatedTaskTable() {
     pickRandom();
     const id = setInterval(pickRandom, 1400);
     return () => clearInterval(id);
-  }, []);
+  }, [tasks]);
 
   return (
     <section id="tasks" className="relative">
