@@ -773,21 +773,29 @@ const resources = {
 };
 
 if (!i18n.isInitialized) {
-  const chain = i18n.use(initReactI18next);
-  if (isBrowser) chain.use(LanguageDetector);
-  chain.init({
+  i18n.use(initReactI18next).init({
     resources,
-    lng: isBrowser ? undefined : "en",
+    lng: "en",
     fallbackLng: "en",
     supportedLngs: ["en", "ru", "es", "de", "fr"],
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
-    
-    detection: {
-      order: ["localStorage", "navigator", "htmlTag"],
-      caches: ["localStorage"],
-    },
   });
+}
+
+// Detect and apply the preferred language only on the client, AFTER hydration,
+// so SSR and initial client render match (both use "en").
+export function applyClientLanguage() {
+  if (!isBrowser) return;
+  try {
+    const saved = localStorage.getItem("i18nextLng");
+    const nav = navigator.language?.split("-")[0];
+    const supported = ["en", "ru", "es", "de", "fr"];
+    const pick = [saved, nav].find((c) => c && supported.includes(c));
+    if (pick && pick !== i18n.language) void i18n.changeLanguage(pick);
+  } catch {
+    /* ignore */
+  }
 }
 
 export const LANGUAGES = [
