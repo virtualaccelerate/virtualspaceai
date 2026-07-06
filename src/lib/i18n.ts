@@ -592,6 +592,34 @@ const resources = {
         contact: "Kontakt",
         copyright: "© Virtual Space. Alle Rechte vorbehalten.",
         powered: "Powered by Virtual Accelerate",
+        productItems: { workspace: "Workspace", aiAgents: "KI-Agenten", automation: "Automatisierung", analytics: "Analytik" },
+      },
+      brandbook: {
+        oneWorkspace: {
+          title: "Ein Workspace.",
+          accent: "Alles verbunden.",
+          desc: "Teams, Tools, Workflows und KI-Agenten in einem Betriebsraum.",
+          bullets: ["KI-Agenten im Zentrum", "Team, Aufgaben, Tools & Daten im Orbit", "Eine verbundene Ebene"],
+          orbit: { ai: "KI-Agenten", tasks: "Aufgaben", data: "Daten", tools: "Tools", team: "Team" },
+        },
+        tone: {
+          title: "Smart,",
+          accent: "aber menschlich.",
+          items: [
+            { title: "Klar statt komplex", body: "Wir erklären es einfach." },
+            { title: "Business zuerst", body: "Wir fokussieren auf echte Ergebnisse." },
+            { title: "Ruhige Souveränität", body: "Zuverlässig und professionell." },
+            { title: "Smart, aber menschlich", body: "KI unterstützt, Menschen führen." },
+          ],
+        },
+      },
+      taskTable: {
+        tasks: [
+          ["Log-Bereinigung", "ETL-Flow", "Validierung", "Verschlüsselung", "Backup"],
+          ["Lead-Scoring", "Outreach", "Follow-up", "Termin", "Abschluss"],
+          ["KPI-Tracking", "Insights", "Prognose", "Audit", "Visualisierung"],
+          ["Lager", "Logistik", "Einkauf", "Compliance", "Versand"],
+        ],
       },
     },
   },
