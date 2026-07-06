@@ -798,9 +798,8 @@ function Landing() {
               </ul>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-white/40">
             <p>{t("footer.copyright")}</p>
-            <p>{t("footer.powered")}</p>
           </div>
         </div>
       </footer>
