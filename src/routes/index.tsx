@@ -15,7 +15,7 @@ import { Brandbook } from "@/components/Brandbook";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
-import vaLogoAsset from "@/assets/Logo_White_1.png.asset.json";
+import vaLogoAsset from "@/assets/Untitled_design_21.png.asset.json";
 
 
 const SITE_URL = "https://virtualspaceai.lovable.app";
