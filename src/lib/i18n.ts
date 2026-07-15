@@ -782,20 +782,64 @@ if (!i18n.isInitialized) {
   });
 }
 
+// Map ISO country code → preferred language
+const COUNTRY_TO_LANG: Record<string, string> = {
+  // Russian-speaking
+  RU: "ru", KZ: "ru", UZ: "ru", BY: "ru", KG: "ru", TJ: "ru", TM: "ru",
+  AM: "ru", AZ: "ru", MD: "ru", UA: "ru",
+  // Spanish-speaking
+  ES: "es", MX: "es", AR: "es", CO: "es", CL: "es", PE: "es", VE: "es",
+  EC: "es", GT: "es", CU: "es", BO: "es", DO: "es", HN: "es", PY: "es",
+  SV: "es", NI: "es", CR: "es", PA: "es", UY: "es", PR: "es",
+  // German-speaking
+  DE: "de", AT: "de", CH: "de", LI: "de",
+  // French-speaking
+  FR: "fr", BE: "fr", LU: "fr", MC: "fr", CI: "fr", SN: "fr", CM: "fr",
+  ML: "fr", MG: "fr", CD: "fr", HT: "fr", TN: "fr", DZ: "fr", MA: "fr",
+};
+
+const SUPPORTED = ["en", "ru", "es", "de", "fr"];
+
+async function detectCountryLang(): Promise<string | null> {
+  try {
+    const cached = localStorage.getItem("i18nGeoCountry");
+    let country = cached;
+    if (!country) {
+      const res = await fetch("https://ipapi.co/json/", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        country = (data?.country_code || data?.country || "").toUpperCase();
+        if (country) localStorage.setItem("i18nGeoCountry", country);
+      }
+    }
+    if (country && COUNTRY_TO_LANG[country]) return COUNTRY_TO_LANG[country];
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 // Detect and apply the preferred language only on the client, AFTER hydration,
 // so SSR and initial client render match (both use "en").
 export function applyClientLanguage() {
   if (!isBrowser) return;
   try {
     const saved = localStorage.getItem("i18nextLng");
-    const nav = navigator.language?.split("-")[0];
-    const supported = ["en", "ru", "es", "de", "fr"];
-    const pick = [saved, nav].find((c) => c && supported.includes(c));
-    if (pick && pick !== i18n.language) void i18n.changeLanguage(pick);
+    if (saved && SUPPORTED.includes(saved)) {
+      if (saved !== i18n.language) void i18n.changeLanguage(saved);
+      return;
+    }
+    // Geo detection (async) — falls back to navigator language
+    void detectCountryLang().then((geoLang) => {
+      const nav = navigator.language?.split("-")[0];
+      const pick = geoLang || (nav && SUPPORTED.includes(nav) ? nav : "en");
+      if (pick && pick !== i18n.language) void i18n.changeLanguage(pick);
+    });
   } catch {
     /* ignore */
   }
 }
+
 
 export const LANGUAGES = [
   { code: "en", label: "EN" },
