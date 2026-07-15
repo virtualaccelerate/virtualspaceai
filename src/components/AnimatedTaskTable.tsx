@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-type Lang = "en" | "ru" | "es" | "de" | "fr";
+type Lang = "en" | "ru" | "kk" | "ky" | "uz" | "tg";
 
 const COPY: Record<Lang, {
   title: string;
@@ -31,34 +31,44 @@ const COPY: Record<Lang, {
     workloadsLabel: "АКТИВНЫЕ AI-НАГРУЗКИ",
     departments: ["Данные", "Продажи", "Аналитика", "Операции"],
   },
-  es: {
-    title: "Tareas dinámicas de agentes",
-    subtitle: "Mira cómo Virtual Space enruta tareas entre departamentos.",
-    headerLeft: "CENTRO DE CONTROL DE AGENTES",
-    headerRight: "ESTADO: SISTEMA OPTIMIZADO",
-    deptLabel: "DEPARTAMENTO",
-    workloadsLabel: "CARGAS DE IA ACTIVAS",
-    departments: ["Datos", "Ventas", "Analítica", "Operaciones"],
+  kk: {
+    title: "Агенттердің динамикалық тапсырмалары",
+    subtitle: "Virtual Space тапсырмаларды бөлімдер арасында қалай бағыттайтынын көріңіз.",
+    headerLeft: "АГЕНТТЕРДІ БАСҚАРУ ОРТАЛЫҒЫ",
+    headerRight: "МӘРТЕБЕ: ЖҮЙЕ ОҢТАЙЛАНДЫРЫЛҒАН",
+    deptLabel: "БӨЛІМ",
+    workloadsLabel: "БЕЛСЕНДІ AI-ЖҮКТЕМЕЛЕР",
+    departments: ["Деректер", "Сатылым", "Аналитика", "Операциялар"],
   },
-  de: {
-    title: "Dynamische Agenten-Aufgaben",
-    subtitle: "Sehen Sie, wie Virtual Space Aufgaben intelligent routed.",
-    headerLeft: "AGENTEN-KONTROLLZENTRUM",
-    headerRight: "STATUS: SYSTEM OPTIMIERT",
-    deptLabel: "ABTEILUNG",
-    workloadsLabel: "AKTIVE KI-WORKLOADS",
-    departments: ["Daten", "Vertrieb", "Analytik", "Betrieb"],
+  ky: {
+    title: "Агенттердин динамикалык тапшырмалары",
+    subtitle: "Virtual Space тапшырмаларды бөлүмдөр арасында кантип багыттарын көрүңүз.",
+    headerLeft: "АГЕНТТЕРДИ БАШКАРУУ БОРБОРУ",
+    headerRight: "АБАЛ: СИСТЕМА ОҢТОЙЛОШТУРУЛГАН",
+    deptLabel: "БӨЛҮМ",
+    workloadsLabel: "АКТИВДҮҮ AI-ЖҮКТӨӨЛӨР",
+    departments: ["Маалыматтар", "Сатуу", "Аналитика", "Операциялар"],
   },
-  fr: {
-    title: "Tâches dynamiques des agents",
-    subtitle: "Regardez comment Virtual Space route les tâches entre départements.",
-    headerLeft: "CENTRE DE CONTRÔLE DES AGENTS",
-    headerRight: "STATUT : SYSTÈME OPTIMISÉ",
-    deptLabel: "DÉPARTEMENT",
-    workloadsLabel: "CHARGES IA ACTIVES",
-    departments: ["Données", "Ventes", "Analyse", "Opérations"],
+  uz: {
+    title: "Agentlarning dinamik vazifalari",
+    subtitle: "Virtual Space vazifalarni boʻlimlar oʻrtasida qanday yoʻnaltirishini kuzating.",
+    headerLeft: "AGENTLARNI BOSHQARISH MARKAZI",
+    headerRight: "HOLAT: TIZIM OPTIMALLASHTIRILDI",
+    deptLabel: "BOʻLIM",
+    workloadsLabel: "FAOL AI-YUKLAMALAR",
+    departments: ["Maʼlumot", "Sotuv", "Analitika", "Operatsiyalar"],
+  },
+  tg: {
+    title: "Вазифаҳои динамикии агентҳо",
+    subtitle: "Бинед, ки Virtual Space вазифаҳоро дар байни шӯъбаҳо чӣ гуна тақсим мекунад.",
+    headerLeft: "МАРКАЗИ ИДОРАКУНИИ АГЕНТҲО",
+    headerRight: "ҲОЛАТ: СИСТЕМА БЕҲИНА",
+    deptLabel: "ШӮЪБА",
+    workloadsLabel: "БОРҲОИ ФАЪОЛИ AI",
+    departments: ["Маълумот", "Фурӯш", "Аналитика", "Амалиёт"],
   },
 };
+
 
 const FALLBACK_TASKS: string[][] = [
   ["Cleaning Logs", "ETL Flow", "Validation", "Encryption", "Backup"],
