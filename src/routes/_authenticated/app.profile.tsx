@@ -144,9 +144,11 @@ function ProfilePage() {
           >
             <option value="en">English</option>
             <option value="ru">Русский</option>
-            <option value="es">Español</option>
-            <option value="de">Deutsch</option>
-            <option value="fr">Français</option>
+            <option value="kk">Қазақша</option>
+            <option value="ky">Кыргызча</option>
+            <option value="uz">Oʻzbekcha</option>
+            <option value="tg">Тоҷикӣ</option>
+
           </select>
         </Field>
 
