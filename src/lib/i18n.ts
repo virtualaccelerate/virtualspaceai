@@ -886,7 +886,7 @@ if (!i18n.isInitialized) {
     resources,
     lng: "en",
     fallbackLng: "en",
-    supportedLngs: ["en", "ru", "es", "de", "fr"],
+    supportedLngs: ["en", "ru", "kk", "ky", "uz", "tg"],
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
   });
@@ -894,21 +894,14 @@ if (!i18n.isInitialized) {
 
 // Map ISO country code → preferred language
 const COUNTRY_TO_LANG: Record<string, string> = {
-  // Russian-speaking
-  RU: "ru", KZ: "ru", UZ: "ru", BY: "ru", KG: "ru", TJ: "ru", TM: "ru",
-  AM: "ru", AZ: "ru", MD: "ru", UA: "ru",
-  // Spanish-speaking
-  ES: "es", MX: "es", AR: "es", CO: "es", CL: "es", PE: "es", VE: "es",
-  EC: "es", GT: "es", CU: "es", BO: "es", DO: "es", HN: "es", PY: "es",
-  SV: "es", NI: "es", CR: "es", PA: "es", UY: "es", PR: "es",
-  // German-speaking
-  DE: "de", AT: "de", CH: "de", LI: "de",
-  // French-speaking
-  FR: "fr", BE: "fr", LU: "fr", MC: "fr", CI: "fr", SN: "fr", CM: "fr",
-  ML: "fr", MG: "fr", CD: "fr", HT: "fr", TN: "fr", DZ: "fr", MA: "fr",
+  RU: "ru", BY: "ru", UA: "ru", MD: "ru", AM: "ru", AZ: "ru", TM: "ru",
+  KZ: "kk",
+  KG: "ky",
+  UZ: "uz",
+  TJ: "tg",
 };
 
-const SUPPORTED = ["en", "ru", "es", "de", "fr"];
+const SUPPORTED = ["en", "ru", "kk", "ky", "uz", "tg"];
 
 async function detectCountryLang(): Promise<string | null> {
   try {
@@ -939,7 +932,6 @@ export function applyClientLanguage() {
       if (saved !== i18n.language) void i18n.changeLanguage(saved);
       return;
     }
-    // Geo detection (async) — falls back to navigator language
     void detectCountryLang().then((geoLang) => {
       const nav = navigator.language?.split("-")[0];
       const pick = geoLang || (nav && SUPPORTED.includes(nav) ? nav : "en");
@@ -954,9 +946,11 @@ export function applyClientLanguage() {
 export const LANGUAGES = [
   { code: "en", label: "EN" },
   { code: "ru", label: "RU" },
-  { code: "es", label: "ES" },
-  { code: "de", label: "DE" },
-  { code: "fr", label: "FR" },
+  { code: "kk", label: "KK" },
+  { code: "ky", label: "KY" },
+  { code: "uz", label: "UZ" },
+  { code: "tg", label: "TG" },
 ] as const;
+
 
 export default i18n;
