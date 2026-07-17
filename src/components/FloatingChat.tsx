@@ -26,7 +26,7 @@ export function FloatingChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="fixed z-40 right-4 bottom-24 sm:right-6 sm:bottom-24 w-[min(380px,calc(100vw-2rem))] h-[min(600px,calc(100vh-8rem))] rounded-2xl border border-border bg-background shadow-2xl overflow-hidden flex flex-col"
+            className="fixed z-40 right-4 bottom-40 sm:right-6 sm:bottom-24 w-[min(380px,calc(100vw-2rem))] h-[min(600px,calc(100vh-12rem))] rounded-2xl border border-border bg-background shadow-2xl overflow-hidden flex flex-col"
           >
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
               <div className="text-sm font-semibold text-foreground">Virtual Space</div>
