@@ -53,6 +53,7 @@ function KnowledgeBase() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [indexing, setIndexing] = useState<Record<string, boolean>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -122,7 +123,16 @@ function KnowledgeBase() {
             mime.startsWith("image/") ||
             /\.(pdf|png|jpe?g|webp|gif|heic)$/i.test(file.name);
           if (eligible) {
-            extract({ data: { id: row.id } }).catch(() => { /* silent */ });
+            setIndexing((p) => ({ ...p, [row.id]: true }));
+            extract({ data: { id: row.id } })
+              .catch(() => { /* silent */ })
+              .finally(() => {
+                setIndexing((p) => {
+                  const n = { ...p };
+                  delete n[row.id];
+                  return n;
+                });
+              });
           }
         }
       }
@@ -247,6 +257,12 @@ function KnowledgeBase() {
                     {formatBytes(d.size_bytes)} · {new Date(d.created_at).toLocaleDateString()}
                   </div>
                 </button>
+                {indexing[d.id] && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/15 rounded-full px-2 py-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t("app.docs.indexing", "Indexing…")}
+                  </span>
+                )}
                 <button
                   onClick={() => openDoc(d.id)}
                   className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition"
