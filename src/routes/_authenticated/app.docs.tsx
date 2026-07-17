@@ -9,6 +9,7 @@ import {
   createDocument,
   deleteDocument,
   getDocumentSignedUrl,
+  extractDocumentText,
 } from "@/lib/documents.functions";
 
 export const Route = createFileRoute("/_authenticated/app/docs")({
@@ -44,6 +45,7 @@ function KnowledgeBase() {
   const create = useServerFn(createDocument);
   const remove = useServerFn(deleteDocument);
   const sign = useServerFn(getDocumentSignedUrl);
+  const extract = useServerFn(extractDocumentText);
 
   const [docs, setDocs] = useState<Doc[]>([]);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
@@ -112,6 +114,17 @@ function KnowledgeBase() {
           },
         });
         setDocs((prev) => [row as Doc, ...prev]);
+        // Fire-and-forget: OCR/PDF text extraction via Gemini for supported binaries.
+        if (!extracted && row?.id) {
+          const mime = (file.type || "").toLowerCase();
+          const eligible =
+            mime === "application/pdf" ||
+            mime.startsWith("image/") ||
+            /\.(pdf|png|jpe?g|webp|gif|heic)$/i.test(file.name);
+          if (eligible) {
+            extract({ data: { id: row.id } }).catch(() => { /* silent */ });
+          }
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
