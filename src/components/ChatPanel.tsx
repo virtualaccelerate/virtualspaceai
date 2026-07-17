@@ -711,11 +711,20 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             placeholder={t("app.overview.placeholder")}
             className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40 py-1.5"
           />
-          {!isCompact && (
-            <button type="button" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/40 transition shrink-0" aria-label="Voice">
-              <Mic className="h-4 w-4" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={toggleMic}
+            disabled={transcribing}
+            title={recording ? t("app.chat.micStop", "Stop recording") : t("app.chat.micStart", "Voice input")}
+            aria-label={recording ? "Stop recording" : "Voice input"}
+            className={`p-1.5 rounded-lg transition shrink-0 disabled:opacity-50 ${
+              recording
+                ? "text-red-500 bg-red-500/10 animate-pulse"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+            }`}
+          >
+            {transcribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+          </button>
           <button
             type="button"
             onClick={() => send()}
