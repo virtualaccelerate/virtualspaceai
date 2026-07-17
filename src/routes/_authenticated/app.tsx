@@ -220,39 +220,42 @@ function HomeChat() {
       )}
 
       {/* Composer */}
-      <div className="mt-3 flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
-        <button
-          type="button"
-          className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition shrink-0"
-          aria-label="Attach"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-        <textarea
-          ref={inputRef}
-          rows={1}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onKey}
-          placeholder={t("app.overview.placeholder")}
-          className="flex-1 resize-none bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none max-h-40 py-1.5"
-        />
-        <button
-          type="button"
-          className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition shrink-0"
-          aria-label="Voice"
-        >
-          <Mic className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => send()}
-          disabled={loading || !input.trim()}
-          className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0"
-          aria-label="Send"
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </button>
+      <div className="relative mt-3">
+        <div className="pointer-events-none absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,transparent,hsl(var(--primary)/0.6),transparent_40%)] opacity-70 blur-[6px] animate-[spin_6s_linear_infinite]" />
+        <div className="relative flex items-end gap-2 rounded-2xl border border-white/10 bg-[color:var(--card)] px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
+          <button
+            type="button"
+            className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition shrink-0"
+            aria-label="Attach"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          <textarea
+            ref={inputRef}
+            rows={1}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKey}
+            placeholder={t("app.overview.placeholder")}
+            className="flex-1 resize-none bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none max-h-40 py-1.5"
+          />
+          <button
+            type="button"
+            className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition shrink-0"
+            aria-label="Voice"
+          >
+            <Mic className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => send()}
+            disabled={loading || !input.trim()}
+            className="h-10 w-10 rounded-full bg-primary text-black flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.45)]"
+            aria-label="Send"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 fill-current" />}
+          </button>
+        </div>
       </div>
     </div>
   );
