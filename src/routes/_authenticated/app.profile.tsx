@@ -96,9 +96,10 @@ function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <h1 className="font-display text-3xl text-white">Profile</h1>
-        <p className="mt-2 text-sm text-white/60">Manage your personal information and preferences.</p>
+        <h1 className="font-display text-3xl text-white">{t("app.profile.title")}</h1>
+        <p className="mt-2 text-sm text-white/60">{t("app.profile.subtitle")}</p>
       </motion.div>
+
 
       <form onSubmit={handleSave} className="mt-8 glass-strong rounded-3xl p-6 sm:p-8 space-y-5">
         <Field label="Email">
