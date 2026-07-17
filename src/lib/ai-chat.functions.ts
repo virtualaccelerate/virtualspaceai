@@ -10,7 +10,18 @@ const MessageSchema = z.object({
 const InputSchema = z.object({
   messages: z.array(MessageSchema).min(1).max(30),
   teamspace_id: z.string().uuid().optional(),
+  agent_id: z.string().max(60).optional(),
 });
+
+const AGENT_PROMPTS: Record<string, string> = {
+  contracts:
+    "You are the Contract Risk Agent inside Virtual Space. " +
+    "When the user provides a contract (as pasted text or as a knowledge-base file), do the following in the user's language:\n" +
+    "1) Summarize the contract in 3-6 short sentences (parties, subject, term, price).\n" +
+    "2) Extract KEY RISKS as a numbered list — each with: what the risk is, why it matters, and severity (low/medium/high).\n" +
+    "3) Suggest concrete IMPROVEMENTS / redlines — numbered, each an actionable rewrite or clause to add.\n" +
+    "Cite source files with the [[file:UUID|Name]] syntax when the analysis comes from the knowledge base. Plain text only, no markdown symbols.",
+};
 
 export const askZukha = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -47,7 +58,12 @@ export const askZukha = createServerFn({ method: "POST" })
       }
     }
 
+    const agentPreamble = data.agent_id && AGENT_PROMPTS[data.agent_id]
+      ? `ACTIVE AGENT MODE: ${AGENT_PROMPTS[data.agent_id]}\n\n`
+      : "";
+
     const systemPrompt =
+      agentPreamble +
       "You are Virtual Space AI, the assistant inside Virtual Space — an AI virtual office for teams. " +
       "Be concise, warm, and practical. Reply in the user's language. " +
       "Reply as plain text only: do NOT use Markdown, asterisks (*), underscores (_), backticks, headings (#), or bullet symbols. " +

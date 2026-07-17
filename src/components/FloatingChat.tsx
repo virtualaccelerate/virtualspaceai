@@ -9,7 +9,7 @@ export function FloatingChat() {
   const [open, setOpen] = useState(false);
 
   // Hide launcher on the dedicated chat page itself
-  const hidden = pathname === "/app" || pathname === "/app/";
+  const hidden = pathname === "/app" || pathname === "/app/" || pathname.startsWith("/app/c/");
 
   useEffect(() => {
     if (hidden) setOpen(false);

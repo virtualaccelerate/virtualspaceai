@@ -29,6 +29,7 @@ import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
+import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -134,6 +135,12 @@ const AuthenticatedAppAgentsRoute = AuthenticatedAppAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppCConversationIdRoute =
+  AuthenticatedAppCConversationIdRouteImport.update({
+    id: '/c/$conversationId',
+    path: '/c/$conversationId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -175,6 +183,7 @@ export interface FileRoutesByTo {
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -198,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/app/telegram'
     | '/app/time'
     | '/app/'
+    | '/app/c/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/app/telegram'
     | '/app/time'
     | '/app'
+    | '/app/c/$conversationId'
   id:
     | '__root__'
     | '/'
@@ -263,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/telegram'
     | '/_authenticated/app/time'
     | '/_authenticated/app/'
+    | '/_authenticated/app/c/$conversationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAgentsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/c/$conversationId': {
+      id: '/_authenticated/app/c/$conversationId'
+      path: '/c/$conversationId'
+      fullPath: '/app/c/$conversationId'
+      preLoaderRoute: typeof AuthenticatedAppCConversationIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
@@ -433,6 +453,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTelegramRoute: typeof AuthenticatedAppTelegramRoute
   AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppCConversationIdRoute: typeof AuthenticatedAppCConversationIdRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -449,6 +470,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTelegramRoute: AuthenticatedAppTelegramRoute,
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppCConversationIdRoute: AuthenticatedAppCConversationIdRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
