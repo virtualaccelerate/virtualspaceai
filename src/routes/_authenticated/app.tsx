@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles, ArrowUpRight, CheckSquare, Clock, TrendingUp, Users,
   Bot, MessageSquare, FileText, CheckCircle2, Circle, AlertCircle, Flag,
+  Send, Plus, Mic, Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { askZukha } from "@/lib/ai-chat.functions";
+
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppDashboard,
