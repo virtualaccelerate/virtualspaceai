@@ -92,6 +92,8 @@ function FinancialsPage() {
   const refresh = useServerFn(refreshSheetSource);
   const analyze = useServerFn(analyzeFinancials);
   const ask = useServerFn(askFinancials);
+  const loadChat = useServerFn(listFinChat);
+  const clearChat = useServerFn(clearFinChat);
 
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [sources, setSources] = useState<Src[]>([]);
