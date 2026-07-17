@@ -86,17 +86,23 @@ function HomeChat() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-              className="h-14 w-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center"
+              transition={{ duration: 0.5 }}
+              className="relative"
             >
-              <Sparkles className="h-6 w-6" />
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <VirtualSpaceLogo size={96} className="text-primary drop-shadow-[0_10px_30px_oklch(0.80_0.22_138_/_0.5)]" />
+              </motion.div>
             </motion.div>
-            <h1 className="mt-5 font-display text-3xl sm:text-4xl text-white">
-              {t("app.overview.askZukha")}
+            <h1 className="mt-6 font-display text-3xl sm:text-4xl text-white">
+              Virtual Space
             </h1>
             <p className="mt-2 text-sm text-white/60 max-w-md">
               {t("app.overview.askZukhaSubtitle")}
             </p>
+
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xl">
               {suggestions.map((s, i) => (
                 <motion.button
