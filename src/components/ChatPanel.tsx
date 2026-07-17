@@ -287,7 +287,9 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     // Open a blank tab synchronously in the click handler so popup blockers
     // don't kill it while we await the signed URL. If the browser still
     // blocked it, fall back to navigating the current tab.
-    const win = window.open("about:blank", "_blank", "noopener,noreferrer");
+    // Note: do NOT pass "noopener" — it detaches the returned window so we
+    // can't set win.location.href afterwards, which leaves the tab blank.
+    const win = window.open("about:blank", "_blank");
     try {
       const { url } = await sign({ data: { id } });
       if (win && !win.closed) {
