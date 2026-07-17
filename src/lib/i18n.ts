@@ -181,7 +181,7 @@ const resources = {
           greeting: "Welcome back", subtitle: "Here's what's happening in your workspace today.",
           quickAction: "Quick action", askZukha: "Ask Zukha",
           askZukhaSubtitle: "Your AI copilot for this teamspace",
-          clear: "Clear", thinking: "Zukha is thinking…", placeholder: "Ask anything…",
+          clear: "Clear", thinking: "Virtual Space is thinking…", placeholder: "Ask anything…",
           suggestions: [
             "Summarize what my team did this week",
             "Draft a client follow-up email",
@@ -383,7 +383,7 @@ const resources = {
           greeting: "С возвращением", subtitle: "Вот что происходит в вашем пространстве сегодня.",
           quickAction: "Быстрое действие", askZukha: "Спросить Zukha",
           askZukhaSubtitle: "Ваш AI-помощник в этом пространстве",
-          clear: "Очистить", thinking: "Zukha думает…", placeholder: "Спросите что угодно…",
+          clear: "Очистить", thinking: "Virtual Space думает…", placeholder: "Спросите что угодно…",
           suggestions: [
             "Подведи итог того, что сделала команда на этой неделе",
             "Напиши письмо-напоминание клиенту",
@@ -562,7 +562,7 @@ const resources = {
           greeting: "Қайта оралуыңызбен", subtitle: "Бүгін кеңістігіңізде не болып жатқанын көріңіз.",
           quickAction: "Жылдам әрекет", askZukha: "Zukha-дан сұрау",
           askZukhaSubtitle: "Осы кеңістіктегі AI-көмекшіңіз",
-          clear: "Тазалау", thinking: "Zukha ойлауда…", placeholder: "Кез келген нәрсені сұраңыз…",
+          clear: "Тазалау", thinking: "Virtual Space ойлауда…", placeholder: "Кез келген нәрсені сұраңыз…",
           suggestions: [
             "Командам осы аптада не істегенін қорытындыла",
             "Клиентке еске салу хатын жаз",
@@ -733,7 +733,7 @@ const resources = {
           greeting: "Кайра кош келиңиз", subtitle: "Бүгүн мейкиндигиңизде эмне болуп жатканын көрүңүз.",
           quickAction: "Тез аракет", askZukha: "Zukha-дан сура",
           askZukhaSubtitle: "Ушул мейкиндиктеги AI-жардамчыңыз",
-          clear: "Тазалоо", thinking: "Zukha ойлонуп жатат…", placeholder: "Каалаган нерсени сура…",
+          clear: "Тазалоо", thinking: "Virtual Space ойлонуп жатат…", placeholder: "Каалаган нерсени сура…",
           suggestions: [
             "Командам бул жумада эмне кылганын жыйынтыкта",
             "Кардарга эскертүү катын жаз",
@@ -904,7 +904,7 @@ const resources = {
           greeting: "Qaytganingiz bilan", subtitle: "Bugun maydoningizda nima boʻlayotganini koʻring.",
           quickAction: "Tez harakat", askZukha: "Zukha'dan soʻrash",
           askZukhaSubtitle: "Ushbu maydondagi AI-yordamchingiz",
-          clear: "Tozalash", thinking: "Zukha oʻylayapti…", placeholder: "Xohlagan narsani soʻrang…",
+          clear: "Tozalash", thinking: "Virtual Space oʻylayapti…", placeholder: "Xohlagan narsani soʻrang…",
           suggestions: [
             "Jamoam shu hafta nima qilganini xulosa qil",
             "Mijozga eslatma xat yoz",
@@ -1075,7 +1075,7 @@ const resources = {
           greeting: "Хуш омадед", subtitle: "Имрӯз дар фазои шумо чӣ рӯй дода истодааст.",
           quickAction: "Амали зуд", askZukha: "Аз Zukha пурсидан",
           askZukhaSubtitle: "Ёрдамчии AI-и шумо дар ин фазо",
-          clear: "Тоза кардан", thinking: "Zukha фикр мекунад…", placeholder: "Ҳар чиро пурсед…",
+          clear: "Тоза кардан", thinking: "Virtual Space фикр мекунад…", placeholder: "Ҳар чиро пурсед…",
           suggestions: [
             "Он чиро, ки дастаам ин ҳафта кард, ҷамъбаст кун",
             "Ба муштарӣ мактуби ёдоварӣ нависед",
