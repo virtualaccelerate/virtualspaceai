@@ -81,3 +81,100 @@ export const getDocumentSignedUrl = createServerFn({ method: "POST" })
     if (sErr) throw new Error(sErr.message);
     return { url: signed.signedUrl, name: doc.name };
   });
+
+// Extract text from PDFs and images using Gemini multimodal.
+// Fire-and-forget from the client after upload; updates documents.extracted_text.
+export const extractDocumentText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const { data: doc, error } = await context.supabase
+      .from("documents")
+      .select("id, name, storage_path, mime_type, extracted_text")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!doc) throw new Error("Document not found");
+    if (doc.extracted_text && doc.extracted_text.length > 0) {
+      return { ok: true, skipped: true as const };
+    }
+
+    const mime = (doc.mime_type || "").toLowerCase();
+    const isPdf = mime === "application/pdf" || /\.pdf$/i.test(doc.name);
+    const isImage = mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(doc.name);
+    if (!isPdf && !isImage) {
+      return { ok: true, unsupported: true as const };
+    }
+
+    const { data: blob, error: dlErr } = await context.supabase.storage
+      .from("documents")
+      .download(doc.storage_path);
+    if (dlErr || !blob) throw new Error(dlErr?.message || "Download failed");
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    if (bytes.byteLength > 15 * 1024 * 1024) {
+      return { ok: true, tooLarge: true as const };
+    }
+
+    // Base64 encode
+    let bin = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    const b64 = btoa(bin);
+    const effectiveMime = isPdf ? "application/pdf" : (mime || "image/png");
+    const dataUrl = `data:${effectiveMime};base64,${b64}`;
+
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+
+    const userContent = isPdf
+      ? [
+          {
+            type: "file",
+            file: { filename: doc.name, file_data: dataUrl },
+          },
+          {
+            type: "text",
+            text: "Extract ALL readable text from this document verbatim, preserving order. Output plain text only, no commentary.",
+          },
+        ]
+      : [
+          { type: "image_url", image_url: { url: dataUrl } },
+          {
+            type: "text",
+            text: "Extract ALL readable text from this image verbatim (OCR). Output plain text only, no commentary.",
+          },
+        ];
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: "You are an OCR/text extraction tool. Output only the extracted text." },
+          { role: "user", content: userContent },
+        ],
+      }),
+    });
+    if (res.status === 429) throw new Error("Rate limit exceeded, try again shortly.");
+    if (res.status === 402) throw new Error("AI credits exhausted.");
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new Error(`AI extract failed (${res.status}): ${t.slice(0, 200)}`);
+    }
+    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    const text = (json.choices?.[0]?.message?.content || "").slice(0, 180_000);
+
+    const { error: upErr } = await context.supabase
+      .from("documents")
+      .update({ extracted_text: text })
+      .eq("id", doc.id);
+    if (upErr) throw new Error(upErr.message);
+
+    return { ok: true, length: text.length };
+  });
