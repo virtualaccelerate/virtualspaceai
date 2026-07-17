@@ -111,6 +111,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const createConv = useServerFn(createConversation);
   const removeConv = useServerFn(deleteConversation);
   const renameConv = useServerFn(renameConversation);
+  const stt = useServerFn(transcribeAudio);
 
   const isCompact = variant === "compact";
   const [messages, setMessages] = useState<ChatMsg[]>([]);
