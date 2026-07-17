@@ -176,6 +176,38 @@ function buildCorpus(rows: { name: string; raw_csv: string | null }[]): string {
   return parts.join("");
 }
 
+// Re-fetch every Google Sheet source so answers reflect the latest values.
+// Mutates rows in place; failures skip silently (stale copy stays usable).
+async function refreshSheetRows(
+  supabase: {
+    from: (t: string) => {
+      update: (v: Record<string, unknown>) => { eq: (c: string, v: string) => Promise<unknown> };
+    };
+  },
+  rows: { id: string; name: string; kind?: string | null; source_url?: string | null; raw_csv: string | null }[],
+) {
+  await Promise.all(
+    rows.map(async (r) => {
+      if (r.kind !== "sheet" || !r.source_url) return;
+      const info = extractSheetInfo(r.source_url);
+      if (!info) return;
+      try {
+        const res = await fetch(csvExportUrl(info.id, info.gid), { redirect: "follow" });
+        if (!res.ok) return;
+        const ct = res.headers.get("content-type") || "";
+        const csv = await res.text();
+        if (ct.includes("text/html") || /<html/i.test(csv.slice(0, 200))) return;
+        const trimmed = csv.slice(0, 400_000);
+        if (trimmed === r.raw_csv) return;
+        r.raw_csv = trimmed;
+        await supabase.from("financial_sources").update({ raw_csv: trimmed }).eq("id", r.id);
+      } catch {
+        // keep stale copy
+      }
+    }),
+  );
+}
+
 export const analyzeFinancials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) =>
