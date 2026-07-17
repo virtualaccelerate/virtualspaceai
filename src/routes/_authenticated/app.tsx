@@ -118,7 +118,11 @@ function AppDashboard() {
         </div>
       </motion.div>
 
+      {/* Ask Zukha chat */}
+      <ZukhaChat />
+
       {/* Stats */}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {STATS.map((s, i) => (
           <motion.div
