@@ -83,19 +83,83 @@ function HomeChat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto pr-1">
         {empty ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-4">
+            {/* Orbital logo animation */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="relative"
+              className="relative w-48 h-48 sm:w-56 sm:h-56"
             >
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              {/* Ambient glow */}
+              <div
+                className="absolute inset-6 rounded-full blur-3xl opacity-60 pointer-events-none"
+                style={{ background: "radial-gradient(circle, oklch(0.80 0.22 138 / 0.45), transparent 65%)" }}
+              />
+
+              {/* Outer rotating ring with dots */}
+              <motion.svg
+                viewBox="0 0 400 400"
+                className="absolute inset-0 w-full h-full text-primary"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
               >
-                <VirtualSpaceLogo size={96} className="text-primary drop-shadow-[0_10px_30px_oklch(0.80_0.22_138_/_0.5)]" />
-              </motion.div>
+                <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 6" />
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
+                  const rad = (angle * Math.PI) / 180;
+                  return (
+                    <circle key={`o-${angle}`} cx={200 + 190 * Math.cos(rad)} cy={200 + 190 * Math.sin(rad)} r="5" fill="currentColor" />
+                  );
+                })}
+              </motion.svg>
+
+              {/* Middle counter-rotating ring */}
+              <motion.svg
+                viewBox="0 0 400 400"
+                className="absolute inset-0 w-full h-full text-primary"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+              >
+                <circle cx="200" cy="200" r="140" fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1" />
+                {[22.5, 112.5, 202.5, 292.5].map((angle) => {
+                  const rad = (angle * Math.PI) / 180;
+                  return (
+                    <circle key={`m-${angle}`} cx={200 + 140 * Math.cos(rad)} cy={200 + 140 * Math.sin(rad)} r="4" fill="currentColor" opacity="0.9" />
+                  );
+                })}
+              </motion.svg>
+
+              {/* Inner rotating ring */}
+              <motion.svg
+                viewBox="0 0 400 400"
+                className="absolute inset-0 w-full h-full text-primary"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+              >
+                <circle cx="200" cy="200" r="95" fill="none" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" />
+                {[0, 120, 240].map((angle) => {
+                  const rad = (angle * Math.PI) / 180;
+                  return (
+                    <circle key={`i-${angle}`} cx={200 + 95 * Math.cos(rad)} cy={200 + 95 * Math.sin(rad)} r="3.5" fill="currentColor" />
+                  );
+                })}
+              </motion.svg>
+
+              {/* Center: floating logo */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative"
+                >
+                  <div
+                    className="absolute inset-0 rounded-full blur-2xl opacity-70"
+                    style={{ background: "radial-gradient(circle, oklch(0.80 0.22 138 / 0.6), transparent 70%)" }}
+                  />
+                  <VirtualSpaceLogo size={72} className="relative drop-shadow-[0_10px_30px_oklch(0.80_0.22_138_/_0.5)]" />
+                </motion.div>
+              </div>
             </motion.div>
+
             <h1 className="mt-6 font-display text-3xl sm:text-4xl text-white">
               Virtual Space
             </h1>
