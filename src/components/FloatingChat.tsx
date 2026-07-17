@@ -26,7 +26,7 @@ export function FloatingChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="fixed z-40 right-4 bottom-24 sm:right-6 sm:bottom-24 w-[min(380px,calc(100vw-2rem))] h-[min(600px,calc(100vh-8rem))] rounded-2xl border border-border bg-background shadow-2xl overflow-hidden flex flex-col"
+            className="fixed z-40 right-4 bottom-40 sm:right-6 sm:bottom-24 w-[min(380px,calc(100vw-2rem))] h-[min(600px,calc(100vh-12rem))] rounded-2xl border border-border bg-background shadow-2xl overflow-hidden flex flex-col"
           >
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
               <div className="text-sm font-semibold text-foreground">Virtual Space</div>
@@ -48,7 +48,7 @@ export function FloatingChat() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close chat" : "Open chat"}
-        className="fixed z-40 right-4 bottom-4 sm:right-6 sm:bottom-6 h-14 w-14 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_10px_30px_hsl(var(--primary)/0.45)] hover:scale-105 transition"
+        className="fixed z-40 right-4 bottom-20 sm:right-6 sm:bottom-6 h-14 w-14 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_10px_30px_hsl(var(--primary)/0.45)] hover:scale-105 transition"
       >
         {open ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
       </button>

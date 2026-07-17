@@ -332,10 +332,41 @@ function AuthenticatedLayout() {
             </button>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile bottom nav — 5 primary destinations */}
+      <nav
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-16 border-t border-white/10 bg-[color:var(--card)]/95 backdrop-blur"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <ul className="grid grid-cols-5 h-full">
+          {[
+            { to: "/app", label: t("app.nav.home", "Home"), icon: MessageSquare, exact: true },
+            { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
+            { to: "/app/tasks", label: t("app.nav.tasks"), icon: CheckSquare },
+            { to: "/app/docs", label: t("app.nav.knowledgeBase"), icon: BookOpen },
+            { to: "/app/agents", label: t("app.nav.aiAgents"), icon: Bot },
+          ].map((item) => {
+            const active = isActive(item.to, item.exact);
+            return (
+              <li key={item.to} className="min-w-0">
+                <Link
+                  to={item.to}
+                  className={`h-full flex flex-col items-center justify-center gap-0.5 text-[10px] transition ${
+                    active ? "text-primary" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  <span className="truncate max-w-full px-1">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
       {inviteOpen && teamspace && (
         <InviteModal teamspace={teamspace} onClose={() => setInviteOpen(false)} />
@@ -343,6 +374,7 @@ function AuthenticatedLayout() {
 
       <FloatingChat />
     </div>
+
   );
 }
 
