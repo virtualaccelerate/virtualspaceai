@@ -62,10 +62,12 @@ function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: s
 function HomeChat() {
   const { t } = useTranslation();
   const ask = useServerFn(askZukha);
+  const sign = useServerFn(getDocumentSignedUrl);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [teamspaceId, setTeamspaceId] = useState<string | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -74,6 +76,29 @@ function HomeChat() {
   }, [messages, loading]);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      const { data: mem } = await supabase
+        .from("teamspace_members")
+        .select("teamspace_id")
+        .eq("user_id", data.user.id)
+        .limit(1)
+        .maybeSingle();
+      if (mem?.teamspace_id) setTeamspaceId(mem.teamspace_id);
+    })();
+  }, []);
+
+  const openFile = async (id: string) => {
+    try {
+      const { url } = await sign({ data: { id } });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not open file");
+    }
+  };
 
   const suggestionsRaw = t("app.overview.suggestions", { returnObjects: true });
   const suggestions: string[] = Array.isArray(suggestionsRaw) ? (suggestionsRaw as string[]) : [];
@@ -87,7 +112,7 @@ function HomeChat() {
     setMessages(next);
     setLoading(true);
     try {
-      const res = await ask({ data: { messages: next } });
+      const res = await ask({ data: { messages: next, teamspace_id: teamspaceId } });
       setMessages([...next, { role: "assistant", content: stripMarkdown(res.reply || "…") }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -96,6 +121,7 @@ function HomeChat() {
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   };
+
 
   const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
