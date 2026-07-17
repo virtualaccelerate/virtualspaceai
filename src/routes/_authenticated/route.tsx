@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -26,28 +27,31 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV_MAIN = [
-  { to: "/app", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/app/tasks", label: "Tasks", icon: CheckSquare, exact: false, badge: "12" },
-  { to: "/app/docs", label: "Knowledge Base", icon: BookOpen, exact: false },
-  { to: "/app/agents", label: "AI Agents", icon: Bot, exact: false, badge: "3" },
+  { to: "/app", labelKey: "app.nav.overview", icon: LayoutDashboard, exact: true },
+  { to: "/app/tasks", labelKey: "app.nav.tasks", icon: CheckSquare, exact: false, badge: "12" },
+  { to: "/app/docs", labelKey: "app.nav.knowledgeBase", icon: BookOpen, exact: false },
+  { to: "/app/agents", labelKey: "app.nav.aiAgents", icon: Bot, exact: false, badge: "3" },
 ] as const;
 
 const NAV_INSIGHTS = [
-  { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false },
-  { to: "/app/time", label: "Time Tracking", icon: Timer, exact: false },
-  { to: "/app/clients", label: "Clients", icon: Users, exact: false },
+  { to: "/app/analytics", labelKey: "app.nav.analytics", icon: BarChart3, exact: false },
+  { to: "/app/time", labelKey: "app.nav.timeTracking", icon: Timer, exact: false },
+  { to: "/app/clients", labelKey: "app.nav.clients", icon: Users, exact: false },
 ] as const;
 
 const NAV_ACCOUNT = [
-  { to: "/app/profile", label: "Profile", icon: User, exact: false },
+  { to: "/app/profile", labelKey: "app.nav.profile", icon: User, exact: false },
 ] as const;
+
 
 type Teamspace = { id: string; name: string; invite_code: string };
 
 function AuthenticatedLayout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
@@ -115,7 +119,7 @@ function AuthenticatedLayout() {
             >
               <span className="flex items-center gap-3">
                 <item.icon className={`h-4 w-4 ${active ? "text-primary" : "text-white/50 group-hover:text-white/80"}`} />
-                {item.label}
+                {t(item.labelKey)}
               </span>
               {"badge" in item && item.badge && (
                 <span className="text-[10px] font-semibold rounded-full px-1.5 py-0.5 bg-white/10 text-white/70">
@@ -149,9 +153,10 @@ function AuthenticatedLayout() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold text-white truncate">
-                  {teamspace?.name ?? "Loading…"}
+                  {teamspace?.name ?? t("app.header.loading")}
                 </div>
-                <div className="text-[10px] text-white/40 uppercase tracking-wider">Teamspace</div>
+                <div className="text-[10px] text-white/40 uppercase tracking-wider">{t("app.header.teamspace")}</div>
+
               </div>
               <ChevronDown className={`h-4 w-4 text-white/50 shrink-0 transition ${menuOpen ? "rotate-180" : ""}`} />
             </button>
@@ -167,26 +172,27 @@ function AuthenticatedLayout() {
           {menuOpen && (
             <div className="absolute left-3 right-3 top-full mt-1 z-50 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl overflow-hidden">
               <div className="px-3 py-2.5 border-b border-white/5">
-                <div className="text-[10px] uppercase tracking-wider text-white/40">Signed in as</div>
+                <div className="text-[10px] uppercase tracking-wider text-white/40">{t("app.header.signedInAs")}</div>
                 <div className="text-xs text-white/80 truncate mt-0.5">{email}</div>
               </div>
               <MenuItem
                 icon={User}
-                label="Profile"
+                label={t("app.nav.profile")}
                 onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }}
               />
               <MenuItem
                 icon={UserPlus}
-                label="Invite members"
+                label={t("app.header.inviteMembers")}
                 onClick={() => { setMenuOpen(false); setInviteOpen(true); }}
               />
               <MenuItem
                 icon={Settings}
-                label="Teamspace settings"
+                label={t("app.header.teamspaceSettings")}
                 onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }}
               />
               <div className="border-t border-white/5" />
-              <MenuItem icon={LogOut} label="Sign out" onClick={signOut} danger />
+              <MenuItem icon={LogOut} label={t("app.header.signOut")} onClick={signOut} danger />
+
             </div>
           )}
         </div>
@@ -194,14 +200,15 @@ function AuthenticatedLayout() {
         <div className="px-3 pt-3">
           <button className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-sm font-semibold hover:bg-primary/90 transition">
             <Plus className="h-4 w-4" />
-            New task
+            {t("app.header.newTask")}
           </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {renderGroup("Workspace", NAV_MAIN as unknown as typeof NAV_MAIN[number][])}
-          {renderGroup("Insights", NAV_INSIGHTS as unknown as typeof NAV_MAIN[number][])}
-          {renderGroup("Account", NAV_ACCOUNT as unknown as typeof NAV_MAIN[number][])}
+          {renderGroup(t("app.nav.workspace"), NAV_MAIN as unknown as typeof NAV_MAIN[number][])}
+          {renderGroup(t("app.nav.insights"), NAV_INSIGHTS as unknown as typeof NAV_MAIN[number][])}
+          {renderGroup(t("app.nav.account"), NAV_ACCOUNT as unknown as typeof NAV_MAIN[number][])}
+
         </nav>
 
         <div className="p-3 border-t border-white/10">
@@ -248,7 +255,7 @@ function AuthenticatedLayout() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input
                 type="search"
-                placeholder="Search tasks, docs, agents…"
+                placeholder={t("app.header.search")}
                 className="w-full rounded-lg bg-white/5 border border-white/10 pl-9 pr-14 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white/40 border border-white/10 rounded px-1.5 py-0.5">
@@ -263,8 +270,9 @@ function AuthenticatedLayout() {
               className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10 transition"
             >
               <UserPlus className="h-3.5 w-3.5" />
-              Invite
+              {t("app.header.invite")}
             </button>
+
             <button
               className="relative h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
               aria-label="Notifications"
@@ -320,6 +328,7 @@ function MenuItem({
 }
 
 function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: () => void }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const link = typeof window !== "undefined"
     ? `${window.location.origin}/onboarding?code=${teamspace.invite_code}`
@@ -345,8 +354,8 @@ function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: ()
               <UserPlus className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h3 className="font-display text-lg text-white">Invite to {teamspace.name}</h3>
-              <p className="text-xs text-white/55">Share the code or link with your team.</p>
+              <h3 className="font-display text-lg text-white">{t("app.invite.title")} {teamspace.name}</h3>
+              <p className="text-xs text-white/55">{t("app.invite.subtitle")}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label="Close">
@@ -356,7 +365,7 @@ function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: ()
 
         <div className="mt-5 space-y-3">
           <div>
-            <label className="text-[10px] uppercase tracking-wider text-white/50">Invite code</label>
+            <label className="text-[10px] uppercase tracking-wider text-white/50">{t("app.invite.code")}</label>
             <div className="mt-1.5 flex items-center gap-2">
               <input
                 readOnly
@@ -367,13 +376,13 @@ function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: ()
                 onClick={() => copy(teamspace.invite_code, "code")}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-semibold hover:bg-primary/90 transition"
               >
-                {copied === "code" ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+                {copied === "code" ? <><Check className="h-3.5 w-3.5" /> {t("app.invite.copied")}</> : <><Copy className="h-3.5 w-3.5" /> {t("app.invite.copy")}</>}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="text-[10px] uppercase tracking-wider text-white/50">Invite link</label>
+            <label className="text-[10px] uppercase tracking-wider text-white/50">{t("app.invite.link")}</label>
             <div className="mt-1.5 flex items-center gap-2">
               <input
                 readOnly
@@ -384,15 +393,16 @@ function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: ()
                 onClick={() => copy(link, "link")}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 transition"
               >
-                {copied === "link" ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+                {copied === "link" ? <><Check className="h-3.5 w-3.5" /> {t("app.invite.copied")}</> : <><Copy className="h-3.5 w-3.5" /> {t("app.invite.copy")}</>}
               </button>
             </div>
           </div>
         </div>
 
         <p className="mt-4 text-[11px] text-white/50">
-          Teammates can join by pasting the code on the onboarding screen or by opening the link and signing in.
+          {t("app.invite.hint")}
         </p>
+
       </div>
     </div>
   );

@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/_authenticated/app/profile")({
   component: ProfilePage,
@@ -23,7 +25,9 @@ type Profile = {
 };
 
 function ProfilePage() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,12 +96,13 @@ function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <h1 className="font-display text-3xl text-white">Profile</h1>
-        <p className="mt-2 text-sm text-white/60">Manage your personal information and preferences.</p>
+        <h1 className="font-display text-3xl text-white">{t("app.profile.title")}</h1>
+        <p className="mt-2 text-sm text-white/60">{t("app.profile.subtitle")}</p>
       </motion.div>
 
+
       <form onSubmit={handleSave} className="mt-8 glass-strong rounded-3xl p-6 sm:p-8 space-y-5">
-        <Field label="Email">
+        <Field label={t("app.profile.email")}>
           <input
             type="email"
             value={profile.email}
@@ -106,7 +111,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Full name">
+        <Field label={t("app.profile.fullName")}>
           <input
             type="text"
             maxLength={120}
@@ -116,7 +121,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Company">
+        <Field label={t("app.profile.company")}>
           <input
             type="text"
             maxLength={200}
@@ -126,7 +131,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Avatar URL">
+        <Field label={t("app.profile.avatarUrl")}>
           <input
             type="url"
             value={profile.avatar_url}
@@ -136,7 +141,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Language">
+        <Field label={t("app.profile.language")}>
           <select
             value={profile.language}
             onChange={(e) => setProfile((p) => ({ ...p, language: e.target.value }))}
@@ -159,7 +164,7 @@ function ProfilePage() {
           disabled={saving}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60"
         >
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? (<><Check className="h-4 w-4" /> Saved</>) : "Save changes"}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? (<><Check className="h-4 w-4" /> {t("app.profile.saved")}</>) : t("app.profile.save")}
         </button>
       </form>
     </div>

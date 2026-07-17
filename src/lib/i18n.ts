@@ -159,6 +159,43 @@ const resources = {
           ],
         },
       },
+      app: {
+        nav: {
+          workspace: "Workspace", insights: "Insights", account: "Account",
+          overview: "Overview", tasks: "Tasks", knowledgeBase: "Knowledge Base",
+          aiAgents: "AI Agents", analytics: "Analytics", timeTracking: "Time Tracking",
+          clients: "Clients", profile: "Profile",
+        },
+        header: {
+          teamspace: "Teamspace", loading: "Loading…", signedInAs: "Signed in as",
+          inviteMembers: "Invite members", teamspaceSettings: "Teamspace settings",
+          signOut: "Sign out", newTask: "New task",
+          search: "Search tasks, docs, agents…", invite: "Invite",
+        },
+        invite: {
+          title: "Invite to", subtitle: "Share the code or link with your team.",
+          code: "Invite code", link: "Invite link", copy: "Copy", copied: "Copied",
+          hint: "Teammates can join by pasting the code on the onboarding screen or by opening the link and signing in.",
+        },
+        overview: {
+          greeting: "Welcome back", subtitle: "Here's what's happening in your workspace today.",
+          quickAction: "Quick action", askZukha: "Ask Zukha",
+          askZukhaSubtitle: "Your AI copilot for this teamspace",
+          clear: "Clear", thinking: "Zukha is thinking…", placeholder: "Ask anything…",
+          suggestions: [
+            "Summarize what my team did this week",
+            "Draft a client follow-up email",
+            "What tasks should I prioritize today?",
+            "Suggest 3 KPIs for our next sprint",
+          ],
+        },
+        profile: {
+          title: "Profile", subtitle: "Manage your personal information and preferences.",
+          email: "Email", fullName: "Full name", company: "Company",
+          avatarUrl: "Avatar URL", language: "Language",
+          save: "Save changes", saving: "Saving…", saved: "Saved",
+        },
+      },
       taskTable: {
         tasks: [
           ["Cleaning Logs", "ETL Flow", "Validation", "Encryption", "Backup"],
@@ -324,6 +361,43 @@ const resources = {
           ],
         },
       },
+      app: {
+        nav: {
+          workspace: "Рабочая область", insights: "Аналитика", account: "Аккаунт",
+          overview: "Обзор", tasks: "Задачи", knowledgeBase: "База знаний",
+          aiAgents: "AI-агенты", analytics: "Аналитика", timeTracking: "Учёт времени",
+          clients: "Клиенты", profile: "Профиль",
+        },
+        header: {
+          teamspace: "Командное пространство", loading: "Загрузка…", signedInAs: "Вы вошли как",
+          inviteMembers: "Пригласить участников", teamspaceSettings: "Настройки пространства",
+          signOut: "Выйти", newTask: "Новая задача",
+          search: "Поиск задач, документов, агентов…", invite: "Пригласить",
+        },
+        invite: {
+          title: "Пригласить в", subtitle: "Поделитесь кодом или ссылкой с командой.",
+          code: "Код приглашения", link: "Ссылка приглашения", copy: "Копировать", copied: "Скопировано",
+          hint: "Коллеги могут присоединиться, введя код на экране онбординга или открыв ссылку и войдя в аккаунт.",
+        },
+        overview: {
+          greeting: "С возвращением", subtitle: "Вот что происходит в вашем пространстве сегодня.",
+          quickAction: "Быстрое действие", askZukha: "Спросить Zukha",
+          askZukhaSubtitle: "Ваш AI-помощник в этом пространстве",
+          clear: "Очистить", thinking: "Zukha думает…", placeholder: "Спросите что угодно…",
+          suggestions: [
+            "Подведи итог того, что сделала команда на этой неделе",
+            "Напиши письмо-напоминание клиенту",
+            "Какие задачи стоит сделать сегодня в первую очередь?",
+            "Предложи 3 KPI для следующего спринта",
+          ],
+        },
+        profile: {
+          title: "Профиль", subtitle: "Управляйте личной информацией и настройками.",
+          email: "Email", fullName: "Полное имя", company: "Компания",
+          avatarUrl: "URL аватара", language: "Язык",
+          save: "Сохранить изменения", saving: "Сохранение…", saved: "Сохранено",
+        },
+      },
       taskTable: {
         tasks: [
           ["Очистка логов", "ETL-поток", "Валидация", "Шифрование", "Бэкап"],
@@ -466,6 +540,43 @@ const resources = {
           ],
         },
       },
+      app: {
+        nav: {
+          workspace: "Жұмыс кеңістігі", insights: "Аналитика", account: "Аккаунт",
+          overview: "Шолу", tasks: "Тапсырмалар", knowledgeBase: "Білім қоры",
+          aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Уақыт есебі",
+          clients: "Клиенттер", profile: "Профиль",
+        },
+        header: {
+          teamspace: "Команда кеңістігі", loading: "Жүктелуде…", signedInAs: "Кіргенсіз:",
+          inviteMembers: "Мүшелерді шақыру", teamspaceSettings: "Кеңістік баптаулары",
+          signOut: "Шығу", newTask: "Жаңа тапсырма",
+          search: "Тапсырмалар, құжаттар, агенттерді іздеу…", invite: "Шақыру",
+        },
+        invite: {
+          title: "Шақыру:", subtitle: "Кодты немесе сілтемені командаңызбен бөлісіңіз.",
+          code: "Шақыру коды", link: "Шақыру сілтемесі", copy: "Көшіру", copied: "Көшірілді",
+          hint: "Әріптестер онбординг экранында кодты енгізу немесе сілтемені ашып кіру арқылы қосыла алады.",
+        },
+        overview: {
+          greeting: "Қайта оралуыңызбен", subtitle: "Бүгін кеңістігіңізде не болып жатқанын көріңіз.",
+          quickAction: "Жылдам әрекет", askZukha: "Zukha-дан сұрау",
+          askZukhaSubtitle: "Осы кеңістіктегі AI-көмекшіңіз",
+          clear: "Тазалау", thinking: "Zukha ойлауда…", placeholder: "Кез келген нәрсені сұраңыз…",
+          suggestions: [
+            "Командам осы аптада не істегенін қорытындыла",
+            "Клиентке еске салу хатын жаз",
+            "Бүгін ең алдымен қандай тапсырмаларға назар аудару керек?",
+            "Келесі спринт үшін 3 KPI ұсын",
+          ],
+        },
+        profile: {
+          title: "Профиль", subtitle: "Жеке ақпарат пен баптауларды басқарыңыз.",
+          email: "Email", fullName: "Толық аты-жөні", company: "Компания",
+          avatarUrl: "Аватар URL", language: "Тіл",
+          save: "Өзгерістерді сақтау", saving: "Сақталуда…", saved: "Сақталды",
+        },
+      },
       taskTable: {
         tasks: [
           ["Логтарды тазалау", "ETL ағыны", "Валидация", "Шифрлау", "Backup"],
@@ -598,6 +709,43 @@ const resources = {
             { title: "Токтоо ишеним", body: "Ишенимдүү жана кесипкөй." },
             { title: "Акылдуу, бирок адамча", body: "ИИ жардам берет — чечимди адамдар кабыл алат." },
           ],
+        },
+      },
+      app: {
+        nav: {
+          workspace: "Иш мейкиндиги", insights: "Аналитика", account: "Аккаунт",
+          overview: "Кароо", tasks: "Тапшырмалар", knowledgeBase: "Билим базасы",
+          aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Убакыт эсеби",
+          clients: "Кардарлар", profile: "Профиль",
+        },
+        header: {
+          teamspace: "Команда мейкиндиги", loading: "Жүктөлүүдө…", signedInAs: "Кирген:",
+          inviteMembers: "Мүчөлөрдү чакыруу", teamspaceSettings: "Мейкиндик жөндөөлөрү",
+          signOut: "Чыгуу", newTask: "Жаңы тапшырма",
+          search: "Тапшырма, документ, агенттерди издөө…", invite: "Чакыруу",
+        },
+        invite: {
+          title: "Чакыруу:", subtitle: "Кодду же шилтемени командаңыз менен бөлүшүңүз.",
+          code: "Чакыруу коду", link: "Чакыруу шилтемеси", copy: "Көчүрүү", copied: "Көчүрүлдү",
+          hint: "Кесиптештер онбординг экранында кодду киргизип же шилтемени ачып кире алышат.",
+        },
+        overview: {
+          greeting: "Кайра кош келиңиз", subtitle: "Бүгүн мейкиндигиңизде эмне болуп жатканын көрүңүз.",
+          quickAction: "Тез аракет", askZukha: "Zukha-дан сура",
+          askZukhaSubtitle: "Ушул мейкиндиктеги AI-жардамчыңыз",
+          clear: "Тазалоо", thinking: "Zukha ойлонуп жатат…", placeholder: "Каалаган нерсени сура…",
+          suggestions: [
+            "Командам бул жумада эмне кылганын жыйынтыкта",
+            "Кардарга эскертүү катын жаз",
+            "Бүгүн эң биринчи кайсы тапшырмаларды аткаруу керек?",
+            "Кийинки спринт үчүн 3 KPI сунуштагыла",
+          ],
+        },
+        profile: {
+          title: "Профиль", subtitle: "Жеке маалыматты жана жөндөөлөрдү башкарыңыз.",
+          email: "Email", fullName: "Толук аты-жөнү", company: "Компания",
+          avatarUrl: "Аватар URL", language: "Тил",
+          save: "Өзгөрүүлөрдү сактоо", saving: "Сакталууда…", saved: "Сакталды",
         },
       },
       taskTable: {
@@ -734,6 +882,43 @@ const resources = {
           ],
         },
       },
+      app: {
+        nav: {
+          workspace: "Ish maydoni", insights: "Analitika", account: "Akkaunt",
+          overview: "Umumiy koʻrinish", tasks: "Vazifalar", knowledgeBase: "Bilim bazasi",
+          aiAgents: "AI-agentlar", analytics: "Analitika", timeTracking: "Vaqt hisobi",
+          clients: "Mijozlar", profile: "Profil",
+        },
+        header: {
+          teamspace: "Jamoa maydoni", loading: "Yuklanmoqda…", signedInAs: "Kirgan:",
+          inviteMembers: "Aʼzolarni taklif qilish", teamspaceSettings: "Maydon sozlamalari",
+          signOut: "Chiqish", newTask: "Yangi vazifa",
+          search: "Vazifa, hujjat, agentlarni qidirish…", invite: "Taklif",
+        },
+        invite: {
+          title: "Taklif:", subtitle: "Kod yoki havolani jamoangiz bilan ulashing.",
+          code: "Taklif kodi", link: "Taklif havolasi", copy: "Nusxalash", copied: "Nusxalandi",
+          hint: "Hamkasblar onboarding ekranida kodni kiritish yoki havolani ochib kirish orqali qoʻshila oladi.",
+        },
+        overview: {
+          greeting: "Qaytganingiz bilan", subtitle: "Bugun maydoningizda nima boʻlayotganini koʻring.",
+          quickAction: "Tez harakat", askZukha: "Zukha'dan soʻrash",
+          askZukhaSubtitle: "Ushbu maydondagi AI-yordamchingiz",
+          clear: "Tozalash", thinking: "Zukha oʻylayapti…", placeholder: "Xohlagan narsani soʻrang…",
+          suggestions: [
+            "Jamoam shu hafta nima qilganini xulosa qil",
+            "Mijozga eslatma xat yoz",
+            "Bugun eng avval qaysi vazifalarni bajarish kerak?",
+            "Keyingi sprint uchun 3 ta KPI taklif qil",
+          ],
+        },
+        profile: {
+          title: "Profil", subtitle: "Shaxsiy maʼlumot va sozlamalarni boshqaring.",
+          email: "Email", fullName: "Toʻliq ism", company: "Kompaniya",
+          avatarUrl: "Avatar URL", language: "Til",
+          save: "Oʻzgarishlarni saqlash", saving: "Saqlanmoqda…", saved: "Saqlandi",
+        },
+      },
       taskTable: {
         tasks: [
           ["Loglarni tozalash", "ETL oqim", "Validatsiya", "Shifrlash", "Backup"],
@@ -866,6 +1051,43 @@ const resources = {
             { title: "Эътимоди ором", body: "Боэътимод ва касбӣ." },
             { title: "Оқилона, вале инсонӣ", body: "AI кӯмак мекунад — қарор аз они одамон." },
           ],
+        },
+      },
+      app: {
+        nav: {
+          workspace: "Фазои корӣ", insights: "Таҳлил", account: "Ҳисоб",
+          overview: "Шарҳ", tasks: "Вазифаҳо", knowledgeBase: "Пойгоҳи дониш",
+          aiAgents: "AI-агентҳо", analytics: "Таҳлил", timeTracking: "Ҳисоби вақт",
+          clients: "Муштариён", profile: "Профил",
+        },
+        header: {
+          teamspace: "Фазои даста", loading: "Бор шуда истодааст…", signedInAs: "Ворид шудаед:",
+          inviteMembers: "Даъвати аъзоён", teamspaceSettings: "Танзимоти фазо",
+          signOut: "Баромадан", newTask: "Вазифаи нав",
+          search: "Ҷустуҷӯи вазифа, ҳуҷҷат, агентҳо…", invite: "Даъват",
+        },
+        invite: {
+          title: "Даъват ба:", subtitle: "Код ё пайвандро бо дастаи худ мубодила кунед.",
+          code: "Коди даъват", link: "Пайванди даъват", copy: "Нусхабардорӣ", copied: "Нусхабардорӣ шуд",
+          hint: "Ҳамкорон метавонанд бо ворид кардани код дар экрани онбординг ё кушодани пайванд ва воридшавӣ ҳамроҳ шаванд.",
+        },
+        overview: {
+          greeting: "Хуш омадед", subtitle: "Имрӯз дар фазои шумо чӣ рӯй дода истодааст.",
+          quickAction: "Амали зуд", askZukha: "Аз Zukha пурсидан",
+          askZukhaSubtitle: "Ёрдамчии AI-и шумо дар ин фазо",
+          clear: "Тоза кардан", thinking: "Zukha фикр мекунад…", placeholder: "Ҳар чиро пурсед…",
+          suggestions: [
+            "Он чиро, ки дастаам ин ҳафта кард, ҷамъбаст кун",
+            "Ба муштарӣ мактуби ёдоварӣ нависед",
+            "Имрӯз пеш аз ҳама кадом вазифаҳоро иҷро кардан лозим аст?",
+            "Барои спринти оянда 3 KPI пешниҳод кун",
+          ],
+        },
+        profile: {
+          title: "Профил", subtitle: "Маълумоти шахсӣ ва танзимотро идора кунед.",
+          email: "Email", fullName: "Номи пурра", company: "Ширкат",
+          avatarUrl: "URL-и аватар", language: "Забон",
+          save: "Захира кардани тағйирот", saving: "Захира шуда истодааст…", saved: "Захира шуд",
         },
       },
       taskTable: {
