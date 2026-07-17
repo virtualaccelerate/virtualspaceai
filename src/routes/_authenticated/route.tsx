@@ -340,6 +340,8 @@ function AuthenticatedLayout() {
       {inviteOpen && teamspace && (
         <InviteModal teamspace={teamspace} onClose={() => setInviteOpen(false)} />
       )}
+
+      <FloatingChat />
     </div>
   );
 }
