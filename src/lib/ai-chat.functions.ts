@@ -94,6 +94,69 @@ export const askZukha = createServerFn({ method: "POST" })
       }
     }
 
+    // Load financial sources (Google Sheets + uploaded CSV/XLSX) and refresh sheets live
+    let financeBlock = "";
+    if (data.teamspace_id) {
+      const { data: fins } = await context.supabase
+        .from("financial_sources")
+        .select("id, name, kind, source_url, raw_csv")
+        .eq("teamspace_id", data.teamspace_id);
+      if (fins && fins.length > 0) {
+        await Promise.all(
+          fins.map(async (r) => {
+            if (r.kind !== "sheet" || !r.source_url) return;
+            const info = extractSheetInfo(r.source_url);
+            if (!info) return;
+            const csv = await fetchSheetCsv(info.id, info.gid);
+            if (!csv) return;
+            r.raw_csv = csv;
+            await context.supabase
+              .from("financial_sources")
+              .update({ raw_csv: csv })
+              .eq("id", r.id);
+          }),
+        );
+        const FIN_BUDGET = 40_000;
+        let used = 0;
+        const parts: string[] = [];
+        for (const r of fins) {
+          if (!r.raw_csv) continue;
+          const chunk = `### FIN TABLE: ${r.name}${r.source_url ? ` (${r.source_url})` : ""}\n${r.raw_csv.slice(0, 20_000)}\n\n`;
+          if (used + chunk.length > FIN_BUDGET) break;
+          parts.push(chunk);
+          used += chunk.length;
+        }
+        if (parts.length) {
+          financeBlock =
+            "\n\nFINANCIAL SOURCES (linked in the Financials section — use for money/revenue/expense questions):\n" +
+            parts.join("");
+        }
+      }
+    }
+
+    // If the latest user message pasted a Google Sheets URL, fetch it inline
+    let inlineSheetBlock = "";
+    const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
+    if (lastUser) {
+      const urls = findSheetUrls(lastUser.content).slice(0, 3);
+      const fetched: string[] = [];
+      for (const url of urls) {
+        const info = extractSheetInfo(url);
+        if (!info) continue;
+        const csv = await fetchSheetCsv(info.id, info.gid);
+        if (!csv) {
+          fetched.push(`### SHARED SHEET (not accessible — user must set share to 'Anyone with the link · Viewer'): ${url}\n`);
+        } else {
+          fetched.push(`### SHARED SHEET: ${url}\n${csv.slice(0, 20_000)}\n`);
+        }
+      }
+      if (fetched.length) {
+        inlineSheetBlock =
+          "\n\nSHEETS SHARED IN THIS MESSAGE (read them directly and answer):\n" +
+          fetched.join("\n");
+      }
+    }
+
     const agentPreamble = data.agent_id && AGENT_PROMPTS[data.agent_id]
       ? `ACTIVE AGENT MODE: ${AGENT_PROMPTS[data.agent_id]}\n\n`
       : "";
