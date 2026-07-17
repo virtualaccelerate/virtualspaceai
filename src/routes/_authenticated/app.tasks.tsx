@@ -56,11 +56,46 @@ type Task = {
   position: number;
 };
 
-const COLUMNS: { id: TaskStatus; label: string; accent: string }[] = [
-  { id: "backlog", label: "Backlog", accent: "bg-white/40" },
-  { id: "in_progress", label: "In Progress", accent: "bg-sky-400" },
-  { id: "review", label: "Review", accent: "bg-amber-400" },
-  { id: "done", label: "Done", accent: "bg-emerald-400" },
+const COLUMNS: {
+  id: TaskStatus;
+  label: string;
+  accent: string;
+  pill: string;
+  dot: string;
+  ring: string;
+}[] = [
+  {
+    id: "backlog",
+    label: "TO DO",
+    accent: "bg-white/40",
+    pill: "bg-white/10 text-white/80 border-white/15",
+    dot: "border-white/40",
+    ring: "ring-white/10",
+  },
+  {
+    id: "in_progress",
+    label: "IN PROGRESS",
+    accent: "bg-violet-500",
+    pill: "bg-violet-500/20 text-violet-200 border-violet-400/30",
+    dot: "border-violet-400",
+    ring: "ring-violet-400/20",
+  },
+  {
+    id: "review",
+    label: "REVIEW",
+    accent: "bg-amber-400",
+    pill: "bg-amber-400/15 text-amber-200 border-amber-400/30",
+    dot: "border-amber-400",
+    ring: "ring-amber-400/20",
+  },
+  {
+    id: "done",
+    label: "COMPLETE",
+    accent: "bg-emerald-500",
+    pill: "bg-emerald-500/20 text-emerald-200 border-emerald-400/30",
+    dot: "border-emerald-400",
+    ring: "ring-emerald-400/20",
+  },
 ];
 
 const PRIORITY_META: Record<TaskPriority, { label: string; color: string; dot: string }> = {
@@ -69,6 +104,17 @@ const PRIORITY_META: Record<TaskPriority, { label: string; color: string; dot: s
   high: { label: "High", color: "text-amber-300 border-amber-400/30", dot: "bg-amber-400" },
   urgent: { label: "Urgent", color: "text-rose-300 border-rose-400/30", dot: "bg-rose-400" },
 };
+
+function initialsOf(name?: string | null) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
+}
+
+function formatDateRange(due: string) {
+  const d = new Date(due);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 type TaskDraft = {
   title: string;
