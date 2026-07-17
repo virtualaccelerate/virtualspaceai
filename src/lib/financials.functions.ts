@@ -176,6 +176,35 @@ function buildCorpus(rows: { name: string; raw_csv: string | null }[]): string {
   return parts.join("");
 }
 
+// Re-fetch every Google Sheet source so answers reflect the latest values.
+// Mutates rows in place; failures skip silently (stale copy stays usable).
+async function refreshSheetRows(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  rows: { id: string; name: string; kind?: string | null; source_url?: string | null; raw_csv: string | null }[],
+) {
+  await Promise.all(
+    rows.map(async (r) => {
+      if (r.kind !== "sheet" || !r.source_url) return;
+      const info = extractSheetInfo(r.source_url);
+      if (!info) return;
+      try {
+        const res = await fetch(csvExportUrl(info.id, info.gid), { redirect: "follow" });
+        if (!res.ok) return;
+        const ct = res.headers.get("content-type") || "";
+        const csv = await res.text();
+        if (ct.includes("text/html") || /<html/i.test(csv.slice(0, 200))) return;
+        const trimmed = csv.slice(0, 400_000);
+        if (trimmed === r.raw_csv) return;
+        r.raw_csv = trimmed;
+        await supabase.from("financial_sources").update({ raw_csv: trimmed }).eq("id", r.id);
+      } catch {
+        // keep stale copy
+      }
+    }),
+  );
+}
+
 export const analyzeFinancials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) =>
@@ -187,10 +216,11 @@ export const analyzeFinancials = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("financial_sources")
-      .select("id, name, raw_csv")
+      .select("id, name, kind, source_url, raw_csv")
       .eq("teamspace_id", data.teamspace_id);
     if (error) throw new Error(error.message);
     if (!rows || rows.length === 0) throw new Error("Add a table or Google Sheet first.");
+    await refreshSheetRows(context.supabase, rows);
     const corpus = buildCorpus(rows);
     if (!corpus.trim()) throw new Error("Sources have no readable data.");
 
@@ -261,9 +291,10 @@ export const askFinancials = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("financial_sources")
-      .select("id, name, raw_csv")
+      .select("id, name, kind, source_url, raw_csv")
       .eq("teamspace_id", data.teamspace_id);
     if (error) throw new Error(error.message);
+    if (rows && rows.length) await refreshSheetRows(context.supabase, rows);
     const corpus = rows && rows.length ? buildCorpus(rows) : "";
 
     const key = process.env.LOVABLE_API_KEY;
