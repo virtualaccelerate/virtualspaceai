@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as BookDemoRouteImport } from './routes/book-demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -26,6 +27,11 @@ import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authentica
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookDemoRoute = BookDemoRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
+  '/onboarding': typeof OnboardingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/agents': typeof AuthenticatedAppAgentsRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
+  '/onboarding': typeof OnboardingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/agents': typeof AuthenticatedAppAgentsRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
+  '/onboarding': typeof OnboardingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/app/agents': typeof AuthenticatedAppAgentsRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book-demo'
+    | '/onboarding'
     | '/sitemap.xml'
     | '/app'
     | '/app/agents'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book-demo'
+    | '/onboarding'
     | '/sitemap.xml'
     | '/app'
     | '/app/agents'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/book-demo'
+    | '/onboarding'
     | '/sitemap.xml'
     | '/_authenticated/app'
     | '/_authenticated/app/agents'
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BookDemoRoute: typeof BookDemoRoute
+  OnboardingRoute: typeof OnboardingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book-demo': {
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BookDemoRoute: BookDemoRoute,
+  OnboardingRoute: OnboardingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
