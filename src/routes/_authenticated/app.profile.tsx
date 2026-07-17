@@ -25,7 +25,9 @@ type Profile = {
 };
 
 function ProfilePage() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
