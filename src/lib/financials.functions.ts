@@ -291,9 +291,10 @@ export const askFinancials = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("financial_sources")
-      .select("id, name, raw_csv")
+      .select("id, name, kind, source_url, raw_csv")
       .eq("teamspace_id", data.teamspace_id);
     if (error) throw new Error(error.message);
+    if (rows && rows.length) await refreshSheetRows(context.supabase, rows);
     const corpus = rows && rows.length ? buildCorpus(rows) : "";
 
     const key = process.env.LOVABLE_API_KEY;
