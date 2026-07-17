@@ -347,18 +347,18 @@ function TasksPage() {
                           }}
                           onClick={() => openEdit(task)}
                           className={cn(
-                            "group cursor-grab active:cursor-grabbing rounded-xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_2px_8px_rgba(0,0,0,0.25)] hover:border-white/25 hover:bg-white/[0.06] transition",
+                            "group cursor-grab active:cursor-grabbing rounded-xl border border-border bg-card p-3 shadow-sm hover:border-primary/30 hover:bg-accent/30 transition",
                             dragId === task.id && "opacity-50",
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <h3 className="text-[13px] font-medium text-white leading-snug">
+                            <h3 className="text-[13px] font-medium text-foreground leading-snug">
                               {task.title}
                             </h3>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <button
-                                  className="opacity-0 group-hover:opacity-100 text-white/40 hover:text-white transition -mr-1"
+                                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition -mr-1"
                                   aria-label="Task actions"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
@@ -377,7 +377,7 @@ function TasksPage() {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(task.id)}
-                                  className="text-rose-300 focus:text-rose-200"
+                                  className="text-rose-600 dark:text-rose-300 focus:text-rose-700 dark:focus:text-rose-200"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" /> Delete
                                 </DropdownMenuItem>
@@ -386,7 +386,7 @@ function TasksPage() {
                           </div>
 
                           {task.description && (
-                            <p className="mt-1 text-xs text-white/50 line-clamp-2">
+                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
                               {task.description}
                             </p>
                           )}
@@ -394,24 +394,24 @@ function TasksPage() {
                           <div className="mt-3 flex items-center gap-1.5">
                             {task.assignee_name ? (
                               <span
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/70 text-[10px] font-semibold text-white ring-2 ring-white/5"
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/80 text-[10px] font-semibold text-white ring-2 ring-background"
                                 title={task.assignee_name}
                               >
                                 {initialsOf(task.assignee_name)}
                               </span>
                             ) : (
-                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-white/20 text-white/30">
+                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
                                 <User className="h-3 w-3" />
                               </span>
                             )}
 
                             {task.due_date ? (
-                              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-white/70">
+                              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-[10px] text-foreground/80">
                                 <CalendarIcon className="h-3 w-3" />
                                 {formatDateRange(task.due_date)}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-white/10 text-white/30">
+                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-border text-muted-foreground">
                                 <CalendarIcon className="h-3 w-3" />
                               </span>
                             )}
@@ -427,7 +427,7 @@ function TasksPage() {
                             </span>
 
                             <span
-                              className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-white/10 text-white/30"
+                              className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-border text-muted-foreground"
                               aria-hidden
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
@@ -440,7 +440,7 @@ function TasksPage() {
 
                   <button
                     onClick={() => openCreate(col.id)}
-                    className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-300/80 hover:text-emerald-200 hover:bg-white/[0.03] transition"
+                    className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 hover:bg-accent/40 transition"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add Task
                   </button>
@@ -450,7 +450,7 @@ function TasksPage() {
 
             <button
               onClick={() => openCreate()}
-              className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-white/10 px-4 py-3 text-sm text-white/40 hover:text-white/70 hover:border-white/25 transition"
+              className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
             >
               <Plus className="h-4 w-4" /> Add group
             </button>
