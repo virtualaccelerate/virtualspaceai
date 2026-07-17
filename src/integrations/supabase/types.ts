@@ -177,6 +177,53 @@ export type Database = {
           },
         ]
       }
+      financial_sources: {
+        Row: {
+          analysis: Json | null
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          raw_csv: string | null
+          source_url: string | null
+          teamspace_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis?: Json | null
+          created_at?: string
+          id?: string
+          kind: string
+          name: string
+          raw_csv?: string | null
+          source_url?: string | null
+          teamspace_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis?: Json | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          raw_csv?: string | null
+          source_url?: string | null
+          teamspace_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_sources_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
