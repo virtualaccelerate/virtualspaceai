@@ -9,6 +9,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { askZukha } from "@/lib/ai-chat.functions";
+import { useTranslation } from "react-i18next";
+
 
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -67,7 +69,9 @@ const NOTIFICATIONS = [
 ];
 
 function AppDashboard() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | null>(null);
+
 
   useEffect(() => {
     (async () => {
@@ -97,25 +101,20 @@ function AppDashboard() {
         className="flex flex-wrap items-end justify-between gap-4"
       >
         <div>
-          <p className="text-[11px] uppercase tracking-[0.25em] text-primary/80">Welcome back</p>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-primary/80">{t("app.overview.greeting")}</p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl text-white">
-            Hi, {displayName} 👋
+            {t("app.overview.greeting")}, {displayName} 👋
           </h1>
           <p className="mt-2 text-sm text-white/60">
-            Вот что происходит в вашем Virtual Office сегодня.
+            {t("app.overview.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 hover:bg-white/10 transition">
-            Today
-          </button>
-          <button className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 hover:bg-white/10 transition">
-            This week
-          </button>
           <button className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition">
-            + Quick action
+            + {t("app.overview.quickAction")}
           </button>
         </div>
+
       </motion.div>
 
       {/* Ask Zukha chat */}
@@ -306,6 +305,7 @@ function PriorityFlag({ p }: { p: Task["priority"] }) {
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
 function ZukhaChat() {
+  const { t } = useTranslation();
   const ask = useServerFn(askZukha);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
@@ -320,12 +320,20 @@ function ZukhaChat() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const suggestions = [
-    "Summarize what my team did this week",
-    "Draft a client follow-up email",
-    "What tasks should I prioritize today?",
-    "Suggest 3 KPIs for our next sprint",
-  ];
+  const suggestionsRaw = t("app.overview.suggestions", { returnObjects: true });
+  const suggestions: string[] = Array.isArray(suggestionsRaw) ? (suggestionsRaw as string[]) : [];
+
+  // Strip any markdown formatting the model might return so replies read as plain text.
+  const stripMarkdown = (s: string) =>
+    s
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/__(.*?)__/g, "$1")
+      .replace(/_(.*?)_/g, "$1")
+      .replace(/`([^`]*)`/g, "$1")
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/^\s*[-*+]\s+/gm, "• ");
+
 
   const send = async (text?: string) => {
     const content = (text ?? input).trim();
@@ -337,7 +345,8 @@ function ZukhaChat() {
     setLoading(true);
     try {
       const res = await ask({ data: { messages: next } });
-      setMessages([...next, { role: "assistant", content: res.reply || "…" }]);
+      setMessages([...next, { role: "assistant", content: stripMarkdown(res.reply || "…") }]);
+
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -366,8 +375,8 @@ function ZukhaChat() {
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-sm font-semibold text-white">Ask Zukha</div>
-            <div className="text-[11px] text-white/50">Your AI copilot for this teamspace</div>
+            <div className="text-sm font-semibold text-white">{t("app.overview.askZukha")}</div>
+            <div className="text-[11px] text-white/50">{t("app.overview.copilot")}</div>
           </div>
         </div>
         {messages.length > 0 && (
@@ -375,9 +384,10 @@ function ZukhaChat() {
             onClick={() => { setMessages([]); setError(null); }}
             className="text-[11px] text-white/50 hover:text-white transition"
           >
-            Clear
+            {t("app.overview.clear")}
           </button>
         )}
+
       </div>
 
       {messages.length === 0 ? (
@@ -410,9 +420,10 @@ function ZukhaChat() {
           {loading && (
             <div className="flex items-center gap-2 text-xs text-white/50">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Zukha is thinking…
+              {t("app.overview.thinking")}
             </div>
           )}
+
         </div>
       )}
 
@@ -434,7 +445,7 @@ function ZukhaChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKey}
-          placeholder="Ask anything…"
+          placeholder={t("app.overview.askPlaceholder")}
           className="flex-1 resize-none bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none max-h-40 py-1.5"
         />
         <button
