@@ -237,7 +237,7 @@ export const analyzeFinancials = createServerFn({ method: "POST" })
     const target = rows[0];
     await context.supabase
       .from("financial_sources")
-      .update({ analysis: analysis as unknown as Record<string, unknown> })
+      .update({ analysis: JSON.parse(JSON.stringify(analysis)) })
       .eq("id", target.id);
 
     return { analysis };
