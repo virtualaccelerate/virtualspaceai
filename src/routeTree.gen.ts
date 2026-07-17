@@ -15,6 +15,7 @@ import { Route as BookDemoRouteImport } from './routes/book-demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
 import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
@@ -58,75 +59,80 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
-  id: '/app/',
-  path: '/app/',
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
-  id: '/app/time',
-  path: '/app/time',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/time',
+  path: '/time',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppTelegramRoute =
   AuthenticatedAppTelegramRouteImport.update({
-    id: '/app/telegram',
-    path: '/app/telegram',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/telegram',
+    path: '/telegram',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
-  id: '/app/team',
-  path: '/app/team',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
-  id: '/app/tasks',
-  path: '/app/tasks',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppSettingsRoute =
   AuthenticatedAppSettingsRouteImport.update({
-    id: '/app/settings',
-    path: '/app/settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
-  id: '/app/profile',
-  path: '/app/profile',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppOverviewRoute =
   AuthenticatedAppOverviewRouteImport.update({
-    id: '/app/overview',
-    path: '/app/overview',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppFinancialsRoute =
   AuthenticatedAppFinancialsRouteImport.update({
-    id: '/app/financials',
-    path: '/app/financials',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
-  id: '/app/docs',
-  path: '/app/docs',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppClientsRoute = AuthenticatedAppClientsRouteImport.update({
-  id: '/app/clients',
-  path: '/app/clients',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppAnalyticsRoute =
   AuthenticatedAppAnalyticsRouteImport.update({
-    id: '/app/analytics',
-    path: '/app/analytics',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppAgentsRoute = AuthenticatedAppAgentsRouteImport.update({
-  id: '/app/agents',
-  path: '/app/agents',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/book-demo': typeof BookDemoRoute
   '/onboarding': typeof OnboardingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/agents': typeof AuthenticatedAppAgentsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
@@ -177,6 +184,7 @@ export interface FileRoutesById {
   '/book-demo': typeof BookDemoRoute
   '/onboarding': typeof OnboardingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/app/agents': typeof AuthenticatedAppAgentsRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
@@ -199,6 +207,7 @@ export interface FileRouteTypes {
     | '/book-demo'
     | '/onboarding'
     | '/sitemap.xml'
+    | '/app'
     | '/app/agents'
     | '/app/analytics'
     | '/app/clients'
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/book-demo'
     | '/onboarding'
     | '/sitemap.xml'
+    | '/_authenticated/app'
     | '/_authenticated/app/agents'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/clients'
@@ -308,101 +318,108 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
-      path: '/app'
+      path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/time': {
       id: '/_authenticated/app/time'
-      path: '/app/time'
+      path: '/time'
       fullPath: '/app/time'
       preLoaderRoute: typeof AuthenticatedAppTimeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/telegram': {
       id: '/_authenticated/app/telegram'
-      path: '/app/telegram'
+      path: '/telegram'
       fullPath: '/app/telegram'
       preLoaderRoute: typeof AuthenticatedAppTelegramRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/team': {
       id: '/_authenticated/app/team'
-      path: '/app/team'
+      path: '/team'
       fullPath: '/app/team'
       preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/tasks': {
       id: '/_authenticated/app/tasks'
-      path: '/app/tasks'
+      path: '/tasks'
       fullPath: '/app/tasks'
       preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/settings': {
       id: '/_authenticated/app/settings'
-      path: '/app/settings'
+      path: '/settings'
       fullPath: '/app/settings'
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/profile': {
       id: '/_authenticated/app/profile'
-      path: '/app/profile'
+      path: '/profile'
       fullPath: '/app/profile'
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/overview': {
       id: '/_authenticated/app/overview'
-      path: '/app/overview'
+      path: '/overview'
       fullPath: '/app/overview'
       preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/financials': {
       id: '/_authenticated/app/financials'
-      path: '/app/financials'
+      path: '/financials'
       fullPath: '/app/financials'
       preLoaderRoute: typeof AuthenticatedAppFinancialsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/docs': {
       id: '/_authenticated/app/docs'
-      path: '/app/docs'
+      path: '/docs'
       fullPath: '/app/docs'
       preLoaderRoute: typeof AuthenticatedAppDocsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/clients': {
       id: '/_authenticated/app/clients'
-      path: '/app/clients'
+      path: '/clients'
       fullPath: '/app/clients'
       preLoaderRoute: typeof AuthenticatedAppClientsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/analytics': {
       id: '/_authenticated/app/analytics'
-      path: '/app/analytics'
+      path: '/analytics'
       fullPath: '/app/analytics'
       preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/agents': {
       id: '/_authenticated/app/agents'
-      path: '/app/agents'
+      path: '/agents'
       fullPath: '/app/agents'
       preLoaderRoute: typeof AuthenticatedAppAgentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
+interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAgentsRoute: typeof AuthenticatedAppAgentsRoute
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
@@ -418,7 +435,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAgentsRoute: AuthenticatedAppAgentsRoute,
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
@@ -432,6 +449,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppTelegramRoute: AuthenticatedAppTelegramRoute,
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+}
+
+const AuthenticatedAppRouteWithChildren =
+  AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -448,3 +476,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
