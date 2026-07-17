@@ -9,6 +9,7 @@ import {
   createDocument,
   deleteDocument,
   getDocumentSignedUrl,
+  extractDocumentText,
 } from "@/lib/documents.functions";
 
 export const Route = createFileRoute("/_authenticated/app/docs")({
