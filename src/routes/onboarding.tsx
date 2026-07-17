@@ -56,6 +56,17 @@ function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const c = params.get("code");
+    if (c) {
+      setCode(c);
+      setTab("join");
+    }
+  }, []);
+
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
