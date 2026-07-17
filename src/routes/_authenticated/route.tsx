@@ -308,6 +308,8 @@ function AuthenticatedLayout() {
               <UserPlus className="h-3.5 w-3.5" />
               {t("app.header.invite")}
             </button>
+            <LangSwitcher />
+            <ThemeToggle />
             <button
               className="relative h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
               aria-label="Notifications"
@@ -315,6 +317,7 @@ function AuthenticatedLayout() {
               <Bell className="h-4 w-4" />
               <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
             </button>
+
             <button
               onClick={() => navigate({ to: "/app/settings" })}
               className="h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
