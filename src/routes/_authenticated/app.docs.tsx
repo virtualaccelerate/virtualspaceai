@@ -53,6 +53,7 @@ function KnowledgeBase() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [indexing, setIndexing] = useState<Record<string, boolean>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
