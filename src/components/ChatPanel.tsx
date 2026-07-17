@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
 import { getDocumentSignedUrl, createDocument, extractDocumentText } from "@/lib/documents.functions";
 import { createTask } from "@/lib/tasks.functions";
+import { transcribeAudio } from "@/lib/transcribe.functions";
 import {
   loadChatHistory,
   saveChatMessage,
