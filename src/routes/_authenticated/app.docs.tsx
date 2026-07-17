@@ -257,6 +257,12 @@ function KnowledgeBase() {
                     {formatBytes(d.size_bytes)} · {new Date(d.created_at).toLocaleDateString()}
                   </div>
                 </button>
+                {indexing[d.id] && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/15 rounded-full px-2 py-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t("app.docs.indexing", "Indexing…")}
+                  </span>
+                )}
                 <button
                   onClick={() => openDoc(d.id)}
                   className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition"
