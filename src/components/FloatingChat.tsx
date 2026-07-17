@@ -48,7 +48,7 @@ export function FloatingChat() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close chat" : "Open chat"}
-        className="fixed z-40 right-4 bottom-4 sm:right-6 sm:bottom-6 h-14 w-14 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_10px_30px_hsl(var(--primary)/0.45)] hover:scale-105 transition"
+        className="fixed z-40 right-4 bottom-20 sm:right-6 sm:bottom-6 h-14 w-14 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_10px_30px_hsl(var(--primary)/0.45)] hover:scale-105 transition"
       >
         {open ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
       </button>
