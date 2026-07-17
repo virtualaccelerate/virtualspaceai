@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Mail, ArrowRight, Check } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
@@ -11,21 +11,25 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Virtual Space" },
-      { name: "description", content: "Sign in to Virtual Space with Google or a magic link." },
+      { name: "description", content: "Sign in or create your Virtual Space account." },
       { name: "robots", content: "noindex" },
     ],
   }),
 });
 
+type Mode = "signin" | "signup";
+
 function AuthPage() {
   const navigate = useNavigate();
+  const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
-  // If already signed in, go to /app
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
@@ -40,25 +44,56 @@ function AuthPage() {
     };
   }, [navigate]);
 
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = email.trim();
-    if (!clean || loading) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password || loading) return;
     setLoading(true);
     setError(null);
+    setInfo(null);
     try {
-      const { error: err } = await supabase.auth.signInWithOtp({
-        email: clean,
-        options: { emailRedirectTo: `${window.location.origin}/app` },
-      });
-      if (err) throw err;
-      setSent(true);
+      if (mode === "signup") {
+        const { data, error: err } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/app`,
+          },
+        });
+        if (err) throw err;
+        // If email confirmation is required, session will be null
+        if (!data.session) {
+          setSent(true);
+        } else {
+          navigate({ to: "/app", replace: true });
+        }
+      } else {
+        const { error: err } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+        if (err) throw err;
+      }
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "Failed to send link");
+      const msg = err instanceof Error ? err.message : "Authentication failed";
+      setError(msg);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResendConfirm = async () => {
+    if (!email.trim()) return;
+    setError(null);
+    setInfo(null);
+    const { error: err } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/app` },
+    });
+    if (err) setError(err.message);
+    else setInfo("Confirmation email resent.");
   };
 
   const handleGoogle = async () => {
@@ -70,7 +105,6 @@ function AuthPage() {
         redirect_uri: window.location.origin,
       });
       if (result.error) throw result.error;
-      // If session is set here, navigate now; otherwise redirect happens
       if (!result.redirected) navigate({ to: "/app", replace: true });
     } catch (err) {
       console.error(err);
@@ -95,75 +129,135 @@ function AuthPage() {
           transition={{ duration: 0.5 }}
           className="glass-strong w-full max-w-md rounded-3xl p-8"
         >
-          <h1 className="font-display text-3xl text-white text-center">Sign in</h1>
-          <p className="mt-2 text-sm text-white/60 text-center">
-            Access your Virtual Space workspace.
-          </p>
-
-          <button
-            onClick={handleGoogle}
-            disabled={googleLoading}
-            className="mt-8 w-full inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-5 py-3 text-sm font-semibold hover:bg-white/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {googleLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <GoogleIcon />
-                Continue with Google
-              </>
-            )}
-          </button>
-
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/10" />
-            <span className="text-[10px] uppercase tracking-widest text-white/40">or email</span>
-            <div className="h-px flex-1 bg-white/10" />
-          </div>
-
           {sent ? (
-            <div className="glass rounded-2xl p-5 text-center">
-              <div className="mx-auto h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mb-3">
-                <Check className="h-5 w-5 text-primary" />
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                <Check className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-white font-medium text-sm">Check your inbox</p>
-              <p className="mt-1 text-xs text-white/60">
-                We sent a magic link to <span className="text-white/80">{email}</span>. Click it to sign in.
+              <h1 className="font-display text-2xl text-white">Check your inbox</h1>
+              <p className="mt-2 text-sm text-white/60">
+                We sent a confirmation link to <span className="text-white/90">{email}</span>. Click it to activate your account.
               </p>
-              <button
-                onClick={() => { setSent(false); setEmail(""); }}
-                className="mt-4 text-xs text-primary hover:underline"
-              >
-                Use a different email
-              </button>
+              {info && <p className="mt-3 text-xs text-primary">{info}</p>}
+              {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
+              <div className="mt-6 flex flex-col gap-2">
+                <button
+                  onClick={handleResendConfirm}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Resend email
+                </button>
+                <button
+                  onClick={() => { setSent(false); setPassword(""); setMode("signin"); }}
+                  className="text-xs text-white/60 hover:text-white"
+                >
+                  Back to sign in
+                </button>
+              </div>
             </div>
           ) : (
-            <form onSubmit={handleMagicLink} className="space-y-3">
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+            <>
+              <h1 className="font-display text-3xl text-white text-center">
+                {mode === "signup" ? "Create account" : "Welcome back"}
+              </h1>
+              <p className="mt-2 text-sm text-white/60 text-center">
+                {mode === "signup"
+                  ? "Start your Virtual Space workspace."
+                  : "Sign in to your Virtual Space workspace."}
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 rounded-full bg-white/5 p-1">
+                <button
+                  onClick={() => { setMode("signup"); setError(null); }}
+                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    mode === "signup" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  Sign up
+                </button>
+                <button
+                  onClick={() => { setMode("signin"); setError(null); }}
+                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    mode === "signin" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  Sign in
+                </button>
               </div>
-              {error && <p className="text-xs text-destructive px-2">{error}</p>}
+
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={handleGoogle}
+                disabled={googleLoading}
+                className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-5 py-3 text-sm font-semibold hover:bg-white/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Send magic link <ArrowRight className="h-4 w-4" /></>}
+                {googleLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <GoogleIcon />
+                    Continue with Google
+                  </>
+                )}
               </button>
-            </form>
+
+              <div className="my-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-white/10" />
+                <span className="text-[10px] uppercase tracking-widest text-white/40">or email</span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={mode === "signup" ? "Create a password (min 8)" : "Your password"}
+                    className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                {error && <p className="text-xs text-destructive px-2">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      {mode === "signup" ? "Create account" : "Sign in"}
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+                {mode === "signup" && (
+                  <p className="text-[11px] text-white/50 text-center pt-1">
+                    You'll receive an email to confirm your address.
+                  </p>
+                )}
+              </form>
+            </>
           )}
 
           <p className="mt-6 text-center text-[11px] text-white/40">
-            By signing in you agree to our terms and privacy policy.
+            By continuing you agree to our terms and privacy policy.
           </p>
         </motion.div>
       </main>

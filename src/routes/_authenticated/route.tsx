@@ -13,7 +13,15 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
+    // Require a teamspace membership; otherwise send to onboarding
+    const { data: membership } = await supabase
+      .from("teamspace_members")
+      .select("teamspace_id")
+      .eq("user_id", data.user.id)
+      .limit(1)
+      .maybeSingle();
+    if (!membership) throw redirect({ to: "/onboarding" });
+    return { user: data.user, teamspaceId: membership.teamspace_id };
   },
   component: AuthenticatedLayout,
 });
