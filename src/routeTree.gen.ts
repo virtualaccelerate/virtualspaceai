@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
+import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
@@ -65,6 +66,12 @@ const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
   path: '/time',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppTelegramRoute =
+  AuthenticatedAppTelegramRouteImport.update({
+    id: '/telegram',
+    path: '/telegram',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRoutesByTo {
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRoutesById {
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/_authenticated/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRouteTypes {
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/app/overview'
     | '/app/profile'
     | '/app/tasks'
+    | '/app/telegram'
     | '/app/time'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/app/overview'
     | '/app/profile'
     | '/app/tasks'
+    | '/app/telegram'
     | '/app/time'
   id:
     | '__root__'
@@ -214,6 +226,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/overview'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/tasks'
+    | '/_authenticated/app/telegram'
     | '/_authenticated/app/time'
   fileRoutesById: FileRoutesById
 }
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTimeRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/telegram': {
+      id: '/_authenticated/app/telegram'
+      path: '/telegram'
+      fullPath: '/app/telegram'
+      preLoaderRoute: typeof AuthenticatedAppTelegramRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/tasks': {
       id: '/_authenticated/app/tasks'
       path: '/tasks'
@@ -352,6 +372,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
+  AuthenticatedAppTelegramRoute: typeof AuthenticatedAppTelegramRoute
   AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
 }
 
@@ -364,6 +385,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
+  AuthenticatedAppTelegramRoute: AuthenticatedAppTelegramRoute,
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
 }
 
