@@ -179,55 +179,63 @@ function AuthPage() {
           ) : (
             <>
               <h1 className="font-display text-3xl text-white text-center">
-                {mode === "signup" ? "Create account" : "Welcome back"}
+                {mode === "signup" ? "Create account" : mode === "signin" ? "Welcome back" : "Reset password"}
               </h1>
               <p className="mt-2 text-sm text-white/60 text-center">
                 {mode === "signup"
                   ? "Start your Virtual Space workspace."
-                  : "Sign in to your Virtual Space workspace."}
+                  : mode === "signin"
+                  ? "Sign in to your Virtual Space workspace."
+                  : "We'll email you a secure link to set a new password."}
               </p>
 
-              <div className="mt-6 grid grid-cols-2 rounded-full bg-white/5 p-1">
-                <button
-                  onClick={() => { setMode("signup"); setError(null); }}
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                    mode === "signup" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
-                  }`}
-                >
-                  Sign up
-                </button>
-                <button
-                  onClick={() => { setMode("signin"); setError(null); }}
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                    mode === "signin" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
-                  }`}
-                >
-                  Sign in
-                </button>
-              </div>
+              {mode !== "forgot" && (
+                <div className="mt-6 grid grid-cols-2 rounded-full bg-white/5 p-1">
+                  <button
+                    onClick={() => { setMode("signup"); setError(null); setInfo(null); }}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      mode === "signup" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
+                    }`}
+                  >
+                    Sign up
+                  </button>
+                  <button
+                    onClick={() => { setMode("signin"); setError(null); setInfo(null); }}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      mode === "signin" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
+                    }`}
+                  >
+                    Sign in
+                  </button>
+                </div>
+              )}
 
-              <button
-                onClick={handleGoogle}
-                disabled={googleLoading}
-                className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-5 py-3 text-sm font-semibold hover:bg-white/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {googleLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <GoogleIcon />
-                    Continue with Google
-                  </>
-                )}
-              </button>
+              {mode !== "forgot" && (
+                <>
+                  <button
+                    onClick={handleGoogle}
+                    disabled={googleLoading}
+                    className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-5 py-3 text-sm font-semibold hover:bg-white/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {googleLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <GoogleIcon />
+                        Continue with Google
+                      </>
+                    )}
+                  </button>
 
-              <div className="my-6 flex items-center gap-3">
-                <div className="h-px flex-1 bg-white/10" />
-                <span className="text-[10px] uppercase tracking-widest text-white/40">or email</span>
-                <div className="h-px flex-1 bg-white/10" />
-              </div>
+                  <div className="my-6 flex items-center gap-3">
+                    <div className="h-px flex-1 bg-white/10" />
+                    <span className="text-[10px] uppercase tracking-widest text-white/40">or email</span>
+                    <div className="h-px flex-1 bg-white/10" />
+                  </div>
+                </>
+              )}
 
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form onSubmit={handleSubmit} className={`space-y-3 ${mode === "forgot" ? "mt-6" : ""}`}>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                   <input
@@ -240,20 +248,23 @@ function AuthPage() {
                     className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={mode === "signup" ? "Create a password (min 8)" : "Your password"}
-                    className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                </div>
+                {mode !== "forgot" && (
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={mode === "signup" ? "Create a password (min 8)" : "Your password"}
+                      className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                )}
                 {error && <p className="text-xs text-destructive px-2">{error}</p>}
+                {info && <p className="text-xs text-primary px-2">{info}</p>}
                 <button
                   type="submit"
                   disabled={loading}
@@ -263,17 +274,36 @@ function AuthPage() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      {mode === "signup" ? "Create account" : "Sign in"}
+                      {mode === "signup" ? "Create account" : mode === "signin" ? "Sign in" : "Send reset link"}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </button>
-                {mode === "signup" && (
-                  <p className="text-[11px] text-white/50 text-center pt-1">
-                    You'll receive an email to confirm your address.
-                  </p>
-                )}
+                <div className="flex items-center justify-between pt-1 px-2">
+                  {mode === "signin" ? (
+                    <button
+                      type="button"
+                      onClick={() => { setMode("forgot"); setError(null); setInfo(null); }}
+                      className="text-[11px] text-white/60 hover:text-white"
+                    >
+                      Забыли пароль?
+                    </button>
+                  ) : mode === "forgot" ? (
+                    <button
+                      type="button"
+                      onClick={() => { setMode("signin"); setError(null); setInfo(null); }}
+                      className="text-[11px] text-white/60 hover:text-white"
+                    >
+                      ← Назад ко входу
+                    </button>
+                  ) : (
+                    <span className="text-[11px] text-white/50">
+                      You'll receive an email to confirm your address.
+                    </span>
+                  )}
+                </div>
               </form>
+
             </>
           )}
 
