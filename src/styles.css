@@ -153,6 +153,26 @@ html.light .placeholder\:text-white\/40::placeholder { color: oklch(0.42 0.02 24
 html.light .placeholder\:text-white\/30::placeholder { color: oklch(0.54 0.02 240 / 0.55); }
 html.light .focus\:ring-primary\/50:focus { --tw-ring-color: oklch(0.72 0.22 138 / 0.5); }
 
+/* Extended overrides for /app UI (extra opacity buckets) */
+html.light .text-white\/65 { color: oklch(0.33 0.02 240 / 0.8); }
+html.light .text-white\/55 { color: oklch(0.39 0.02 240 / 0.75); }
+html.light .text-white\/35 { color: oklch(0.5 0.02 240 / 0.6); }
+html.light .text-white\/30 { color: oklch(0.52 0.02 240 / 0.55); }
+html.light .text-white\/25 { color: oklch(0.55 0.02 240 / 0.5); }
+html.light .bg-white\/5 { background-color: oklch(0.19 0.02 240 / 0.04); }
+html.light .bg-white\/15 { background-color: oklch(0.19 0.02 240 / 0.08); }
+html.light .bg-white\/40 { background-color: oklch(0.19 0.02 240 / 0.22); }
+html.light .border-white\/5 { border-color: oklch(0.19 0.02 240 / 0.06); }
+html.light .border-white\/15 { border-color: oklch(0.19 0.02 240 / 0.14); }
+html.light .border-white\/25 { border-color: oklch(0.19 0.02 240 / 0.22); }
+html.light .hover\:bg-white\/5:hover { background-color: oklch(0.19 0.02 240 / 0.04); }
+html.light .hover\:bg-white\/15:hover { background-color: oklch(0.19 0.02 240 / 0.08); }
+html.light .hover\:text-white:hover { color: oklch(0.15 0.02 240); }
+
+/* /app card surfaces read as white cards in light mode */
+html.light .bg-\[color\:var\(--card\)\] { background-color: oklch(0.995 0 0); }
+
+
 /* Theme-aware Virtual Accelerate logo: dark vs light variants */
 html.light .va-logo-dark { display: none !important; }
 html:not(.light) .va-logo-light { display: none !important; }
