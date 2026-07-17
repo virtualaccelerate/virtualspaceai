@@ -1,11 +1,11 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard, User, LogOut, Menu, X, CheckSquare, BookOpen,
   Bot, BarChart3, Timer, Users, Bell, Search, Plus, Settings,
+  ChevronDown, UserPlus, Copy, Check, Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -13,7 +13,6 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
-    // Require a teamspace membership; otherwise send to onboarding
     const { data: membership } = await supabase
       .from("teamspace_members")
       .select("teamspace_id")
@@ -27,7 +26,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV_MAIN = [
-  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/app", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/app/tasks", label: "Tasks", icon: CheckSquare, exact: false, badge: "12" },
   { to: "/app/docs", label: "Knowledge Base", icon: BookOpen, exact: false },
   { to: "/app/agents", label: "AI Agents", icon: Bot, exact: false, badge: "3" },
@@ -43,16 +42,48 @@ const NAV_ACCOUNT = [
   { to: "/app/profile", label: "Profile", icon: User, exact: false },
 ] as const;
 
+type Teamspace = { id: string; name: string; invite_code: string };
+
 function AuthenticatedLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
+  const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      setEmail(data.user?.email ?? null);
+      if (!data.user) return;
+      const { data: mem } = await supabase
+        .from("teamspace_members")
+        .select("teamspace_id")
+        .eq("user_id", data.user.id)
+        .limit(1)
+        .maybeSingle();
+      if (!mem) return;
+      const { data: ts } = await supabase
+        .from("teamspaces")
+        .select("id, name, invite_code")
+        .eq("id", mem.teamspace_id)
+        .maybeSingle();
+      if (ts) setTeamspace(ts as Teamspace);
+    })();
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [menuOpen]);
 
   const signOut = async () => {
     await queryClient.cancelQueries();
@@ -65,6 +96,7 @@ function AuthenticatedLayout() {
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
   const initial = (email?.[0] ?? "u").toUpperCase();
+  const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
   const renderGroup = (label: string, items: readonly typeof NAV_MAIN[number][]) => (
     <div>
@@ -105,14 +137,58 @@ function AuthenticatedLayout() {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between px-5 h-16 border-b border-white/10">
-          <Link to="/app" className="flex items-center gap-2">
-            <VirtualSpaceLogo className="text-primary" size={24} />
-            <span className="font-display font-extrabold text-white">Virtual Space</span>
-          </Link>
-          <button className="lg:hidden text-white/60" onClick={() => setMobileOpen(false)} aria-label="Close">
-            <X className="h-4 w-4" />
-          </button>
+        {/* Teamspace switcher */}
+        <div className="relative px-3 pt-3 pb-2 border-b border-white/10" ref={menuRef}>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="flex-1 flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-white/5 transition text-left"
+            >
+              <div className="h-8 w-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-sm font-bold shrink-0">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-white truncate">
+                  {teamspace?.name ?? "Loading…"}
+                </div>
+                <div className="text-[10px] text-white/40 uppercase tracking-wider">Teamspace</div>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-white/50 shrink-0 transition ${menuOpen ? "rotate-180" : ""}`} />
+            </button>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="lg:hidden text-white/60 p-2"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {menuOpen && (
+            <div className="absolute left-3 right-3 top-full mt-1 z-50 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl overflow-hidden">
+              <div className="px-3 py-2.5 border-b border-white/5">
+                <div className="text-[10px] uppercase tracking-wider text-white/40">Signed in as</div>
+                <div className="text-xs text-white/80 truncate mt-0.5">{email}</div>
+              </div>
+              <MenuItem
+                icon={User}
+                label="Profile"
+                onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }}
+              />
+              <MenuItem
+                icon={UserPlus}
+                label="Invite members"
+                onClick={() => { setMenuOpen(false); setInviteOpen(true); }}
+              />
+              <MenuItem
+                icon={Settings}
+                label="Teamspace settings"
+                onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }}
+              />
+              <div className="border-t border-white/5" />
+              <MenuItem icon={LogOut} label="Sign out" onClick={signOut} danger />
+            </div>
+          )}
         </div>
 
         <div className="px-3 pt-3">
@@ -183,6 +259,13 @@ function AuthenticatedLayout() {
 
           <div className="ml-auto flex items-center gap-1">
             <button
+              onClick={() => setInviteOpen(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10 transition"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              Invite
+            </button>
+            <button
               className="relative h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
               aria-label="Notifications"
             >
@@ -196,13 +279,120 @@ function AuthenticatedLayout() {
               <Settings className="h-4 w-4" />
             </button>
             <div className="h-8 w-8 ml-2 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">
-              {initial}
+              {tsInitial}
             </div>
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
+      </div>
+
+      {inviteOpen && teamspace && (
+        <InviteModal teamspace={teamspace} onClose={() => setInviteOpen(false)} />
+      )}
+    </div>
+  );
+}
+
+function MenuItem({
+  icon: Icon,
+  label,
+  onClick,
+  danger,
+}: {
+  icon: typeof User;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition text-left ${
+        danger ? "text-red-400 hover:bg-red-500/10" : "text-white/80 hover:bg-white/5 hover:text-white"
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </button>
+  );
+}
+
+function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: () => void }) {
+  const [copied, setCopied] = useState<"code" | "link" | null>(null);
+  const link = typeof window !== "undefined"
+    ? `${window.location.origin}/onboarding?code=${teamspace.invite_code}`
+    : `/onboarding?code=${teamspace.invite_code}`;
+
+  const copy = async (value: string, kind: "code" | "link") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(kind);
+      setTimeout(() => setCopied(null), 1800);
+    } catch { /* ignore */ }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl border border-white/10 bg-[color:var(--card)] p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+              <UserPlus className="h-4.5 w-4.5" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg text-white">Invite to {teamspace.name}</h3>
+              <p className="text-xs text-white/55">Share the code or link with your team.</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-white/50">Invite code</label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <input
+                readOnly
+                value={teamspace.invite_code}
+                className="flex-1 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white font-mono"
+              />
+              <button
+                onClick={() => copy(teamspace.invite_code, "code")}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-semibold hover:bg-primary/90 transition"
+              >
+                {copied === "code" ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-white/50">Invite link</label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <input
+                readOnly
+                value={link}
+                className="flex-1 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-white/80 truncate"
+              />
+              <button
+                onClick={() => copy(link, "link")}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 transition"
+              >
+                {copied === "link" ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-4 text-[11px] text-white/50">
+          Teammates can join by pasting the code on the onboarding screen or by opening the link and signing in.
+        </p>
       </div>
     </div>
   );
