@@ -91,6 +91,7 @@ function HomeChat() {
   const { t } = useTranslation();
   const ask = useServerFn(askZukha);
   const sign = useServerFn(getDocumentSignedUrl);
+  const mkTask = useServerFn(createTask);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
