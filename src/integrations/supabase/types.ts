@@ -49,6 +49,7 @@ export type Database = {
           avatar_url: string | null
           company: string | null
           created_at: string
+          current_teamspace_id: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -59,6 +60,7 @@ export type Database = {
           avatar_url?: string | null
           company?: string | null
           created_at?: string
+          current_teamspace_id?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -69,13 +71,22 @@ export type Database = {
           avatar_url?: string | null
           company?: string | null
           created_at?: string
+          current_teamspace_id?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           language?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_teamspace_id_fkey"
+            columns: ["current_teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -119,6 +130,71 @@ export type Database = {
         }
         Relationships: []
       }
+      teamspace_members: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["member_role"]
+          teamspace_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["member_role"]
+          teamspace_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["member_role"]
+          teamspace_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teamspace_members_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teamspaces: {
+        Row: {
+          business_type: Database["public"]["Enums"]["business_type"]
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          team_size: Database["public"]["Enums"]["team_size"]
+          updated_at: string
+        }
+        Insert: {
+          business_type: Database["public"]["Enums"]["business_type"]
+          created_at?: string
+          id?: string
+          invite_code?: string
+          name: string
+          owner_id: string
+          team_size: Database["public"]["Enums"]["team_size"]
+          updated_at?: string
+        }
+        Update: {
+          business_type?: Database["public"]["Enums"]["business_type"]
+          created_at?: string
+          id?: string
+          invite_code?: string
+          name?: string
+          owner_id?: string
+          team_size?: Database["public"]["Enums"]["team_size"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -152,11 +228,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_teamspace_member: {
+        Args: { _ts: string; _uid: string }
+        Returns: boolean
+      }
+      is_teamspace_owner: {
+        Args: { _ts: string; _uid: string }
+        Returns: boolean
+      }
+      join_teamspace_by_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"
+      business_type: "startup" | "agency" | "company"
+      member_role: "owner" | "admin" | "member"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status: "backlog" | "in_progress" | "review" | "done"
+      team_size: "0-50" | "50-100" | "100+"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -285,8 +373,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      business_type: ["startup", "agency", "company"],
+      member_role: ["owner", "admin", "member"],
       task_priority: ["low", "medium", "high", "urgent"],
       task_status: ["backlog", "in_progress", "review", "done"],
+      team_size: ["0-50", "50-100", "100+"],
     },
   },
 } as const
