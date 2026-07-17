@@ -195,6 +195,22 @@ const resources = {
           avatarUrl: "Avatar URL", language: "Language",
           save: "Save changes", saving: "Saving…", saved: "Saved",
         },
+        chat: {
+          newChat: "New chat", history: "History", noHistory: "No previous chats yet",
+          confirmDelete: "Delete this chat?", attach: "Attach file — synced to Knowledge Base",
+        },
+        agents: {
+          title: "AI Agents",
+          subtitle: "Specialized AI agents you can call from any chat with @tag",
+          howTitle: "How to use",
+          howBody: "Type an agent tag inside any chat (e.g. @contracts) — the agent will handle that message. Or click 'Open' to start a dedicated conversation with the agent.",
+          open: "Open agent", useInChat: "or use in any chat", moreSoon: "More agents coming soon",
+          contracts: {
+            title: "Contract Risk Agent",
+            desc: "Analyzes contracts for risks and suggests improvements. Upload a contract to the Knowledge Base or paste text, then chat with @contracts.",
+          },
+        },
+        tasks: { chatLog: "Task created manually" },
       },
       taskTable: {
         tasks: [
@@ -397,6 +413,22 @@ const resources = {
           avatarUrl: "URL аватара", language: "Язык",
           save: "Сохранить изменения", saving: "Сохранение…", saved: "Сохранено",
         },
+        chat: {
+          newChat: "Новый чат", history: "История", noHistory: "Пока нет прошлых чатов",
+          confirmDelete: "Удалить этот чат?", attach: "Прикрепить файл — синхронизируется с Базой знаний",
+        },
+        agents: {
+          title: "AI Агенты",
+          subtitle: "Специализированные AI-агенты, которых можно вызвать в любом чате через @тег",
+          howTitle: "Как использовать",
+          howBody: "Впишите тег агента в любом чате (например, @contracts) — агент возьмёт это сообщение. Или нажмите «Открыть», чтобы начать выделенный чат с агентом.",
+          open: "Открыть агента", useInChat: "или использовать в любом чате", moreSoon: "Скоро больше агентов",
+          contracts: {
+            title: "Агент рисков по договорам",
+            desc: "Анализирует договоры на риски и предлагает улучшения. Загрузите договор в Базу знаний или вставьте текст, затем пишите @contracts.",
+          },
+        },
+        tasks: { chatLog: "Задача создана вручную" },
       },
       taskTable: {
         tasks: [
@@ -576,6 +608,22 @@ const resources = {
           avatarUrl: "Аватар URL", language: "Тіл",
           save: "Өзгерістерді сақтау", saving: "Сақталуда…", saved: "Сақталды",
         },
+        chat: {
+          newChat: "Жаңа чат", history: "Тарих", noHistory: "Әзірге чаттар жоқ",
+          confirmDelete: "Осы чатты жоямыз ба?", attach: "Файлды тіркеу — Білім қорымен синхрондалады",
+        },
+        agents: {
+          title: "AI Агенттер",
+          subtitle: "Кез-келген чатта @тег арқылы шақыратын мамандандырылған AI-агенттер",
+          howTitle: "Қалай қолдану",
+          howBody: "Кез-келген чатта агент тегін жазыңыз (мысалы, @contracts) — агент сол хабарламаны өңдейді. Немесе агентпен бөлек әңгіме бастау үшін 'Ашу' түймесін басыңыз.",
+          open: "Агентті ашу", useInChat: "немесе кез-келген чатта", moreSoon: "Жақын арада тағы агенттер",
+          contracts: {
+            title: "Келісім-шарт тәуекел агенті",
+            desc: "Келісім-шарттарды тәуекелдерге талдап, жақсартулар ұсынады. Келісім-шартты Білім қорына жүктеңіз немесе мәтінді қойып, @contracts арқылы жазыңыз.",
+          },
+        },
+        tasks: { chatLog: "Тапсырма қолмен құрылды" },
       },
       taskTable: {
         tasks: [
@@ -747,6 +795,22 @@ const resources = {
           avatarUrl: "Аватар URL", language: "Тил",
           save: "Өзгөрүүлөрдү сактоо", saving: "Сакталууда…", saved: "Сакталды",
         },
+        chat: {
+          newChat: "Жаңы чат", history: "Тарых", noHistory: "Азырынча чаттар жок",
+          confirmDelete: "Бул чатты өчүрөбүзбү?", attach: "Файл тиркөө — Билим базасы менен синхрондолот",
+        },
+        agents: {
+          title: "AI Агенттер",
+          subtitle: "Каалаган чатта @тег аркылуу чакыра турган адистешкен AI-агенттер",
+          howTitle: "Кантип колдонуу",
+          howBody: "Каалаган чатта агенттин тегин жазыңыз (мисалы, @contracts) — агент ошол билдирүүнү иштетет. Же 'Ачуу' баскычы менен агент менен өзүнчө чат баштаңыз.",
+          open: "Агентти ачуу", useInChat: "же каалаган чатта колдонуу", moreSoon: "Жакында дагы агенттер",
+          contracts: {
+            title: "Келишим тобокелдик агенти",
+            desc: "Келишимдерди тобокелдиктерге талдап, жакшыртууларды сунуштайт. Келишимди Билим базасына жүктөңүз же текстти коюңуз, андан кийин @contracts менен жазыңыз.",
+          },
+        },
+        tasks: { chatLog: "Тапшырма кол менен түзүлдү" },
       },
       taskTable: {
         tasks: [
@@ -918,6 +982,22 @@ const resources = {
           avatarUrl: "Avatar URL", language: "Til",
           save: "Oʻzgarishlarni saqlash", saving: "Saqlanmoqda…", saved: "Saqlandi",
         },
+        chat: {
+          newChat: "Yangi chat", history: "Tarix", noHistory: "Hozircha chatlar yo'q",
+          confirmDelete: "Ushbu chat o'chirilsinmi?", attach: "Fayl biriktirish — Bilim bazasi bilan sinxronlanadi",
+        },
+        agents: {
+          title: "AI Agentlar",
+          subtitle: "Har qanday chatda @teg orqali chaqiriladigan maxsus AI-agentlar",
+          howTitle: "Qanday foydalanish",
+          howBody: "Har qanday chatda agent tegini yozing (masalan, @contracts) — agent shu xabarni ishlaydi. Yoki 'Ochish' tugmasi bilan agent bilan alohida suhbat boshlang.",
+          open: "Agentni ochish", useInChat: "yoki har qanday chatda", moreSoon: "Yaqinda ko'proq agentlar",
+          contracts: {
+            title: "Shartnoma xavf agenti",
+            desc: "Shartnomalarni xavflarga tahlil qiladi va yaxshilanishlarni taklif qiladi. Shartnomani Bilim bazasiga yuklang yoki matnni joylashtiring, so'ng @contracts orqali yozing.",
+          },
+        },
+        tasks: { chatLog: "Vazifa qo'lda yaratildi" },
       },
       taskTable: {
         tasks: [
@@ -1089,6 +1169,22 @@ const resources = {
           avatarUrl: "URL-и аватар", language: "Забон",
           save: "Захира кардани тағйирот", saving: "Захира шуда истодааст…", saved: "Захира шуд",
         },
+        chat: {
+          newChat: "Чати нав", history: "Таърих", noHistory: "Ҳоло чатҳо нест",
+          confirmDelete: "Ин чатро нест мекунед?", attach: "Замима кардани файл — бо Пойгоҳи дониш ҳамоҳанг мешавад",
+        },
+        agents: {
+          title: "AI Агентҳо",
+          subtitle: "AI-агентҳои махсус, ки шумо метавонед дар ҳар як чат бо @тег даъват кунед",
+          howTitle: "Тарзи истифода",
+          howBody: "Дар ҳар як чат теги агентро нависед (масалан, @contracts) — агент он паёмро иҷро мекунад. Ё тугмаи 'Кушодан'-ро зер кунед, то бо агент сӯҳбати ҷудогона оғоз кунед.",
+          open: "Кушодани агент", useInChat: "ё дар ҳар як чат", moreSoon: "Ба зудӣ агентҳои бештар",
+          contracts: {
+            title: "Агенти хатарҳои шартнома",
+            desc: "Шартномаҳоро барои хатарҳо таҳлил мекунад ва беҳбудиҳо пешниҳод мекунад. Шартномаро ба Пойгоҳи дониш бор кунед ё матнро гузоред, сипас бо @contracts нависед.",
+          },
+        },
+        tasks: { chatLog: "Вазифа дастӣ сохта шуд" },
       },
       taskTable: {
         tasks: [

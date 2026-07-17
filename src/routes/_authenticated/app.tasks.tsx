@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logChatEvent } from "@/lib/chat-history.functions";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -135,6 +138,8 @@ const emptyDraft = (status: TaskStatus = "backlog"): TaskDraft => ({
 });
 
 function TasksPage() {
+  const { t } = useTranslation();
+  const logEvent = useServerFn(logChatEvent);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -231,8 +236,16 @@ function TasksPage() {
         .select()
         .single();
       if (error) return toast.error(error.message);
-      setTasks((prev) => [...prev, data as Task]);
+      const created = data as Task;
+      setTasks((prev) => [...prev, created]);
       toast.success("Task created");
+      // Log manual task creation into chat history so the user has a record
+      logEvent({
+        data: {
+          content: `${t("app.tasks.chatLog", "Task created manually")}: ${created.title}`,
+          tasks: [{ id: created.id, title: created.title }],
+        },
+      }).catch(() => {});
     }
     setDialogOpen(false);
   }
