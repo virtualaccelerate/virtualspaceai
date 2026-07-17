@@ -142,7 +142,21 @@ function HomeChat() {
     setLoading(true);
     try {
       const res = await ask({ data: { messages: next, teamspace_id: teamspaceId } });
-      setMessages([...next, { role: "assistant", content: stripMarkdown(res.reply || "…") }]);
+      const raw = stripMarkdown(res.reply || "…");
+      const { cleaned, tasks } = parseTaskTokens(raw);
+      const created: CreatedTask[] = [];
+      for (const t of tasks) {
+        try {
+          const row = await mkTask({ data: t });
+          created.push({ id: row.id, title: row.title });
+        } catch {
+          /* ignore individual failures */
+        }
+      }
+      setMessages([
+        ...next,
+        { role: "assistant", content: cleaned || (created.length ? "" : "…"), tasks: created },
+      ]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
