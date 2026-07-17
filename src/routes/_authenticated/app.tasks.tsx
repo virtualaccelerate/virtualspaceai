@@ -269,8 +269,8 @@ function TasksPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-2xl sm:text-3xl text-white">Tasks</h1>
-          <p className="mt-1 text-sm text-white/60">
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Tasks</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами.
           </p>
         </div>
@@ -280,7 +280,7 @@ function TasksPage() {
       </div>
 
       {loading ? (
-        <div className="text-sm text-white/50">Loading…</div>
+        <div className="text-sm text-muted-foreground">Loading…</div>
       ) : (
         <div className="-mx-4 sm:-mx-6 overflow-x-auto pb-4">
           <div className="flex gap-4 px-4 sm:px-6 min-w-max">
