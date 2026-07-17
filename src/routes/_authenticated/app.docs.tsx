@@ -45,6 +45,7 @@ function KnowledgeBase() {
   const create = useServerFn(createDocument);
   const remove = useServerFn(deleteDocument);
   const sign = useServerFn(getDocumentSignedUrl);
+  const extract = useServerFn(extractDocumentText);
 
   const [docs, setDocs] = useState<Doc[]>([]);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
