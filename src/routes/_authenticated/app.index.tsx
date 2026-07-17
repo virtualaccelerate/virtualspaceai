@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
 
-export const Route = createFileRoute("/_authenticated/app")({
+export const Route = createFileRoute("/_authenticated/app/")({
   component: HomeChat,
   head: () => ({
     meta: [
