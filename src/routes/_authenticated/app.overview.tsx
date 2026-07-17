@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 
 
 
-export const Route = createFileRoute("/_authenticated/app")({
+export const Route = createFileRoute("/_authenticated/app/overview")({
   component: AppDashboard,
   head: () => ({
     meta: [
