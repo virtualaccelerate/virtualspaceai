@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
 
-import { useTranslation } from "react-i18next";
+
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
