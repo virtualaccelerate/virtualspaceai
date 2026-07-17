@@ -114,6 +114,17 @@ function KnowledgeBase() {
           },
         });
         setDocs((prev) => [row as Doc, ...prev]);
+        // Fire-and-forget: OCR/PDF text extraction via Gemini for supported binaries.
+        if (!extracted && row?.id) {
+          const mime = (file.type || "").toLowerCase();
+          const eligible =
+            mime === "application/pdf" ||
+            mime.startsWith("image/") ||
+            /\.(pdf|png|jpe?g|webp|gif|heic)$/i.test(file.name);
+          if (eligible) {
+            extract({ data: { id: row.id } }).catch(() => { /* silent */ });
+          }
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
