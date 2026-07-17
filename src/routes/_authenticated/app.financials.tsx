@@ -15,6 +15,8 @@ import {
   refreshSheetSource,
   analyzeFinancials,
   askFinancials,
+  listFinChat,
+  clearFinChat,
 } from "@/lib/financials.functions";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
