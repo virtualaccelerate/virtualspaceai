@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, Plus, Mic, Loader2 } from "lucide-react";
+import { Send, Plus, Mic, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
+import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
+
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: HomeChat,
