@@ -450,9 +450,28 @@ function FinancialsPage() {
 
       {/* Q&A */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <div className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          {t("app.fin.ask", "Ask about your finances")}
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="text-sm font-semibold flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {t("app.fin.ask", "Ask about your finances")}
+          </div>
+          {messages.length > 0 && (
+            <button
+              onClick={async () => {
+                if (!teamspaceId) return;
+                if (!confirm(t("app.fin.clearConfirm", "Clear chat history?"))) return;
+                try {
+                  await clearChat({ data: { teamspace_id: teamspaceId } });
+                  setMessages([]);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Failed to clear");
+                }
+              }}
+              className="text-xs text-muted-foreground hover:text-red-500 inline-flex items-center gap-1"
+            >
+              <Trash2 className="h-3 w-3" /> {t("app.fin.clear", "Clear")}
+            </button>
+          )}
         </div>
         <div className="space-y-2 max-h-72 overflow-y-auto mb-3">
           {messages.length === 0 && (
