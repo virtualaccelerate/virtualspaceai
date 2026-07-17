@@ -302,3 +302,159 @@ function PriorityFlag({ p }: { p: Task["priority"] }) {
   const color = p === "high" ? "text-red-400" : p === "medium" ? "text-yellow-400" : "text-white/30";
   return <Flag className={`h-4 w-4 ${color}`} />;
 }
+
+type ChatMsg = { role: "user" | "assistant"; content: string };
+
+function ZukhaChat() {
+  const ask = useServerFn(askZukha);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading]);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  const suggestions = [
+    "Summarize what my team did this week",
+    "Draft a client follow-up email",
+    "What tasks should I prioritize today?",
+    "Suggest 3 KPIs for our next sprint",
+  ];
+
+  const send = async (text?: string) => {
+    const content = (text ?? input).trim();
+    if (!content || loading) return;
+    setInput("");
+    setError(null);
+    const next: ChatMsg[] = [...messages, { role: "user", content }];
+    setMessages(next);
+    setLoading(true);
+    try {
+      const res = await ask({ data: { messages: next } });
+      setMessages([...next, { role: "assistant", content: res.reply || "…" }]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  };
+
+  const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  };
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="glass-strong rounded-3xl p-4 sm:p-5 border border-white/10"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white">Ask Zukha</div>
+            <div className="text-[11px] text-white/50">Your AI copilot for this teamspace</div>
+          </div>
+        </div>
+        {messages.length > 0 && (
+          <button
+            onClick={() => { setMessages([]); setError(null); }}
+            className="text-[11px] text-white/50 hover:text-white transition"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {messages.length === 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              onClick={() => send(s)}
+              className="text-left rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition px-3 py-2.5 text-xs text-white/80"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div ref={scrollRef} className="max-h-80 overflow-y-auto space-y-3 mb-4 pr-1">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap leading-relaxed ${
+                  m.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-white/90"
+                }`}
+              >
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex items-center gap-2 text-xs text-white/50">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Zukha is thinking…
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-2 text-xs text-red-400">{error}</div>
+      )}
+
+      <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
+        <button
+          type="button"
+          className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition shrink-0"
+          aria-label="Attach"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+        <textarea
+          ref={inputRef}
+          rows={1}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onKey}
+          placeholder="Ask anything…"
+          className="flex-1 resize-none bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none max-h-40 py-1.5"
+        />
+        <button
+          type="button"
+          className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition shrink-0"
+          aria-label="Voice"
+        >
+          <Mic className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => send()}
+          disabled={loading || !input.trim()}
+          className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0"
+          aria-label="Send"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        </button>
+      </div>
+    </motion.section>
+  );
+}
+
