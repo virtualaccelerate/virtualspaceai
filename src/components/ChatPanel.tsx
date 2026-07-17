@@ -284,10 +284,19 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   }, [activeId, loadHistory]);
 
   const openFile = async (id: string) => {
+    // Open a blank tab synchronously in the click handler so popup blockers
+    // don't kill it while we await the signed URL. If the browser still
+    // blocked it, fall back to navigating the current tab.
+    const win = window.open("about:blank", "_blank", "noopener,noreferrer");
     try {
       const { url } = await sign({ data: { id } });
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (win && !win.closed) {
+        win.location.href = url;
+      } else {
+        window.location.href = url;
+      }
     } catch (e) {
+      if (win && !win.closed) win.close();
       setError(e instanceof Error ? e.message : "Could not open file");
     }
   };
