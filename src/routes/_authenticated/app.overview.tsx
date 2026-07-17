@@ -117,8 +117,8 @@ function AppDashboard() {
 
       </motion.div>
 
-      {/* Ask Zukha chat */}
-      <ZukhaChat />
+
+
 
       {/* Stats */}
 
