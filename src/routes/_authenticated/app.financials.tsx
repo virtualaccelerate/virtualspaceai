@@ -15,6 +15,8 @@ import {
   refreshSheetSource,
   analyzeFinancials,
   askFinancials,
+  listFinChat,
+  clearFinChat,
 } from "@/lib/financials.functions";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -90,6 +92,8 @@ function FinancialsPage() {
   const refresh = useServerFn(refreshSheetSource);
   const analyze = useServerFn(analyzeFinancials);
   const ask = useServerFn(askFinancials);
+  const loadChat = useServerFn(listFinChat);
+  const clearChat = useServerFn(clearFinChat);
 
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [sources, setSources] = useState<Src[]>([]);
@@ -125,6 +129,10 @@ function FinancialsPage() {
         setSources(rows);
         const cached = rows.find((r) => r.analysis)?.analysis;
         if (cached) setAnalysis(cached);
+        try {
+          const history = await loadChat({ data: { teamspace_id: mem.teamspace_id } });
+          setMessages(history.map((h) => ({ role: h.role, content: h.content })));
+        } catch { /* ignore chat load errors */ }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
@@ -442,9 +450,28 @@ function FinancialsPage() {
 
       {/* Q&A */}
       <div className="rounded-2xl border border-border bg-card p-4">
-        <div className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          {t("app.fin.ask", "Ask about your finances")}
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="text-sm font-semibold flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {t("app.fin.ask", "Ask about your finances")}
+          </div>
+          {messages.length > 0 && (
+            <button
+              onClick={async () => {
+                if (!teamspaceId) return;
+                if (!confirm(t("app.fin.clearConfirm", "Clear chat history?"))) return;
+                try {
+                  await clearChat({ data: { teamspace_id: teamspaceId } });
+                  setMessages([]);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Failed to clear");
+                }
+              }}
+              className="text-xs text-muted-foreground hover:text-red-500 inline-flex items-center gap-1"
+            >
+              <Trash2 className="h-3 w-3" /> {t("app.fin.clear", "Clear")}
+            </button>
+          )}
         </div>
         <div className="space-y-2 max-h-72 overflow-y-auto mb-3">
           {messages.length === 0 && (
