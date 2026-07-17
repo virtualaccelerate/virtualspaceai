@@ -376,7 +376,7 @@ function ZukhaChat() {
           </div>
           <div>
             <div className="text-sm font-semibold text-white">{t("app.overview.askZukha")}</div>
-            <div className="text-[11px] text-white/50">{t("app.overview.copilot")}</div>
+            <div className="text-[11px] text-white/50">{t("app.overview.askZukhaSubtitle")}</div>
           </div>
         </div>
         {messages.length > 0 && (
@@ -445,7 +445,7 @@ function ZukhaChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKey}
-          placeholder={t("app.overview.askPlaceholder")}
+          placeholder={t("app.overview.placeholder")}
           className="flex-1 resize-none bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none max-h-40 py-1.5"
         />
         <button
