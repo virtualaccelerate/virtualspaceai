@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Plus, Mic, Loader2 } from "lucide-react";
+import { Send, Plus, Mic, Loader2, FileText } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
+import { getDocumentSignedUrl } from "@/lib/documents.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
 
@@ -20,23 +22,52 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
+const FILE_TOKEN = /\[\[file:([0-9a-f-]{36})\|([^\]]+)\]\]/gi;
+
 const stripMarkdown = (s: string) =>
   s
     .replace(/\*\*(.*?)\*\*/g, "$1")
     .replace(/\*(.*?)\*/g, "$1")
     .replace(/__(.*?)__/g, "$1")
-    .replace(/_(.*?)_/g, "$1")
+    .replace(/(?<!\[)_([^_\n]+)_(?!\])/g, "$1")
     .replace(/`([^`]*)`/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/^\s*[-*+]\s+/gm, "• ");
 
+function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: string) => void }) {
+  const nodes: React.ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  const re = new RegExp(FILE_TOKEN.source, "gi");
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    const id = m[1];
+    const name = m[2];
+    nodes.push(
+      <button
+        key={`${id}-${m.index}`}
+        onClick={() => onOpenFile(id)}
+        className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary hover:bg-primary/25 px-1.5 py-0.5 text-xs font-medium align-baseline mx-0.5 transition"
+      >
+        <FileText className="h-3 w-3" />
+        {name}
+      </button>,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return <>{nodes}</>;
+}
+
 function HomeChat() {
   const { t } = useTranslation();
   const ask = useServerFn(askZukha);
+  const sign = useServerFn(getDocumentSignedUrl);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [teamspaceId, setTeamspaceId] = useState<string | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -45,6 +76,29 @@ function HomeChat() {
   }, [messages, loading]);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      const { data: mem } = await supabase
+        .from("teamspace_members")
+        .select("teamspace_id")
+        .eq("user_id", data.user.id)
+        .limit(1)
+        .maybeSingle();
+      if (mem?.teamspace_id) setTeamspaceId(mem.teamspace_id);
+    })();
+  }, []);
+
+  const openFile = async (id: string) => {
+    try {
+      const { url } = await sign({ data: { id } });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not open file");
+    }
+  };
 
   const suggestionsRaw = t("app.overview.suggestions", { returnObjects: true });
   const suggestions: string[] = Array.isArray(suggestionsRaw) ? (suggestionsRaw as string[]) : [];
@@ -58,7 +112,7 @@ function HomeChat() {
     setMessages(next);
     setLoading(true);
     try {
-      const res = await ask({ data: { messages: next } });
+      const res = await ask({ data: { messages: next, teamspace_id: teamspaceId } });
       setMessages([...next, { role: "assistant", content: stripMarkdown(res.reply || "…") }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -67,6 +121,7 @@ function HomeChat() {
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   };
+
 
   const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -200,7 +255,9 @@ function HomeChat() {
                         : "text-white/90"
                     }`}
                   >
-                    {m.content}
+                    {m.role === "assistant"
+                      ? <MessageContent text={m.content} onOpenFile={openFile} />
+                      : m.content}
                   </div>
                 </motion.div>
               ))}
