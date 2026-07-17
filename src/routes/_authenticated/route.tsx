@@ -10,6 +10,10 @@ import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LangSwitcher } from "@/components/LangSwitcher";
+
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
