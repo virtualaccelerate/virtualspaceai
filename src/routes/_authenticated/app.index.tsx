@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Plus, Mic, Loader2, FileText } from "lucide-react";
+import { Send, Plus, Mic, Loader2, FileText, CheckSquare } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
 import { getDocumentSignedUrl } from "@/lib/documents.functions";
+import { createTask } from "@/lib/tasks.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
@@ -20,9 +21,11 @@ export const Route = createFileRoute("/_authenticated/app/")({
   }),
 });
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
+type CreatedTask = { id: string; title: string };
+type ChatMsg = { role: "user" | "assistant"; content: string; tasks?: CreatedTask[] };
 
 const FILE_TOKEN = /\[\[file:([0-9a-f-]{36})\|([^\]]+)\]\]/gi;
+const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
 
 const stripMarkdown = (s: string) =>
   s
@@ -33,6 +36,31 @@ const stripMarkdown = (s: string) =>
     .replace(/`([^`]*)`/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/^\s*[-*+]\s+/gm, "• ");
+
+type ParsedTask = {
+  title: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  due_date?: string;
+  description?: string;
+};
+
+function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] } {
+  const tasks: ParsedTask[] = [];
+  const cleaned = text.replace(TASK_TOKEN, (_m, body: string) => {
+    const parts = body.split("||").map((p) => p.trim());
+    const [title, priority, due_date, description] = parts;
+    if (!title) return "";
+    const t: ParsedTask = { title };
+    if (priority && ["low", "medium", "high", "urgent"].includes(priority)) {
+      t.priority = priority as ParsedTask["priority"];
+    }
+    if (due_date && /^\d{4}-\d{2}-\d{2}$/.test(due_date)) t.due_date = due_date;
+    if (description) t.description = description;
+    tasks.push(t);
+    return "";
+  });
+  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks };
+}
 
 function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: string) => void }) {
   const nodes: React.ReactNode[] = [];
@@ -63,6 +91,7 @@ function HomeChat() {
   const { t } = useTranslation();
   const ask = useServerFn(askZukha);
   const sign = useServerFn(getDocumentSignedUrl);
+  const mkTask = useServerFn(createTask);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -113,7 +142,21 @@ function HomeChat() {
     setLoading(true);
     try {
       const res = await ask({ data: { messages: next, teamspace_id: teamspaceId } });
-      setMessages([...next, { role: "assistant", content: stripMarkdown(res.reply || "…") }]);
+      const raw = stripMarkdown(res.reply || "…");
+      const { cleaned, tasks } = parseTaskTokens(raw);
+      const created: CreatedTask[] = [];
+      for (const t of tasks) {
+        try {
+          const row = await mkTask({ data: t });
+          created.push({ id: row.id, title: row.title });
+        } catch {
+          /* ignore individual failures */
+        }
+      }
+      setMessages([
+        ...next,
+        { role: "assistant", content: cleaned || (created.length ? "" : "…"), tasks: created },
+      ]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -258,6 +301,20 @@ function HomeChat() {
                     {m.role === "assistant"
                       ? <MessageContent text={m.content} onOpenFile={openFile} />
                       : m.content}
+                    {m.role === "assistant" && m.tasks && m.tasks.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {m.tasks.map((tk) => (
+                          <Link
+                            key={tk.id}
+                            to="/app/tasks"
+                            className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary hover:bg-primary/25 px-2 py-1 text-xs font-medium transition"
+                          >
+                            <CheckSquare className="h-3 w-3" />
+                            {tk.title}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}

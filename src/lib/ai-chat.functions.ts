@@ -54,7 +54,10 @@ export const askZukha = createServerFn({ method: "POST" })
       "Write in normal sentences and short paragraphs; if you need a list, use numbers like '1.' or plain lines. " +
       "When you reference or cite a file from the KNOWLEDGE BASE, ALWAYS use this exact inline syntax: [[file:UUID|File name]] — the app will render it as a clickable link. " +
       "Never invent file ids. Only use ids that appear in the KNOWLEDGE BASE below. " +
-      "If the user asks for a report, summary, or something derived from a file, produce the answer as text and cite the relevant [[file:...]] links so they can open the source." +
+      "If the user asks for a report, summary, or something derived from a file, produce the answer as text and cite the relevant [[file:...]] links so they can open the source.\n\n" +
+      "TASK CREATION: When the user asks you to create, add, or plan a task (задача, таск, todo, task), emit ONE token per task on its own line using EXACTLY this syntax:\n" +
+      "[[task:Title||priority||YYYY-MM-DD||description]]\n" +
+      "Rules: priority ∈ low|medium|high|urgent (default medium). Date is optional — leave empty as ||||. Description optional. Example: [[task:Prepare Q3 report||high||2026-08-01||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
       knowledgeBlock;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
