@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
+import { FloatingChat } from "@/components/FloatingChat";
 
 
 
@@ -339,6 +340,8 @@ function AuthenticatedLayout() {
       {inviteOpen && teamspace && (
         <InviteModal teamspace={teamspace} onClose={() => setInviteOpen(false)} />
       )}
+
+      <FloatingChat />
     </div>
   );
 }

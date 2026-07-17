@@ -67,42 +67,42 @@ const COLUMNS: {
   {
     id: "backlog",
     label: "TO DO",
-    accent: "bg-white/40",
-    pill: "bg-white/10 text-white/80 border-white/15",
-    dot: "border-white/40",
-    ring: "ring-white/10",
+    accent: "bg-foreground/20",
+    pill: "bg-muted text-foreground border-border",
+    dot: "border-foreground/50",
+    ring: "ring-foreground/10",
   },
   {
     id: "in_progress",
     label: "IN PROGRESS",
     accent: "bg-violet-500",
-    pill: "bg-violet-500/20 text-violet-200 border-violet-400/30",
-    dot: "border-violet-400",
+    pill: "bg-violet-500/15 text-violet-700 dark:text-violet-200 border-violet-500/40",
+    dot: "border-violet-500 dark:border-violet-400",
     ring: "ring-violet-400/20",
   },
   {
     id: "review",
     label: "REVIEW",
-    accent: "bg-amber-400",
-    pill: "bg-amber-400/15 text-amber-200 border-amber-400/30",
-    dot: "border-amber-400",
+    accent: "bg-amber-500",
+    pill: "bg-amber-500/15 text-amber-700 dark:text-amber-200 border-amber-500/40",
+    dot: "border-amber-500 dark:border-amber-400",
     ring: "ring-amber-400/20",
   },
   {
     id: "done",
     label: "COMPLETE",
     accent: "bg-emerald-500",
-    pill: "bg-emerald-500/20 text-emerald-200 border-emerald-400/30",
-    dot: "border-emerald-400",
+    pill: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 border-emerald-500/40",
+    dot: "border-emerald-500 dark:border-emerald-400",
     ring: "ring-emerald-400/20",
   },
 ];
 
 const PRIORITY_META: Record<TaskPriority, { label: string; color: string; dot: string }> = {
-  low: { label: "Low", color: "text-white/60 border-white/15", dot: "bg-white/40" },
-  medium: { label: "Medium", color: "text-sky-300 border-sky-400/30", dot: "bg-sky-400" },
-  high: { label: "High", color: "text-amber-300 border-amber-400/30", dot: "bg-amber-400" },
-  urgent: { label: "Urgent", color: "text-rose-300 border-rose-400/30", dot: "bg-rose-400" },
+  low: { label: "Low", color: "text-muted-foreground border-border", dot: "bg-foreground/40" },
+  medium: { label: "Medium", color: "text-sky-700 dark:text-sky-300 border-sky-500/40", dot: "bg-sky-500 dark:bg-sky-400" },
+  high: { label: "High", color: "text-amber-700 dark:text-amber-300 border-amber-500/40", dot: "bg-amber-500 dark:bg-amber-400" },
+  urgent: { label: "Urgent", color: "text-rose-700 dark:text-rose-300 border-rose-500/40", dot: "bg-rose-500 dark:bg-rose-400" },
 };
 
 function initialsOf(name?: string | null) {
@@ -269,8 +269,8 @@ function TasksPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-2xl sm:text-3xl text-white">Tasks</h1>
-          <p className="mt-1 text-sm text-white/60">
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Tasks</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами.
           </p>
         </div>
@@ -280,7 +280,7 @@ function TasksPage() {
       </div>
 
       {loading ? (
-        <div className="text-sm text-white/50">Loading…</div>
+        <div className="text-sm text-muted-foreground">Loading…</div>
       ) : (
         <div className="-mx-4 sm:-mx-6 overflow-x-auto pb-4">
           <div className="flex gap-4 px-4 sm:px-6 min-w-max">
@@ -301,7 +301,7 @@ function TasksPage() {
                     setDragOver(null);
                   }}
                   className={cn(
-                    "w-[300px] shrink-0 flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors",
+                    "w-[300px] shrink-0 flex flex-col rounded-2xl border border-border bg-card/50 p-3 transition-colors",
                     isOver && "border-primary/40 bg-primary/[0.05] ring-2 ring-primary/20",
                   )}
                 >
@@ -321,16 +321,17 @@ function TasksPage() {
                         />
                         {col.label}
                       </span>
-                      <span className="text-xs text-white/50 font-medium">{items.length}</span>
+                      <span className="text-xs text-muted-foreground font-medium">{items.length}</span>
                     </div>
                     <button
                       onClick={() => openCreate(col.id)}
-                      className="text-white/40 hover:text-white transition"
+                      className="text-muted-foreground hover:text-foreground transition"
                       aria-label={`Add task to ${col.label}`}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
+
 
                   <div className="flex-1 space-y-2 min-h-[80px]">
                     {items.map((task) => {
@@ -346,18 +347,18 @@ function TasksPage() {
                           }}
                           onClick={() => openEdit(task)}
                           className={cn(
-                            "group cursor-grab active:cursor-grabbing rounded-xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_2px_8px_rgba(0,0,0,0.25)] hover:border-white/25 hover:bg-white/[0.06] transition",
+                            "group cursor-grab active:cursor-grabbing rounded-xl border border-border bg-card p-3 shadow-sm hover:border-primary/30 hover:bg-accent/30 transition",
                             dragId === task.id && "opacity-50",
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <h3 className="text-[13px] font-medium text-white leading-snug">
+                            <h3 className="text-[13px] font-medium text-foreground leading-snug">
                               {task.title}
                             </h3>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <button
-                                  className="opacity-0 group-hover:opacity-100 text-white/40 hover:text-white transition -mr-1"
+                                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition -mr-1"
                                   aria-label="Task actions"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
@@ -376,7 +377,7 @@ function TasksPage() {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(task.id)}
-                                  className="text-rose-300 focus:text-rose-200"
+                                  className="text-rose-600 dark:text-rose-300 focus:text-rose-700 dark:focus:text-rose-200"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" /> Delete
                                 </DropdownMenuItem>
@@ -385,7 +386,7 @@ function TasksPage() {
                           </div>
 
                           {task.description && (
-                            <p className="mt-1 text-xs text-white/50 line-clamp-2">
+                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
                               {task.description}
                             </p>
                           )}
@@ -393,24 +394,24 @@ function TasksPage() {
                           <div className="mt-3 flex items-center gap-1.5">
                             {task.assignee_name ? (
                               <span
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/70 text-[10px] font-semibold text-white ring-2 ring-white/5"
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/80 text-[10px] font-semibold text-white ring-2 ring-background"
                                 title={task.assignee_name}
                               >
                                 {initialsOf(task.assignee_name)}
                               </span>
                             ) : (
-                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-white/20 text-white/30">
+                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
                                 <User className="h-3 w-3" />
                               </span>
                             )}
 
                             {task.due_date ? (
-                              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-white/70">
+                              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-[10px] text-foreground/80">
                                 <CalendarIcon className="h-3 w-3" />
                                 {formatDateRange(task.due_date)}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-white/10 text-white/30">
+                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-border text-muted-foreground">
                                 <CalendarIcon className="h-3 w-3" />
                               </span>
                             )}
@@ -426,7 +427,7 @@ function TasksPage() {
                             </span>
 
                             <span
-                              className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-white/10 text-white/30"
+                              className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-border text-muted-foreground"
                               aria-hidden
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
@@ -439,7 +440,7 @@ function TasksPage() {
 
                   <button
                     onClick={() => openCreate(col.id)}
-                    className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-300/80 hover:text-emerald-200 hover:bg-white/[0.03] transition"
+                    className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 hover:bg-accent/40 transition"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add Task
                   </button>
@@ -449,7 +450,7 @@ function TasksPage() {
 
             <button
               onClick={() => openCreate()}
-              className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-white/10 px-4 py-3 text-sm text-white/40 hover:text-white/70 hover:border-white/25 transition"
+              className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
             >
               <Plus className="h-4 w-4" /> Add group
             </button>
