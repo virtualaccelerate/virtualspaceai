@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Rocket, Briefcase, Building2, ArrowRight, Users, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +55,17 @@ function OnboardingPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const c = params.get("code");
+    if (c) {
+      setCode(c);
+      setTab("join");
+    }
+  }, []);
+
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
