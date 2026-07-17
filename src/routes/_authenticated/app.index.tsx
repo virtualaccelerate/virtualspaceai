@@ -21,9 +21,11 @@ export const Route = createFileRoute("/_authenticated/app/")({
   }),
 });
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
+type CreatedTask = { id: string; title: string };
+type ChatMsg = { role: "user" | "assistant"; content: string; tasks?: CreatedTask[] };
 
 const FILE_TOKEN = /\[\[file:([0-9a-f-]{36})\|([^\]]+)\]\]/gi;
+const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
 
 const stripMarkdown = (s: string) =>
   s
@@ -34,6 +36,31 @@ const stripMarkdown = (s: string) =>
     .replace(/`([^`]*)`/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/^\s*[-*+]\s+/gm, "• ");
+
+type ParsedTask = {
+  title: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  due_date?: string;
+  description?: string;
+};
+
+function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] } {
+  const tasks: ParsedTask[] = [];
+  const cleaned = text.replace(TASK_TOKEN, (_m, body: string) => {
+    const parts = body.split("||").map((p) => p.trim());
+    const [title, priority, due_date, description] = parts;
+    if (!title) return "";
+    const t: ParsedTask = { title };
+    if (priority && ["low", "medium", "high", "urgent"].includes(priority)) {
+      t.priority = priority as ParsedTask["priority"];
+    }
+    if (due_date && /^\d{4}-\d{2}-\d{2}$/.test(due_date)) t.due_date = due_date;
+    if (description) t.description = description;
+    tasks.push(t);
+    return "";
+  });
+  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks };
+}
 
 function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: string) => void }) {
   const nodes: React.ReactNode[] = [];
