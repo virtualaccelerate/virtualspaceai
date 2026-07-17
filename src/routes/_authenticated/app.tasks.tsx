@@ -301,7 +301,7 @@ function TasksPage() {
                     setDragOver(null);
                   }}
                   className={cn(
-                    "w-[300px] shrink-0 flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors",
+                    "w-[300px] shrink-0 flex flex-col rounded-2xl border border-border bg-card/50 p-3 transition-colors",
                     isOver && "border-primary/40 bg-primary/[0.05] ring-2 ring-primary/20",
                   )}
                 >
@@ -321,16 +321,17 @@ function TasksPage() {
                         />
                         {col.label}
                       </span>
-                      <span className="text-xs text-white/50 font-medium">{items.length}</span>
+                      <span className="text-xs text-muted-foreground font-medium">{items.length}</span>
                     </div>
                     <button
                       onClick={() => openCreate(col.id)}
-                      className="text-white/40 hover:text-white transition"
+                      className="text-muted-foreground hover:text-foreground transition"
                       aria-label={`Add task to ${col.label}`}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
+
 
                   <div className="flex-1 space-y-2 min-h-[80px]">
                     {items.map((task) => {
