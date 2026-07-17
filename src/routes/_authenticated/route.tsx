@@ -1,10 +1,12 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
-  LayoutDashboard, User, LogOut, Menu, X, CheckSquare, BookOpen,
-  Bot, BarChart3, Timer, Users, Bell, Search, Plus, Settings,
+  LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
+  Bot, Users, Bell, Search, Plus, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
+  MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -26,25 +28,20 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
-const NAV_MAIN = [
-  { to: "/app", labelKey: "app.nav.overview", icon: LayoutDashboard, exact: true },
-  { to: "/app/tasks", labelKey: "app.nav.tasks", icon: CheckSquare, exact: false, badge: "12" },
-  { to: "/app/docs", labelKey: "app.nav.knowledgeBase", icon: BookOpen, exact: false },
-  { to: "/app/agents", labelKey: "app.nav.aiAgents", icon: Bot, exact: false, badge: "3" },
-] as const;
-
-const NAV_INSIGHTS = [
-  { to: "/app/analytics", labelKey: "app.nav.analytics", icon: BarChart3, exact: false },
-  { to: "/app/time", labelKey: "app.nav.timeTracking", icon: Timer, exact: false },
-  { to: "/app/clients", labelKey: "app.nav.clients", icon: Users, exact: false },
-] as const;
-
-const NAV_ACCOUNT = [
-  { to: "/app/profile", labelKey: "app.nav.profile", icon: User, exact: false },
-] as const;
-
+type NavItem = {
+  to: string;
+  label: string;
+  icon: LucideIcon | ComponentType<{ className?: string }>;
+  exact?: boolean;
+};
 
 type Teamspace = { id: string; name: string; invite_code: string };
+
+const TelegramIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+    <path d="M9.78 17.26 9.6 20.2c.27 0 .39-.12.53-.26l1.28-1.22 2.65 1.94c.49.27.84.13.97-.45l1.76-8.25c.16-.73-.26-1.01-.74-.83L4.62 14.7c-.71.28-.7.68-.13.86l2.63.82 6.11-3.86c.29-.19.55-.09.34.11" />
+  </svg>
+);
 
 function AuthenticatedLayout() {
   const { t } = useTranslation();
@@ -52,12 +49,22 @@ function AuthenticatedLayout() {
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("app.sidebar.expanded") === "1";
+  });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("app.sidebar.expanded", expanded ? "1" : "0");
+    }
+  }, [expanded]);
 
   useEffect(() => {
     (async () => {
@@ -89,6 +96,8 @@ function AuthenticatedLayout() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [menuOpen]);
 
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
   const signOut = async () => {
     await queryClient.cancelQueries();
     queryClient.clear();
@@ -96,138 +105,165 @@ function AuthenticatedLayout() {
     navigate({ to: "/auth", replace: true });
   };
 
-  const isActive = (to: string, exact: boolean) =>
+  const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
   const initial = (email?.[0] ?? "u").toUpperCase();
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
-  const renderGroup = (label: string, items: readonly typeof NAV_MAIN[number][]) => (
-    <div>
-      <div className="px-3 pt-4 pb-1.5 text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</div>
-      <div className="space-y-0.5">
-        {items.map((item) => {
-          const active = isActive(item.to, item.exact);
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={() => setMobileOpen(false)}
-              className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
-                active ? "bg-primary/15 text-white" : "text-white/65 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <item.icon className={`h-4 w-4 ${active ? "text-primary" : "text-white/50 group-hover:text-white/80"}`} />
-                {t(item.labelKey)}
-              </span>
-              {"badge" in item && item.badge && (
-                <span className="text-[10px] font-semibold rounded-full px-1.5 py-0.5 bg-white/10 text-white/70">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
+  const mainNav: NavItem[] = [
+    { to: "/app", label: t("app.nav.home", "Home"), icon: MessageSquare, exact: true },
+    { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
+    { to: "/app/docs", label: t("app.nav.knowledgeBase"), icon: BookOpen },
+    { to: "/app/tasks", label: t("app.nav.tasks"), icon: CheckSquare },
+    { to: "/app/agents", label: t("app.nav.aiAgents"), icon: Bot },
+    { to: "/app/financials", label: t("app.nav.financials", "Financials"), icon: Wallet },
+    { to: "/app/telegram", label: t("app.nav.telegram", "Telegram"), icon: TelegramIcon },
+    { to: "/app/team", label: t("app.nav.team", "Team"), icon: Users },
+  ];
+
+  const bottomNav: NavItem[] = [
+    { to: "/app/settings", label: t("app.nav.settings", "Settings"), icon: Settings },
+  ];
+
+  const showLabels = expanded || mobileOpen;
+  const railWidth = showLabels ? "w-64" : "w-[68px]";
+
+  const NavButton = ({ item }: { item: NavItem }) => {
+    const active = isActive(item.to, item.exact);
+    return (
+      <Link
+        to={item.to}
+        title={showLabels ? undefined : item.label}
+        className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition ${
+          active ? "bg-primary/15 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
+        }`}
+      >
+        <span className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+          active ? "text-primary" : "text-white/60 group-hover:text-white/90"
+        }`}>
+          <item.icon className="h-[18px] w-[18px]" />
+        </span>
+        {showLabels && <span className="truncate">{item.label}</span>}
+      </Link>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex w-full">
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 z-40 h-screen w-64 shrink-0 border-r border-white/10 bg-[color:var(--card)] transform transition-transform lg:translate-x-0 flex flex-col ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed lg:sticky top-0 z-40 h-screen ${railWidth} shrink-0 border-r border-white/10 bg-[color:var(--card)] transform transition-all duration-200 lg:translate-x-0 flex flex-col ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        {/* Teamspace switcher */}
-        <div className="relative px-3 pt-3 pb-2 border-b border-white/10" ref={menuRef}>
-          <div className="flex items-center gap-1.5">
+        {/* Top: teamspace + collapse */}
+        <div className="relative px-2 pt-2 pb-2 border-b border-white/10" ref={menuRef}>
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="flex-1 flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-white/5 transition text-left"
+              onClick={() => showLabels && setMenuOpen((v) => !v)}
+              className={`flex-1 flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-white/5 transition text-left min-w-0 ${
+                showLabels ? "" : "justify-center"
+              }`}
+              title={teamspace?.name ?? ""}
             >
-              <div className="h-8 w-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-sm font-bold shrink-0">
-                <Sparkles className="h-4 w-4" />
+              <div className="h-9 w-9 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-sm font-bold shrink-0">
+                {teamspace ? tsInitial : <Sparkles className="h-4 w-4" />}
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-white truncate">
-                  {teamspace?.name ?? t("app.header.loading")}
-                </div>
-                <div className="text-[10px] text-white/40 uppercase tracking-wider">{t("app.header.teamspace")}</div>
-
-              </div>
-              <ChevronDown className={`h-4 w-4 text-white/50 shrink-0 transition ${menuOpen ? "rotate-180" : ""}`} />
+              {showLabels && (
+                <>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-white truncate">
+                      {teamspace?.name ?? t("app.header.loading")}
+                    </div>
+                    <div className="text-[10px] text-white/40 uppercase tracking-wider">
+                      {t("app.header.teamspace")}
+                    </div>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-white/50 shrink-0 transition ${menuOpen ? "rotate-180" : ""}`} />
+                </>
+              )}
             </button>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="lg:hidden text-white/60 p-2"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {mobileOpen && (
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="lg:hidden text-white/60 p-2"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
-          {menuOpen && (
-            <div className="absolute left-3 right-3 top-full mt-1 z-50 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl overflow-hidden">
+          {menuOpen && showLabels && (
+            <div className="absolute left-2 right-2 top-full mt-1 z-50 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl overflow-hidden">
               <div className="px-3 py-2.5 border-b border-white/5">
                 <div className="text-[10px] uppercase tracking-wider text-white/40">{t("app.header.signedInAs")}</div>
                 <div className="text-xs text-white/80 truncate mt-0.5">{email}</div>
               </div>
-              <MenuItem
-                icon={User}
-                label={t("app.nav.profile")}
-                onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }}
-              />
-              <MenuItem
-                icon={UserPlus}
-                label={t("app.header.inviteMembers")}
-                onClick={() => { setMenuOpen(false); setInviteOpen(true); }}
-              />
-              <MenuItem
-                icon={Settings}
-                label={t("app.header.teamspaceSettings")}
-                onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }}
-              />
+              <MenuItem icon={User} label={t("app.nav.profile")}
+                onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }} />
+              <MenuItem icon={UserPlus} label={t("app.header.inviteMembers")}
+                onClick={() => { setMenuOpen(false); setInviteOpen(true); }} />
+              <MenuItem icon={Settings} label={t("app.header.teamspaceSettings")}
+                onClick={() => { setMenuOpen(false); navigate({ to: "/app/settings" }); }} />
               <div className="border-t border-white/5" />
               <MenuItem icon={LogOut} label={t("app.header.signOut")} onClick={signOut} danger />
-
             </div>
           )}
         </div>
 
-        <div className="px-3 pt-3">
-          <button className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-sm font-semibold hover:bg-primary/90 transition">
-            <Plus className="h-4 w-4" />
-            {t("app.header.newTask")}
+        {/* Collapse toggle + New */}
+        <div className="px-2 pt-2 space-y-1">
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className={`hidden lg:flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/60 hover:bg-white/5 hover:text-white transition ${
+              showLabels ? "" : "justify-center"
+            }`}
+            title={showLabels ? "Collapse" : "Expand"}
+          >
+            <span className="h-8 w-8 flex items-center justify-center">
+              {showLabels ? <PanelLeftClose className="h-[18px] w-[18px]" /> : <PanelLeftOpen className="h-[18px] w-[18px]" />}
+            </span>
+            {showLabels && <span>Collapse</span>}
+          </button>
+          <button
+            onClick={() => navigate({ to: "/app/tasks" })}
+            className={`w-full flex items-center gap-3 rounded-lg bg-primary text-primary-foreground px-2.5 py-2 text-sm font-semibold hover:bg-primary/90 transition ${
+              showLabels ? "" : "justify-center"
+            }`}
+            title={t("app.header.newTask")}
+          >
+            <span className="h-8 w-8 flex items-center justify-center">
+              <Plus className="h-[18px] w-[18px]" />
+            </span>
+            {showLabels && <span>{t("app.header.newTask")}</span>}
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {renderGroup(t("app.nav.workspace"), NAV_MAIN as unknown as typeof NAV_MAIN[number][])}
-          {renderGroup(t("app.nav.insights"), NAV_INSIGHTS as unknown as typeof NAV_MAIN[number][])}
-          {renderGroup(t("app.nav.account"), NAV_ACCOUNT as unknown as typeof NAV_MAIN[number][])}
-
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 mt-1">
+          {mainNav.map((item) => <NavButton key={item.to} item={item} />)}
         </nav>
 
-        <div className="p-3 border-t border-white/10">
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">
+        <div className="p-2 border-t border-white/10 space-y-0.5">
+          {bottomNav.map((item) => <NavButton key={item.to} item={item} />)}
+          <Link
+            to="/app/profile"
+            title={showLabels ? undefined : email ?? ""}
+            className={`flex items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-white/5 transition ${
+              showLabels ? "" : "justify-center"
+            }`}
+          >
+            <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
               {initial}
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs text-white/50 truncate">{email ?? ""}</div>
-            </div>
-            <button
-              onClick={signOut}
-              className="text-white/50 hover:text-white transition p-1.5 rounded-md hover:bg-white/5"
-              aria-label="Sign out"
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
+            {showLabels && (
+              <div className="min-w-0 flex-1">
+                <div className="text-xs text-white/70 truncate">{email ?? ""}</div>
+              </div>
+            )}
+          </Link>
         </div>
       </aside>
 
@@ -243,11 +279,11 @@ function AuthenticatedLayout() {
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="sticky top-0 z-20 h-14 border-b border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 flex items-center gap-3">
           <button
-            className="lg:hidden text-white"
+            className="lg:hidden text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5"
             onClick={() => setMobileOpen(true)}
-            aria-label="Menu"
+            aria-label="Open sidebar"
           >
-            <Menu className="h-5 w-5" />
+            <PanelLeftOpen className="h-5 w-5" />
           </button>
 
           <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
@@ -272,7 +308,6 @@ function AuthenticatedLayout() {
               <UserPlus className="h-3.5 w-3.5" />
               {t("app.header.invite")}
             </button>
-
             <button
               className="relative h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
               aria-label="Notifications"
@@ -281,14 +316,12 @@ function AuthenticatedLayout() {
               <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
             </button>
             <button
+              onClick={() => navigate({ to: "/app/settings" })}
               className="h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
               aria-label="Settings"
             >
               <Settings className="h-4 w-4" />
             </button>
-            <div className="h-8 w-8 ml-2 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">
-              {tsInitial}
-            </div>
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
@@ -302,6 +335,7 @@ function AuthenticatedLayout() {
     </div>
   );
 }
+
 
 function MenuItem({
   icon: Icon,

@@ -17,8 +17,13 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
+import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
+import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
+import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
 import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticated/app.docs'
 import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
@@ -63,16 +68,45 @@ const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
   path: '/time',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppTelegramRoute =
+  AuthenticatedAppTelegramRouteImport.update({
+    id: '/telegram',
+    path: '/telegram',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppOverviewRoute =
+  AuthenticatedAppOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppFinancialsRoute =
+  AuthenticatedAppFinancialsRouteImport.update({
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -106,8 +140,13 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/financials': typeof AuthenticatedAppFinancialsRoute
+  '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/app/team': typeof AuthenticatedAppTeamRoute
+  '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRoutesByTo {
@@ -121,8 +160,13 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/financials': typeof AuthenticatedAppFinancialsRoute
+  '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/app/team': typeof AuthenticatedAppTeamRoute
+  '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRoutesById {
@@ -138,8 +182,13 @@ export interface FileRoutesById {
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
   '/_authenticated/app/docs': typeof AuthenticatedAppDocsRoute
+  '/_authenticated/app/financials': typeof AuthenticatedAppFinancialsRoute
+  '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
+  '/_authenticated/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
 }
 export interface FileRouteTypes {
@@ -155,8 +204,13 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/clients'
     | '/app/docs'
+    | '/app/financials'
+    | '/app/overview'
     | '/app/profile'
+    | '/app/settings'
     | '/app/tasks'
+    | '/app/team'
+    | '/app/telegram'
     | '/app/time'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -170,8 +224,13 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/clients'
     | '/app/docs'
+    | '/app/financials'
+    | '/app/overview'
     | '/app/profile'
+    | '/app/settings'
     | '/app/tasks'
+    | '/app/team'
+    | '/app/telegram'
     | '/app/time'
   id:
     | '__root__'
@@ -186,8 +245,13 @@ export interface FileRouteTypes {
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/clients'
     | '/_authenticated/app/docs'
+    | '/_authenticated/app/financials'
+    | '/_authenticated/app/overview'
     | '/_authenticated/app/profile'
+    | '/_authenticated/app/settings'
     | '/_authenticated/app/tasks'
+    | '/_authenticated/app/team'
+    | '/_authenticated/app/telegram'
     | '/_authenticated/app/time'
   fileRoutesById: FileRoutesById
 }
@@ -258,6 +322,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTimeRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/telegram': {
+      id: '/_authenticated/app/telegram'
+      path: '/telegram'
+      fullPath: '/app/telegram'
+      preLoaderRoute: typeof AuthenticatedAppTelegramRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/team': {
+      id: '/_authenticated/app/team'
+      path: '/team'
+      fullPath: '/app/team'
+      preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/tasks': {
       id: '/_authenticated/app/tasks'
       path: '/tasks'
@@ -265,11 +343,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/settings': {
+      id: '/_authenticated/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/profile': {
       id: '/_authenticated/app/profile'
       path: '/profile'
       fullPath: '/app/profile'
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/overview': {
+      id: '/_authenticated/app/overview'
+      path: '/overview'
+      fullPath: '/app/overview'
+      preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/financials': {
+      id: '/_authenticated/app/financials'
+      path: '/financials'
+      fullPath: '/app/financials'
+      preLoaderRoute: typeof AuthenticatedAppFinancialsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/docs': {
@@ -308,8 +407,13 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
   AuthenticatedAppDocsRoute: typeof AuthenticatedAppDocsRoute
+  AuthenticatedAppFinancialsRoute: typeof AuthenticatedAppFinancialsRoute
+  AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
+  AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
+  AuthenticatedAppTelegramRoute: typeof AuthenticatedAppTelegramRoute
   AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
 }
 
@@ -318,8 +422,13 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
   AuthenticatedAppDocsRoute: AuthenticatedAppDocsRoute,
+  AuthenticatedAppFinancialsRoute: AuthenticatedAppFinancialsRoute,
+  AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
+  AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
+  AuthenticatedAppTelegramRoute: AuthenticatedAppTelegramRoute,
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
 }
 
