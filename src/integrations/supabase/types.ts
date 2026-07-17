@@ -177,6 +177,41 @@ export type Database = {
           },
         ]
       }
+      financial_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          teamspace_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          teamspace_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          teamspace_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_chat_messages_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_sources: {
         Row: {
           analysis: Json | null
