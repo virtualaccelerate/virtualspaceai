@@ -20,6 +20,7 @@ import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
+import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
 import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticated/app.docs'
 import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
@@ -80,6 +81,12 @@ const AuthenticatedAppOverviewRoute =
     path: '/overview',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppFinancialsRoute =
+  AuthenticatedAppFinancialsRouteImport.update({
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -129,6 +137,7 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -147,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
   '/_authenticated/app/docs': typeof AuthenticatedAppDocsRoute
+  '/_authenticated/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/clients'
     | '/app/docs'
+    | '/app/financials'
     | '/app/overview'
     | '/app/profile'
     | '/app/tasks'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/clients'
     | '/app/docs'
+    | '/app/financials'
     | '/app/overview'
     | '/app/profile'
     | '/app/tasks'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/clients'
     | '/_authenticated/app/docs'
+    | '/_authenticated/app/financials'
     | '/_authenticated/app/overview'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/tasks'
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/financials': {
+      id: '/_authenticated/app/financials'
+      path: '/financials'
+      fullPath: '/app/financials'
+      preLoaderRoute: typeof AuthenticatedAppFinancialsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/docs': {
       id: '/_authenticated/app/docs'
       path: '/docs'
@@ -328,6 +348,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
   AuthenticatedAppDocsRoute: typeof AuthenticatedAppDocsRoute
+  AuthenticatedAppFinancialsRoute: typeof AuthenticatedAppFinancialsRoute
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
@@ -339,6 +360,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
   AuthenticatedAppDocsRoute: AuthenticatedAppDocsRoute,
+  AuthenticatedAppFinancialsRoute: AuthenticatedAppFinancialsRoute,
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
