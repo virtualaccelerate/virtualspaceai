@@ -164,7 +164,7 @@ function ProfilePage() {
           disabled={saving}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60"
         >
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? (<><Check className="h-4 w-4" /> Saved</>) : "Save changes"}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? (<><Check className="h-4 w-4" /> {t("app.profile.saved")}</>) : t("app.profile.save")}
         </button>
       </form>
     </div>
