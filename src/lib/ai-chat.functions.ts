@@ -23,6 +23,42 @@ const AGENT_PROMPTS: Record<string, string> = {
     "Cite source files with the [[file:UUID|Name]] syntax when the analysis comes from the knowledge base. Plain text only, no markdown symbols.",
 };
 
+// ---------- Google Sheets helpers (shared with financials) ----------
+function extractSheetInfo(url: string): { id: string; gid: string } | null {
+  try {
+    const u = new URL(url);
+    if (!/docs\.google\.com$/.test(u.hostname)) return null;
+    const m = u.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    if (!m) return null;
+    const gidHash = u.hash.match(/gid=(\d+)/);
+    const gidQuery = u.searchParams.get("gid");
+    return { id: m[1], gid: gidHash?.[1] ?? gidQuery ?? "0" };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchSheetCsv(id: string, gid: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
+      { redirect: "follow" },
+    );
+    if (!res.ok) return null;
+    const ct = res.headers.get("content-type") || "";
+    const csv = await res.text();
+    if (ct.includes("text/html") || /<html/i.test(csv.slice(0, 200))) return null;
+    return csv.slice(0, 40_000);
+  } catch {
+    return null;
+  }
+}
+
+function findSheetUrls(text: string): string[] {
+  const re = /https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+[^\s)]*/g;
+  return Array.from(new Set(text.match(re) ?? []));
+}
+
 export const askZukha = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => InputSchema.parse(raw))
