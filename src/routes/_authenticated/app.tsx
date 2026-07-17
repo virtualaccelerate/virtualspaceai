@@ -255,7 +255,9 @@ function HomeChat() {
                         : "text-white/90"
                     }`}
                   >
-                    {m.content}
+                    {m.role === "assistant"
+                      ? <MessageContent text={m.content} onOpenFile={openFile} />
+                      : m.content}
                   </div>
                 </motion.div>
               ))}
