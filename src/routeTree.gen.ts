@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as BookDemoRouteImport } from './routes/book-demo'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -34,6 +35,11 @@ import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_a
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/agents': typeof AuthenticatedAppAgentsRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/agents': typeof AuthenticatedAppAgentsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/app/agents': typeof AuthenticatedAppAgentsRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book-demo'
     | '/onboarding'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/app'
     | '/app/agents'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book-demo'
     | '/onboarding'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/app/agents'
     | '/app/analytics'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book-demo'
     | '/onboarding'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/_authenticated/app'
     | '/_authenticated/app/agents'
@@ -284,6 +296,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookDemoRoute: typeof BookDemoRoute
   OnboardingRoute: typeof OnboardingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -493,18 +513,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookDemoRoute: BookDemoRoute,
   OnboardingRoute: OnboardingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

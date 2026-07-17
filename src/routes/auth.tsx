@@ -17,7 +17,22 @@ export const Route = createFileRoute("/auth")({
   }),
 });
 
-type Mode = "signin" | "signup";
+type Mode = "signin" | "signup" | "forgot";
+
+function friendlyAuthError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const code = (err as { code?: string })?.code;
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(raw)) {
+    return "Неверный email или пароль. Проверьте раскладку клавиатуры (EN/RU) и Caps Lock, или сбросьте пароль ниже.";
+  }
+  if (code === "user_already_exists" || /already registered/i.test(raw)) {
+    return "Этот email уже зарегистрирован. Войдите или сбросьте пароль.";
+  }
+  if (code === "email_not_confirmed") {
+    return "Email не подтверждён. Проверьте почту.";
+  }
+  return raw;
+}
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -47,7 +62,8 @@ function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim();
-    if (!cleanEmail || !password || loading) return;
+    if (!cleanEmail || loading) return;
+    if (mode !== "forgot" && !password) return;
     setLoading(true);
     setError(null);
     setInfo(null);
@@ -61,23 +77,28 @@ function AuthPage() {
           },
         });
         if (err) throw err;
-        // If email confirmation is required, session will be null
         if (!data.session) {
           setSent(true);
         } else {
           navigate({ to: "/app", replace: true });
         }
-      } else {
+      } else if (mode === "signin") {
         const { error: err } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
           password,
         });
         if (err) throw err;
+      } else {
+        // forgot password
+        const { error: err } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (err) throw err;
+        setInfo("Ссылка для сброса пароля отправлена на почту.");
       }
     } catch (err) {
       console.error(err);
-      const msg = err instanceof Error ? err.message : "Authentication failed";
-      setError(msg);
+      setError(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -92,8 +113,8 @@ function AuthPage() {
       email: email.trim(),
       options: { emailRedirectTo: `${window.location.origin}/app` },
     });
-    if (err) setError(err.message);
-    else setInfo("Confirmation email resent.");
+    if (err) setError(friendlyAuthError(err));
+    else setInfo("Письмо отправлено повторно.");
   };
 
   const handleGoogle = async () => {
