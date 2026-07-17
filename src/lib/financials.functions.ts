@@ -219,10 +219,11 @@ export const analyzeFinancials = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("financial_sources")
-      .select("id, name, raw_csv")
+      .select("id, name, kind, source_url, raw_csv")
       .eq("teamspace_id", data.teamspace_id);
     if (error) throw new Error(error.message);
     if (!rows || rows.length === 0) throw new Error("Add a table or Google Sheet first.");
+    await refreshSheetRows(context.supabase, rows);
     const corpus = buildCorpus(rows);
     if (!corpus.trim()) throw new Error("Sources have no readable data.");
 
