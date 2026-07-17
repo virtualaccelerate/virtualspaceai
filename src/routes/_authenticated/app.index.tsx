@@ -301,6 +301,20 @@ function HomeChat() {
                     {m.role === "assistant"
                       ? <MessageContent text={m.content} onOpenFile={openFile} />
                       : m.content}
+                    {m.role === "assistant" && m.tasks && m.tasks.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {m.tasks.map((tk) => (
+                          <Link
+                            key={tk.id}
+                            to="/app/tasks"
+                            className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary hover:bg-primary/25 px-2 py-1 text-xs font-medium transition"
+                          >
+                            <CheckSquare className="h-3 w-3" />
+                            {tk.title}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
