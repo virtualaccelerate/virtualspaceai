@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
 import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
@@ -62,6 +63,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
   id: '/time',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,7 +162,6 @@ export interface FileRoutesByTo {
   '/book-demo': typeof BookDemoRoute
   '/onboarding': typeof OnboardingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/agents': typeof AuthenticatedAppAgentsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
@@ -168,6 +174,7 @@ export interface FileRoutesByTo {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
+  '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -190,6 +197,7 @@ export interface FileRoutesById {
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/_authenticated/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -212,6 +220,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/telegram'
     | '/app/time'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -219,7 +228,6 @@ export interface FileRouteTypes {
     | '/book-demo'
     | '/onboarding'
     | '/sitemap.xml'
-    | '/app'
     | '/app/agents'
     | '/app/analytics'
     | '/app/clients'
@@ -232,6 +240,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/telegram'
     | '/app/time'
+    | '/app'
   id:
     | '__root__'
     | '/'
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/team'
     | '/_authenticated/app/telegram'
     | '/_authenticated/app/time'
+    | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -314,6 +324,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app'
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/time': {
       id: '/_authenticated/app/time'
@@ -415,6 +432,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppTelegramRoute: typeof AuthenticatedAppTelegramRoute
   AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -430,6 +448,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppTelegramRoute: AuthenticatedAppTelegramRoute,
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
