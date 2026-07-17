@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Plus, Mic, Loader2, FileText } from "lucide-react";
+import { Send, Plus, Mic, Loader2, FileText, CheckSquare } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
 import { getDocumentSignedUrl } from "@/lib/documents.functions";
+import { createTask } from "@/lib/tasks.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
