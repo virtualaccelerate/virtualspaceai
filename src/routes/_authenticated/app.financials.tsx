@@ -129,6 +129,10 @@ function FinancialsPage() {
         setSources(rows);
         const cached = rows.find((r) => r.analysis)?.analysis;
         if (cached) setAnalysis(cached);
+        try {
+          const history = await loadChat({ data: { teamspace_id: mem.teamspace_id } });
+          setMessages(history.map((h) => ({ role: h.role, content: h.content })));
+        } catch { /* ignore chat load errors */ }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
