@@ -322,5 +322,47 @@ export const askFinancials = createServerFn({ method: "POST" })
       throw new Error(`AI error (${res.status}): ${t.slice(0, 200)}`);
     }
     const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    return { reply: j.choices?.[0]?.message?.content ?? "" };
+    const reply = j.choices?.[0]?.message?.content ?? "";
+
+    // Persist last user message + assistant reply to cloud
+    const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
+    if (lastUser) {
+      await context.supabase.from("financial_chat_messages").insert([
+        { teamspace_id: data.teamspace_id, user_id: context.userId, role: "user", content: lastUser.content },
+        { teamspace_id: data.teamspace_id, user_id: context.userId, role: "assistant", content: reply || "…" },
+      ]);
+    }
+
+    return { reply };
+  });
+
+// ---------- Chat history persistence ----------
+export const listFinChat = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ teamspace_id: z.string().uuid() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("financial_chat_messages")
+      .select("role, content, created_at")
+      .eq("teamspace_id", data.teamspace_id)
+      .order("created_at", { ascending: true })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as { role: "user" | "assistant"; content: string; created_at: string }[];
+  });
+
+export const clearFinChat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ teamspace_id: z.string().uuid() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("financial_chat_messages")
+      .delete()
+      .eq("teamspace_id", data.teamspace_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
