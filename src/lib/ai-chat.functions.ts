@@ -23,6 +23,42 @@ const AGENT_PROMPTS: Record<string, string> = {
     "Cite source files with the [[file:UUID|Name]] syntax when the analysis comes from the knowledge base. Plain text only, no markdown symbols.",
 };
 
+// ---------- Google Sheets helpers (shared with financials) ----------
+function extractSheetInfo(url: string): { id: string; gid: string } | null {
+  try {
+    const u = new URL(url);
+    if (!/docs\.google\.com$/.test(u.hostname)) return null;
+    const m = u.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    if (!m) return null;
+    const gidHash = u.hash.match(/gid=(\d+)/);
+    const gidQuery = u.searchParams.get("gid");
+    return { id: m[1], gid: gidHash?.[1] ?? gidQuery ?? "0" };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchSheetCsv(id: string, gid: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
+      { redirect: "follow" },
+    );
+    if (!res.ok) return null;
+    const ct = res.headers.get("content-type") || "";
+    const csv = await res.text();
+    if (ct.includes("text/html") || /<html/i.test(csv.slice(0, 200))) return null;
+    return csv.slice(0, 40_000);
+  } catch {
+    return null;
+  }
+}
+
+function findSheetUrls(text: string): string[] {
+  const re = /https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+[^\s)]*/g;
+  return Array.from(new Set(text.match(re) ?? []));
+}
+
 export const askZukha = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => InputSchema.parse(raw))
@@ -58,6 +94,69 @@ export const askZukha = createServerFn({ method: "POST" })
       }
     }
 
+    // Load financial sources (Google Sheets + uploaded CSV/XLSX) and refresh sheets live
+    let financeBlock = "";
+    if (data.teamspace_id) {
+      const { data: fins } = await context.supabase
+        .from("financial_sources")
+        .select("id, name, kind, source_url, raw_csv")
+        .eq("teamspace_id", data.teamspace_id);
+      if (fins && fins.length > 0) {
+        await Promise.all(
+          fins.map(async (r) => {
+            if (r.kind !== "sheet" || !r.source_url) return;
+            const info = extractSheetInfo(r.source_url);
+            if (!info) return;
+            const csv = await fetchSheetCsv(info.id, info.gid);
+            if (!csv) return;
+            r.raw_csv = csv;
+            await context.supabase
+              .from("financial_sources")
+              .update({ raw_csv: csv })
+              .eq("id", r.id);
+          }),
+        );
+        const FIN_BUDGET = 40_000;
+        let used = 0;
+        const parts: string[] = [];
+        for (const r of fins) {
+          if (!r.raw_csv) continue;
+          const chunk = `### FIN TABLE: ${r.name}${r.source_url ? ` (${r.source_url})` : ""}\n${r.raw_csv.slice(0, 20_000)}\n\n`;
+          if (used + chunk.length > FIN_BUDGET) break;
+          parts.push(chunk);
+          used += chunk.length;
+        }
+        if (parts.length) {
+          financeBlock =
+            "\n\nFINANCIAL SOURCES (linked in the Financials section — use for money/revenue/expense questions):\n" +
+            parts.join("");
+        }
+      }
+    }
+
+    // If the latest user message pasted a Google Sheets URL, fetch it inline
+    let inlineSheetBlock = "";
+    const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
+    if (lastUser) {
+      const urls = findSheetUrls(lastUser.content).slice(0, 3);
+      const fetched: string[] = [];
+      for (const url of urls) {
+        const info = extractSheetInfo(url);
+        if (!info) continue;
+        const csv = await fetchSheetCsv(info.id, info.gid);
+        if (!csv) {
+          fetched.push(`### SHARED SHEET (not accessible — user must set share to 'Anyone with the link · Viewer'): ${url}\n`);
+        } else {
+          fetched.push(`### SHARED SHEET: ${url}\n${csv.slice(0, 20_000)}\n`);
+        }
+      }
+      if (fetched.length) {
+        inlineSheetBlock =
+          "\n\nSHEETS SHARED IN THIS MESSAGE (read them directly and answer):\n" +
+          fetched.join("\n");
+      }
+    }
+
     const agentPreamble = data.agent_id && AGENT_PROMPTS[data.agent_id]
       ? `ACTIVE AGENT MODE: ${AGENT_PROMPTS[data.agent_id]}\n\n`
       : "";
@@ -74,7 +173,9 @@ export const askZukha = createServerFn({ method: "POST" })
       "TASK CREATION: When the user asks you to create, add, or plan a task (задача, таск, todo, task), emit ONE token per task on its own line using EXACTLY this syntax:\n" +
       "[[task:Title||priority||YYYY-MM-DD||description]]\n" +
       "Rules: priority ∈ low|medium|high|urgent (default medium). Date is optional — leave empty as ||||. Description optional. Example: [[task:Prepare Q3 report||high||2026-08-01||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
-      knowledgeBlock;
+      knowledgeBlock +
+      financeBlock +
+      inlineSheetBlock;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
