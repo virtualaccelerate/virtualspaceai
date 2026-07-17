@@ -67,42 +67,42 @@ const COLUMNS: {
   {
     id: "backlog",
     label: "TO DO",
-    accent: "bg-white/40",
-    pill: "bg-white/10 text-white/80 border-white/15",
-    dot: "border-white/40",
-    ring: "ring-white/10",
+    accent: "bg-foreground/20",
+    pill: "bg-muted text-foreground border-border",
+    dot: "border-foreground/50",
+    ring: "ring-foreground/10",
   },
   {
     id: "in_progress",
     label: "IN PROGRESS",
     accent: "bg-violet-500",
-    pill: "bg-violet-500/20 text-violet-200 border-violet-400/30",
-    dot: "border-violet-400",
+    pill: "bg-violet-500/15 text-violet-700 dark:text-violet-200 border-violet-500/40",
+    dot: "border-violet-500 dark:border-violet-400",
     ring: "ring-violet-400/20",
   },
   {
     id: "review",
     label: "REVIEW",
-    accent: "bg-amber-400",
-    pill: "bg-amber-400/15 text-amber-200 border-amber-400/30",
-    dot: "border-amber-400",
+    accent: "bg-amber-500",
+    pill: "bg-amber-500/15 text-amber-700 dark:text-amber-200 border-amber-500/40",
+    dot: "border-amber-500 dark:border-amber-400",
     ring: "ring-amber-400/20",
   },
   {
     id: "done",
     label: "COMPLETE",
     accent: "bg-emerald-500",
-    pill: "bg-emerald-500/20 text-emerald-200 border-emerald-400/30",
-    dot: "border-emerald-400",
+    pill: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 border-emerald-500/40",
+    dot: "border-emerald-500 dark:border-emerald-400",
     ring: "ring-emerald-400/20",
   },
 ];
 
 const PRIORITY_META: Record<TaskPriority, { label: string; color: string; dot: string }> = {
-  low: { label: "Low", color: "text-white/60 border-white/15", dot: "bg-white/40" },
-  medium: { label: "Medium", color: "text-sky-300 border-sky-400/30", dot: "bg-sky-400" },
-  high: { label: "High", color: "text-amber-300 border-amber-400/30", dot: "bg-amber-400" },
-  urgent: { label: "Urgent", color: "text-rose-300 border-rose-400/30", dot: "bg-rose-400" },
+  low: { label: "Low", color: "text-muted-foreground border-border", dot: "bg-foreground/40" },
+  medium: { label: "Medium", color: "text-sky-700 dark:text-sky-300 border-sky-500/40", dot: "bg-sky-500 dark:bg-sky-400" },
+  high: { label: "High", color: "text-amber-700 dark:text-amber-300 border-amber-500/40", dot: "bg-amber-500 dark:bg-amber-400" },
+  urgent: { label: "Urgent", color: "text-rose-700 dark:text-rose-300 border-rose-500/40", dot: "bg-rose-500 dark:bg-rose-400" },
 };
 
 function initialsOf(name?: string | null) {
