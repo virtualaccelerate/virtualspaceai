@@ -56,11 +56,46 @@ type Task = {
   position: number;
 };
 
-const COLUMNS: { id: TaskStatus; label: string; accent: string }[] = [
-  { id: "backlog", label: "Backlog", accent: "bg-white/40" },
-  { id: "in_progress", label: "In Progress", accent: "bg-sky-400" },
-  { id: "review", label: "Review", accent: "bg-amber-400" },
-  { id: "done", label: "Done", accent: "bg-emerald-400" },
+const COLUMNS: {
+  id: TaskStatus;
+  label: string;
+  accent: string;
+  pill: string;
+  dot: string;
+  ring: string;
+}[] = [
+  {
+    id: "backlog",
+    label: "TO DO",
+    accent: "bg-white/40",
+    pill: "bg-white/10 text-white/80 border-white/15",
+    dot: "border-white/40",
+    ring: "ring-white/10",
+  },
+  {
+    id: "in_progress",
+    label: "IN PROGRESS",
+    accent: "bg-violet-500",
+    pill: "bg-violet-500/20 text-violet-200 border-violet-400/30",
+    dot: "border-violet-400",
+    ring: "ring-violet-400/20",
+  },
+  {
+    id: "review",
+    label: "REVIEW",
+    accent: "bg-amber-400",
+    pill: "bg-amber-400/15 text-amber-200 border-amber-400/30",
+    dot: "border-amber-400",
+    ring: "ring-amber-400/20",
+  },
+  {
+    id: "done",
+    label: "COMPLETE",
+    accent: "bg-emerald-500",
+    pill: "bg-emerald-500/20 text-emerald-200 border-emerald-400/30",
+    dot: "border-emerald-400",
+    ring: "ring-emerald-400/20",
+  },
 ];
 
 const PRIORITY_META: Record<TaskPriority, { label: string; color: string; dot: string }> = {
@@ -69,6 +104,17 @@ const PRIORITY_META: Record<TaskPriority, { label: string; color: string; dot: s
   high: { label: "High", color: "text-amber-300 border-amber-400/30", dot: "bg-amber-400" },
   urgent: { label: "Urgent", color: "text-rose-300 border-rose-400/30", dot: "bg-rose-400" },
 };
+
+function initialsOf(name?: string | null) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
+}
+
+function formatDateRange(due: string) {
+  const d = new Date(due);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 type TaskDraft = {
   title: string;
@@ -236,134 +282,178 @@ function TasksPage() {
       {loading ? (
         <div className="text-sm text-white/50">Loading…</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {COLUMNS.map((col) => {
-            const items = grouped[col.id];
-            const isOver = dragOver === col.id;
-            return (
-              <div
-                key={col.id}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (dragOver !== col.id) setDragOver(col.id);
-                }}
-                onDragLeave={() => setDragOver((s) => (s === col.id ? null : s))}
-                onDrop={() => {
-                  if (dragId) moveTask(dragId, col.id);
-                  setDragId(null);
-                  setDragOver(null);
-                }}
-                className={cn(
-                  "rounded-2xl border border-white/10 bg-white/[0.03] p-3 flex flex-col min-h-[300px] transition-colors",
-                  isOver && "border-primary/50 bg-primary/[0.06]",
-                )}
-              >
-                <div className="flex items-center justify-between px-1 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className={cn("h-2 w-2 rounded-full", col.accent)} />
-                    <span className="text-xs font-medium uppercase tracking-wider text-white/70">
-                      {col.label}
-                    </span>
-                    <span className="text-xs text-white/40">{items.length}</span>
-                  </div>
-                  <button
-                    onClick={() => openCreate(col.id)}
-                    className="text-white/40 hover:text-white transition"
-                    aria-label={`Add task to ${col.label}`}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="flex-1 space-y-2">
-                  {items.map((task) => (
-                    <article
-                      key={task.id}
-                      draggable
-                      onDragStart={() => setDragId(task.id)}
-                      onDragEnd={() => {
-                        setDragId(null);
-                        setDragOver(null);
-                      }}
-                      onClick={() => openEdit(task)}
-                      className={cn(
-                        "group cursor-grab active:cursor-grabbing rounded-xl border border-white/10 bg-black/30 p-3 hover:border-white/25 transition",
-                        dragId === task.id && "opacity-50",
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-sm text-white leading-snug">{task.title}</h3>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <button
-                              className="opacity-0 group-hover:opacity-100 text-white/40 hover:text-white transition"
-                              aria-label="Task actions"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenuItem onClick={() => openEdit(task)}>
-                              <Pencil className="h-4 w-4 mr-2" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {COLUMNS.filter((c) => c.id !== task.status).map((c) => (
-                              <DropdownMenuItem key={c.id} onClick={() => moveTask(task.id, c.id)}>
-                                Move to {c.label}
-                              </DropdownMenuItem>
-                            ))}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(task.id)}
-                              className="text-rose-300 focus:text-rose-200"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      {task.description && (
-                        <p className="mt-1 text-xs text-white/50 line-clamp-2">
-                          {task.description}
-                        </p>
-                      )}
-
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className={cn("gap-1 text-[10px] px-1.5 py-0", PRIORITY_META[task.priority].color)}
-                        >
-                          <Flag className="h-3 w-3" />
-                          {PRIORITY_META[task.priority].label}
-                        </Badge>
-                        {task.due_date && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-white/50">
-                            <CalendarIcon className="h-3 w-3" />
-                            {new Date(task.due_date).toLocaleDateString()}
-                          </span>
+        <div className="-mx-4 sm:-mx-6 overflow-x-auto pb-4">
+          <div className="flex gap-4 px-4 sm:px-6 min-w-max">
+            {COLUMNS.map((col) => {
+              const items = grouped[col.id];
+              const isOver = dragOver === col.id;
+              return (
+                <div
+                  key={col.id}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragOver !== col.id) setDragOver(col.id);
+                  }}
+                  onDragLeave={() => setDragOver((s) => (s === col.id ? null : s))}
+                  onDrop={() => {
+                    if (dragId) moveTask(dragId, col.id);
+                    setDragId(null);
+                    setDragOver(null);
+                  }}
+                  className={cn(
+                    "w-[300px] shrink-0 flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors",
+                    isOver && "border-primary/40 bg-primary/[0.05] ring-2 ring-primary/20",
+                  )}
+                >
+                  <div className="flex items-center justify-between pb-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-semibold tracking-wider",
+                          col.pill,
                         )}
-                        {task.assignee_name && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-white/60 ml-auto">
-                            <User className="h-3 w-3" />
-                            {task.assignee_name}
-                          </span>
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                  {items.length === 0 && (
+                      >
+                        <span
+                          className={cn(
+                            "h-2.5 w-2.5 rounded-full border-2 bg-transparent",
+                            col.dot,
+                          )}
+                        />
+                        {col.label}
+                      </span>
+                      <span className="text-xs text-white/50 font-medium">{items.length}</span>
+                    </div>
                     <button
                       onClick={() => openCreate(col.id)}
-                      className="w-full rounded-xl border border-dashed border-white/10 py-6 text-xs text-white/40 hover:text-white/70 hover:border-white/25 transition"
+                      className="text-white/40 hover:text-white transition"
+                      aria-label={`Add task to ${col.label}`}
                     >
-                      + Add task
+                      <Plus className="h-4 w-4" />
                     </button>
-                  )}
+                  </div>
+
+                  <div className="flex-1 space-y-2 min-h-[80px]">
+                    {items.map((task) => {
+                      const meta = PRIORITY_META[task.priority];
+                      return (
+                        <article
+                          key={task.id}
+                          draggable
+                          onDragStart={() => setDragId(task.id)}
+                          onDragEnd={() => {
+                            setDragId(null);
+                            setDragOver(null);
+                          }}
+                          onClick={() => openEdit(task)}
+                          className={cn(
+                            "group cursor-grab active:cursor-grabbing rounded-xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_2px_8px_rgba(0,0,0,0.25)] hover:border-white/25 hover:bg-white/[0.06] transition",
+                            dragId === task.id && "opacity-50",
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="text-[13px] font-medium text-white leading-snug">
+                              {task.title}
+                            </h3>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  className="opacity-0 group-hover:opacity-100 text-white/40 hover:text-white transition -mr-1"
+                                  aria-label="Task actions"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={() => openEdit(task)}>
+                                  <Pencil className="h-4 w-4 mr-2" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {COLUMNS.filter((c) => c.id !== task.status).map((c) => (
+                                  <DropdownMenuItem key={c.id} onClick={() => moveTask(task.id, c.id)}>
+                                    Move to {c.label}
+                                  </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(task.id)}
+                                  className="text-rose-300 focus:text-rose-200"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+
+                          {task.description && (
+                            <p className="mt-1 text-xs text-white/50 line-clamp-2">
+                              {task.description}
+                            </p>
+                          )}
+
+                          <div className="mt-3 flex items-center gap-1.5">
+                            {task.assignee_name ? (
+                              <span
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/70 text-[10px] font-semibold text-white ring-2 ring-white/5"
+                                title={task.assignee_name}
+                              >
+                                {initialsOf(task.assignee_name)}
+                              </span>
+                            ) : (
+                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-white/20 text-white/30">
+                                <User className="h-3 w-3" />
+                              </span>
+                            )}
+
+                            {task.due_date ? (
+                              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-white/70">
+                                <CalendarIcon className="h-3 w-3" />
+                                {formatDateRange(task.due_date)}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-white/10 text-white/30">
+                                <CalendarIcon className="h-3 w-3" />
+                              </span>
+                            )}
+
+                            <span
+                              className={cn(
+                                "inline-flex items-center justify-center h-6 w-6 rounded-md border",
+                                meta.color,
+                              )}
+                              title={`Priority: ${meta.label}`}
+                            >
+                              <Flag className="h-3 w-3" />
+                            </span>
+
+                            <span
+                              className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-white/10 text-white/30"
+                              aria-hidden
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                            </span>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => openCreate(col.id)}
+                    className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-300/80 hover:text-emerald-200 hover:bg-white/[0.03] transition"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Task
+                  </button>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+
+            <button
+              onClick={() => openCreate()}
+              className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-white/10 px-4 py-3 text-sm text-white/40 hover:text-white/70 hover:border-white/25 transition"
+            >
+              <Plus className="h-4 w-4" /> Add group
+            </button>
+          </div>
         </div>
       )}
 
