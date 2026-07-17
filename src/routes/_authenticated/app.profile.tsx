@@ -102,7 +102,7 @@ function ProfilePage() {
 
 
       <form onSubmit={handleSave} className="mt-8 glass-strong rounded-3xl p-6 sm:p-8 space-y-5">
-        <Field label="Email">
+        <Field label={t("app.profile.email")}>
           <input
             type="email"
             value={profile.email}
@@ -111,7 +111,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Full name">
+        <Field label={t("app.profile.fullName")}>
           <input
             type="text"
             maxLength={120}
@@ -121,7 +121,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Company">
+        <Field label={t("app.profile.company")}>
           <input
             type="text"
             maxLength={200}
@@ -131,7 +131,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Avatar URL">
+        <Field label={t("app.profile.avatarUrl")}>
           <input
             type="url"
             value={profile.avatar_url}
@@ -141,7 +141,7 @@ function ProfilePage() {
           />
         </Field>
 
-        <Field label="Language">
+        <Field label={t("app.profile.language")}>
           <select
             value={profile.language}
             onChange={(e) => setProfile((p) => ({ ...p, language: e.target.value }))}
