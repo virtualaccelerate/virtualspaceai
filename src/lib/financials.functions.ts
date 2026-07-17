@@ -179,11 +179,8 @@ function buildCorpus(rows: { name: string; raw_csv: string | null }[]): string {
 // Re-fetch every Google Sheet source so answers reflect the latest values.
 // Mutates rows in place; failures skip silently (stale copy stays usable).
 async function refreshSheetRows(
-  supabase: {
-    from: (t: string) => {
-      update: (v: Record<string, unknown>) => { eq: (c: string, v: string) => Promise<unknown> };
-    };
-  },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
   rows: { id: string; name: string; kind?: string | null; source_url?: string | null; raw_csv: string | null }[],
 ) {
   await Promise.all(
