@@ -195,6 +195,22 @@ const resources = {
           avatarUrl: "Avatar URL", language: "Language",
           save: "Save changes", saving: "Saving…", saved: "Saved",
         },
+        chat: {
+          newChat: "New chat", history: "History", noHistory: "No previous chats yet",
+          confirmDelete: "Delete this chat?", attach: "Attach file — synced to Knowledge Base",
+        },
+        agents: {
+          title: "AI Agents",
+          subtitle: "Specialized AI agents you can call from any chat with @tag",
+          howTitle: "How to use",
+          howBody: "Type an agent tag inside any chat (e.g. @contracts) — the agent will handle that message. Or click 'Open' to start a dedicated conversation with the agent.",
+          open: "Open agent", useInChat: "or use in any chat", moreSoon: "More agents coming soon",
+          contracts: {
+            title: "Contract Risk Agent",
+            desc: "Analyzes contracts for risks and suggests improvements. Upload a contract to the Knowledge Base or paste text, then chat with @contracts.",
+          },
+        },
+        tasks: { chatLog: "Task created manually" },
       },
       taskTable: {
         tasks: [
