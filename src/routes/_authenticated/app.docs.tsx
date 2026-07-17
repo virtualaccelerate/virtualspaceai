@@ -123,7 +123,16 @@ function KnowledgeBase() {
             mime.startsWith("image/") ||
             /\.(pdf|png|jpe?g|webp|gif|heic)$/i.test(file.name);
           if (eligible) {
-            extract({ data: { id: row.id } }).catch(() => { /* silent */ });
+            setIndexing((p) => ({ ...p, [row.id]: true }));
+            extract({ data: { id: row.id } })
+              .catch(() => { /* silent */ })
+              .finally(() => {
+                setIndexing((p) => {
+                  const n = { ...p };
+                  delete n[row.id];
+                  return n;
+                });
+              });
           }
         }
       }
