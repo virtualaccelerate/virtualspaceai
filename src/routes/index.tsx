@@ -402,15 +402,9 @@ function Landing() {
       <Header />
 
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        {/* Background image */}
-        <div
-          className="absolute inset-0 -z-10 bg-cover bg-center opacity-40 sm:opacity-30"
-          style={{ backgroundImage: `url(${heroBg.url})` }}
-          aria-hidden
-        />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/60 to-background pointer-events-none" aria-hidden />
+      <section className="relative">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-24">
+
 
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Copy */}
