@@ -234,7 +234,7 @@ function AuthenticatedLayout() {
           </button>
           <button
             onClick={async () => {
-              if (location.pathname !== "/app") {
+              if (pathname !== "/app") {
                 await navigate({ to: "/app" });
               }
               setTimeout(() => window.dispatchEvent(new CustomEvent("virtualspace:new-chat")), 50);
