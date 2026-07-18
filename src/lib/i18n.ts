@@ -162,6 +162,7 @@ const resources = {
       },
       app: {
         nav: {
+          chat: "__CHAT__",
           workspace: "Workspace", insights: "Insights", account: "Account",
           overview: "Overview", tasks: "Tasks", knowledgeBase: "Knowledge Base",
           aiAgents: "AI Agents", analytics: "Analytics", timeTracking: "Time Tracking",
@@ -380,6 +381,7 @@ const resources = {
         },
       },
       app: {
+          chat: "__CHAT__",
         nav: {
           workspace: "Рабочая область", insights: "Аналитика", account: "Аккаунт",
           overview: "Обзор", tasks: "Задачи", knowledgeBase: "База знаний",
@@ -575,6 +577,7 @@ const resources = {
           ],
         },
       },
+          chat: "__CHAT__",
       app: {
         nav: {
           workspace: "Жұмыс кеңістігі", insights: "Аналитика", account: "Аккаунт",
@@ -762,6 +765,7 @@ const resources = {
             { title: "Акылдуу, бирок адамча", body: "ИИ жардам берет — чечимди адамдар кабыл алат." },
           ],
         },
+          chat: "__CHAT__",
       },
       app: {
         nav: {
@@ -949,6 +953,7 @@ const resources = {
             { title: "Osoyishta ishonch", body: "Ishonchli va professional." },
             { title: "Aqlli, lekin insoniy", body: "AI yordam beradi — qaror odamniki." },
           ],
+          chat: "__CHAT__",
         },
       },
       app: {
@@ -1136,6 +1141,7 @@ const resources = {
             { title: "Нигоҳ ба бизнес", body: "Диққат ба натиҷаҳои воқеӣ." },
             { title: "Эътимоди ором", body: "Боэътимод ва касбӣ." },
             { title: "Оқилона, вале инсонӣ", body: "AI кӯмак мекунад — қарор аз они одамон." },
+          chat: "__CHAT__",
           ],
         },
       },
