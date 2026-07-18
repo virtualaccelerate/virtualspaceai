@@ -403,85 +403,77 @@ function Landing() {
 
       {/* HERO */}
       <section className="relative">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-24">
-
-
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left: Copy */}
-            <div className="text-center lg:text-left">
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-                className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[56px] leading-[1.1] text-white"
-              >
-                {t("hero.title")}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.25 }}
-                className="mt-5 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl mx-auto lg:mx-0"
-              >
-                {t("hero.subtitle")}
-              </motion.p>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.35 }}
-                className="mt-4 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl mx-auto lg:mx-0"
-              >
-                {t("hero.subtitle2")}
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.45 }}
-                className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
-              >
-                <a
-                  href="#demo"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.5)]"
-                >
-                  {t("hero.cta")} <ArrowRight className="h-4 w-4" />
-                </a>
-                <a
-                  href="/book-demo"
-                  className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition"
-                >
-                  {t("hero.cta2")}
-                </a>
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.55 }}
-                className="mt-6 text-sm text-white/40 max-w-xl mx-auto lg:mx-0"
-              >
-                {t("hero.tagline")}
-              </motion.p>
-            </div>
-
-            {/* Right: Business hero image */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              className="relative flex items-center justify-center mt-8 lg:mt-0"
-            >
-              <div className="relative w-full max-w-[560px]">
-                <div
-                  className="absolute -inset-6 rounded-[40px] opacity-40 blur-3xl pointer-events-none"
-                  style={{ background: "radial-gradient(circle, oklch(0.80 0.22 138 / 0.55), transparent 65%)" }}
-                />
-                <img
-                  src={heroBg.url}
-                  alt={t("hero.title")}
-                  className="relative w-full rounded-3xl shadow-2xl shadow-black/40 object-cover aspect-[4/3]"
-                />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9 }}
+            className="relative w-full overflow-hidden rounded-[28px] sm:rounded-[40px] shadow-2xl shadow-black/40"
+          >
+            <img
+              src={heroBg.url}
+              alt={t("hero.title")}
+              className="w-full h-[70vh] min-h-[420px] max-h-[720px] object-cover"
+            />
+            {/* Overlay scrim for readability */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(180deg, oklch(0.15 0.02 150 / 0.55) 0%, oklch(0.12 0.02 150 / 0.35) 35%, oklch(0.10 0.02 150 / 0.85) 100%)",
+              }}
+              aria-hidden
+            />
+            <div className="absolute inset-0 flex items-end sm:items-center">
+              <div className="w-full px-5 sm:px-10 md:px-16 pb-8 sm:pb-0">
+                <div className="max-w-2xl">
+                  <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[64px] leading-[1.05] text-white drop-shadow-[0_4px_30px_rgba(0,0,0,0.6)]"
+                  >
+                    {t("hero.title")}
+                  </motion.h1>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.35 }}
+                    className="mt-5 text-base sm:text-lg text-white/85 leading-relaxed max-w-xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
+                  >
+                    {t("hero.subtitle")}
+                  </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.5 }}
+                    className="mt-7 flex flex-col sm:flex-row items-start gap-3"
+                  >
+                    <a
+                      href="#demo"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 transition shadow-[0_10px_40px_-10px_oklch(0.75_0.18_155_/_0.6)]"
+                    >
+                      {t("hero.cta")} <ArrowRight className="h-4 w-4" />
+                    </a>
+                    <a
+                      href="/book-demo"
+                      className="glass w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/10 transition"
+                    >
+                      {t("hero.cta2")}
+                    </a>
+                  </motion.div>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.65 }}
+                    className="mt-5 text-xs sm:text-sm text-white/70 max-w-xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+                  >
+                    {t("hero.tagline")}
+                  </motion.p>
+                </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
