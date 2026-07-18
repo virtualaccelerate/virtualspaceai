@@ -310,7 +310,7 @@ function ChatBubble({ who, time, children, accent }: { who: string; time: string
   );
 }
 
-function DemoForm() {
+function DemoForm({ onClose }: { onClose?: () => void }) {
   const { t, i18n } = useTranslation();
   const submit = useServerFn(submitDemoRequest);
   const [name, setName] = useState("");
@@ -319,7 +319,6 @@ function DemoForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [closed, setClosed] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -344,20 +343,6 @@ function DemoForm() {
     }
   };
 
-  if (closed) {
-    return (
-      <div className="relative mt-10 max-w-xl mx-auto text-center">
-        <button
-          type="button"
-          onClick={() => setClosed(false)}
-          className="glass inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white hover:bg-white/10 transition"
-        >
-          {t("cta.submit")} <ArrowRight className="h-4 w-4" />
-        </button>
-      </div>
-    );
-  }
-
   if (submitted) {
     return (
       <div className="relative mt-10 max-w-xl mx-auto glass rounded-2xl p-6 text-center">
@@ -371,14 +356,6 @@ function DemoForm() {
 
   return (
     <form onSubmit={onSubmit} className="relative mt-10 max-w-xl mx-auto grid gap-3">
-      <button
-        type="button"
-        onClick={() => setClosed(true)}
-        aria-label="Close"
-        className="glass absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-10 h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition shadow-lg backdrop-blur-xl border border-white/20"
-      >
-        <X className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} />
-      </button>
       <input required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("cta.name")}
         className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
       <input required type="text" maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("cta.contact")}
@@ -393,6 +370,62 @@ function DemoForm() {
     </form>
   );
 }
+
+function DemoCTASection() {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(true);
+
+  if (!open) {
+    return (
+      <section id="demo" className="relative">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 text-center">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="glass inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium text-white hover:bg-white/10 transition"
+          >
+            {t("hero.cta")} <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="demo" className="relative">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
+        <motion.div
+          initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
+          className="glass-strong rounded-[32px] p-6 sm:p-12 text-center relative overflow-hidden"
+        >
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+            className="glass absolute top-4 right-4 z-20 h-10 w-10 rounded-full inline-flex items-center justify-center text-white/85 hover:text-white hover:bg-white/15 transition shadow-lg backdrop-blur-xl border border-white/20"
+          >
+            <X className="h-[18px] w-[18px]" strokeWidth={2} />
+          </button>
+          <div className="absolute inset-0 opacity-40 pointer-events-none"
+            style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
+          <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
+            {t("cta.title1")} <span className="grad-accent">{t("cta.title2")}</span>
+          </h2>
+          <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
+
+          <DemoForm />
+
+          <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/50">
+            <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note1")}</span>
+            <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note2")}</span>
+            <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note3")}</span>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 
 
 function Landing() {
@@ -681,29 +714,8 @@ function Landing() {
       </section>
 
       {/* CTA */}
-      <section id="demo" className="relative">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
-          <motion.div
-            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
-            className="glass-strong rounded-[32px] p-6 sm:p-12 text-center relative overflow-hidden"
-          >
-            <div className="absolute inset-0 opacity-40 pointer-events-none"
-              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
-            <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <span className="grad-accent">{t("cta.title2")}</span>
-            </h2>
-            <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
+      <DemoCTASection />
 
-            <DemoForm />
-
-            <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/50">
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note1")}</span>
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note2")}</span>
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note3")}</span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* FINAL CTA */}
       <section className="relative">
