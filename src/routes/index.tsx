@@ -319,6 +319,7 @@ function DemoForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [closed, setClosed] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,6 +344,20 @@ function DemoForm() {
     }
   };
 
+  if (closed) {
+    return (
+      <div className="relative mt-10 max-w-xl mx-auto text-center">
+        <button
+          type="button"
+          onClick={() => setClosed(false)}
+          className="glass inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white hover:bg-white/10 transition"
+        >
+          {t("cta.submit")} <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="relative mt-10 max-w-xl mx-auto glass rounded-2xl p-6 text-center">
@@ -356,6 +371,14 @@ function DemoForm() {
 
   return (
     <form onSubmit={onSubmit} className="relative mt-10 max-w-xl mx-auto grid gap-3">
+      <button
+        type="button"
+        onClick={() => setClosed(true)}
+        aria-label="Close"
+        className="glass absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-10 h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition shadow-lg backdrop-blur-xl border border-white/20"
+      >
+        <X className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} />
+      </button>
       <input required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("cta.name")}
         className="glass w-full rounded-full px-5 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50" />
       <input required type="text" maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("cta.contact")}
