@@ -681,29 +681,8 @@ function Landing() {
       </section>
 
       {/* CTA */}
-      <section id="demo" className="relative">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
-          <motion.div
-            initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}
-            className="glass-strong rounded-[32px] p-6 sm:p-12 text-center relative overflow-hidden"
-          >
-            <div className="absolute inset-0 opacity-40 pointer-events-none"
-              style={{ background: "radial-gradient(60% 60% at 50% 0%, oklch(0.72 0.18 155 / 0.5), transparent 70%)" }} />
-            <h2 className="relative font-display text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-              {t("cta.title1")} <span className="grad-accent">{t("cta.title2")}</span>
-            </h2>
-            <p className="relative mt-5 text-base sm:text-lg text-white/60 max-w-xl mx-auto">{t("cta.subtitle")}</p>
+      <DemoCTASection />
 
-            <DemoForm />
-
-            <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/50">
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note1")}</span>
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note2")}</span>
-              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("cta.note3")}</span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* FINAL CTA */}
       <section className="relative">
