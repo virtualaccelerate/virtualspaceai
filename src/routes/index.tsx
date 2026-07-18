@@ -17,6 +17,7 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
 import vaLogoDark from "@/assets/Untitled_design_21.png.asset.json";
 import vaLogoLight from "@/assets/Untitled_design_22.png.asset.json";
+import aiBusinessEra from "@/assets/ai-business-era.jpg.asset.json";
 
 
 const SITE_URL = "https://virtualspaceai.lovable.app";
