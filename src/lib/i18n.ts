@@ -381,8 +381,8 @@ const resources = {
         },
       },
       app: {
-          chat: "Чат",
         nav: {
+          chat: "Чат",
           workspace: "Рабочая область", insights: "Аналитика", account: "Аккаунт",
           overview: "Обзор", tasks: "Задачи", knowledgeBase: "База знаний",
           aiAgents: "AI-агенты", analytics: "Аналитика", timeTracking: "Учёт времени",
@@ -577,9 +577,9 @@ const resources = {
           ],
         },
       },
-          chat: "Чат",
       app: {
         nav: {
+          chat: "Чат",
           workspace: "Жұмыс кеңістігі", insights: "Аналитика", account: "Аккаунт",
           overview: "Шолу", tasks: "Тапсырмалар", knowledgeBase: "Білім қоры",
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Уақыт есебі",
@@ -765,10 +765,10 @@ const resources = {
             { title: "Акылдуу, бирок адамча", body: "ИИ жардам берет — чечимди адамдар кабыл алат." },
           ],
         },
-          chat: "Чат",
       },
       app: {
         nav: {
+          chat: "Чат",
           workspace: "Иш мейкиндиги", insights: "Аналитика", account: "Аккаунт",
           overview: "Кароо", tasks: "Тапшырмалар", knowledgeBase: "Билим базасы",
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Убакыт эсеби",
@@ -953,11 +953,11 @@ const resources = {
             { title: "Osoyishta ishonch", body: "Ishonchli va professional." },
             { title: "Aqlli, lekin insoniy", body: "AI yordam beradi — qaror odamniki." },
           ],
-          chat: "Chat",
         },
       },
       app: {
         nav: {
+          chat: "Chat",
           workspace: "Ish maydoni", insights: "Analitika", account: "Akkaunt",
           overview: "Umumiy koʻrinish", tasks: "Vazifalar", knowledgeBase: "Bilim bazasi",
           aiAgents: "AI-agentlar", analytics: "Analitika", timeTracking: "Vaqt hisobi",
@@ -1141,12 +1141,12 @@ const resources = {
             { title: "Нигоҳ ба бизнес", body: "Диққат ба натиҷаҳои воқеӣ." },
             { title: "Эътимоди ором", body: "Боэътимод ва касбӣ." },
             { title: "Оқилона, вале инсонӣ", body: "AI кӯмак мекунад — қарор аз они одамон." },
-          chat: "Чат",
           ],
         },
       },
       app: {
         nav: {
+          chat: "Чат",
           workspace: "Фазои корӣ", insights: "Таҳлил", account: "Ҳисоб",
           overview: "Шарҳ", tasks: "Вазифаҳо", knowledgeBase: "Пойгоҳи дониш",
           aiAgents: "AI-агентҳо", analytics: "Таҳлил", timeTracking: "Ҳисоби вақт",
