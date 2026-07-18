@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
-  Zap, Clock, PiggyBank, Workflow, Rocket, Building2,
+  Zap, Clock, Wallet, Workflow, Rocket, Building2,
   HeartHandshake, BellRing, BookOpen,
   ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown, Loader2,
 } from "lucide-react";
