@@ -470,6 +470,15 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     }
   };
 
+  useEffect(() => {
+    if (isCompact) return;
+    const handler = () => { void onNewChat(); };
+    window.addEventListener("virtualspace:new-chat", handler);
+    return () => window.removeEventListener("virtualspace:new-chat", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCompact, teamspaceId]);
+
+
   const onSwitchThread = (id: string) => {
     setThreadsOpen(false);
     if (isCompact) {
