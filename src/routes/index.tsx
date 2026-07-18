@@ -663,10 +663,19 @@ function Landing() {
               return (
                 <motion.div
                   key={a.key} variants={fadeUp}
-                  className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col"
+                  className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col min-h-[420px]"
                 >
+                  {/* Background image */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+                    style={{ backgroundImage: `url(${audienceBg[a.key]})` }}
+                    aria-hidden
+                  />
+                  {/* Dark scrim for readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/60 to-black/40" aria-hidden />
                   <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl" style={{ background: a.gradient }} />
                   <a.icon className="relative h-8 w-8 text-white" strokeWidth={1.5} />
+
                   <div className="relative mt-6">
                     <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">{t(`audience.${a.key}.tag`)}</p>
                     <h3 className="mt-2 font-display text-3xl sm:text-4xl text-white">{t(`audience.${a.key}.title`)}</h3>
