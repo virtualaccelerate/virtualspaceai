@@ -47,7 +47,7 @@ function OnboardingPage() {
 
   // Create form
   const [name, setName] = useState("");
-  const [teamSize, setTeamSize] = useState<TeamSize>("0-50");
+  const [teamSize, setTeamSize] = useState<TeamSize>("1-5");
   const [businessType, setBusinessType] = useState<BusinessType>("startup");
 
   // Join form
