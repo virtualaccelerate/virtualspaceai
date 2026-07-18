@@ -193,6 +193,7 @@ const resources = {
           okUpdate: "Task updated",
           okCreate: "Task created",
           okDelete: "Task deleted",
+          chatLog: "Task created manually",
         },
         header: {
           teamspace: "Teamspace", loading: "Loading…", signedInAs: "Signed in as",
@@ -238,7 +239,6 @@ const resources = {
             desc: "Analyzes contracts for risks and suggests improvements. Upload a contract to the Knowledge Base or paste text, then chat with @contracts.",
           },
         },
-        tasks: { chatLog: "Task created manually" },
       },
       taskTable: {
         tasks: [
@@ -439,6 +439,7 @@ const resources = {
           okUpdate: "Задача обновлена",
           okCreate: "Задача создана",
           okDelete: "Задача удалена",
+          chatLog: "Задача создана вручную",
         },
         header: {
           teamspace: "Командное пространство", loading: "Загрузка…", signedInAs: "Вы вошли как",
@@ -484,7 +485,6 @@ const resources = {
             desc: "Анализирует договоры на риски и предлагает улучшения. Загрузите договор в Базу знаний или вставьте текст, затем пишите @contracts.",
           },
         },
-        tasks: { chatLog: "Задача создана вручную" },
       },
       taskTable: {
         tasks: [
@@ -662,6 +662,7 @@ const resources = {
           okUpdate: "Тапсырма жаңартылды",
           okCreate: "Тапсырма құрылды",
           okDelete: "Тапсырма жойылды",
+          chatLog: "Тапсырма қолмен құрылды",
         },
         header: {
           teamspace: "Команда кеңістігі", loading: "Жүктелуде…", signedInAs: "Кіргенсіз:",
@@ -707,7 +708,6 @@ const resources = {
             desc: "Келісім-шарттарды тәуекелдерге талдап, жақсартулар ұсынады. Келісім-шартты Білім қорына жүктеңіз немесе мәтінді қойып, @contracts арқылы жазыңыз.",
           },
         },
-        tasks: { chatLog: "Тапсырма қолмен құрылды" },
       },
       taskTable: {
         tasks: [
@@ -877,6 +877,7 @@ const resources = {
           okUpdate: "Тапшырма жаңыртылды",
           okCreate: "Тапшырма түзүлдү",
           okDelete: "Тапшырма өчүрүлдү",
+          chatLog: "Тапшырма кол менен түзүлдү",
         },
         header: {
           teamspace: "Команда мейкиндиги", loading: "Жүктөлүүдө…", signedInAs: "Кирген:",
@@ -922,7 +923,6 @@ const resources = {
             desc: "Келишимдерди тобокелдиктерге талдап, жакшыртууларды сунуштайт. Келишимди Билим базасына жүктөңүз же текстти коюңуз, андан кийин @contracts менен жазыңыз.",
           },
         },
-        tasks: { chatLog: "Тапшырма кол менен түзүлдү" },
       },
       taskTable: {
         tasks: [
@@ -1092,6 +1092,7 @@ const resources = {
           okUpdate: "Vazifa yangilandi",
           okCreate: "Vazifa yaratildi",
           okDelete: "Vazifa oʻchirildi",
+          chatLog: "Vazifa qo'lda yaratildi",
         },
         header: {
           teamspace: "Jamoa maydoni", loading: "Yuklanmoqda…", signedInAs: "Kirgan:",
@@ -1137,7 +1138,6 @@ const resources = {
             desc: "Shartnomalarni xavflarga tahlil qiladi va yaxshilanishlarni taklif qiladi. Shartnomani Bilim bazasiga yuklang yoki matnni joylashtiring, so'ng @contracts orqali yozing.",
           },
         },
-        tasks: { chatLog: "Vazifa qo'lda yaratildi" },
       },
       taskTable: {
         tasks: [
@@ -1307,6 +1307,7 @@ const resources = {
           okUpdate: "Вазифа навсозӣ шуд",
           okCreate: "Вазифа сохта шуд",
           okDelete: "Вазифа нест шуд",
+          chatLog: "Вазифа дастӣ сохта шуд",
         },
         header: {
           teamspace: "Фазои даста", loading: "Бор шуда истодааст…", signedInAs: "Ворид шудаед:",
@@ -1352,7 +1353,6 @@ const resources = {
             desc: "Шартномаҳоро барои хатарҳо таҳлил мекунад ва беҳбудиҳо пешниҳод мекунад. Шартномаро ба Пойгоҳи дониш бор кунед ё матнро гузоред, сипас бо @contracts нависед.",
           },
         },
-        tasks: { chatLog: "Вазифа дастӣ сохта шуд" },
       },
       taskTable: {
         tasks: [
