@@ -391,13 +391,27 @@ function Landing() {
     { key: "ngos", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.16 165), oklch(0.72 0.12 180))" },
   ] as const;
 
+  const audienceBg: Record<string, string> = {
+    businesses: heroBg.url,
+    startups: startupsBg.url,
+    ngos: ngosBg.url,
+  };
+
   return (
     <div id="top" className="min-h-screen text-white overflow-hidden">
       <Header />
 
       {/* HERO */}
-      <section className="relative">
+      <section className="relative overflow-hidden">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 -z-10 bg-cover bg-center opacity-40 sm:opacity-30"
+          style={{ backgroundImage: `url(${heroBg.url})` }}
+          aria-hidden
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/60 to-background pointer-events-none" aria-hidden />
         <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-24">
+
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Copy */}
             <div className="text-center lg:text-left">
