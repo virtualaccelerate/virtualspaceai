@@ -599,18 +599,21 @@ function Landing() {
               return (
                 <motion.div
                   key={a.key} variants={fadeUp}
-                  className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col min-h-[420px]"
+                  className="glass-strong relative overflow-hidden rounded-3xl flex flex-col"
                 >
-                  {/* Background image */}
-                  <div
-                    className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
-                    style={{ backgroundImage: `url(${audienceBg[a.key]})` }}
-                    aria-hidden
-                  />
-                  {/* Dark scrim for readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/60 to-black/40" aria-hidden />
-                  <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl" style={{ background: a.gradient }} />
-                  <a.icon className="relative h-8 w-8 text-white" strokeWidth={1.5} />
+                  {/* Card image */}
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img
+                      src={audienceBg[a.key]}
+                      alt={t(`audience.${a.key}.title`)}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" aria-hidden />
+                    <a.icon className="absolute top-4 left-4 h-8 w-8 text-white drop-shadow-lg" strokeWidth={1.5} />
+                  </div>
+                  <div className="relative p-6 sm:p-8">
+                    <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl pointer-events-none" style={{ background: a.gradient }} />
+
 
                   <div className="relative mt-6">
                     <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">{t(`audience.${a.key}.tag`)}</p>
