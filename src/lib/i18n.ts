@@ -30,6 +30,7 @@ const resources = {
         pill1: "Organize & analyze",
         pill2: "Support operations",
         pill3: "Automate workflows",
+        imageAlt: "Colleagues collaborating with an AI-powered workspace",
       },
       features: {
         eyebrow: "Built for how you work",
@@ -248,6 +249,7 @@ const resources = {
         pill1: "Организация и анализ",
         pill2: "Поддержка операций",
         pill3: "Автоматизация процессов",
+        imageAlt: "Коллеги работают с AI-пространством",
       },
       features: {
         eyebrow: "Работает так, как думаете вы",
@@ -466,6 +468,7 @@ const resources = {
         pill1: "Ұйымдастыру және талдау",
         pill2: "Операцияларды қолдау",
         pill3: "Процестерді автоматтандыру",
+        imageAlt: "AI-кеңістікпен жұмыс істеп жатқан әріптестер",
       },
       features: {
         eyebrow: "Сіздің ойлау жүйеңізбен жұмыс істейді",
@@ -661,6 +664,7 @@ const resources = {
         pill1: "Уюштуруу жана талдоо",
         pill2: "Операцияларды колдоо",
         pill3: "Процесстерди автоматташтыруу",
+        imageAlt: "ИИ-мейкиндиги менен иштеген кесиптештер",
       },
       features: {
         eyebrow: "Сиз ойлогондой иштейт",
@@ -848,6 +852,7 @@ const resources = {
         pill1: "Tashkil qilish va tahlil",
         pill2: "Operatsiyalarni qoʻllab-quvvatlash",
         pill3: "Jarayonlarni avtomatlashtirish",
+        imageAlt: "AI-makoni bilan hamkorlik qilayotgan hamkasblar",
       },
       features: {
         eyebrow: "Siz oʻylagandek ishlaydi",
@@ -1035,6 +1040,7 @@ const resources = {
         pill1: "Ташкил ва таҳлил",
         pill2: "Дастгирии амалиёт",
         pill3: "Автоматикунонии равандҳо",
+        imageAlt: "Кормандон бо AI-фазо ҳамкорӣ мекунанд",
       },
       features: {
         eyebrow: "Ба тарзе ки шумо фикр мекунед, кор мекунад",
