@@ -204,7 +204,7 @@ function TasksPage() {
 
   async function handleSave() {
     if (!draft.title.trim()) {
-      toast.error("Title is required");
+      toast.error(t("app.tasks.errTitle", "Title is required"));
       return;
     }
     if (!userId) return;
@@ -227,7 +227,7 @@ function TasksPage() {
         .single();
       if (error) return toast.error(error.message);
       setTasks((prev) => prev.map((t) => (t.id === editing.id ? (data as Task) : t)));
-      toast.success("Task updated");
+      toast.success(t("app.tasks.okUpdate", "Task updated"));
     } else {
       const position = (grouped[draft.status]?.length ?? 0) * 1000;
       const { data, error } = await supabase
@@ -238,7 +238,7 @@ function TasksPage() {
       if (error) return toast.error(error.message);
       const created = data as Task;
       setTasks((prev) => [...prev, created]);
-      toast.success("Task created");
+      toast.success(t("app.tasks.okCreate", "Task created"));
       // Log manual task creation into chat history so the user has a record
       logEvent({
         data: {
@@ -258,7 +258,7 @@ function TasksPage() {
       setTasks(prev);
       toast.error(error.message);
     } else {
-      toast.success("Task deleted");
+      toast.success(t("app.tasks.okDelete", "Task deleted"));
     }
   }
 
