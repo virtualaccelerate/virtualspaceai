@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Settings as SettingsIcon, User, UserPlus, Building2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   component: SettingsPage,
@@ -7,10 +8,11 @@ export const Route = createFileRoute("/_authenticated/app/settings")({
 });
 
 function SettingsPage() {
+  const { t } = useTranslation();
   const items = [
-    { to: "/app/profile", icon: User, title: "Profile", desc: "Your name, avatar, and language." },
-    { to: "/app/team", icon: UserPlus, title: "Team & invites", desc: "Manage members and roles." },
-    { to: "/app", icon: Building2, title: "Teamspace", desc: "Workspace name and preferences." },
+    { to: "/app/profile", icon: User, title: t("app.settings.profile.title", "Profile"), desc: t("app.settings.profile.desc", "Your name, avatar, and language.") },
+    { to: "/app/team", icon: UserPlus, title: t("app.settings.team.title", "Team & invites"), desc: t("app.settings.team.desc", "Manage members and roles.") },
+    { to: "/app", icon: Building2, title: t("app.settings.teamspace.title", "Teamspace"), desc: t("app.settings.teamspace.desc", "Workspace name and preferences.") },
   ] as const;
 
   return (
@@ -19,7 +21,7 @@ function SettingsPage() {
         <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
           <SettingsIcon className="h-5 w-5 text-primary" />
         </div>
-        <h1 className="font-display text-2xl text-white">Settings</h1>
+        <h1 className="font-display text-2xl text-white">{t("app.nav.settings", "Settings")}</h1>
       </div>
       <div className="grid gap-3">
         {items.map((it) => (
