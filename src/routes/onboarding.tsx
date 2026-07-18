@@ -33,7 +33,7 @@ type Tab = "create" | "join";
 type TeamSize = "1-5" | "5-20" | "20+";
 type BusinessType = "startup" | "agency" | "company";
 
-const SIZES: TeamSize[] = ["0-50", "50-100", "100+"];
+const SIZES: TeamSize[] = ["1-5", "5-20", "20+"];
 const BUSINESS: { id: BusinessType; icon: typeof Rocket; title: string; desc: string }[] = [
   { id: "startup", icon: Rocket, title: "Startup", desc: "Fast-moving team, all hands on deck" },
   { id: "agency", icon: Briefcase, title: "Agency", desc: "Client projects, creative workflows" },
