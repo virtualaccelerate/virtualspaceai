@@ -462,81 +462,26 @@ function Landing() {
               </motion.p>
             </div>
 
-            {/* Right: Orbital visual with real logo */}
+            {/* Right: Business hero image */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
               className="relative flex items-center justify-center mt-8 lg:mt-0"
             >
-              <div className="relative w-full max-w-[420px] sm:max-w-[480px] aspect-square mx-auto">
-                {/* Ambient glow */}
+              <div className="relative w-full max-w-[560px]">
                 <div
-                  className="absolute inset-6 rounded-full blur-3xl opacity-60 pointer-events-none"
-                  style={{ background: "radial-gradient(circle, oklch(0.80 0.22 138 / 0.45), transparent 65%)" }}
+                  className="absolute -inset-6 rounded-[40px] opacity-40 blur-3xl pointer-events-none"
+                  style={{ background: "radial-gradient(circle, oklch(0.80 0.22 138 / 0.55), transparent 65%)" }}
                 />
+                <img
+                  src={heroBg.url}
+                  alt={t("hero.title")}
+                  className="relative w-full rounded-3xl shadow-2xl shadow-black/40 object-cover aspect-[4/3]"
+                />
+              </div>
+            </motion.div>
 
-                {/* Rotating outer ring with dots */}
-                <motion.svg
-                  viewBox="0 0 400 400"
-                  className="absolute inset-0 w-full h-full text-primary"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-                >
-                  <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 6" />
-                  {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
-                    const rad = (angle * Math.PI) / 180;
-                    return (
-                      <circle key={`o-${angle}`} cx={200 + 190 * Math.cos(rad)} cy={200 + 190 * Math.sin(rad)} r="5" fill="currentColor" />
-                    );
-                  })}
-                </motion.svg>
-
-                {/* Middle ring — counter-rotating */}
-                <motion.svg
-                  viewBox="0 0 400 400"
-                  className="absolute inset-0 w-full h-full text-primary"
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-                >
-                  <circle cx="200" cy="200" r="140" fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1" />
-                  {[22.5, 112.5, 202.5, 292.5].map((angle) => {
-                    const rad = (angle * Math.PI) / 180;
-                    return (
-                      <circle key={`m-${angle}`} cx={200 + 140 * Math.cos(rad)} cy={200 + 140 * Math.sin(rad)} r="4" fill="currentColor" opacity="0.9" />
-                    );
-                  })}
-                </motion.svg>
-
-                {/* Inner ring — slow rotation */}
-                <motion.svg
-                  viewBox="0 0 400 400"
-                  className="absolute inset-0 w-full h-full text-primary"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-                >
-                  <circle cx="200" cy="200" r="95" fill="none" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" />
-                  {[0, 120, 240].map((angle) => {
-                    const rad = (angle * Math.PI) / 180;
-                    return (
-                      <circle key={`i-${angle}`} cx={200 + 95 * Math.cos(rad)} cy={200 + 95 * Math.sin(rad)} r="3.5" fill="currentColor" />
-                    );
-                  })}
-                </motion.svg>
-
-                {/* Center: real logo with float */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                    className="relative"
-                  >
-                    <div
-                      className="absolute inset-0 rounded-full blur-2xl opacity-70"
-                      style={{ background: "radial-gradient(circle, oklch(0.80 0.22 138 / 0.6), transparent 70%)" }}
-                    />
-                    <VirtualSpaceLogo size={160} className="relative drop-shadow-[0_10px_30px_oklch(0.80_0.22_138_/_0.5)]" />
-                  </motion.div>
                 </div>
               </div>
             </motion.div>
