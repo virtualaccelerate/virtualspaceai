@@ -505,79 +505,188 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   const rootClass = isCompact
     ? "h-full flex flex-col"
-    : "h-[calc(100vh-3.5rem-2rem)] sm:h-[calc(100vh-3.5rem-3rem)] max-w-3xl mx-auto flex flex-col";
+    : "h-[calc(100vh-3.5rem-2rem)] sm:h-[calc(100vh-3.5rem-3rem)] flex gap-4";
 
-  return (
-    <div className={rootClass}>
-      {/* Threads / New chat header */}
-      <div className={`flex items-center gap-2 ${isCompact ? "pb-2" : "pb-3"}`}>
+  const ThreadsSidebar = (
+    <aside className="hidden md:flex w-64 shrink-0 flex-col rounded-2xl border border-border bg-card/50 overflow-hidden">
+      <div className="p-2 border-b border-border">
         <button
           onClick={onNewChat}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 px-2.5 py-1.5 text-xs font-semibold transition"
+          className="w-full inline-flex items-center gap-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 px-3 py-2 text-sm font-semibold transition"
         >
-          <MessageSquarePlus className="h-3.5 w-3.5" />
+          <MessageSquarePlus className="h-4 w-4" />
           {t("app.chat.newChat", "New chat")}
         </button>
-        <div className="relative">
-          <button
-            onClick={() => setThreadsOpen((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card hover:bg-accent/40 px-2.5 py-1.5 text-xs font-medium text-foreground/80 transition"
+      </div>
+      <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+        <History className="h-3 w-3" />
+        {t("app.chat.history", "History")}
+        <span className="ml-auto">{conversations.length}</span>
+      </div>
+      <div className="flex-1 overflow-y-auto px-1.5 pb-2 space-y-0.5">
+        {conversations.length === 0 ? (
+          <div className="p-3 text-xs text-muted-foreground text-center">
+            {t("app.chat.noHistory", "No previous chats yet")}
+          </div>
+        ) : conversations.map((c) => (
+          <div
+            key={c.id}
+            onClick={() => onSwitchThread(c.id)}
+            className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/50 ${
+              c.id === activeId ? "bg-accent/60 text-foreground" : "text-foreground/80"
+            }`}
           >
-            <History className="h-3.5 w-3.5" />
-            {t("app.chat.history", "History")}
-            <span className="ml-1 text-muted-foreground">{conversations.length}</span>
-          </button>
-          {threadsOpen && (
-            <>
-              <button
-                aria-label="close"
-                className="fixed inset-0 z-30"
-                onClick={() => setThreadsOpen(false)}
-              />
-              <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
-                {conversations.length === 0 ? (
-                  <div className="p-3 text-xs text-muted-foreground text-center">
-                    {t("app.chat.noHistory", "No previous chats yet")}
-                  </div>
-                ) : conversations.map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => onSwitchThread(c.id)}
-                    className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/50 ${
-                      c.id === activeId ? "bg-accent/40" : ""
-                    }`}
+            {c.agent_id ? <Bot className="h-3.5 w-3.5 text-primary shrink-0" /> : <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+            <span className="flex-1 truncate">{c.title}</span>
+            <button
+              onClick={(e) => onDeleteThread(c.id, e)}
+              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
+              aria-label="delete"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+
+  const CompactHeader = (
+    <div className="flex items-center gap-2 pb-2">
+      <button
+        onClick={onNewChat}
+        className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 px-2.5 py-1.5 text-xs font-semibold transition"
+      >
+        <MessageSquarePlus className="h-3.5 w-3.5" />
+        {t("app.chat.newChat", "New chat")}
+      </button>
+      <div className="relative">
+        <button
+          onClick={() => setThreadsOpen((v) => !v)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card hover:bg-accent/40 px-2.5 py-1.5 text-xs font-medium text-foreground/80 transition"
+        >
+          <History className="h-3.5 w-3.5" />
+          {t("app.chat.history", "History")}
+          <span className="ml-1 text-muted-foreground">{conversations.length}</span>
+        </button>
+        {threadsOpen && (
+          <>
+            <button aria-label="close" className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
+            <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
+              {conversations.length === 0 ? (
+                <div className="p-3 text-xs text-muted-foreground text-center">
+                  {t("app.chat.noHistory", "No previous chats yet")}
+                </div>
+              ) : conversations.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => onSwitchThread(c.id)}
+                  className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/50 ${
+                    c.id === activeId ? "bg-accent/40" : ""
+                  }`}
+                >
+                  {c.agent_id ? <Bot className="h-3.5 w-3.5 text-primary shrink-0" /> : <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                  <span className="flex-1 truncate text-foreground">{c.title}</span>
+                  <button
+                    onClick={(e) => onDeleteThread(c.id, e)}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
+                    aria-label="delete"
                   >
-                    {c.agent_id ? <Bot className="h-3.5 w-3.5 text-primary shrink-0" /> : <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-                    <span className="flex-1 truncate text-foreground">{c.title}</span>
-                    <button
-                      onClick={(e) => onDeleteThread(c.id, e)}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
-                      aria-label="delete"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-        {effectiveAgent && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold">
-            <Bot className="h-3 w-3" /> @{effectiveAgent}
-          </span>
-        )}
-        <div className="flex-1" />
-        {messages.length > 0 && (
-          <button
-            onClick={onClear}
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
-            title={t("app.overview.clear", "Clear")}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
+      {effectiveAgent && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold">
+          <Bot className="h-3 w-3" /> @{effectiveAgent}
+        </span>
+      )}
+      <div className="flex-1" />
+      {messages.length > 0 && (
+        <button
+          onClick={onClear}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
+          title={t("app.overview.clear", "Clear")}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+
+  const ChatColumn = (
+    <div className={isCompact ? "flex-1 flex flex-col min-h-0" : "flex-1 min-w-0 flex flex-col max-w-3xl mx-auto w-full"}>
+      {isCompact ? CompactHeader : (
+        <div className="flex items-center gap-2 pb-3 md:hidden">
+          <button
+            onClick={onNewChat}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 px-2.5 py-1.5 text-xs font-semibold transition"
+          >
+            <MessageSquarePlus className="h-3.5 w-3.5" />
+            {t("app.chat.newChat", "New chat")}
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => setThreadsOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card hover:bg-accent/40 px-2.5 py-1.5 text-xs font-medium text-foreground/80 transition"
+            >
+              <History className="h-3.5 w-3.5" />
+              {t("app.chat.history", "History")}
+              <span className="ml-1 text-muted-foreground">{conversations.length}</span>
+            </button>
+            {threadsOpen && (
+              <>
+                <button aria-label="close" className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
+                <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
+                  {conversations.length === 0 ? (
+                    <div className="p-3 text-xs text-muted-foreground text-center">
+                      {t("app.chat.noHistory", "No previous chats yet")}
+                    </div>
+                  ) : conversations.map((c) => (
+                    <div
+                      key={c.id}
+                      onClick={() => onSwitchThread(c.id)}
+                      className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/50 ${
+                        c.id === activeId ? "bg-accent/40" : ""
+                      }`}
+                    >
+                      {c.agent_id ? <Bot className="h-3.5 w-3.5 text-primary shrink-0" /> : <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                      <span className="flex-1 truncate text-foreground">{c.title}</span>
+                      <button
+                        onClick={(e) => onDeleteThread(c.id, e)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
+                        aria-label="delete"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          {effectiveAgent && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold">
+              <Bot className="h-3 w-3" /> @{effectiveAgent}
+            </span>
+          )}
+          <div className="flex-1" />
+          {messages.length > 0 && (
+            <button
+              onClick={onClear}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
+              title={t("app.overview.clear", "Clear")}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto pr-1">
         {empty ? (
