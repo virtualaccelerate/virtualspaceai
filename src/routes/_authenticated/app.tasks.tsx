@@ -204,7 +204,7 @@ function TasksPage() {
 
   async function handleSave() {
     if (!draft.title.trim()) {
-      toast.error("Title is required");
+      toast.error(t("app.tasks.errTitle", "Title is required"));
       return;
     }
     if (!userId) return;
@@ -227,7 +227,7 @@ function TasksPage() {
         .single();
       if (error) return toast.error(error.message);
       setTasks((prev) => prev.map((t) => (t.id === editing.id ? (data as Task) : t)));
-      toast.success("Task updated");
+      toast.success(t("app.tasks.okUpdate", "Task updated"));
     } else {
       const position = (grouped[draft.status]?.length ?? 0) * 1000;
       const { data, error } = await supabase
@@ -238,7 +238,7 @@ function TasksPage() {
       if (error) return toast.error(error.message);
       const created = data as Task;
       setTasks((prev) => [...prev, created]);
-      toast.success("Task created");
+      toast.success(t("app.tasks.okCreate", "Task created"));
       // Log manual task creation into chat history so the user has a record
       logEvent({
         data: {
@@ -258,7 +258,7 @@ function TasksPage() {
       setTasks(prev);
       toast.error(error.message);
     } else {
-      toast.success("Task deleted");
+      toast.success(t("app.tasks.okDelete", "Task deleted"));
     }
   }
 
@@ -474,32 +474,32 @@ function TasksPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit task" : "New task"}</DialogTitle>
+            <DialogTitle>{editing ? t("app.tasks.dlgEdit", "Edit task") : t("app.tasks.dlgNew", "New task")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="task-title">Title</Label>
+              <Label htmlFor="task-title">{t("app.tasks.fTitle", "Title")}</Label>
               <Input
                 id="task-title"
                 value={draft.title}
                 onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                placeholder="Design new onboarding flow"
+                placeholder={t("app.tasks.phTitle", "Design new onboarding flow")}
                 autoFocus
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="task-desc">Description</Label>
+              <Label htmlFor="task-desc">{t("app.tasks.fDesc", "Description")}</Label>
               <Textarea
                 id="task-desc"
                 value={draft.description}
                 onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-                placeholder="Details, acceptance criteria, links…"
+                placeholder={t("app.tasks.phDesc", "Details, acceptance criteria, links…")}
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>{t("app.tasks.fStatus", "Status")}</Label>
                 <Select
                   value={draft.status}
                   onValueChange={(v) => setDraft((d) => ({ ...d, status: v as TaskStatus }))}
@@ -513,7 +513,7 @@ function TasksPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Priority</Label>
+                <Label>{t("app.tasks.fPriority", "Priority")}</Label>
                 <Select
                   value={draft.priority}
                   onValueChange={(v) => setDraft((d) => ({ ...d, priority: v as TaskPriority }))}
@@ -527,16 +527,16 @@ function TasksPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="task-assignee">Assignee</Label>
+                <Label htmlFor="task-assignee">{t("app.tasks.fAssignee", "Assignee")}</Label>
                 <Input
                   id="task-assignee"
                   value={draft.assignee_name}
                   onChange={(e) => setDraft((d) => ({ ...d, assignee_name: e.target.value }))}
-                  placeholder="Name or email"
+                  placeholder={t("app.tasks.phAssignee", "Name or email")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="task-due">Due date</Label>
+                <Label htmlFor="task-due">{t("app.tasks.fDue", "Due date")}</Label>
                 <Input
                   id="task-due"
                   type="date"
@@ -556,14 +556,15 @@ function TasksPage() {
                   setDialogOpen(false);
                 }}
               >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete
+                <Trash2 className="h-4 w-4 mr-2" /> {t("app.tasks.delete", "Delete")}
               </Button>
             )}
-            <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>{editing ? "Save" : "Create task"}</Button>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)}>{t("app.tasks.cancel", "Cancel")}</Button>
+            <Button onClick={handleSave}>{editing ? t("app.tasks.save", "Save") : t("app.tasks.create", "Create task")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

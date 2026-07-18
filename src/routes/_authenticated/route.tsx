@@ -117,7 +117,7 @@ function AuthenticatedLayout() {
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
   const mainNav: NavItem[] = [
-    { to: "/app", label: t("app.nav.home", "Home"), icon: MessageSquare, exact: true },
+    { to: "/app", label: t("app.nav.chat", "Chat"), icon: MessageSquare, exact: true },
     { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
     { to: "/app/docs", label: t("app.nav.knowledgeBase"), icon: BookOpen },
     { to: "/app/tasks", label: t("app.nav.tasks"), icon: CheckSquare },
@@ -344,7 +344,7 @@ function AuthenticatedLayout() {
       >
         <ul className="grid grid-cols-5 h-full">
           {[
-            { to: "/app", label: t("app.nav.home", "Home"), icon: MessageSquare, exact: true },
+            { to: "/app", label: t("app.nav.chat", "Chat"), icon: MessageSquare, exact: true },
             { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
             { to: "/app/tasks", label: t("app.nav.tasks"), icon: CheckSquare },
             { to: "/app/docs", label: t("app.nav.knowledgeBase"), icon: BookOpen },
