@@ -30,7 +30,7 @@ export const Route = createFileRoute("/onboarding")({
 });
 
 type Tab = "create" | "join";
-type TeamSize = "0-50" | "50-100" | "100+";
+type TeamSize = "1-5" | "5-20" | "20+";
 type BusinessType = "startup" | "agency" | "company";
 
 const SIZES: TeamSize[] = ["0-50", "50-100", "100+"];
