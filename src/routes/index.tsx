@@ -629,7 +629,9 @@ function Landing() {
                       ))}
                     </ul>
                   </div>
+                  </div>
                 </motion.div>
+
               );
             })}
           </motion.div>
