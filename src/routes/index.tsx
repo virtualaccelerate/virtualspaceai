@@ -18,6 +18,9 @@ import { submitDemoRequest } from "@/lib/demo-request.functions";
 import vaLogoDark from "@/assets/Untitled_design_21.png.asset.json";
 import vaLogoLight from "@/assets/Untitled_design_22.png.asset.json";
 import aiBusinessEra from "@/assets/ai-business-era.jpg.asset.json";
+import heroBg from "@/assets/hero-bg.jpg.asset.json";
+import startupsBg from "@/assets/startups-bg.jpg.asset.json";
+import ngosBg from "@/assets/ngos-bg.jpg.asset.json";
 
 
 const SITE_URL = "https://virtualspaceai.lovable.app";
@@ -388,13 +391,27 @@ function Landing() {
     { key: "ngos", icon: HeartHandshake, gradient: "linear-gradient(135deg, oklch(0.6 0.16 165), oklch(0.72 0.12 180))" },
   ] as const;
 
+  const audienceBg: Record<string, string> = {
+    businesses: heroBg.url,
+    startups: startupsBg.url,
+    ngos: ngosBg.url,
+  };
+
   return (
     <div id="top" className="min-h-screen text-white overflow-hidden">
       <Header />
 
       {/* HERO */}
-      <section className="relative">
+      <section className="relative overflow-hidden">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 -z-10 bg-cover bg-center opacity-40 sm:opacity-30"
+          style={{ backgroundImage: `url(${heroBg.url})` }}
+          aria-hidden
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/60 to-background pointer-events-none" aria-hidden />
         <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-24">
+
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Copy */}
             <div className="text-center lg:text-left">
@@ -646,10 +663,19 @@ function Landing() {
               return (
                 <motion.div
                   key={a.key} variants={fadeUp}
-                  className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col"
+                  className="glass-strong relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col min-h-[420px]"
                 >
+                  {/* Background image */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+                    style={{ backgroundImage: `url(${audienceBg[a.key]})` }}
+                    aria-hidden
+                  />
+                  {/* Dark scrim for readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/60 to-black/40" aria-hidden />
                   <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl" style={{ background: a.gradient }} />
                   <a.icon className="relative h-8 w-8 text-white" strokeWidth={1.5} />
+
                   <div className="relative mt-6">
                     <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">{t(`audience.${a.key}.tag`)}</p>
                     <h3 className="mt-2 font-display text-3xl sm:text-4xl text-white">{t(`audience.${a.key}.title`)}</h3>
