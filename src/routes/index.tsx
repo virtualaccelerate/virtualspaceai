@@ -376,7 +376,7 @@ function Landing() {
   }, [i18n.language]);
 
   const benefitCards = [
-    { key: "money", icon: PiggyBank },
+    { key: "money", icon: Wallet },
     { key: "time", icon: Clock },
     { key: "auto", icon: Workflow },
   ] as const;
