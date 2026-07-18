@@ -459,7 +459,7 @@ export type Database = {
       member_role: "owner" | "admin" | "member"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status: "backlog" | "in_progress" | "review" | "done"
-      team_size: "0-50" | "50-100" | "100+"
+      team_size: "0-50" | "50-100" | "100+" | "1-5" | "5-20" | "20+"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -592,7 +592,7 @@ export const Constants = {
       member_role: ["owner", "admin", "member"],
       task_priority: ["low", "medium", "high", "urgent"],
       task_status: ["backlog", "in_progress", "review", "done"],
-      team_size: ["0-50", "50-100", "100+"],
+      team_size: ["0-50", "50-100", "100+", "1-5", "5-20", "20+"],
     },
   },
 } as const
