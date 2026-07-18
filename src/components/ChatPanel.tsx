@@ -858,4 +858,14 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       </div>
     </div>
   );
+
+  if (isCompact) return ChatColumn;
+
+  return (
+    <div className={rootClass}>
+      {ThreadsSidebar}
+      {ChatColumn}
+    </div>
+  );
 }
+
