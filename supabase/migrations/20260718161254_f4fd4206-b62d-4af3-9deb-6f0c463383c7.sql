@@ -1,0 +1,3 @@
+ALTER TYPE public.team_size ADD VALUE IF NOT EXISTS '1-5';
+ALTER TYPE public.team_size ADD VALUE IF NOT EXISTS '5-20';
+ALTER TYPE public.team_size ADD VALUE IF NOT EXISTS '20+';
