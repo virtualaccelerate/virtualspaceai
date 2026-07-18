@@ -481,13 +481,10 @@ function Landing() {
                 />
               </div>
             </motion.div>
-
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </section>
+
 
       
 
