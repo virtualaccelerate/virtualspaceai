@@ -606,12 +606,14 @@ function Landing() {
                 </div>
               </div>
               <div className="relative flex items-center justify-center">
-                <div className="relative w-full max-w-[380px] aspect-square">
-                  <div className="absolute inset-0 rounded-full opacity-30 blur-3xl"
+                <div className="relative w-full max-w-[480px]">
+                  <div className="absolute -inset-4 rounded-[40px] opacity-30 blur-3xl"
                     style={{ background: "radial-gradient(circle, #73D94F, transparent 60%)" }} />
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <VirtualSpaceLogo size={280} className="text-primary" />
-                  </div>
+                  <img
+                    src={aiBusinessEra.url}
+                    alt={t("newEra.imageAlt")}
+                    className="relative w-full rounded-3xl shadow-2xl shadow-black/20 object-cover"
+                  />
                 </div>
               </div>
             </div>
