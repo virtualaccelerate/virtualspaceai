@@ -141,7 +141,7 @@ function Header() {
             <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
           </div>
           <div className="flex flex-col items-start pl-2 sm:pl-3 border-l border-white/15">
-            <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/40 leading-none">Powered by</span>
+            <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/40 leading-none">{t("footer.poweredBy")}</span>
             <img
               src={vaLogoDark.url}
               alt="Virtual Accelerate"
@@ -749,7 +749,7 @@ function Landing() {
       <section className="relative">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-12 text-center">
           <div className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4">
-            <span className="text-xs uppercase tracking-wider text-white/50">Powered by</span>
+            <span className="text-xs uppercase tracking-wider text-white/50">{t("footer.poweredBy")}</span>
             <img
               src={vaLogoDark.url}
               alt="Virtual Accelerate"

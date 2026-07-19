@@ -139,6 +139,7 @@ const resources = {
         contact: "Contact",
         copyright: "© Virtual Space. All rights reserved.",
         powered: "Powered by Virtual Accelerate",
+        poweredBy: "Powered by",
         productItems: { workspace: "Workspace", aiAgents: "AI Agents", automation: "Automation", analytics: "Analytics" },
       },
       brandbook: {
@@ -388,7 +389,8 @@ const resources = {
         resources: "Ресурсы",
         contact: "Контакты",
         copyright: "© Virtual Space. Все права защищены.",
-        powered: "Powered by Virtual Accelerate",
+        powered: "При поддержке Virtual Accelerate",
+        poweredBy: "При поддержке",
         productItems: { workspace: "Пространство", aiAgents: "ИИ-агенты", automation: "Автоматизация", analytics: "Аналитика" },
       },
       brandbook: {
@@ -617,7 +619,8 @@ const resources = {
         productLabel: "Өнім", learnLabel: "Оқыту", companyLabel: "Компания", accountLabel: "Аккаунт",
         resources: "Ресурстар", contact: "Байланыс",
         copyright: "© Virtual Space. Барлық құқықтар қорғалған.",
-        powered: "Powered by Virtual Accelerate",
+        powered: "Virtual Accelerate қолдауымен",
+        poweredBy: "Қолдауымен",
         productItems: { workspace: "Кеңістік", aiAgents: "ИИ-агенттер", automation: "Автоматтандыру", analytics: "Аналитика" },
       },
       brandbook: {
@@ -836,7 +839,8 @@ const resources = {
         productLabel: "Продукт", learnLabel: "Окутуу", companyLabel: "Компания", accountLabel: "Аккаунт",
         resources: "Ресурстар", contact: "Байланыш",
         copyright: "© Virtual Space. Бардык укуктар корголгон.",
-        powered: "Powered by Virtual Accelerate",
+        powered: "Virtual Accelerate колдоосу менен",
+        poweredBy: "Колдоосу менен",
         productItems: { workspace: "Мейкиндик", aiAgents: "ИИ-агенттер", automation: "Автоматташтыруу", analytics: "Аналитика" },
       },
       brandbook: {
@@ -1055,7 +1059,8 @@ const resources = {
         productLabel: "Mahsulot", learnLabel: "Oʻqitish", companyLabel: "Kompaniya", accountLabel: "Akkaunt",
         resources: "Resurslar", contact: "Aloqa",
         copyright: "© Virtual Space. Barcha huquqlar himoyalangan.",
-        powered: "Powered by Virtual Accelerate",
+        powered: "Virtual Accelerate koʻmagida",
+        poweredBy: "Koʻmagida",
         productItems: { workspace: "Makon", aiAgents: "AI-agentlar", automation: "Avtomatlashtirish", analytics: "Analitika" },
       },
       brandbook: {
@@ -1274,7 +1279,8 @@ const resources = {
         productLabel: "Маҳсулот", learnLabel: "Омӯзиш", companyLabel: "Ширкат", accountLabel: "Ҳисоб",
         resources: "Захираҳо", contact: "Тамос",
         copyright: "© Virtual Space. Ҳамаи ҳуқуқҳо ҳифз шудаанд.",
-        powered: "Powered by Virtual Accelerate",
+        powered: "Бо дастгирии Virtual Accelerate",
+        poweredBy: "Бо дастгирии",
         productItems: { workspace: "Фазо", aiAgents: "AI-агентҳо", automation: "Автоматикунонӣ", analytics: "Аналитика" },
       },
       brandbook: {
