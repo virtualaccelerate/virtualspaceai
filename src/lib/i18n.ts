@@ -1074,7 +1074,8 @@ const resources = {
           overview: "Umumiy koʻrinish", tasks: "Vazifalar", knowledgeBase: "Bilim bazasi",
           aiAgents: "AI-agentlar", analytics: "Analitika", timeTracking: "Vaqt hisobi",
           clients: "Mijozlar", profile: "Profil",
-          agentsDocs: "Hujjatlar va maʼlumotlar", agentsTasks: "Jamoa vazifalari", agentsFusion: "Sotuvlar — Fusion AI", inDevelopment: "Ishlab chiqilmoqda", comingSoon: "Tez orada",
+          agentsDocs: "Hujjatlar va maʼlumotlar", agentsTasks: "Jamoa vazifalari", agentsFusion: "Sotuv", inDevelopment: "Ishlab chiqilmoqda", comingSoon: "Tez orada",
+
         },
         settings: {
           profile: { title: "Profil", desc: "Ism, avatar va til." },
