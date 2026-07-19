@@ -169,7 +169,7 @@ const resources = {
           aiAgents: "AI Agents", analytics: "Analytics", timeTracking: "Time Tracking",
           clients: "Clients", profile: "Profile",
           agentsDocs: "Documents & Data", agentsTasks: "Team Tasks", agentsFusion: "Sales", inDevelopment: "In development", comingSoon: "Coming soon",
-          financials: "Financials", telegram: "Telegram", team: "Team", settings: "Settings", newChat: "New chat", collapse: "Collapse", expand: "Expand",
+          financials: "Financials", telegram: "Telegram", team: "Team", settings: "Settings", newChat: "New chat", collapse: "Collapse", expand: "Expand", integrations: "Integrations",
 
         },
         settings: {
@@ -420,7 +420,7 @@ const resources = {
           aiAgents: "AI-агенты", analytics: "Аналитика", timeTracking: "Учёт времени",
           clients: "Клиенты", profile: "Профиль",
           agentsDocs: "Документы и данные", agentsTasks: "Задачи команды", agentsFusion: "Продажи", inDevelopment: "В разработке", comingSoon: "Скоро",
-          financials: "Финансы", telegram: "Телеграм", team: "Команда", settings: "Настройки", newChat: "Новый чат", collapse: "Свернуть", expand: "Развернуть",
+          financials: "Финансы", telegram: "Телеграм", team: "Команда", settings: "Настройки", newChat: "Новый чат", collapse: "Свернуть", expand: "Развернуть", integrations: "Интеграции",
 
         },
         settings: {
@@ -648,7 +648,7 @@ const resources = {
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Уақыт есебі",
           clients: "Клиенттер", profile: "Профиль",
           agentsDocs: "Құжаттар және деректер", agentsTasks: "Команда тапсырмалары", agentsFusion: "Сатылым", inDevelopment: "Әзірленуде", comingSoon: "Жақында",
-          financials: "Қаржы", telegram: "Телеграм", team: "Команда", settings: "Баптаулар", newChat: "Жаңа чат", collapse: "Жию", expand: "Ашу",
+          financials: "Қаржы", telegram: "Телеграм", team: "Команда", settings: "Баптаулар", newChat: "Жаңа чат", collapse: "Жию", expand: "Ашу", integrations: "Интеграциялар",
 
         },
         settings: {
@@ -868,7 +868,7 @@ const resources = {
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Убакыт эсеби",
           clients: "Кардарлар", profile: "Профиль",
           agentsDocs: "Документтер жана маалыматтар", agentsTasks: "Команда тапшырмалары", agentsFusion: "Сатуулар", inDevelopment: "Иштелип жатат", comingSoon: "Жакында",
-          financials: "Каржы", telegram: "Телеграм", team: "Команда", settings: "Жөндөөлөр", newChat: "Жаңы чат", collapse: "Жыйноо", expand: "Ачуу",
+          financials: "Каржы", telegram: "Телеграм", team: "Команда", settings: "Жөндөөлөр", newChat: "Жаңы чат", collapse: "Жыйноо", expand: "Ачуу", integrations: "Интеграциялар",
 
         },
         settings: {
@@ -1088,7 +1088,7 @@ const resources = {
           aiAgents: "AI-agentlar", analytics: "Analitika", timeTracking: "Vaqt hisobi",
           clients: "Mijozlar", profile: "Profil",
           agentsDocs: "Hujjatlar va maʼlumotlar", agentsTasks: "Jamoa vazifalari", agentsFusion: "Sotuv", inDevelopment: "Ishlab chiqilmoqda", comingSoon: "Tez orada",
-          financials: "Moliya", telegram: "Telegram", team: "Jamoa", settings: "Sozlamalar", newChat: "Yangi chat", collapse: "Yig'ish", expand: "Ochish",
+          financials: "Moliya", telegram: "Telegram", team: "Jamoa", settings: "Sozlamalar", newChat: "Yangi chat", collapse: "Yig'ish", expand: "Ochish", integrations: "Integratsiyalar",
 
         },
         settings: {
@@ -1308,7 +1308,7 @@ const resources = {
           aiAgents: "AI-агентҳо", analytics: "Таҳлил", timeTracking: "Ҳисоби вақт",
           clients: "Муштариён", profile: "Профил",
           agentsDocs: "Ҳуҷҷатҳо ва маълумот", agentsTasks: "Вазифаҳои даста", agentsFusion: "Фурӯш", inDevelopment: "Дар ҳоли таҳия", comingSoon: "Ба зудӣ",
-          financials: "Молия", telegram: "Телеграм", team: "Даста", settings: "Танзимот", newChat: "Чати нав", collapse: "Ҷамъ кардан", expand: "Кушодан",
+          financials: "Молия", telegram: "Телеграм", team: "Даста", settings: "Танзимот", newChat: "Чати нав", collapse: "Ҷамъ кардан", expand: "Кушодан", integrations: "Интегратсияҳо",
 
         },
         settings: {
