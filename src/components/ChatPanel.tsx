@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Plus, Mic, Loader2, FileText, CheckSquare, Trash2,
-  MessageSquarePlus, History, Bot, X, Paperclip,
+  MessageSquarePlus, History, Bot, X, Paperclip, Lightbulb,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
