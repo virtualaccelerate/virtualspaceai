@@ -229,7 +229,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     const m = input.match(AGENT_TAG);
     return m ? m[1].toLowerCase() : undefined;
   }, [input]);
-  const effectiveAgent = inlineAgent || activeAgent;
+  const effectiveAgent = inlineAgent || selectedAgent || activeAgent;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
