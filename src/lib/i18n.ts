@@ -258,7 +258,7 @@ const resources = {
     translation: {
       nav: {
         learn: "Обучение", mentors: "Наставники", courses: "Курсы",
-        product: "Продукт", pricing: "Тарифы", bookDemo: "Забронировать демо",
+        product: "Продукт", pricing: "Тарифы", bookDemo: "Демо",
         login: "Войти", signup: "Регистрация",
         cta: "Попробовать бесплатно", demo: "Демо", price: "Тарифы",
       },
