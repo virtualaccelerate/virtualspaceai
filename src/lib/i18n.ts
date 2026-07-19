@@ -648,7 +648,7 @@ const resources = {
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Уақыт есебі",
           clients: "Клиенттер", profile: "Профиль",
           agentsDocs: "Құжаттар және деректер", agentsTasks: "Команда тапсырмалары", agentsFusion: "Сатылым", inDevelopment: "Әзірленуде", comingSoon: "Жақында",
-          financials: "Қаржы", telegram: "Телеграм", team: "Команда", settings: "Баптаулар", newChat: "Жаңа чат", collapse: "Жию", expand: "Ашу",
+          financials: "Қаржы", telegram: "Телеграм", team: "Команда", settings: "Баптаулар", newChat: "Жаңа чат", collapse: "Жию", expand: "Ашу", integrations: "Интеграциялар",
 
         },
         settings: {
