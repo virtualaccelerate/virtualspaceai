@@ -6,7 +6,7 @@ import {
   Bot, Users, Bell, Search, Plus, Settings,
   ChevronDown, ChevronRight, UserPlus, Copy, Check, Sparkles,
   MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  FileText, KanbanSquare,
+  FileText, KanbanSquare, TrendingUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -301,15 +301,20 @@ function AuthenticatedLayout() {
                   showLabels ? "" : "justify-center"
                 }`}
               >
-                <span className="h-8 rounded-md flex items-center justify-center shrink-0 bg-white/95 px-1.5">
-                  <img
-                    src={fusionLogo.url}
-                    alt="Fusion"
-                    className={`h-4 w-auto object-contain ${showLabels ? "" : "h-5"}`}
-                  />
+                <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-white/60">
+                  <TrendingUp className="h-[18px] w-[18px]" />
                 </span>
                 {showLabels && (
-                  <span className="truncate flex-1">{t("app.nav.agentsFusion", "Fusion AI")}</span>
+                  <>
+                    <span className="truncate">{t("app.nav.agentsFusion", "Fusion AI")}</span>
+                    <span className="ml-auto h-6 rounded-md flex items-center justify-center shrink-0 bg-white/95 px-1.5">
+                      <img
+                        src={fusionLogo.url}
+                        alt="Fusion"
+                        className="h-3.5 w-auto object-contain"
+                      />
+                    </span>
+                  </>
                 )}
               </div>
             </div>
