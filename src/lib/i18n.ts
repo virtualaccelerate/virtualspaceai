@@ -926,6 +926,7 @@ const resources = {
         chat: {
           newChat: "Жаңы чат", history: "Тарых", noHistory: "Азырынча чаттар жок",
           confirmDelete: "Бул чатты өчүрөбүзбү?", attach: "Файл тиркөө — Билим базасы менен синхрондолот",
+          agentDocs: "Документтер", agentTasks: "Тапшырмалар", agentAdvisor: "Кеңешчи", clearAgent: "алып салуу",
         },
         agents: {
           title: "AI Агенттер",
