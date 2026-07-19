@@ -242,12 +242,12 @@ function AuthenticatedLayout() {
             className={`hidden lg:flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/60 hover:bg-white/5 hover:text-white transition ${
               showLabels ? "" : "justify-center"
             }`}
-            title={showLabels ? "Collapse" : "Expand"}
+            title={showLabels ? t("app.nav.collapse") : t("app.nav.expand")}
           >
             <span className="h-8 w-8 flex items-center justify-center">
               {showLabels ? <PanelLeftClose className="h-[18px] w-[18px]" /> : <PanelLeftOpen className="h-[18px] w-[18px]" />}
             </span>
-            {showLabels && <span>Collapse</span>}
+            {showLabels && <span>{t("app.nav.collapse")}</span>}
           </button>
           <button
             onClick={async () => {
@@ -259,12 +259,12 @@ function AuthenticatedLayout() {
             className={`w-full flex items-center gap-3 rounded-lg bg-primary text-primary-foreground px-2.5 py-2 text-sm font-semibold hover:bg-primary/90 transition ${
               showLabels ? "" : "justify-center"
             }`}
-            title={t("app.header.newChat", "New chat")}
+            title={t("app.nav.newChat")}
           >
             <span className="h-8 w-8 flex items-center justify-center">
               <Plus className="h-[18px] w-[18px]" />
             </span>
-            {showLabels && <span>{t("app.header.newChat", "New chat")}</span>}
+            {showLabels && <span>{t("app.nav.newChat")}</span>}
           </button>
 
         </div>
