@@ -1308,7 +1308,7 @@ const resources = {
           aiAgents: "AI-агентҳо", analytics: "Таҳлил", timeTracking: "Ҳисоби вақт",
           clients: "Муштариён", profile: "Профил",
           agentsDocs: "Ҳуҷҷатҳо ва маълумот", agentsTasks: "Вазифаҳои даста", agentsFusion: "Фурӯш", inDevelopment: "Дар ҳоли таҳия", comingSoon: "Ба зудӣ",
-          financials: "Молия", telegram: "Телеграм", team: "Даста", settings: "Танзимот", newChat: "Чати нав", collapse: "Ҷамъ кардан", expand: "Кушодан",
+          financials: "Молия", telegram: "Телеграм", team: "Даста", settings: "Танзимот", newChat: "Чати нав", collapse: "Ҷамъ кардан", expand: "Кушодан", integrations: "Интегратсияҳо",
 
         },
         settings: {
