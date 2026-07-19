@@ -1088,7 +1088,7 @@ const resources = {
           aiAgents: "AI-agentlar", analytics: "Analitika", timeTracking: "Vaqt hisobi",
           clients: "Mijozlar", profile: "Profil",
           agentsDocs: "Hujjatlar va maʼlumotlar", agentsTasks: "Jamoa vazifalari", agentsFusion: "Sotuv", inDevelopment: "Ishlab chiqilmoqda", comingSoon: "Tez orada",
-          financials: "Moliya", telegram: "Telegram", team: "Jamoa", settings: "Sozlamalar", newChat: "Yangi chat", collapse: "Yig'ish", expand: "Ochish",
+          financials: "Moliya", telegram: "Telegram", team: "Jamoa", settings: "Sozlamalar", newChat: "Yangi chat", collapse: "Yig'ish", expand: "Ochish", integrations: "Integratsiyalar",
 
         },
         settings: {
