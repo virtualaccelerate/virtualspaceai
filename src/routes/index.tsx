@@ -459,7 +459,7 @@ function Landing() {
       <Header />
 
       {/* HERO */}
-      <section className="relative">
+      <section className="relative hero-force-dark">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
