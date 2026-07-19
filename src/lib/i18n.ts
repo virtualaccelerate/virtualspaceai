@@ -1291,7 +1291,8 @@ const resources = {
           overview: "Шарҳ", tasks: "Вазифаҳо", knowledgeBase: "Пойгоҳи дониш",
           aiAgents: "AI-агентҳо", analytics: "Таҳлил", timeTracking: "Ҳисоби вақт",
           clients: "Муштариён", profile: "Профил",
-          agentsDocs: "Ҳуҷҷатҳо ва маълумот", agentsTasks: "Вазифаҳои даста", agentsFusion: "Фурӯш — Fusion AI", inDevelopment: "Дар ҳоли таҳия", comingSoon: "Ба зудӣ",
+          agentsDocs: "Ҳуҷҷатҳо ва маълумот", agentsTasks: "Вазифаҳои даста", agentsFusion: "Фурӯш", inDevelopment: "Дар ҳоли таҳия", comingSoon: "Ба зудӣ",
+
         },
         settings: {
           profile: { title: "Профил", desc: "Ном, аватар ва забон." },
