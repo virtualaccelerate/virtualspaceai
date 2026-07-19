@@ -296,27 +296,38 @@ function AuthenticatedLayout() {
               {agentsNav.map((item) => <NavButton key={item.to} item={item} />)}
               {/* Fusion AI — disabled */}
               <div
-                title={t("app.nav.comingSoon", "Скоро")}
+                title={`${t("app.nav.agentsFusion", "Sales")} — Fusion AI`}
                 className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/40 cursor-not-allowed ${
                   showLabels ? "" : "justify-center"
                 }`}
               >
                 <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-white/60">
-                  <TrendingUp className="h-[18px] w-[18px]" />
-                </span>
-                {showLabels && (
-                  <>
-                    <span className="truncate">{t("app.nav.agentsFusion", "Fusion AI")}</span>
-                    <span className="ml-auto h-6 rounded-md flex items-center justify-center shrink-0 bg-white/95 px-1.5">
+                  {showLabels ? (
+                    <TrendingUp className="h-[18px] w-[18px]" />
+                  ) : (
+                    <span className="h-[18px] w-[18px] rounded bg-white p-0.5 flex items-center justify-center">
                       <img
                         src={fusionLogo.url}
                         alt="Fusion"
-                        className="h-3.5 w-auto object-contain"
+                        className="h-full w-auto object-contain"
+                      />
+                    </span>
+                  )}
+                </span>
+                {showLabels && (
+                  <>
+                    <span className="truncate">{t("app.nav.agentsFusion", "Sales")}</span>
+                    <span className="ml-auto h-6 rounded-md flex items-center justify-center shrink-0 bg-white px-2">
+                      <img
+                        src={fusionLogo.url}
+                        alt="Fusion"
+                        className="h-4 w-auto object-contain"
                       />
                     </span>
                   </>
                 )}
               </div>
+
             </div>
           )}
 
