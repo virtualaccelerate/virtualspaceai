@@ -172,6 +172,26 @@ const resources = {
           financials: "Financials", telegram: "Telegram", team: "Team", settings: "Settings", newChat: "New chat", collapse: "Collapse", expand: "Expand", integrations: "Integrations",
 
         },
+        integrations: {
+          title: "Integrations",
+          subtitle: "Connect your data sources so the assistant answers across your whole company — Drive, Sheets, Notion, Slack and more.",
+          available: "Available",
+          soon: "Coming soon",
+          soonBadge: "Soon",
+          connect: "Connect",
+          notify: "Notify me",
+          wip: "Connection flow coming next — the UI is ready.",
+          desc: {
+            gdrive: "Documents, spreadsheets and folders",
+            gsheets: "Live tables and finance data",
+            notion: "Wiki, pages and databases",
+            slack: "Team messages and channels",
+            onedrive: "Files stored in Microsoft 365",
+            onenote: "Notebooks and quick notes",
+            "1c": "Accounting and inventory",
+            bitrix: "CRM, deals and tasks",
+          },
+        },
         settings: {
           profile: { title: "Profile", desc: "Your name, avatar, and language." },
           team: { title: "Team & invites", desc: "Manage members and roles." },
