@@ -480,6 +480,7 @@ const resources = {
         chat: {
           newChat: "Новый чат", history: "История", noHistory: "Пока нет прошлых чатов",
           confirmDelete: "Удалить этот чат?", attach: "Прикрепить файл — синхронизируется с Базой знаний",
+          agentDocs: "Документы", agentTasks: "Задачи", agentAdvisor: "Советник", clearAgent: "снять",
         },
         agents: {
           title: "AI Агенты",
