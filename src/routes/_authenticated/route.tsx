@@ -3,8 +3,9 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
   Bot, Users, Bell, Search, Plus, Settings,
-  ChevronDown, UserPlus, Copy, Check, Sparkles,
+  ChevronDown, ChevronRight, UserPlus, Copy, Check, Sparkles,
   MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
+  FileText, KanbanSquare, Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
