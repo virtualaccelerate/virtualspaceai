@@ -64,7 +64,17 @@ function AuthenticatedLayout() {
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [agentsOpen, setAgentsOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("app.sidebar.agentsOpen") !== "0";
+  });
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("app.sidebar.agentsOpen", agentsOpen ? "1" : "0");
+    }
+  }, [agentsOpen]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
