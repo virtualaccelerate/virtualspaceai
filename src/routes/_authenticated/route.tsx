@@ -134,18 +134,18 @@ function AuthenticatedLayout() {
   ];
 
   const agentsNav: NavItem[] = [
-    { to: "/app/docs", label: t("app.nav.agentsDocs", "Документы и данные"), icon: FileText },
-    { to: "/app/tasks", label: t("app.nav.agentsTasks", "Задачи команды"), icon: KanbanSquare },
+    { to: "/app/docs", label: t("app.nav.agentsDocs"), icon: FileText },
+    { to: "/app/tasks", label: t("app.nav.agentsTasks"), icon: KanbanSquare },
   ];
 
   const afterNav: NavItem[] = [
-    { to: "/app/financials", label: t("app.nav.financials", "Financials"), icon: Wallet },
-    { to: "/app/telegram", label: t("app.nav.telegram", "Telegram"), icon: TelegramIcon },
-    { to: "/app/team", label: t("app.nav.team", "Team"), icon: Users },
+    { to: "/app/financials", label: t("app.nav.financials"), icon: Wallet },
+    { to: "/app/telegram", label: t("app.nav.telegram"), icon: TelegramIcon },
+    { to: "/app/team", label: t("app.nav.team"), icon: Users },
   ];
 
   const bottomNav: NavItem[] = [
-    { to: "/app/settings", label: t("app.nav.settings", "Settings"), icon: Settings },
+    { to: "/app/settings", label: t("app.nav.settings"), icon: Settings },
   ];
 
   const showLabels = expanded || mobileOpen;
