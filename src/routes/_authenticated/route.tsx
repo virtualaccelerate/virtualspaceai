@@ -120,9 +120,14 @@ function AuthenticatedLayout() {
   const mainNav: NavItem[] = [
     { to: "/app", label: t("app.nav.chat", "Chat"), icon: MessageSquare, exact: true },
     { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
-    { to: "/app/docs", label: t("app.nav.knowledgeBase"), icon: BookOpen },
-    { to: "/app/tasks", label: t("app.nav.tasks"), icon: CheckSquare },
-    { to: "/app/agents", label: t("app.nav.aiAgents"), icon: Bot },
+  ];
+
+  const agentsNav: NavItem[] = [
+    { to: "/app/docs", label: t("app.nav.agentsDocs", "Документы и данные"), icon: FileText },
+    { to: "/app/tasks", label: t("app.nav.agentsTasks", "Задачи команды"), icon: KanbanSquare },
+  ];
+
+  const afterNav: NavItem[] = [
     { to: "/app/financials", label: t("app.nav.financials", "Financials"), icon: Wallet },
     { to: "/app/telegram", label: t("app.nav.telegram", "Telegram"), icon: TelegramIcon },
     { to: "/app/team", label: t("app.nav.team", "Team"), icon: Users },
