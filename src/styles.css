@@ -205,3 +205,15 @@ html.light .grad-accent {
   to { transform: rotate(360deg); }
 }
 .vs-mark { animation: vs-spin 22s linear infinite; }
+
+/* Hero block: keep text white in both light and dark modes */
+html.light .hero-force-dark .text-white { color: #fff; }
+html.light .hero-force-dark .text-white\/90 { color: rgb(255 255 255 / 0.9); }
+html.light .hero-force-dark .text-white\/85 { color: rgb(255 255 255 / 0.85); }
+html.light .hero-force-dark .text-white\/80 { color: rgb(255 255 255 / 0.8); }
+html.light .hero-force-dark .text-white\/75 { color: rgb(255 255 255 / 0.75); }
+html.light .hero-force-dark .text-white\/70 { color: rgb(255 255 255 / 0.7); }
+html.light .hero-force-dark .text-white\/60 { color: rgb(255 255 255 / 0.6); }
+html.light .hero-force-dark .bg-white\/10 { background-color: rgb(255 255 255 / 0.1); }
+html.light .hero-force-dark .hover\:bg-white\/10:hover { background-color: rgb(255 255 255 / 0.15); }
+html.light .hero-force-dark .border-white\/10 { border-color: rgb(255 255 255 / 0.15); }
