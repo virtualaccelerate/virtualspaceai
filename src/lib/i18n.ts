@@ -230,6 +230,7 @@ const resources = {
         chat: {
           newChat: "New chat", history: "History", noHistory: "No previous chats yet",
           confirmDelete: "Delete this chat?", attach: "Attach file — synced to Knowledge Base",
+          agentDocs: "Docs", agentTasks: "Tasks", agentAdvisor: "Advisor", clearAgent: "clear",
         },
         agents: {
           title: "AI Agents",
