@@ -134,18 +134,18 @@ function AuthenticatedLayout() {
   ];
 
   const agentsNav: NavItem[] = [
-    { to: "/app/docs", label: t("app.nav.agentsDocs", "Документы и данные"), icon: FileText },
-    { to: "/app/tasks", label: t("app.nav.agentsTasks", "Задачи команды"), icon: KanbanSquare },
+    { to: "/app/docs", label: t("app.nav.agentsDocs"), icon: FileText },
+    { to: "/app/tasks", label: t("app.nav.agentsTasks"), icon: KanbanSquare },
   ];
 
   const afterNav: NavItem[] = [
-    { to: "/app/financials", label: t("app.nav.financials", "Financials"), icon: Wallet },
-    { to: "/app/telegram", label: t("app.nav.telegram", "Telegram"), icon: TelegramIcon },
-    { to: "/app/team", label: t("app.nav.team", "Team"), icon: Users },
+    { to: "/app/financials", label: t("app.nav.financials"), icon: Wallet },
+    { to: "/app/telegram", label: t("app.nav.telegram"), icon: TelegramIcon },
+    { to: "/app/team", label: t("app.nav.team"), icon: Users },
   ];
 
   const bottomNav: NavItem[] = [
-    { to: "/app/settings", label: t("app.nav.settings", "Settings"), icon: Settings },
+    { to: "/app/settings", label: t("app.nav.settings"), icon: Settings },
   ];
 
   const showLabels = expanded || mobileOpen;
@@ -166,7 +166,7 @@ function AuthenticatedLayout() {
         }`}>
           <item.icon className="h-[18px] w-[18px]" />
         </span>
-        {showLabels && <span className="truncate">{item.label}</span>}
+        {showLabels && <span className="leading-tight break-words min-w-0">{item.label}</span>}
       </Link>
     );
   };
@@ -242,12 +242,12 @@ function AuthenticatedLayout() {
             className={`hidden lg:flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/60 hover:bg-white/5 hover:text-white transition ${
               showLabels ? "" : "justify-center"
             }`}
-            title={showLabels ? "Collapse" : "Expand"}
+            title={showLabels ? t("app.nav.collapse") : t("app.nav.expand")}
           >
             <span className="h-8 w-8 flex items-center justify-center">
               {showLabels ? <PanelLeftClose className="h-[18px] w-[18px]" /> : <PanelLeftOpen className="h-[18px] w-[18px]" />}
             </span>
-            {showLabels && <span>Collapse</span>}
+            {showLabels && <span>{t("app.nav.collapse")}</span>}
           </button>
           <button
             onClick={async () => {
@@ -259,12 +259,12 @@ function AuthenticatedLayout() {
             className={`w-full flex items-center gap-3 rounded-lg bg-primary text-primary-foreground px-2.5 py-2 text-sm font-semibold hover:bg-primary/90 transition ${
               showLabels ? "" : "justify-center"
             }`}
-            title={t("app.header.newChat", "New chat")}
+            title={t("app.nav.newChat")}
           >
             <span className="h-8 w-8 flex items-center justify-center">
               <Plus className="h-[18px] w-[18px]" />
             </span>
-            {showLabels && <span>{t("app.header.newChat", "New chat")}</span>}
+            {showLabels && <span>{t("app.nav.newChat")}</span>}
           </button>
 
         </div>
@@ -316,7 +316,7 @@ function AuthenticatedLayout() {
                 </span>
                 {showLabels && (
                   <>
-                    <span className="truncate">{t("app.nav.agentsFusion", "Sales")}</span>
+                    <span className="leading-tight break-words min-w-0">{t("app.nav.agentsFusion")}</span>
                     <span className="ml-auto h-6 rounded-md flex items-center justify-center shrink-0 bg-white px-2">
                       <img
                         src={fusionLogo.url}
