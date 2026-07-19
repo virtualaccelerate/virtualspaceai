@@ -166,7 +166,7 @@ function AuthenticatedLayout() {
         }`}>
           <item.icon className="h-[18px] w-[18px]" />
         </span>
-        {showLabels && <span className="truncate">{item.label}</span>}
+        {showLabels && <span className="leading-tight break-words min-w-0">{item.label}</span>}
       </Link>
     );
   };
