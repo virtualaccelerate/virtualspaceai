@@ -301,16 +301,15 @@ function AuthenticatedLayout() {
                   showLabels ? "" : "justify-center"
                 }`}
               >
-                <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-gradient-to-br from-fuchsia-500/20 to-cyan-400/20 text-cyan-300">
-                  <Zap className="h-[18px] w-[18px]" />
+                <span className="h-8 rounded-md flex items-center justify-center shrink-0 bg-white/95 px-1.5">
+                  <img
+                    src={fusionLogo.url}
+                    alt="Fusion"
+                    className={`h-4 w-auto object-contain ${showLabels ? "" : "h-5"}`}
+                  />
                 </span>
                 {showLabels && (
-                  <>
-                    <span className="truncate flex-1">{t("app.nav.agentsFusion", "Продажи — Fusion AI")}</span>
-                    <span className="text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 border border-white/10 bg-white/5 text-white/60 shrink-0">
-                      {t("app.nav.inDevelopment", "В разработке")}
-                    </span>
-                  </>
+                  <span className="truncate flex-1">{t("app.nav.agentsFusion", "Fusion AI")}</span>
                 )}
               </div>
             </div>
