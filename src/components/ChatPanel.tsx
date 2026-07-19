@@ -29,7 +29,8 @@ export type ChatMsg = { role: "user" | "assistant"; content: string; tasks?: Cre
 
 const FILE_TOKEN = /\[\[file:([0-9a-f-]{36})\|([^\]]+)\]\]/gi;
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
-const AGENT_TAG = /@(contracts)\b/i;
+const AGENT_TAG = /@(contracts|tasks|advisor)\b/i;
+type AgentId = "contracts" | "tasks" | "advisor";
 
 const stripMarkdown = (s: string) =>
   s
