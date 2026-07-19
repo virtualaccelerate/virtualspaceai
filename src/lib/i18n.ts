@@ -857,7 +857,8 @@ const resources = {
           overview: "Кароо", tasks: "Тапшырмалар", knowledgeBase: "Билим базасы",
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Убакыт эсеби",
           clients: "Кардарлар", profile: "Профиль",
-          agentsDocs: "Документтер жана маалыматтар", agentsTasks: "Команда тапшырмалары", agentsFusion: "Сатуулар — Fusion AI", inDevelopment: "Иштелип жатат", comingSoon: "Жакында",
+          agentsDocs: "Документтер жана маалыматтар", agentsTasks: "Команда тапшырмалары", agentsFusion: "Сатуулар", inDevelopment: "Иштелип жатат", comingSoon: "Жакында",
+
         },
         settings: {
           profile: { title: "Профиль", desc: "Атыңыз, аватар жана тил." },
