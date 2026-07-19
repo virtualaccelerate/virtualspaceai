@@ -155,7 +155,7 @@ function Header() {
           </div>
         </a>
 
-        <nav className="hidden lg:flex items-center gap-5 text-sm">
+        <nav className="hidden md:flex items-center gap-5 text-sm">
           <div className="relative">
             <button
               onClick={() => setLearnOpen((o) => !o)}
@@ -191,7 +191,7 @@ function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="hidden lg:flex items-center gap-3 text-sm">
+          <div className="hidden md:flex items-center gap-3 text-sm">
             <Link to="/auth" className="text-white/70 hover:text-white transition whitespace-nowrap">
               {t("nav.login")}
             </Link>
@@ -200,7 +200,7 @@ function Header() {
           <ThemeToggle />
           <LangSwitcher />
 
-          <div className="lg:hidden">
+          <div className="md:hidden">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <button
