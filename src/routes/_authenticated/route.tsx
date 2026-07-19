@@ -316,7 +316,7 @@ function AuthenticatedLayout() {
                 </span>
                 {showLabels && (
                   <>
-                    <span className="truncate">{t("app.nav.agentsFusion", "Sales")}</span>
+                    <span className="leading-tight break-words min-w-0">{t("app.nav.agentsFusion")}</span>
                     <span className="ml-auto h-6 rounded-md flex items-center justify-center shrink-0 bg-white px-2">
                       <img
                         src={fusionLogo.url}
