@@ -417,6 +417,7 @@ const resources = {
           aiAgents: "AI-агенты", analytics: "Аналитика", timeTracking: "Учёт времени",
           clients: "Клиенты", profile: "Профиль",
           agentsDocs: "Документы и данные", agentsTasks: "Задачи команды", agentsFusion: "Продажи", inDevelopment: "В разработке", comingSoon: "Скоро",
+          financials: "Финансы", telegram: "Телеграм", team: "Команда", settings: "Настройки", newChat: "Новый чат", collapse: "Свернуть", expand: "Развернуть",
 
         },
         settings: {
