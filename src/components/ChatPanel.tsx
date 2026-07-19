@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Plus, Mic, Loader2, FileText, CheckSquare, Trash2,
-  MessageSquarePlus, History, Bot, X, Paperclip,
+  MessageSquarePlus, History, Bot, X, Paperclip, Lightbulb,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -29,7 +29,8 @@ export type ChatMsg = { role: "user" | "assistant"; content: string; tasks?: Cre
 
 const FILE_TOKEN = /\[\[file:([0-9a-f-]{36})\|([^\]]+)\]\]/gi;
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
-const AGENT_TAG = /@(contracts)\b/i;
+const AGENT_TAG = /@(contracts|tasks|advisor)\b/i;
+type AgentId = "contracts" | "tasks" | "advisor";
 
 const stripMarkdown = (s: string) =>
   s
@@ -124,6 +125,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const [threadsOpen, setThreadsOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [attached, setAttached] = useState<{ id: string; name: string }[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<AgentId | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -227,7 +229,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     const m = input.match(AGENT_TAG);
     return m ? m[1].toLowerCase() : undefined;
   }, [input]);
-  const effectiveAgent = inlineAgent || activeAgent;
+  const effectiveAgent = inlineAgent || selectedAgent || activeAgent;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -377,7 +379,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     const attachTokens = attached.map((a) => `[[file:${a.id}|${a.name}]]`).join(" ");
     const contentForSend = attachTokens ? `${raw}\n\n${attachTokens}` : raw;
     // Strip inline @agent tag from what we display, but pass agent id to server
-    const agent = (raw.match(AGENT_TAG)?.[1] || activeAgent || "").toLowerCase() || undefined;
+    const agent = (raw.match(AGENT_TAG)?.[1] || selectedAgent || activeAgent || "").toLowerCase() || undefined;
 
     setInput("");
     setError(null);
@@ -810,6 +812,41 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
           ))}
         </div>
       )}
+
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        {([
+          { id: "contracts" as const, icon: FileText, label: t("app.chat.agentDocs", "Docs") },
+          { id: "tasks" as const, icon: CheckSquare, label: t("app.chat.agentTasks", "Tasks") },
+          { id: "advisor" as const, icon: Lightbulb, label: t("app.chat.agentAdvisor", "Advisor") },
+        ]).map(({ id, icon: Icon, label }) => {
+          const active = selectedAgent === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setSelectedAgent(active ? null : id)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition ${
+                active
+                  ? "bg-primary text-primary-foreground border-primary shadow-[0_0_16px_hsl(var(--primary)/0.55)]"
+                  : "bg-card text-foreground/70 border-border hover:text-foreground hover:bg-accent/40"
+              }`}
+              title={label}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          );
+        })}
+        {selectedAgent && (
+          <button
+            type="button"
+            onClick={() => setSelectedAgent(null)}
+            className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
+            {t("app.chat.clearAgent", "clear")}
+          </button>
+        )}
+      </div>
 
       <div className="relative mt-1">
         <div className="pointer-events-none absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,transparent,hsl(var(--primary)/0.6),transparent_40%)] opacity-70 blur-[6px] animate-[spin_6s_linear_infinite]" />

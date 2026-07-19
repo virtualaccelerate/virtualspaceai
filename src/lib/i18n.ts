@@ -230,6 +230,7 @@ const resources = {
         chat: {
           newChat: "New chat", history: "History", noHistory: "No previous chats yet",
           confirmDelete: "Delete this chat?", attach: "Attach file — synced to Knowledge Base",
+          agentDocs: "Docs", agentTasks: "Tasks", agentAdvisor: "Advisor", clearAgent: "clear",
         },
         agents: {
           title: "AI Agents",
@@ -479,6 +480,7 @@ const resources = {
         chat: {
           newChat: "Новый чат", history: "История", noHistory: "Пока нет прошлых чатов",
           confirmDelete: "Удалить этот чат?", attach: "Прикрепить файл — синхронизируется с Базой знаний",
+          agentDocs: "Документы", agentTasks: "Задачи", agentAdvisor: "Советник", clearAgent: "снять",
         },
         agents: {
           title: "AI Агенты",
@@ -705,6 +707,7 @@ const resources = {
         chat: {
           newChat: "Жаңа чат", history: "Тарих", noHistory: "Әзірге чаттар жоқ",
           confirmDelete: "Осы чатты жоямыз ба?", attach: "Файлды тіркеу — Білім қорымен синхрондалады",
+          agentDocs: "Құжаттар", agentTasks: "Тапсырмалар", agentAdvisor: "Кеңесші", clearAgent: "алып тастау",
         },
         agents: {
           title: "AI Агенттер",
@@ -923,6 +926,7 @@ const resources = {
         chat: {
           newChat: "Жаңы чат", history: "Тарых", noHistory: "Азырынча чаттар жок",
           confirmDelete: "Бул чатты өчүрөбүзбү?", attach: "Файл тиркөө — Билим базасы менен синхрондолот",
+          agentDocs: "Документтер", agentTasks: "Тапшырмалар", agentAdvisor: "Кеңешчи", clearAgent: "алып салуу",
         },
         agents: {
           title: "AI Агенттер",
@@ -1141,6 +1145,7 @@ const resources = {
         chat: {
           newChat: "Yangi chat", history: "Tarix", noHistory: "Hozircha chatlar yo'q",
           confirmDelete: "Ushbu chat o'chirilsinmi?", attach: "Fayl biriktirish — Bilim bazasi bilan sinxronlanadi",
+          agentDocs: "Hujjatlar", agentTasks: "Vazifalar", agentAdvisor: "Maslahatchi", clearAgent: "o'chirish",
         },
         agents: {
           title: "AI Agentlar",
@@ -1359,6 +1364,7 @@ const resources = {
         chat: {
           newChat: "Чати нав", history: "Таърих", noHistory: "Ҳоло чатҳо нест",
           confirmDelete: "Ин чатро нест мекунед?", attach: "Замима кардани файл — бо Пойгоҳи дониш ҳамоҳанг мешавад",
+          agentDocs: "Ҳуҷҷатҳо", agentTasks: "Вазифаҳо", agentAdvisor: "Мушовир", clearAgent: "тоза кардан",
         },
         agents: {
           title: "AI Агентҳо",
