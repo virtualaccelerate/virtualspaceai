@@ -125,6 +125,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const [threadsOpen, setThreadsOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [attached, setAttached] = useState<{ id: string; name: string }[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<AgentId | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
