@@ -415,7 +415,8 @@ const resources = {
           overview: "Обзор", tasks: "Задачи", knowledgeBase: "База знаний",
           aiAgents: "AI-агенты", analytics: "Аналитика", timeTracking: "Учёт времени",
           clients: "Клиенты", profile: "Профиль",
-          agentsDocs: "Документы и данные", agentsTasks: "Задачи команды", agentsFusion: "Продажи — Fusion AI", inDevelopment: "В разработке", comingSoon: "Скоро",
+          agentsDocs: "Документы и данные", agentsTasks: "Задачи команды", agentsFusion: "Продажи", inDevelopment: "В разработке", comingSoon: "Скоро",
+
         },
         settings: {
           profile: { title: "Профиль", desc: "Имя, аватар и язык." },
