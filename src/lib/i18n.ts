@@ -169,7 +169,7 @@ const resources = {
           aiAgents: "AI Agents", analytics: "Analytics", timeTracking: "Time Tracking",
           clients: "Clients", profile: "Profile",
           agentsDocs: "Documents & Data", agentsTasks: "Team Tasks", agentsFusion: "Sales", inDevelopment: "In development", comingSoon: "Coming soon",
-          financials: "Financials", telegram: "Telegram", team: "Team", settings: "Settings", newChat: "New chat", collapse: "Collapse", expand: "Expand",
+          financials: "Financials", telegram: "Telegram", team: "Team", settings: "Settings", newChat: "New chat", collapse: "Collapse", expand: "Expand", integrations: "Integrations",
 
         },
         settings: {
