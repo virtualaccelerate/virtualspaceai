@@ -167,7 +167,8 @@ const resources = {
           overview: "Overview", tasks: "Tasks", knowledgeBase: "Knowledge Base",
           aiAgents: "AI Agents", analytics: "Analytics", timeTracking: "Time Tracking",
           clients: "Clients", profile: "Profile",
-          agentsDocs: "Documents & Data", agentsTasks: "Team Tasks", agentsFusion: "Sales — Fusion AI", inDevelopment: "In development", comingSoon: "Coming soon",
+          agentsDocs: "Documents & Data", agentsTasks: "Team Tasks", agentsFusion: "Sales", inDevelopment: "In development", comingSoon: "Coming soon",
+
         },
         settings: {
           profile: { title: "Profile", desc: "Your name, avatar, and language." },
