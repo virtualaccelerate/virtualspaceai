@@ -707,6 +707,7 @@ const resources = {
         chat: {
           newChat: "Жаңа чат", history: "Тарих", noHistory: "Әзірге чаттар жоқ",
           confirmDelete: "Осы чатты жоямыз ба?", attach: "Файлды тіркеу — Білім қорымен синхрондалады",
+          agentDocs: "Құжаттар", agentTasks: "Тапсырмалар", agentAdvisor: "Кеңесші", clearAgent: "алып тастау",
         },
         agents: {
           title: "AI Агенттер",
