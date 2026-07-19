@@ -1364,6 +1364,7 @@ const resources = {
         chat: {
           newChat: "Чати нав", history: "Таърих", noHistory: "Ҳоло чатҳо нест",
           confirmDelete: "Ин чатро нест мекунед?", attach: "Замима кардани файл — бо Пойгоҳи дониш ҳамоҳанг мешавад",
+          agentDocs: "Ҳуҷҷатҳо", agentTasks: "Вазифаҳо", agentAdvisor: "Мушовир", clearAgent: "тоза кардан",
         },
         agents: {
           title: "AI Агентҳо",
