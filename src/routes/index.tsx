@@ -258,10 +258,11 @@ function Header() {
 
           <a
             href="#demo"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition"
+            className="hidden xl:inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition whitespace-nowrap"
           >
             {t("nav.cta")}
           </a>
+
         </div>
       </div>
     </header>
