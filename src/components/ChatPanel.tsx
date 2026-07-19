@@ -813,6 +813,41 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         </div>
       )}
 
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        {([
+          { id: "contracts" as const, icon: FileText, label: t("app.chat.agentDocs", "Docs") },
+          { id: "tasks" as const, icon: CheckSquare, label: t("app.chat.agentTasks", "Tasks") },
+          { id: "advisor" as const, icon: Lightbulb, label: t("app.chat.agentAdvisor", "Advisor") },
+        ]).map(({ id, icon: Icon, label }) => {
+          const active = selectedAgent === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setSelectedAgent(active ? null : id)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition ${
+                active
+                  ? "bg-primary text-primary-foreground border-primary shadow-[0_0_16px_hsl(var(--primary)/0.55)]"
+                  : "bg-card text-foreground/70 border-border hover:text-foreground hover:bg-accent/40"
+              }`}
+              title={label}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          );
+        })}
+        {selectedAgent && (
+          <button
+            type="button"
+            onClick={() => setSelectedAgent(null)}
+            className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
+            {t("app.chat.clearAgent", "clear")}
+          </button>
+        )}
+      </div>
+
       <div className="relative mt-1">
         <div className="pointer-events-none absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,transparent,hsl(var(--primary)/0.6),transparent_40%)] opacity-70 blur-[6px] animate-[spin_6s_linear_infinite]" />
         <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
