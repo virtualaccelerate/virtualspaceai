@@ -640,7 +640,8 @@ const resources = {
           overview: "Шолу", tasks: "Тапсырмалар", knowledgeBase: "Білім қоры",
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Уақыт есебі",
           clients: "Клиенттер", profile: "Профиль",
-          agentsDocs: "Құжаттар және деректер", agentsTasks: "Команда тапсырмалары", agentsFusion: "Сатылымдар — Fusion AI", inDevelopment: "Әзірленуде", comingSoon: "Жақында",
+          agentsDocs: "Құжаттар және деректер", agentsTasks: "Команда тапсырмалары", agentsFusion: "Сатылым", inDevelopment: "Әзірленуде", comingSoon: "Жақында",
+
         },
         settings: {
           profile: { title: "Профиль", desc: "Атыңыз, аватар және тіл." },
