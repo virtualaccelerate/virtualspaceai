@@ -1145,6 +1145,7 @@ const resources = {
         chat: {
           newChat: "Yangi chat", history: "Tarix", noHistory: "Hozircha chatlar yo'q",
           confirmDelete: "Ushbu chat o'chirilsinmi?", attach: "Fayl biriktirish — Bilim bazasi bilan sinxronlanadi",
+          agentDocs: "Hujjatlar", agentTasks: "Vazifalar", agentAdvisor: "Maslahatchi", clearAgent: "o'chirish",
         },
         agents: {
           title: "AI Agentlar",
