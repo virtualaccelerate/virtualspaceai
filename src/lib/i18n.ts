@@ -167,6 +167,7 @@ const resources = {
           overview: "Overview", tasks: "Tasks", knowledgeBase: "Knowledge Base",
           aiAgents: "AI Agents", analytics: "Analytics", timeTracking: "Time Tracking",
           clients: "Clients", profile: "Profile",
+          agentsDocs: "Documents & Data", agentsTasks: "Team Tasks", agentsFusion: "Sales — Fusion AI", inDevelopment: "In development", comingSoon: "Coming soon",
         },
         settings: {
           profile: { title: "Profile", desc: "Your name, avatar, and language." },
@@ -413,6 +414,7 @@ const resources = {
           overview: "Обзор", tasks: "Задачи", knowledgeBase: "База знаний",
           aiAgents: "AI-агенты", analytics: "Аналитика", timeTracking: "Учёт времени",
           clients: "Клиенты", profile: "Профиль",
+          agentsDocs: "Документы и данные", agentsTasks: "Задачи команды", agentsFusion: "Продажи — Fusion AI", inDevelopment: "В разработке", comingSoon: "Скоро",
         },
         settings: {
           profile: { title: "Профиль", desc: "Имя, аватар и язык." },
@@ -636,6 +638,7 @@ const resources = {
           overview: "Шолу", tasks: "Тапсырмалар", knowledgeBase: "Білім қоры",
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Уақыт есебі",
           clients: "Клиенттер", profile: "Профиль",
+          agentsDocs: "Құжаттар және деректер", agentsTasks: "Команда тапсырмалары", agentsFusion: "Сатылымдар — Fusion AI", inDevelopment: "Әзірленуде", comingSoon: "Жақында",
         },
         settings: {
           profile: { title: "Профиль", desc: "Атыңыз, аватар және тіл." },
@@ -851,6 +854,7 @@ const resources = {
           overview: "Кароо", tasks: "Тапшырмалар", knowledgeBase: "Билим базасы",
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Убакыт эсеби",
           clients: "Кардарлар", profile: "Профиль",
+          agentsDocs: "Документтер жана маалыматтар", agentsTasks: "Команда тапшырмалары", agentsFusion: "Сатуулар — Fusion AI", inDevelopment: "Иштелип жатат", comingSoon: "Жакында",
         },
         settings: {
           profile: { title: "Профиль", desc: "Атыңыз, аватар жана тил." },
@@ -1066,6 +1070,7 @@ const resources = {
           overview: "Umumiy koʻrinish", tasks: "Vazifalar", knowledgeBase: "Bilim bazasi",
           aiAgents: "AI-agentlar", analytics: "Analitika", timeTracking: "Vaqt hisobi",
           clients: "Mijozlar", profile: "Profil",
+          agentsDocs: "Hujjatlar va maʼlumotlar", agentsTasks: "Jamoa vazifalari", agentsFusion: "Sotuvlar — Fusion AI", inDevelopment: "Ishlab chiqilmoqda", comingSoon: "Tez orada",
         },
         settings: {
           profile: { title: "Profil", desc: "Ism, avatar va til." },
@@ -1281,6 +1286,7 @@ const resources = {
           overview: "Шарҳ", tasks: "Вазифаҳо", knowledgeBase: "Пойгоҳи дониш",
           aiAgents: "AI-агентҳо", analytics: "Таҳлил", timeTracking: "Ҳисоби вақт",
           clients: "Муштариён", profile: "Профил",
+          agentsDocs: "Ҳуҷҷатҳо ва маълумот", agentsTasks: "Вазифаҳои даста", agentsFusion: "Фурӯш — Fusion AI", inDevelopment: "Дар ҳоли таҳия", comingSoon: "Ба зудӣ",
         },
         settings: {
           profile: { title: "Профил", desc: "Ном, аватар ва забон." },

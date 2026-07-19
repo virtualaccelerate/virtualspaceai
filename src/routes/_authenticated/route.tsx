@@ -3,8 +3,9 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
   Bot, Users, Bell, Search, Plus, Settings,
-  ChevronDown, UserPlus, Copy, Check, Sparkles,
+  ChevronDown, ChevronRight, UserPlus, Copy, Check, Sparkles,
   MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
+  FileText, KanbanSquare, Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +64,17 @@ function AuthenticatedLayout() {
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [agentsOpen, setAgentsOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("app.sidebar.agentsOpen") !== "0";
+  });
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("app.sidebar.agentsOpen", agentsOpen ? "1" : "0");
+    }
+  }, [agentsOpen]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -119,9 +130,14 @@ function AuthenticatedLayout() {
   const mainNav: NavItem[] = [
     { to: "/app", label: t("app.nav.chat", "Chat"), icon: MessageSquare, exact: true },
     { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
-    { to: "/app/docs", label: t("app.nav.knowledgeBase"), icon: BookOpen },
-    { to: "/app/tasks", label: t("app.nav.tasks"), icon: CheckSquare },
-    { to: "/app/agents", label: t("app.nav.aiAgents"), icon: Bot },
+  ];
+
+  const agentsNav: NavItem[] = [
+    { to: "/app/docs", label: t("app.nav.agentsDocs", "Документы и данные"), icon: FileText },
+    { to: "/app/tasks", label: t("app.nav.agentsTasks", "Задачи команды"), icon: KanbanSquare },
+  ];
+
+  const afterNav: NavItem[] = [
     { to: "/app/financials", label: t("app.nav.financials", "Financials"), icon: Wallet },
     { to: "/app/telegram", label: t("app.nav.telegram", "Telegram"), icon: TelegramIcon },
     { to: "/app/team", label: t("app.nav.team", "Team"), icon: Users },
@@ -255,7 +271,55 @@ function AuthenticatedLayout() {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 mt-1">
           {mainNav.map((item) => <NavButton key={item.to} item={item} />)}
+
+          {/* AI Agents group */}
+          {showLabels ? (
+            <button
+              onClick={() => setAgentsOpen((v) => !v)}
+              className="w-full mt-2 flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition"
+            >
+              <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-white/60">
+                <Bot className="h-[18px] w-[18px]" />
+              </span>
+              <span className="flex-1 text-left truncate">{t("app.nav.aiAgents")}</span>
+              <ChevronRight className={`h-4 w-4 text-white/40 transition ${agentsOpen ? "rotate-90" : ""}`} />
+            </button>
+          ) : (
+            <div className="mt-2 flex items-center justify-center py-1" title={t("app.nav.aiAgents")}>
+              <div className="h-px w-6 bg-white/10" />
+            </div>
+          )}
+
+          {(agentsOpen || !showLabels) && (
+            <div className={showLabels ? "ml-3 pl-3 border-l border-white/10 space-y-0.5" : "space-y-0.5"}>
+              {agentsNav.map((item) => <NavButton key={item.to} item={item} />)}
+              {/* Fusion AI — disabled */}
+              <div
+                title={t("app.nav.comingSoon", "Скоро")}
+                className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/40 cursor-not-allowed ${
+                  showLabels ? "" : "justify-center"
+                }`}
+              >
+                <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-gradient-to-br from-fuchsia-500/20 to-cyan-400/20 text-cyan-300">
+                  <Zap className="h-[18px] w-[18px]" />
+                </span>
+                {showLabels && (
+                  <>
+                    <span className="truncate flex-1">{t("app.nav.agentsFusion", "Продажи — Fusion AI")}</span>
+                    <span className="text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 border border-white/10 bg-white/5 text-white/60 shrink-0">
+                      {t("app.nav.inDevelopment", "В разработке")}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-2 space-y-0.5">
+            {afterNav.map((item) => <NavButton key={item.to} item={item} />)}
+          </div>
         </nav>
+
 
         <div className="p-2 border-t border-white/10 space-y-0.5">
           {bottomNav.map((item) => <NavButton key={item.to} item={item} />)}
