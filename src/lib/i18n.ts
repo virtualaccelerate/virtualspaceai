@@ -1171,6 +1171,26 @@ const resources = {
           financials: "Moliya", telegram: "Telegram", team: "Jamoa", settings: "Sozlamalar", newChat: "Yangi chat", collapse: "Yig'ish", expand: "Ochish", integrations: "Integratsiyalar",
 
         },
+        integrations: {
+          title: "Integratsiyalar",
+          subtitle: "Ma'lumot manbalarini ulang — yordamchi butun kompaniya bo'yicha javob beradi: Drive, Sheets, Notion, Slack va boshqalar.",
+          available: "Mavjud",
+          soon: "Tez orada",
+          soonBadge: "Tez orada",
+          connect: "Ulash",
+          notify: "Xabar berish",
+          wip: "Ulanish tez orada — interfeys tayyor.",
+          desc: {
+            gdrive: "Hujjatlar, jadvallar va papkalar",
+            gsheets: "Jonli jadvallar va moliya ma'lumotlari",
+            notion: "Wiki, sahifalar va bazalar",
+            slack: "Jamoa xabarlari va kanallari",
+            onedrive: "Microsoft 365 fayllari",
+            onenote: "Daftarlar va tez yozuvlar",
+            "1c": "Buxgalteriya va ombor",
+            bitrix: "CRM, bitimlar va vazifalar",
+          },
+        },
         settings: {
           profile: { title: "Profil", desc: "Ism, avatar va til." },
           team: { title: "Jamoa va takliflar", desc: "Aʼzolar va rollar." },
