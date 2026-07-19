@@ -155,7 +155,7 @@ function Header() {
           </div>
         </a>
 
-        <nav className="hidden md:flex items-center gap-5 text-sm">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-5 text-sm mx-4 flex-1 justify-center">
           <div className="relative">
             <button
               onClick={() => setLearnOpen((o) => !o)}
