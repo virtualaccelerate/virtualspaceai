@@ -379,7 +379,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     const attachTokens = attached.map((a) => `[[file:${a.id}|${a.name}]]`).join(" ");
     const contentForSend = attachTokens ? `${raw}\n\n${attachTokens}` : raw;
     // Strip inline @agent tag from what we display, but pass agent id to server
-    const agent = (raw.match(AGENT_TAG)?.[1] || activeAgent || "").toLowerCase() || undefined;
+    const agent = (raw.match(AGENT_TAG)?.[1] || selectedAgent || activeAgent || "").toLowerCase() || undefined;
 
     setInput("");
     setError(null);
