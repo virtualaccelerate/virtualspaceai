@@ -753,7 +753,12 @@ function Landing() {
       {/* POWERED BY */}
       <section className="relative">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-12 text-center">
-          <div className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4">
+          <a
+            href="https://www.virtualaccelerate.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4 hover:opacity-80 transition"
+          >
             <span className="text-xs uppercase tracking-wider text-white/50">{t("footer.poweredBy")}</span>
             <img
               src={vaLogoDark.url}
@@ -765,7 +770,7 @@ function Landing() {
               alt="Virtual Accelerate"
               className="va-logo-light h-7 sm:h-8 w-auto"
             />
-          </div>
+          </a>
         </div>
       </section>
 
