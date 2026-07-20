@@ -140,7 +140,12 @@ function Header() {
             <VirtualSpaceLogo className="text-primary" size={28} />
             <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
           </div>
-          <div className="flex flex-col items-start pl-2 sm:pl-3 border-l border-white/15">
+          <a
+            href="https://www.virtualaccelerate.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-start pl-2 sm:pl-3 border-l border-white/15 hover:opacity-80 transition"
+          >
             <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/40 leading-none">{t("footer.poweredBy")}</span>
             <img
               src={vaLogoDark.url}
@@ -152,7 +157,7 @@ function Header() {
               alt="Virtual Accelerate"
               className="va-logo-light h-3.5 sm:h-5 w-auto mt-0.5"
             />
-          </div>
+          </a>
         </a>
 
         <nav className="hidden md:flex items-center gap-4 lg:gap-5 text-sm mx-4 flex-1 justify-center">
@@ -748,7 +753,12 @@ function Landing() {
       {/* POWERED BY */}
       <section className="relative">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-12 text-center">
-          <div className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4">
+          <a
+            href="https://www.virtualaccelerate.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex flex-col items-center gap-2 glass rounded-2xl px-6 py-4 hover:opacity-80 transition"
+          >
             <span className="text-xs uppercase tracking-wider text-white/50">{t("footer.poweredBy")}</span>
             <img
               src={vaLogoDark.url}
@@ -760,7 +770,7 @@ function Landing() {
               alt="Virtual Accelerate"
               className="va-logo-light h-7 sm:h-8 w-auto"
             />
-          </div>
+          </a>
         </div>
       </section>
 
