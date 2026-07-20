@@ -140,7 +140,12 @@ function Header() {
             <VirtualSpaceLogo className="text-primary" size={28} />
             <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
           </div>
-          <div className="flex flex-col items-start pl-2 sm:pl-3 border-l border-white/15">
+          <a
+            href="https://www.virtualaccelerate.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-start pl-2 sm:pl-3 border-l border-white/15 hover:opacity-80 transition"
+          >
             <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/40 leading-none">{t("footer.poweredBy")}</span>
             <img
               src={vaLogoDark.url}
@@ -152,7 +157,7 @@ function Header() {
               alt="Virtual Accelerate"
               className="va-logo-light h-3.5 sm:h-5 w-auto mt-0.5"
             />
-          </div>
+          </a>
         </a>
 
         <nav className="hidden md:flex items-center gap-4 lg:gap-5 text-sm mx-4 flex-1 justify-center">
