@@ -57,11 +57,16 @@ function AuthPage() {
 
   useEffect(() => {
     let mounted = true;
+    const goAfterAuth = () => {
+      const next = getNextPath();
+      if (next) window.location.href = next;
+      else navigate({ to: "/app", replace: true });
+    };
     supabase.auth.getSession().then(({ data }) => {
-      if (mounted && data.session) navigate({ to: "/app", replace: true });
+      if (mounted && data.session) goAfterAuth();
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: "/app", replace: true });
+      if (event === "SIGNED_IN" && session) goAfterAuth();
     });
     return () => {
       mounted = false;
@@ -83,14 +88,16 @@ function AuthPage() {
           email: cleanEmail,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/app`,
+            emailRedirectTo: `${window.location.origin}${getNextPath() ?? "/app"}`,
           },
         });
         if (err) throw err;
         if (!data.session) {
           setSent(true);
         } else {
-          navigate({ to: "/app", replace: true });
+          const next = getNextPath();
+          if (next) window.location.href = next;
+          else navigate({ to: "/app", replace: true });
         }
       } else if (mode === "signin") {
         const { error: err } = await supabase.auth.signInWithPassword({
@@ -132,11 +139,15 @@ function AuthPage() {
     setGoogleLoading(true);
     setError(null);
     try {
+      const next = getNextPath();
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth`,
+        redirect_uri: `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`,
       });
       if (result.error) throw result.error;
-      if (!result.redirected) navigate({ to: "/app", replace: true });
+      if (!result.redirected) {
+        if (next) window.location.href = next;
+        else navigate({ to: "/app", replace: true });
+      }
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "Google sign-in failed");
