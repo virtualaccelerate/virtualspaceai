@@ -33,6 +33,15 @@ function friendlyAuthError(err: unknown): string {
   }
   return raw;
 }
+/** Same-origin relative path to return to after auth (e.g. the OAuth consent page). */
+function getNextPath(): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("next");
+  if (!raw) return null;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
 
 function AuthPage() {
   const navigate = useNavigate();
