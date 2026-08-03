@@ -327,22 +327,6 @@ function AuthenticatedLayout() {
 
         <div className="p-2 border-t border-white/10 space-y-0.5">
           {bottomNav.map((item) => <NavButton key={item.to} item={item} />)}
-          <Link
-            to="/app/profile"
-            title={showLabels ? undefined : email ?? ""}
-            className={`flex items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-white/5 transition ${
-              showLabels ? "" : "justify-center"
-            }`}
-          >
-            <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-              {initial}
-            </div>
-            {showLabels && (
-              <div className="min-w-0 flex-1">
-                <div className="text-xs text-white/70 truncate">{email ?? ""}</div>
-              </div>
-            )}
-          </Link>
         </div>
       </aside>
 
