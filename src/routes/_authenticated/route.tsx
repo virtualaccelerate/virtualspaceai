@@ -132,7 +132,6 @@ function AuthenticatedLayout() {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
-  const initial = (email?.[0] ?? "u").toUpperCase();
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
   const topNav: NavItem[] = [
