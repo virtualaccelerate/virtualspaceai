@@ -4,7 +4,7 @@ import {
   LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
   Bot, Users, Bell, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
-  MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
+  MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
   FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
