@@ -444,7 +444,7 @@ function AuthenticatedLayout() {
 
       {/* Mobile bottom nav — 5 primary destinations */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-16 border-t border-white/10 bg-[color:var(--card)]/95 backdrop-blur"
+        className={`${isTg ? "" : "lg:hidden"} fixed bottom-0 inset-x-0 z-40 h-16 border-t border-white/10 bg-[color:var(--card)]/95 backdrop-blur`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <ul className="grid grid-cols-5 h-full">
