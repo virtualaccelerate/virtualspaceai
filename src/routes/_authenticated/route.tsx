@@ -1,12 +1,11 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import fusionLogo from "@/assets/fusion-logo.png.asset.json";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
   Bot, Users, Bell, Search, Settings,
-  ChevronDown, ChevronRight, UserPlus, Copy, Check, Sparkles,
-  MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  FileText, KanbanSquare, TrendingUp, Plug, GraduationCap,
+  ChevronDown, UserPlus, Copy, Check, Sparkles,
+  MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
+  FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,8 +37,10 @@ export const Route = createFileRoute("/_authenticated")({
 type NavItem = {
   to: string;
   label: string;
+  subtitle?: string;
   icon: LucideIcon | ComponentType<{ className?: string }>;
   exact?: boolean;
+  disabled?: boolean;
 };
 
 type Teamspace = { id: string; name: string; invite_code: string };
@@ -81,17 +82,7 @@ function AuthenticatedLayout() {
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [agentsOpen, setAgentsOpen] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return window.localStorage.getItem("app.sidebar.agentsOpen") !== "0";
-  });
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("app.sidebar.agentsOpen", agentsOpen ? "1" : "0");
-    }
-  }, [agentsOpen]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -144,47 +135,88 @@ function AuthenticatedLayout() {
   const initial = (email?.[0] ?? "u").toUpperCase();
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
-  const mainNav: NavItem[] = [
-    { to: "/app", label: t("app.nav.chat", "Chat"), icon: MessageSquare, exact: true },
-    { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
+  const topNav: NavItem[] = [
+    { to: "/app/overview", label: t("app.nav.overview"), subtitle: t("app.nav.overviewSubtitle", "Workspace insights"), icon: LayoutDashboard },
   ];
 
-  const agentsNav: NavItem[] = [
-    { to: "/app/docs", label: t("app.nav.agentsDocs"), icon: FileText },
-    { to: "/app/tasks", label: t("app.nav.agentsTasks"), icon: KanbanSquare },
+  const workspaceNav: NavItem[] = [
+    { to: "/app/docs", label: t("app.nav.documents", "Documents"), subtitle: t("app.nav.documentsSubtitle", "Company knowledge base"), icon: FileText },
+    { to: "/app/tasks", label: t("app.nav.taskBoard", "Task Board"), subtitle: t("app.nav.taskBoardSubtitle", "Team tasks & deadlines"), icon: KanbanSquare },
+    { to: "/app/agents", label: t("app.nav.aiAgents"), subtitle: t("app.nav.aiAgentsSubtitle", "Automated assistants"), icon: Bot },
+    { to: "/app/financials", label: t("app.nav.financials"), subtitle: t("app.nav.financialsSubtitle", "Key metrics & reports"), icon: TrendingUp },
+    { to: "/app/mentors", label: t("app.nav.mentors", "Mentors"), subtitle: t("app.nav.mentorsSubtitle", "Book expert sessions"), icon: Users, disabled: true },
+    { to: "/app/learn", label: t("app.nav.courses", "Courses"), subtitle: t("app.nav.coursesSubtitle", "Learn & grow"), icon: BookOpen },
+    { to: "/app/solutions", label: t("app.nav.solutions", "Solutions"), subtitle: t("app.nav.solutionsSubtitle", "Startup marketplace"), icon: Briefcase, disabled: true },
+    { to: "/app/integrations", label: t("app.nav.integrations", "Integrations"), subtitle: t("app.nav.integrationsSubtitle", "Connect your tools"), icon: Plug },
   ];
 
-  const afterNav: NavItem[] = [
-    { to: "/app/integrations", label: t("app.nav.integrations", "Integrations"), icon: Plug },
-    { to: "/app/financials", label: t("app.nav.financials"), icon: Wallet },
-    { to: "/app/telegram", label: t("app.nav.telegram"), icon: TelegramIcon },
-    { to: "/app/learn", label: t("app.nav.learn", "Learning"), icon: GraduationCap },
-    { to: "/app/team", label: t("app.nav.team"), icon: Users },
+  const communicationNav: NavItem[] = [
+    { to: "/app", label: t("app.nav.chat", "Chat"), subtitle: t("app.nav.chatSubtitle", "Team conversations"), icon: MessageSquare, exact: true },
+    { to: "/app/telegram", label: t("app.nav.telegramBot", "Telegram Bot"), subtitle: t("app.nav.telegramBotSubtitle", "Bot commands & updates"), icon: TelegramIcon },
+    { to: "/app/team", label: t("app.nav.team"), subtitle: t("app.nav.teamSubtitle", "Members & roles"), icon: Users },
   ];
 
   const bottomNav: NavItem[] = [
-    { to: "/app/settings", label: t("app.nav.settings"), icon: Settings },
+    { to: "/app/settings", label: t("app.nav.settings"), subtitle: t("app.nav.settingsSubtitle", "Preferences"), icon: Settings },
   ];
 
   const showLabels = expanded || mobileOpen;
-  const railWidth = showLabels ? "w-64" : "w-[68px]";
+  const railWidth = showLabels ? "w-72" : "w-[68px]";
 
   const NavButton = ({ item }: { item: NavItem }) => {
-    const active = isActive(item.to, item.exact);
-    return (
-      <Link
-        to={item.to}
-        title={showLabels ? undefined : item.label}
+    const active = !item.disabled && isActive(item.to, item.exact);
+    const content = (
+      <div
         className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition ${
-          active ? "bg-primary/15 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
+          item.disabled
+            ? "text-muted-foreground/50 cursor-not-allowed"
+            : active
+            ? "bg-primary/15 text-primary"
+            : "text-foreground hover:bg-muted hover:text-foreground"
         }`}
       >
-        <span className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
-          active ? "text-primary" : "text-white/60 group-hover:text-white/90"
-        }`}>
+        <span
+          className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+            active
+              ? "text-primary"
+              : item.disabled
+              ? "text-muted-foreground/40"
+              : "text-muted-foreground group-hover:text-foreground"
+          }`}
+        >
           <item.icon className="h-[18px] w-[18px]" />
         </span>
-        {showLabels && <span className="leading-tight break-words min-w-0">{item.label}</span>}
+        {showLabels && (
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate">{item.label}</div>
+            {item.subtitle && (
+              <div className="text-[11px] text-muted-foreground/70 truncate">{item.subtitle}</div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+
+    if (item.disabled) {
+      return (
+        <div
+          key={item.to}
+          title={`${item.label} — ${t("app.nav.comingSoon", "Coming soon")}`}
+          className="w-full"
+        >
+          {content}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        title={showLabels ? undefined : item.label}
+        className="w-full block"
+      >
+        {content}
       </Link>
     );
   };
@@ -271,69 +303,31 @@ function AuthenticatedLayout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 mt-1">
-          {mainNav.map((item) => <NavButton key={item.to} item={item} />)}
+        <nav className="flex-1 overflow-y-auto p-2 space-y-4 mt-1">
+          <div className="space-y-0.5">
+            {topNav.map((item) => <NavButton key={item.to} item={item} />)}
+          </div>
 
-          {/* AI Agents group */}
-          {showLabels ? (
-            <button
-              onClick={() => setAgentsOpen((v) => !v)}
-              className="w-full mt-2 flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition"
-            >
-              <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-white/60">
-                <Bot className="h-[18px] w-[18px]" />
-              </span>
-              <span className="flex-1 text-left truncate">{t("app.nav.aiAgents")}</span>
-              <ChevronRight className={`h-4 w-4 text-white/40 transition ${agentsOpen ? "rotate-90" : ""}`} />
-            </button>
-          ) : (
-            <div className="mt-2 flex items-center justify-center py-1" title={t("app.nav.aiAgents")}>
-              <div className="h-px w-6 bg-white/10" />
-            </div>
-          )}
-
-          {(agentsOpen || !showLabels) && (
-            <div className={showLabels ? "ml-3 pl-3 border-l border-white/10 space-y-0.5" : "space-y-0.5"}>
-              {agentsNav.map((item) => <NavButton key={item.to} item={item} />)}
-              {/* Fusion AI — disabled */}
-              <div
-                title={`${t("app.nav.agentsFusion", "Sales")} — Fusion AI`}
-                className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/40 cursor-not-allowed ${
-                  showLabels ? "" : "justify-center"
-                }`}
-              >
-                <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-white/60">
-                  {showLabels ? (
-                    <TrendingUp className="h-[18px] w-[18px]" />
-                  ) : (
-                    <span className="h-[18px] w-[18px] rounded bg-white p-0.5 flex items-center justify-center">
-                      <img
-                        src={fusionLogo.url}
-                        alt="Fusion"
-                        className="h-full w-auto object-contain"
-                      />
-                    </span>
-                  )}
-                </span>
-                {showLabels && (
-                  <>
-                    <span className="leading-tight break-words min-w-0">{t("app.nav.agentsFusion")}</span>
-                    <span className="ml-auto h-6 rounded-md flex items-center justify-center shrink-0 bg-white px-2">
-                      <img
-                        src={fusionLogo.url}
-                        alt="Fusion"
-                        className="h-4 w-auto object-contain"
-                      />
-                    </span>
-                  </>
-                )}
+          {showLabels && (
+            <div className="px-2.5 pt-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
+                {t("app.nav.workspace", "Workspace")}
               </div>
-
             </div>
           )}
+          <div className="space-y-0.5">
+            {workspaceNav.map((item) => <NavButton key={item.to} item={item} />)}
+          </div>
 
-          <div className="mt-2 space-y-0.5">
-            {afterNav.map((item) => <NavButton key={item.to} item={item} />)}
+          {showLabels && (
+            <div className="px-2.5 pt-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
+                {t("app.nav.communication", "Communication")}
+              </div>
+            </div>
+          )}
+          <div className="space-y-0.5">
+            {communicationNav.map((item) => <NavButton key={item.to} item={item} />)}
           </div>
         </nav>
 
