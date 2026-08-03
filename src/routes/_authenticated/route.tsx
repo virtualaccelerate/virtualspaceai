@@ -61,6 +61,22 @@ function AuthenticatedLayout() {
     return window.localStorage.getItem("app.sidebar.expanded") === "1";
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Telegram Mini App mode: single-column, bottom-nav-first layout
+  const [isTg, setIsTg] = useState(false);
+  useEffect(() => {
+    const flag =
+      window.localStorage.getItem("tg.miniapp") === "1" ||
+      Boolean((window as any).Telegram?.WebApp?.initData);
+    setIsTg(flag);
+    if (flag) {
+      try {
+        const wa = (window as any).Telegram?.WebApp;
+        wa?.ready?.();
+        wa?.expand?.();
+      } catch { /* ignore */ }
+    }
+  }, []);
+
   const [email, setEmail] = useState<string | null>(null);
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
