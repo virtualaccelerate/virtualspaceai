@@ -194,9 +194,10 @@ function AuthenticatedLayout() {
       {/* Sidebar */}
       <aside
         className={`fixed lg:sticky top-0 z-40 h-screen ${railWidth} shrink-0 border-r border-white/10 bg-[color:var(--card)] transform transition-all duration-200 lg:translate-x-0 flex flex-col ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+          isTg ? "lg:hidden" : ""
+        } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
+
         {/* Top: teamspace + collapse */}
         <div className="relative px-2 pt-2 pb-2 border-b border-white/10" ref={menuRef}>
           <div className="flex items-center gap-1">
