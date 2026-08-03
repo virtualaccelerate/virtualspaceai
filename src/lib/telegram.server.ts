@@ -3,7 +3,14 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const TELEGRAM_API = "https://api.telegram.org";
 
+export function miniAppUrl(): string {
+  const base =
+    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://virtualspaceai.lovable.app";
+  return `${base}/tg`;
+}
+
 export function botToken(): string {
+
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("Missing TELEGRAM_BOT_TOKEN");
   return token;
