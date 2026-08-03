@@ -182,6 +182,15 @@ const resources = {
             faq: { title: "FAQ", body: "Answers to common questions." },
           },
         },
+        telegram: {
+          title: "Telegram bot", subtitle: "Manage Virtual Space right from Telegram: tasks, statuses, reports and the AI assistant.", connected: "Connected", disconnect: "Disconnect",
+          howto: "Open the bot in Telegram and send this command:", copy: "Copy", open: "Open the bot", hint: "The code is personal — everything the bot does happens inside your account.",
+          abilities: "What the bot can do", admin: "Bot setup", adminHint: "Run this once (or after a new deploy) to register the bot webhook and its command menu.", activate: "Activate bot",
+          activated: "Bot activated", activateError: "Could not activate the bot", unlinked: "Telegram disconnected", loading: "Loading…",
+          can: {
+            tasks: "See open tasks and change their status with one tap", new: "Create tasks: /new Call the client", done: "Complete tasks: /done Call the client", report: "Get reports: /report day | week | month", ai: "Ask the AI assistant anything — it sees your knowledge base, finances and tasks",
+          },
+        },
         integrations: {
           title: "Integrations",
           subtitle: "Connect your data sources so the assistant answers across your whole company — Drive, Sheets, Notion, Slack and more.",
@@ -463,6 +472,15 @@ const resources = {
             faq: { title: "FAQ", body: "Ответы на частые вопросы." },
           },
         },
+        telegram: {
+          title: "Телеграм-бот", subtitle: "Управляйте Virtual Space прямо из Telegram: задачи, статусы, отчёты и AI-ассистент.", connected: "Подключено", disconnect: "Отвязать",
+          howto: "Откройте бота в Telegram и отправьте эту команду:", copy: "Копировать", open: "Открыть бота", hint: "Код персональный — всё, что делает бот, происходит в вашем аккаунте.",
+          abilities: "Что умеет бот", admin: "Настройка бота", adminHint: "Запустите один раз (или после нового деплоя), чтобы зарегистрировать вебхук и меню команд.", activate: "Активировать бота",
+          activated: "Бот активирован", activateError: "Не удалось активировать бота", unlinked: "Telegram отвязан", loading: "Загрузка…",
+          can: {
+            tasks: "Смотреть активные задачи и менять статус в одно нажатие", new: "Создавать задачи: /new Позвонить клиенту", done: "Завершать задачи: /done Позвонить клиенту", report: "Получать отчёты: /report day | week | month", ai: "Задавать вопросы AI-ассистенту — он видит базу знаний, финансы и задачи",
+          },
+        },
         integrations: {
           title: "Интеграции",
           subtitle: "Подключите источники данных, чтобы ассистент отвечал по всей компании — Drive, Таблицы, Notion, Slack и другим.",
@@ -721,6 +739,15 @@ const resources = {
             faq: { title: "FAQ", body: "Жиі сұрақтарға жауаптар." },
           },
         },
+        telegram: {
+          title: "Телеграм-бот", subtitle: "Virtual Space-ті Telegram арқылы басқарыңыз: тапсырмалар, мәртебелер, есептер және AI-көмекші.", connected: "Қосылған", disconnect: "Ажырату",
+          howto: "Telegram-да ботты ашып, осы команданы жіберіңіз:", copy: "Көшіру", open: "Ботты ашу", hint: "Код жеке — бот жасайтын әрекеттер сіздің аккаунтыңызда орындалады.",
+          abilities: "Бот не істей алады", admin: "Ботты баптау", adminHint: "Вебхук пен команда мәзірін тіркеу үшін бір рет іске қосыңыз.", activate: "Ботты іске қосу",
+          activated: "Бот іске қосылды", activateError: "Ботты іске қосу мүмкін болмады", unlinked: "Telegram ажыратылды", loading: "Жүктелуде…",
+          can: {
+            tasks: "Ашық тапсырмаларды көру және мәртебесін бір басумен өзгерту", new: "Тапсырма құру: /new Клиентке қоңырау шалу", done: "Тапсырманы аяқтау: /done Клиентке қоңырау шалу", report: "Есеп алу: /report day | week | month", ai: "AI-көмекшіден сұрау — ол білім қорын, қаржыны және тапсырмаларды көреді",
+          },
+        },
         integrations: {
           title: "Интеграциялар",
           subtitle: "Дерек көздерін қосыңыз — ассистент бүкіл компания бойынша жауап береді: Drive, Sheets, Notion, Slack және басқалары.",
@@ -969,6 +996,15 @@ const resources = {
             mentors: { title: "Менторлор", body: "Эксперттер менен сессиялар." },
             knowledge: { title: "Билим базасы", body: "Макалалар жана колдонмолор." },
             faq: { title: "FAQ", body: "Көп берилген суроолорго жооптор." },
+          },
+        },
+        telegram: {
+          title: "Телеграм-бот", subtitle: "Virtual Space'ти Telegram аркылуу башкарыңыз: тапшырмалар, статустар, отчёттор жана AI-жардамчы.", connected: "Туташтырылды", disconnect: "Ажыратуу",
+          howto: "Telegram'да ботту ачып, ушул буйрукту жибериңиз:", copy: "Көчүрүү", open: "Ботту ачуу", hint: "Код жеке — бот аткарган нерселердин баары сиздин аккаунтуңузда болот.",
+          abilities: "Бот эмне кыла алат", admin: "Ботту жөндөө", adminHint: "Вебхук жана буйрук менюсун каттоо үчүн бир жолу иштетиңиз.", activate: "Ботту иштетүү",
+          activated: "Бот иштетилди", activateError: "Ботту иштетүү мүмкүн болгон жок", unlinked: "Telegram ажыратылды", loading: "Жүктөлүүдө…",
+          can: {
+            tasks: "Ачык тапшырмаларды көрүү жана статусту бир басууда өзгөртүү", new: "Тапшырма түзүү: /new Кардарга чалуу", done: "Тапшырманы бүтүрүү: /done Кардарга чалуу", report: "Отчёт алуу: /report day | week | month", ai: "AI-жардамчыдан суроо — ал билим базасын, каржыны жана тапшырмаларды көрөт",
           },
         },
         integrations: {
@@ -1221,6 +1257,15 @@ const resources = {
             faq: { title: "FAQ", body: "Tez-tez beriladigan savollarga javoblar." },
           },
         },
+        telegram: {
+          title: "Telegram bot", subtitle: "Virtual Space'ni to‘g‘ridan-to‘g‘ri Telegram orqali boshqaring: vazifalar, statuslar, hisobotlar va AI-yordamchi.", connected: "Ulangan", disconnect: "Uzish",
+          howto: "Telegram'da botni oching va ushbu buyruqni yuboring:", copy: "Nusxalash", open: "Botni ochish", hint: "Kod shaxsiy — bot bajaradigan hamma narsa sizning akkauntingizda sodir bo‘ladi.",
+          abilities: "Bot nima qila oladi", admin: "Botni sozlash", adminHint: "Webhook va buyruqlar menyusini ro‘yxatdan o‘tkazish uchun bir marta ishga tushiring.", activate: "Botni faollashtirish",
+          activated: "Bot faollashtirildi", activateError: "Botni faollashtirib bo‘lmadi", unlinked: "Telegram uzildi", loading: "Yuklanmoqda…",
+          can: {
+            tasks: "Ochiq vazifalarni ko‘rish va statusni bir bosishda o‘zgartirish", new: "Vazifa yaratish: /new Mijozga qo‘ng‘iroq qilish", done: "Vazifani yakunlash: /done Mijozga qo‘ng‘iroq qilish", report: "Hisobot olish: /report day | week | month", ai: "AI-yordamchidan so‘rang — u bilimlar bazasi, moliya va vazifalarni ko‘radi",
+          },
+        },
         integrations: {
           title: "Integratsiyalar",
           subtitle: "Ma'lumot manbalarini ulang — yordamchi butun kompaniya bo'yicha javob beradi: Drive, Sheets, Notion, Slack va boshqalar.",
@@ -1469,6 +1514,15 @@ const resources = {
             mentors: { title: "Менторҳо", body: "Сеансҳо бо мутахассисон." },
             knowledge: { title: "Пойгоҳи дониш", body: "Мақолаҳо ва дастурҳо." },
             faq: { title: "FAQ", body: "Ҷавобҳо ба саволҳои маъмул." },
+          },
+        },
+        telegram: {
+          title: "Телеграм-бот", subtitle: "Virtual Space-ро бевосита аз Telegram идора кунед: вазифаҳо, ҳолатҳо, ҳисоботҳо ва AI-ёрдамчӣ.", connected: "Пайваст шуд", disconnect: "Ҷудо кардан",
+          howto: "Дар Telegram ботро кушоед ва ин фармонро фиристед:", copy: "Нусхабардорӣ", open: "Кушодани бот", hint: "Код шахсист — ҳар кори бот дар аккаунти шумо иҷро мешавад.",
+          abilities: "Бот чӣ карда метавонад", admin: "Танзими бот", adminHint: "Барои сабти вебхук ва менюи фармонҳо як бор иҷро кунед.", activate: "Фаъол кардани бот",
+          activated: "Бот фаъол шуд", activateError: "Ботро фаъол кардан нашуд", unlinked: "Telegram ҷудо шуд", loading: "Боркунӣ…",
+          can: {
+            tasks: "Дидани вазифаҳои кушод ва тағйири ҳолат бо як зер", new: "Сохтани вазифа: /new Ба мизоҷ занг задан", done: "Анҷоми вазифа: /done Ба мизоҷ занг задан", report: "Гирифтани ҳисобот: /report day | week | month", ai: "Пурсидан аз AI-ёрдамчӣ — ӯ пойгоҳи дониш, молия ва вазифаҳоро мебинад",
           },
         },
         integrations: {
