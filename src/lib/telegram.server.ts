@@ -420,8 +420,10 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
         title: title.trim().slice(0, 300),
         description: description?.trim() || null,
         status: "backlog",
-        priority: ["low", "medium", "high", "urgent"].includes(priority?.trim())
-          ? priority.trim()
+        priority: (["low", "medium", "high", "urgent"] as const).includes(
+          (priority?.trim() ?? "") as any,
+        )
+          ? (priority.trim() as "low" | "medium" | "high" | "urgent")
           : "medium",
         due_date: /^\d{4}-\d{2}-\d{2}$/.test(due?.trim() ?? "") ? due.trim() : null,
         position: 0,
@@ -467,7 +469,11 @@ async function handleCallback(cb: any) {
     await tg("answerCallbackQuery", { callback_query_id: cb.id, text: t(lang).notFound });
     return;
   }
-  const next = action === "done" ? "done" : CYCLE[(task as any).status] ?? "in_progress";
+  const next = (action === "done" ? "done" : CYCLE[(task as any).status] ?? "in_progress") as
+    | "backlog"
+    | "in_progress"
+    | "review"
+    | "done";
   await supabaseAdmin.from("tasks").update({ status: next }).eq("id", (task as any).id);
   await tg("answerCallbackQuery", {
     callback_query_id: cb.id,
@@ -512,7 +518,6 @@ export async function handleUpdate(update: any) {
 
   switch (cmd) {
     case "/help":
-ようこそ:
       await sendMessage(chatId, t(lang).help);
       return;
     case "/tasks":
