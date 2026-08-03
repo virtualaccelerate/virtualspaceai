@@ -161,7 +161,7 @@ function AuthenticatedLayout() {
   ];
 
   const showLabels = expanded || mobileOpen;
-  const railWidth = showLabels ? "w-64" : "w-[68px]";
+  const railWidth = showLabels ? "w-72" : "w-[68px]";
 
   const NavButton = ({ item }: { item: NavItem }) => {
     const active = !item.disabled && isActive(item.to, item.exact);
