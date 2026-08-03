@@ -6,6 +6,7 @@ const isBrowser = typeof window !== "undefined";
 const resources = {
   en: {
     translation: {
+      tg: { signingIn: "Signing you in…", notLinkedTitle: "Account is not linked", notLinkedBody: "Open the Telegram page in the web app, copy your code and send /start CODE to the bot. Then reopen the mini app.", openWeb: "Open the web version", errorTitle: "Could not sign in", errorBody: "Open this page from the Telegram bot menu button." },
       nav: {
         learn: "Learn", mentors: "Mentors", courses: "Courses",
         product: "Product", pricing: "Pricing", bookDemo: "Book Demo",
@@ -297,6 +298,7 @@ const resources = {
   },
   ru: {
     translation: {
+      tg: { signingIn: "Выполняем вход…", notLinkedTitle: "Аккаунт не привязан", notLinkedBody: "Откройте раздел Telegram в веб-версии, скопируйте код и отправьте боту /start КОД. Затем откройте мини-приложение снова.", openWeb: "Открыть веб-версию", errorTitle: "Не удалось войти", errorBody: "Откройте эту страницу через кнопку меню Telegram-бота." },
       nav: {
         learn: "Обучение", mentors: "Наставники", courses: "Курсы",
         product: "Продукт", pricing: "Тарифы", bookDemo: "Демо",
@@ -588,6 +590,7 @@ const resources = {
   },
   kk: {
     translation: {
+      tg: { signingIn: "Кіру орындалуда…", notLinkedTitle: "Аккаунт байланыстырылмаған", notLinkedBody: "Веб-нұсқадағы Telegram бөлімін ашып, кодты көшіріңіз де, ботқа /start КОД жіберіңіз. Содан кейін мини-қосымшаны қайта ашыңыз.", openWeb: "Веб-нұсқаны ашу", errorTitle: "Кіру мүмкін болмады", errorBody: "Бұл бетті Telegram бот мәзірі арқылы ашыңыз." },
       nav: {
         learn: "Оқыту", mentors: "Тәлімгерлер", courses: "Курстар",
         product: "Өнім", pricing: "Тарифтер", bookDemo: "Демо тапсырыс",
@@ -856,6 +859,7 @@ const resources = {
   },
   ky: {
     translation: {
+      tg: { signingIn: "Кирүү аткарылууда…", notLinkedTitle: "Аккаунт байланышкан эмес", notLinkedBody: "Веб-версиядагы Telegram бөлүмүн ачып, кодду көчүрүп, ботко /start КОД жибериңиз. Андан соң мини-колдонмону кайра ачыңыз.", openWeb: "Веб-версияны ачуу", errorTitle: "Кирүү мүмкүн болбоду", errorBody: "Бул баракты Telegram боттун меню баскычы аркылуу ачыңыз." },
       nav: {
         learn: "Окутуу", mentors: "Насаатчылар", courses: "Курстар",
         product: "Продукт", pricing: "Тарифтер", bookDemo: "Демо буйруу",
@@ -1116,6 +1120,7 @@ const resources = {
   },
   uz: {
     translation: {
+      tg: { signingIn: "Kirilmoqda…", notLinkedTitle: "Akkaunt bog‘lanmagan", notLinkedBody: "Veb-versiyadagi Telegram bo‘limini oching, kodni nusxalang va botga /start KOD yuboring. So‘ng mini ilovani qayta oching.", openWeb: "Veb-versiyani ochish", errorTitle: "Kirib bo‘lmadi", errorBody: "Bu sahifani Telegram bot menyu tugmasi orqali oching." },
       nav: {
         learn: "Oʻqitish", mentors: "Mentorlar", courses: "Kurslar",
         product: "Mahsulot", pricing: "Tariflar", bookDemo: "Demo buyurtma",
@@ -1376,6 +1381,7 @@ const resources = {
   },
   tg: {
     translation: {
+      tg: { signingIn: "Воридшавӣ…", notLinkedTitle: "Аккаунт пайваст нашудааст", notLinkedBody: "Бахши Telegram-ро дар версияи веб кушоед, кодро нусхабардорӣ кунед ва ба бот /start КОД фиристед. Сипас мини-барномаро аз нав кушоед.", openWeb: "Кушодани версияи веб", errorTitle: "Ворид шудан нашуд", errorBody: "Ин саҳифаро тавассути тугмаи менюи бот кушоед." },
       nav: {
         learn: "Омӯзиш", mentors: "Мураббиён", courses: "Курсҳо",
         product: "Маҳсулот", pricing: "Тарифҳо", bookDemo: "Фармоиши демо",
