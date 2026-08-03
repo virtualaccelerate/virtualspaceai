@@ -146,26 +146,29 @@ function AuthenticatedLayout() {
   const initial = (email?.[0] ?? "u").toUpperCase();
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
-  const mainNav: NavItem[] = [
-    { to: "/app", label: t("app.nav.chat", "Chat"), icon: MessageSquare, exact: true },
-    { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
+  const topNav: NavItem[] = [
+    { to: "/app/overview", label: t("app.nav.overview"), subtitle: t("app.nav.overviewSubtitle", "Workspace insights"), icon: LayoutDashboard },
   ];
 
-  const agentsNav: NavItem[] = [
-    { to: "/app/docs", label: t("app.nav.agentsDocs"), icon: FileText },
-    { to: "/app/tasks", label: t("app.nav.agentsTasks"), icon: KanbanSquare },
+  const workspaceNav: NavItem[] = [
+    { to: "/app/docs", label: t("app.nav.documents", "Documents"), subtitle: t("app.nav.documentsSubtitle", "Company knowledge base"), icon: FileText },
+    { to: "/app/tasks", label: t("app.nav.taskBoard", "Task Board"), subtitle: t("app.nav.taskBoardSubtitle", "Team tasks & deadlines"), icon: KanbanSquare },
+    { to: "/app/agents", label: t("app.nav.aiAgents"), subtitle: t("app.nav.aiAgentsSubtitle", "Automated assistants"), icon: Bot },
+    { to: "/app/financials", label: t("app.nav.financials"), subtitle: t("app.nav.financialsSubtitle", "Key metrics & reports"), icon: TrendingUp },
+    { to: "/app/mentors", label: t("app.nav.mentors", "Mentors"), subtitle: t("app.nav.mentorsSubtitle", "Book expert sessions"), icon: Users, disabled: true },
+    { to: "/app/learn", label: t("app.nav.courses", "Courses"), subtitle: t("app.nav.coursesSubtitle", "Learn & grow"), icon: BookOpen },
+    { to: "/app/solutions", label: t("app.nav.solutions", "Solutions"), subtitle: t("app.nav.solutionsSubtitle", "Startup marketplace"), icon: Briefcase, disabled: true },
+    { to: "/app/integrations", label: t("app.nav.integrations", "Integrations"), subtitle: t("app.nav.integrationsSubtitle", "Connect your tools"), icon: Plug },
   ];
 
-  const afterNav: NavItem[] = [
-    { to: "/app/integrations", label: t("app.nav.integrations", "Integrations"), icon: Plug },
-    { to: "/app/financials", label: t("app.nav.financials"), icon: Wallet },
-    { to: "/app/telegram", label: t("app.nav.telegram"), icon: TelegramIcon },
-    { to: "/app/learn", label: t("app.nav.learn", "Learning"), icon: GraduationCap },
-    { to: "/app/team", label: t("app.nav.team"), icon: Users },
+  const communicationNav: NavItem[] = [
+    { to: "/app", label: t("app.nav.chat", "Chat"), subtitle: t("app.nav.chatSubtitle", "Team conversations"), icon: MessageSquare, exact: true },
+    { to: "/app/telegram", label: t("app.nav.telegramBot", "Telegram Bot"), subtitle: t("app.nav.telegramBotSubtitle", "Bot commands & updates"), icon: TelegramIcon },
+    { to: "/app/team", label: t("app.nav.team"), subtitle: t("app.nav.teamSubtitle", "Members & roles"), icon: Users },
   ];
 
   const bottomNav: NavItem[] = [
-    { to: "/app/settings", label: t("app.nav.settings"), icon: Settings },
+    { to: "/app/settings", label: t("app.nav.settings"), subtitle: t("app.nav.settingsSubtitle", "Preferences"), icon: Settings },
   ];
 
   const showLabels = expanded || mobileOpen;
