@@ -477,7 +477,7 @@ function AuthenticatedLayout() {
         <InviteModal teamspace={teamspace} onClose={() => setInviteOpen(false)} />
       )}
 
-      <FloatingChat />
+      {!isTg && <FloatingChat />}
     </div>
 
   );
