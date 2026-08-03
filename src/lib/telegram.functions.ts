@@ -11,9 +11,10 @@ function webhookUrl(): string {
   return `${appBase()}/api/public/telegram/webhook`;
 }
 
-export function miniAppUrl(): string {
+function miniAppUrl(): string {
   return `${appBase()}/tg`;
 }
+
 
 
 /** Current Telegram link state + bot username for the connect deep link. */
