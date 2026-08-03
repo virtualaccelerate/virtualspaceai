@@ -254,8 +254,8 @@ function AuthenticatedLayout() {
           )}
         </div>
 
-        {/* Collapse toggle + New */}
-        <div className="px-2 pt-2 space-y-1">
+        {/* Collapse toggle */}
+        <div className="px-2 pt-2">
           <button
             onClick={() => setExpanded((v) => !v)}
             className={`hidden lg:flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/60 hover:bg-white/5 hover:text-white transition ${
@@ -268,24 +268,6 @@ function AuthenticatedLayout() {
             </span>
             {showLabels && <span>{t("app.nav.collapse")}</span>}
           </button>
-          <button
-            onClick={async () => {
-              if (pathname !== "/app") {
-                await navigate({ to: "/app" });
-              }
-              setTimeout(() => window.dispatchEvent(new CustomEvent("virtualspace:new-chat")), 50);
-            }}
-            className={`w-full flex items-center gap-3 rounded-lg bg-primary text-primary-foreground px-2.5 py-2 text-sm font-semibold hover:bg-primary/90 transition ${
-              showLabels ? "" : "justify-center"
-            }`}
-            title={t("app.nav.newChat")}
-          >
-            <span className="h-8 w-8 flex items-center justify-center">
-              <Plus className="h-[18px] w-[18px]" />
-            </span>
-            {showLabels && <span>{t("app.nav.newChat")}</span>}
-          </button>
-
         </div>
 
         {/* Nav */}
