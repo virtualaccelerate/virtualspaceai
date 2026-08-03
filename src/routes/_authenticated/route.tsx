@@ -38,8 +38,10 @@ export const Route = createFileRoute("/_authenticated")({
 type NavItem = {
   to: string;
   label: string;
+  subtitle?: string;
   icon: LucideIcon | ComponentType<{ className?: string }>;
   exact?: boolean;
+  disabled?: boolean;
 };
 
 type Teamspace = { id: string; name: string; invite_code: string };
