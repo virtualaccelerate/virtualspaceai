@@ -142,6 +142,7 @@ function AuthenticatedLayout() {
     { to: "/app/integrations", label: t("app.nav.integrations", "Integrations"), icon: Plug },
     { to: "/app/financials", label: t("app.nav.financials"), icon: Wallet },
     { to: "/app/telegram", label: t("app.nav.telegram"), icon: TelegramIcon },
+    { to: "/app/learn", label: t("app.nav.learn", "Learning"), icon: GraduationCap },
     { to: "/app/team", label: t("app.nav.team"), icon: Users },
   ];
 
