@@ -1051,6 +1051,8 @@ const resources = {
             faq: { title: "FAQ", body: "Көп берилген суроолорго жооптор." },
           },
         },
+        mentors: { title: "Менторлор", subtitle: "Эксперт сессиясын брондап, командаңыз үчүн жетектөө алыңыз." },
+        solutions: { title: "Чечимдер", subtitle: "Стартап маркетплейси жана даяр бизнес чечимдери." },
         telegram: {
           title: "Телеграм-бот", subtitle: "Virtual Space'ти Telegram аркылуу башкарыңыз: тапшырмалар, статустар, отчёттор жана AI-жардамчы.", connected: "Туташтырылды", disconnect: "Ажыратуу",
           howto: "Telegram'да ботту ачып, ушул буйрукту жибериңиз:", copy: "Көчүрүү", open: "Ботту ачуу", hint: "Код жеке — бот аткарган нерселердин баары сиздин аккаунтуңузда болот.",
@@ -1322,6 +1324,8 @@ const resources = {
             faq: { title: "FAQ", body: "Tez-tez beriladigan savollarga javoblar." },
           },
         },
+        mentors: { title: "Mentorlar", subtitle: "Ekspert seansini band qilib, jamoangiz uchun qo‘llab-quvvatlash oling." },
+        solutions: { title: "Yechimlar", subtitle: "Startap bozori va tayyor biznes yechimlari." },
         telegram: {
           title: "Telegram bot", subtitle: "Virtual Space'ni to‘g‘ridan-to‘g‘ri Telegram orqali boshqaring: vazifalar, statuslar, hisobotlar va AI-yordamchi.", connected: "Ulangan", disconnect: "Uzish",
           howto: "Telegram'da botni oching va ushbu buyruqni yuboring:", copy: "Nusxalash", open: "Botni ochish", hint: "Kod shaxsiy — bot bajaradigan hamma narsa sizning akkauntingizda sodir bo‘ladi.",
@@ -1593,6 +1597,8 @@ const resources = {
             faq: { title: "FAQ", body: "Ҷавобҳо ба саволҳои маъмул." },
           },
         },
+        mentors: { title: "Менторон", subtitle: "Сеанси коршиносро брон кунед ва дастаи худро дастгирӣ кунед." },
+        solutions: { title: "Решения", subtitle: "Бозори стартапҳо ва ҳалли тайёри бизнес." },
         telegram: {
           title: "Телеграм-бот", subtitle: "Virtual Space-ро бевосита аз Telegram идора кунед: вазифаҳо, ҳолатҳо, ҳисоботҳо ва AI-ёрдамчӣ.", connected: "Пайваст шуд", disconnect: "Ҷудо кардан",
           howto: "Дар Telegram ботро кушоед ва ин фармонро фиристед:", copy: "Нусхабардорӣ", open: "Кушодани бот", hint: "Код шахсист — ҳар кори бот дар аккаунти шумо иҷро мешавад.",
