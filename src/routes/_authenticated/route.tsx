@@ -165,21 +165,59 @@ function AuthenticatedLayout() {
   const railWidth = showLabels ? "w-64" : "w-[68px]";
 
   const NavButton = ({ item }: { item: NavItem }) => {
-    const active = isActive(item.to, item.exact);
-    return (
-      <Link
-        to={item.to}
-        title={showLabels ? undefined : item.label}
+    const active = !item.disabled && isActive(item.to, item.exact);
+    const content = (
+      <div
         className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition ${
-          active ? "bg-primary/15 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
+          item.disabled
+            ? "text-muted-foreground/50 cursor-not-allowed"
+            : active
+            ? "bg-primary/15 text-primary"
+            : "text-foreground hover:bg-muted hover:text-foreground"
         }`}
       >
-        <span className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
-          active ? "text-primary" : "text-white/60 group-hover:text-white/90"
-        }`}>
+        <span
+          className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+            active
+              ? "text-primary"
+              : item.disabled
+              ? "text-muted-foreground/40"
+              : "text-muted-foreground group-hover:text-foreground"
+          }`}
+        >
           <item.icon className="h-[18px] w-[18px]" />
         </span>
-        {showLabels && <span className="leading-tight break-words min-w-0">{item.label}</span>}
+        {showLabels && (
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate">{item.label}</div>
+            {item.subtitle && (
+              <div className="text-[11px] text-muted-foreground/70 truncate">{item.subtitle}</div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+
+    if (item.disabled) {
+      return (
+        <div
+          key={item.to}
+          title={`${item.label} — ${t("app.nav.comingSoon", "Coming soon")}`}
+          className="w-full"
+        >
+          {content}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        title={showLabels ? undefined : item.label}
+        className="w-full block"
+      >
+        {content}
       </Link>
     );
   };
