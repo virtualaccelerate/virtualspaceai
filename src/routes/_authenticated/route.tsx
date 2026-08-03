@@ -389,7 +389,7 @@ function AuthenticatedLayout() {
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="sticky top-0 z-20 h-14 border-b border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 flex items-center gap-3">
           <button
-            className="lg:hidden text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5"
+            className={`${isTg ? "" : "lg:hidden"} text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5`}
             onClick={() => setMobileOpen(true)}
             aria-label="Open sidebar"
           >
