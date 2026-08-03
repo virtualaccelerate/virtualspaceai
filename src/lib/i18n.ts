@@ -708,8 +708,18 @@ const resources = {
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Уақыт есебі",
           clients: "Клиенттер", profile: "Профиль",
           agentsDocs: "Құжаттар және деректер", agentsTasks: "Команда тапсырмалары", agentsFusion: "Сатылым", inDevelopment: "Әзірленуде", comingSoon: "Жақында",
-          financials: "Қаржы", telegram: "Телеграм", team: "Команда", settings: "Баптаулар", newChat: "Жаңа чат", collapse: "Жию", expand: "Ашу", integrations: "Интеграциялар",
+          financials: "Қаржы", telegram: "Телеграм", learn: "Оқыту", team: "Команда", settings: "Баптаулар", newChat: "Жаңа чат", collapse: "Жию", expand: "Ашу", integrations: "Интеграциялар",
 
+        },
+        learn: {
+          title: "Оқу орталығы",
+          subtitle: "Курстар, менторлар және білім базасы — жақында.",
+          cards: {
+            courses: { title: "Курстар", body: "Командаға арналған курстар." },
+            mentors: { title: "Менторлар", body: "Сарапшылармен сессиялар." },
+            knowledge: { title: "Білім базасы", body: "Мақалалар мен нұсқаулықтар." },
+            faq: { title: "FAQ", body: "Жиі сұрақтарға жауаптар." },
+          },
         },
         integrations: {
           title: "Интеграциялар",
@@ -948,8 +958,18 @@ const resources = {
           aiAgents: "AI-агенттер", analytics: "Аналитика", timeTracking: "Убакыт эсеби",
           clients: "Кардарлар", profile: "Профиль",
           agentsDocs: "Документтер жана маалыматтар", agentsTasks: "Команда тапшырмалары", agentsFusion: "Сатуулар", inDevelopment: "Иштелип жатат", comingSoon: "Жакында",
-          financials: "Каржы", telegram: "Телеграм", team: "Команда", settings: "Жөндөөлөр", newChat: "Жаңы чат", collapse: "Жыйноо", expand: "Ачуу", integrations: "Интеграциялар",
+          financials: "Каржы", telegram: "Телеграм", learn: "Окутуу", team: "Команда", settings: "Жөндөөлөр", newChat: "Жаңы чат", collapse: "Жыйноо", expand: "Ачуу", integrations: "Интеграциялар",
 
+        },
+        learn: {
+          title: "Окутуу борбору",
+          subtitle: "Курстар, менторлор жана билим базасы — жакында.",
+          cards: {
+            courses: { title: "Курстар", body: "Команда үчүн курстар." },
+            mentors: { title: "Менторлор", body: "Эксперттер менен сессиялар." },
+            knowledge: { title: "Билим базасы", body: "Макалалар жана колдонмолор." },
+            faq: { title: "FAQ", body: "Көп берилген суроолорго жооптор." },
+          },
         },
         integrations: {
           title: "Интеграциялар",
