@@ -6,7 +6,7 @@ import {
   Bot, Users, Bell, Search, Plus, Settings,
   ChevronDown, ChevronRight, UserPlus, Copy, Check, Sparkles,
   MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  FileText, KanbanSquare, TrendingUp, Plug,
+  FileText, KanbanSquare, TrendingUp, Plug, GraduationCap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -142,6 +142,7 @@ function AuthenticatedLayout() {
     { to: "/app/integrations", label: t("app.nav.integrations", "Integrations"), icon: Plug },
     { to: "/app/financials", label: t("app.nav.financials"), icon: Wallet },
     { to: "/app/telegram", label: t("app.nav.telegram"), icon: TelegramIcon },
+    { to: "/app/learn", label: t("app.nav.learn", "Learning"), icon: GraduationCap },
     { to: "/app/team", label: t("app.nav.team"), icon: Users },
   ];
 
