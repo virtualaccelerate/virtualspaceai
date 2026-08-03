@@ -132,7 +132,6 @@ function AuthenticatedLayout() {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
-  const initial = (email?.[0] ?? "u").toUpperCase();
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
   const topNav: NavItem[] = [
@@ -232,11 +231,11 @@ function AuthenticatedLayout() {
 
         {/* Top: teamspace + collapse */}
         <div className="relative px-2 pt-2 pb-2 border-b border-white/10" ref={menuRef}>
-          <div className="flex items-center gap-1">
+          <div className={`flex items-center gap-1 ${showLabels ? "" : "flex-col"}`}>
             <button
-              onClick={() => showLabels && setMenuOpen((v) => !v)}
-              className={`flex-1 flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-white/5 transition text-left min-w-0 ${
-                showLabels ? "" : "justify-center"
+              onClick={() => (showLabels ? setMenuOpen((v) => !v) : setExpanded(true))}
+              className={`flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-white/5 transition text-left min-w-0 ${
+                showLabels ? "flex-1" : "justify-center"
               }`}
               title={teamspace?.name ?? ""}
             >
@@ -257,6 +256,15 @@ function AuthenticatedLayout() {
                 </>
               )}
             </button>
+
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-white/60 hover:bg-white/5 hover:text-white transition shrink-0"
+              title={showLabels ? t("app.nav.collapse") : t("app.nav.expand")}
+            >
+              {showLabels ? <PanelLeftClose className="h-[18px] w-[18px]" /> : <PanelLeftOpen className="h-[18px] w-[18px]" />}
+            </button>
+
             {mobileOpen && (
               <button
                 onClick={() => setMobileOpen(false)}
@@ -284,22 +292,6 @@ function AuthenticatedLayout() {
               <MenuItem icon={LogOut} label={t("app.header.signOut")} onClick={signOut} danger />
             </div>
           )}
-        </div>
-
-        {/* Collapse toggle */}
-        <div className="px-2 pt-2">
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className={`hidden lg:flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/60 hover:bg-white/5 hover:text-white transition ${
-              showLabels ? "" : "justify-center"
-            }`}
-            title={showLabels ? t("app.nav.collapse") : t("app.nav.expand")}
-          >
-            <span className="h-8 w-8 flex items-center justify-center">
-              {showLabels ? <PanelLeftClose className="h-[18px] w-[18px]" /> : <PanelLeftOpen className="h-[18px] w-[18px]" />}
-            </span>
-            {showLabels && <span>{t("app.nav.collapse")}</span>}
-          </button>
         </div>
 
         {/* Nav */}
@@ -334,22 +326,6 @@ function AuthenticatedLayout() {
 
         <div className="p-2 border-t border-white/10 space-y-0.5">
           {bottomNav.map((item) => <NavButton key={item.to} item={item} />)}
-          <Link
-            to="/app/profile"
-            title={showLabels ? undefined : email ?? ""}
-            className={`flex items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-white/5 transition ${
-              showLabels ? "" : "justify-center"
-            }`}
-          >
-            <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-              {initial}
-            </div>
-            {showLabels && (
-              <div className="min-w-0 flex-1">
-                <div className="text-xs text-white/70 truncate">{email ?? ""}</div>
-              </div>
-            )}
-          </Link>
         </div>
       </aside>
 
