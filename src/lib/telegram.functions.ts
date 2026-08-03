@@ -1,11 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-function webhookUrl(): string {
-  const base =
-    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://virtualspaceai.lovable.app";
-  return `${base}/api/public/telegram/webhook`;
+function appBase(): string {
+  return (
+    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://virtualspaceai.lovable.app"
+  );
 }
+
+function webhookUrl(): string {
+  return `${appBase()}/api/public/telegram/webhook`;
+}
+
+function miniAppUrl(): string {
+  return `${appBase()}/tg`;
+}
+
+
 
 /** Current Telegram link state + bot username for the connect deep link. */
 export const getTelegramStatus = createServerFn({ method: "GET" })
@@ -54,10 +64,11 @@ export const getTelegramStatus = createServerFn({ method: "GET" })
       telegramUsername: (link as any)?.telegram_username ?? null,
       linkedAt: (link as any)?.linked_at ?? null,
       botUsername,
+      miniAppUrl: miniAppUrl(),
     };
   });
 
-/** Registers the Telegram webhook for this deployment. */
+/** Registers the Telegram webhook + mini app menu button for this deployment. */
 export const setupTelegramWebhook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
@@ -73,6 +84,7 @@ export const setupTelegramWebhook = createServerFn({ method: "POST" })
     await tg("setMyCommands", {
       commands: [
         { command: "start", description: "Connect account / Привязать аккаунт" },
+        { command: "app", description: "Open mini app / Открыть приложение" },
         { command: "tasks", description: "Open tasks / Активные задачи" },
         { command: "new", description: "New task / Новая задача" },
         { command: "done", description: "Complete task / Завершить задачу" },
@@ -81,8 +93,22 @@ export const setupTelegramWebhook = createServerFn({ method: "POST" })
         { command: "unlink", description: "Disconnect / Отвязать" },
       ],
     });
-    return { ok: Boolean(res?.ok), url: webhookUrl(), error: res?.description ?? null };
+    const menu = await tg<any>("setChatMenuButton", {
+      menu_button: {
+        type: "web_app",
+        text: "Virtual Space",
+        web_app: { url: miniAppUrl() },
+      },
+    });
+    return {
+      ok: Boolean(res?.ok),
+      url: webhookUrl(),
+      miniApp: miniAppUrl(),
+      miniAppOk: Boolean(menu?.ok),
+      error: res?.description ?? menu?.description ?? null,
+    };
   });
+
 
 /** Unlinks Telegram and rotates the connect code. */
 export const unlinkTelegram = createServerFn({ method: "POST" })

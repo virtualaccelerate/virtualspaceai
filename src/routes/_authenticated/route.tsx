@@ -61,6 +61,22 @@ function AuthenticatedLayout() {
     return window.localStorage.getItem("app.sidebar.expanded") === "1";
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Telegram Mini App mode: single-column, bottom-nav-first layout
+  const [isTg, setIsTg] = useState(false);
+  useEffect(() => {
+    const flag =
+      window.localStorage.getItem("tg.miniapp") === "1" ||
+      Boolean((window as any).Telegram?.WebApp?.initData);
+    setIsTg(flag);
+    if (flag) {
+      try {
+        const wa = (window as any).Telegram?.WebApp;
+        wa?.ready?.();
+        wa?.expand?.();
+      } catch { /* ignore */ }
+    }
+  }, []);
+
   const [email, setEmail] = useState<string | null>(null);
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -178,9 +194,10 @@ function AuthenticatedLayout() {
       {/* Sidebar */}
       <aside
         className={`fixed lg:sticky top-0 z-40 h-screen ${railWidth} shrink-0 border-r border-white/10 bg-[color:var(--card)] transform transition-all duration-200 lg:translate-x-0 flex flex-col ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+          isTg ? "lg:hidden" : ""
+        } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
+
         {/* Top: teamspace + collapse */}
         <div className="relative px-2 pt-2 pb-2 border-b border-white/10" ref={menuRef}>
           <div className="flex items-center gap-1">
@@ -372,7 +389,7 @@ function AuthenticatedLayout() {
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="sticky top-0 z-20 h-14 border-b border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 flex items-center gap-3">
           <button
-            className="lg:hidden text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5"
+            className={`${isTg ? "" : "lg:hidden"} text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5`}
             onClick={() => setMobileOpen(true)}
             aria-label="Open sidebar"
           >
@@ -396,7 +413,7 @@ function AuthenticatedLayout() {
           <div className="ml-auto flex items-center gap-1">
             <button
               onClick={() => setInviteOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10 transition"
+              className={`${isTg ? "hidden" : "hidden sm:inline-flex"} items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10 transition`}
             >
               <UserPlus className="h-3.5 w-3.5" />
               {t("app.header.invite")}
@@ -420,14 +437,14 @@ function AuthenticatedLayout() {
             </button>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main className={`flex-1 ${isTg ? "p-4 pb-24" : "p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8"}`}>
           <Outlet />
         </main>
       </div>
 
       {/* Mobile bottom nav — 5 primary destinations */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 h-16 border-t border-white/10 bg-[color:var(--card)]/95 backdrop-blur"
+        className={`${isTg ? "" : "lg:hidden"} fixed bottom-0 inset-x-0 z-40 h-16 border-t border-white/10 bg-[color:var(--card)]/95 backdrop-blur`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <ul className="grid grid-cols-5 h-full">
@@ -460,7 +477,7 @@ function AuthenticatedLayout() {
         <InviteModal teamspace={teamspace} onClose={() => setInviteOpen(false)} />
       )}
 
-      <FloatingChat />
+      {!isTg && <FloatingChat />}
     </div>
 
   );

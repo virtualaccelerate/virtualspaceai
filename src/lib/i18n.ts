@@ -6,6 +6,7 @@ const isBrowser = typeof window !== "undefined";
 const resources = {
   en: {
     translation: {
+      tg: { signingIn: "Signing you in…", notLinkedTitle: "Account is not linked", notLinkedBody: "Open the Telegram page in the web app, copy your code and send /start CODE to the bot. Then reopen the mini app.", openWeb: "Open the web version", errorTitle: "Could not sign in", errorBody: "Open this page from the Telegram bot menu button." },
       nav: {
         learn: "Learn", mentors: "Mentors", courses: "Courses",
         product: "Product", pricing: "Pricing", bookDemo: "Book Demo",
@@ -185,6 +186,7 @@ const resources = {
         telegram: {
           title: "Telegram bot", subtitle: "Manage Virtual Space right from Telegram: tasks, statuses, reports and the AI assistant.", connected: "Connected", disconnect: "Disconnect",
           howto: "Open the bot in Telegram and send this command:", copy: "Copy", open: "Open the bot", hint: "The code is personal — everything the bot does happens inside your account.",
+          miniApp: "Mini App", miniAppHint: "The full Virtual Space workspace inside Telegram — same account, same data. Open the bot and tap the menu button, or use /app.", openMiniApp: "Open mini app",
           abilities: "What the bot can do", admin: "Bot setup", adminHint: "Run this once (or after a new deploy) to register the bot webhook and its command menu.", activate: "Activate bot",
           activated: "Bot activated", activateError: "Could not activate the bot", unlinked: "Telegram disconnected", loading: "Loading…",
           can: {
@@ -296,6 +298,7 @@ const resources = {
   },
   ru: {
     translation: {
+      tg: { signingIn: "Выполняем вход…", notLinkedTitle: "Аккаунт не привязан", notLinkedBody: "Откройте раздел Telegram в веб-версии, скопируйте код и отправьте боту /start КОД. Затем откройте мини-приложение снова.", openWeb: "Открыть веб-версию", errorTitle: "Не удалось войти", errorBody: "Откройте эту страницу через кнопку меню Telegram-бота." },
       nav: {
         learn: "Обучение", mentors: "Наставники", courses: "Курсы",
         product: "Продукт", pricing: "Тарифы", bookDemo: "Демо",
@@ -475,6 +478,7 @@ const resources = {
         telegram: {
           title: "Телеграм-бот", subtitle: "Управляйте Virtual Space прямо из Telegram: задачи, статусы, отчёты и AI-ассистент.", connected: "Подключено", disconnect: "Отвязать",
           howto: "Откройте бота в Telegram и отправьте эту команду:", copy: "Копировать", open: "Открыть бота", hint: "Код персональный — всё, что делает бот, происходит в вашем аккаунте.",
+          miniApp: "Мини-приложение", miniAppHint: "Полная рабочая среда Virtual Space прямо в Telegram — тот же аккаунт и те же данные. Откройте бота и нажмите кнопку меню или отправьте /app.", openMiniApp: "Открыть мини-приложение",
           abilities: "Что умеет бот", admin: "Настройка бота", adminHint: "Запустите один раз (или после нового деплоя), чтобы зарегистрировать вебхук и меню команд.", activate: "Активировать бота",
           activated: "Бот активирован", activateError: "Не удалось активировать бота", unlinked: "Telegram отвязан", loading: "Загрузка…",
           can: {
@@ -586,6 +590,7 @@ const resources = {
   },
   kk: {
     translation: {
+      tg: { signingIn: "Кіру орындалуда…", notLinkedTitle: "Аккаунт байланыстырылмаған", notLinkedBody: "Веб-нұсқадағы Telegram бөлімін ашып, кодты көшіріңіз де, ботқа /start КОД жіберіңіз. Содан кейін мини-қосымшаны қайта ашыңыз.", openWeb: "Веб-нұсқаны ашу", errorTitle: "Кіру мүмкін болмады", errorBody: "Бұл бетті Telegram бот мәзірі арқылы ашыңыз." },
       nav: {
         learn: "Оқыту", mentors: "Тәлімгерлер", courses: "Курстар",
         product: "Өнім", pricing: "Тарифтер", bookDemo: "Демо тапсырыс",
@@ -742,6 +747,7 @@ const resources = {
         telegram: {
           title: "Телеграм-бот", subtitle: "Virtual Space-ті Telegram арқылы басқарыңыз: тапсырмалар, мәртебелер, есептер және AI-көмекші.", connected: "Қосылған", disconnect: "Ажырату",
           howto: "Telegram-да ботты ашып, осы команданы жіберіңіз:", copy: "Көшіру", open: "Ботты ашу", hint: "Код жеке — бот жасайтын әрекеттер сіздің аккаунтыңызда орындалады.",
+          miniApp: "Мини-қосымша", miniAppHint: "Virtual Space жұмыс кеңістігі Telegram ішінде — сол аккаунт, сол деректер. Ботты ашып, мәзір түймесін басыңыз немесе /app жіберіңіз.", openMiniApp: "Мини-қосымшаны ашу",
           abilities: "Бот не істей алады", admin: "Ботты баптау", adminHint: "Вебхук пен команда мәзірін тіркеу үшін бір рет іске қосыңыз.", activate: "Ботты іске қосу",
           activated: "Бот іске қосылды", activateError: "Ботты іске қосу мүмкін болмады", unlinked: "Telegram ажыратылды", loading: "Жүктелуде…",
           can: {
@@ -853,6 +859,7 @@ const resources = {
   },
   ky: {
     translation: {
+      tg: { signingIn: "Кирүү аткарылууда…", notLinkedTitle: "Аккаунт байланышкан эмес", notLinkedBody: "Веб-версиядагы Telegram бөлүмүн ачып, кодду көчүрүп, ботко /start КОД жибериңиз. Андан соң мини-колдонмону кайра ачыңыз.", openWeb: "Веб-версияны ачуу", errorTitle: "Кирүү мүмкүн болбоду", errorBody: "Бул баракты Telegram боттун меню баскычы аркылуу ачыңыз." },
       nav: {
         learn: "Окутуу", mentors: "Насаатчылар", courses: "Курстар",
         product: "Продукт", pricing: "Тарифтер", bookDemo: "Демо буйруу",
@@ -1001,6 +1008,7 @@ const resources = {
         telegram: {
           title: "Телеграм-бот", subtitle: "Virtual Space'ти Telegram аркылуу башкарыңыз: тапшырмалар, статустар, отчёттор жана AI-жардамчы.", connected: "Туташтырылды", disconnect: "Ажыратуу",
           howto: "Telegram'да ботту ачып, ушул буйрукту жибериңиз:", copy: "Көчүрүү", open: "Ботту ачуу", hint: "Код жеке — бот аткарган нерселердин баары сиздин аккаунтуңузда болот.",
+          miniApp: "Мини-колдонмо", miniAppHint: "Virtual Space иш чөйрөсү Telegram ичинде — ошол эле аккаунт жана маалыматтар. Ботту ачып, меню баскычын басыңыз же /app жибериңиз.", openMiniApp: "Мини-колдонмону ачуу",
           abilities: "Бот эмне кыла алат", admin: "Ботту жөндөө", adminHint: "Вебхук жана буйрук менюсун каттоо үчүн бир жолу иштетиңиз.", activate: "Ботту иштетүү",
           activated: "Бот иштетилди", activateError: "Ботту иштетүү мүмкүн болгон жок", unlinked: "Telegram ажыратылды", loading: "Жүктөлүүдө…",
           can: {
@@ -1112,6 +1120,7 @@ const resources = {
   },
   uz: {
     translation: {
+      tg: { signingIn: "Kirilmoqda…", notLinkedTitle: "Akkaunt bog‘lanmagan", notLinkedBody: "Veb-versiyadagi Telegram bo‘limini oching, kodni nusxalang va botga /start KOD yuboring. So‘ng mini ilovani qayta oching.", openWeb: "Veb-versiyani ochish", errorTitle: "Kirib bo‘lmadi", errorBody: "Bu sahifani Telegram bot menyu tugmasi orqali oching." },
       nav: {
         learn: "Oʻqitish", mentors: "Mentorlar", courses: "Kurslar",
         product: "Mahsulot", pricing: "Tariflar", bookDemo: "Demo buyurtma",
@@ -1260,6 +1269,7 @@ const resources = {
         telegram: {
           title: "Telegram bot", subtitle: "Virtual Space'ni to‘g‘ridan-to‘g‘ri Telegram orqali boshqaring: vazifalar, statuslar, hisobotlar va AI-yordamchi.", connected: "Ulangan", disconnect: "Uzish",
           howto: "Telegram'da botni oching va ushbu buyruqni yuboring:", copy: "Nusxalash", open: "Botni ochish", hint: "Kod shaxsiy — bot bajaradigan hamma narsa sizning akkauntingizda sodir bo‘ladi.",
+          miniApp: "Mini ilova", miniAppHint: "Virtual Space ish maydoni to‘liq Telegram ichida — o‘sha akkaunt va ma’lumotlar. Botni oching va menyu tugmasini bosing yoki /app yuboring.", openMiniApp: "Mini ilovani ochish",
           abilities: "Bot nima qila oladi", admin: "Botni sozlash", adminHint: "Webhook va buyruqlar menyusini ro‘yxatdan o‘tkazish uchun bir marta ishga tushiring.", activate: "Botni faollashtirish",
           activated: "Bot faollashtirildi", activateError: "Botni faollashtirib bo‘lmadi", unlinked: "Telegram uzildi", loading: "Yuklanmoqda…",
           can: {
@@ -1371,6 +1381,7 @@ const resources = {
   },
   tg: {
     translation: {
+      tg: { signingIn: "Воридшавӣ…", notLinkedTitle: "Аккаунт пайваст нашудааст", notLinkedBody: "Бахши Telegram-ро дар версияи веб кушоед, кодро нусхабардорӣ кунед ва ба бот /start КОД фиристед. Сипас мини-барномаро аз нав кушоед.", openWeb: "Кушодани версияи веб", errorTitle: "Ворид шудан нашуд", errorBody: "Ин саҳифаро тавассути тугмаи менюи бот кушоед." },
       nav: {
         learn: "Омӯзиш", mentors: "Мураббиён", courses: "Курсҳо",
         product: "Маҳсулот", pricing: "Тарифҳо", bookDemo: "Фармоиши демо",
@@ -1519,6 +1530,7 @@ const resources = {
         telegram: {
           title: "Телеграм-бот", subtitle: "Virtual Space-ро бевосита аз Telegram идора кунед: вазифаҳо, ҳолатҳо, ҳисоботҳо ва AI-ёрдамчӣ.", connected: "Пайваст шуд", disconnect: "Ҷудо кардан",
           howto: "Дар Telegram ботро кушоед ва ин фармонро фиристед:", copy: "Нусхабардорӣ", open: "Кушодани бот", hint: "Код шахсист — ҳар кори бот дар аккаунти шумо иҷро мешавад.",
+          miniApp: "Мини-барнома", miniAppHint: "Фазои кории Virtual Space дар дохили Telegram — ҳамон аккаунт ва ҳамон маълумот. Ботро кушоед ва тугмаи менюро пахш кунед ё /app фиристед.", openMiniApp: "Кушодани мини-барнома",
           abilities: "Бот чӣ карда метавонад", admin: "Танзими бот", adminHint: "Барои сабти вебхук ва менюи фармонҳо як бор иҷро кунед.", activate: "Фаъол кардани бот",
           activated: "Бот фаъол шуд", activateError: "Ботро фаъол кардан нашуд", unlinked: "Telegram ҷудо шуд", loading: "Боркунӣ…",
           can: {

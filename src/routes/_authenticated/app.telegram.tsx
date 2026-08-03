@@ -149,6 +149,35 @@ function TelegramPage() {
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
+          {t("app.telegram.miniApp", "Mini App")}
+        </h2>
+        <p className="text-sm text-white/70">
+          {t(
+            "app.telegram.miniAppHint",
+            "The full Virtual Space workspace inside Telegram — same account, same data. Open the bot and tap the menu button, or use /app.",
+          )}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <code className="rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-xs text-white/70 break-all">
+            {(data as any)?.miniAppUrl ?? "…"}
+          </code>
+          {data?.botUsername ? (
+            <a
+              href={`https://t.me/${data.botUsername}?startapp=1`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+            >
+              <Send className="h-3.5 w-3.5" />
+              {t("app.telegram.openMiniApp", "Open mini app")}
+            </a>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+
+        <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
           {t("app.telegram.abilities", "What the bot can do")}
         </h2>
         <ul className="space-y-2">
