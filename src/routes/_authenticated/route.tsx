@@ -6,7 +6,7 @@ import {
   Bot, Users, Bell, Search, Settings,
   ChevronDown, ChevronRight, UserPlus, Copy, Check, Sparkles,
   MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  FileText, KanbanSquare, TrendingUp, Plug, GraduationCap,
+  FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
