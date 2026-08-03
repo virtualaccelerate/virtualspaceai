@@ -520,6 +520,24 @@ export async function handleUpdate(update: any) {
     case "/help":
       await sendMessage(chatId, t(lang).help);
       return;
+    case "/app":
+    case "/open":
+      await sendMessage(
+        chatId,
+        lang === "ru" ? "Открыть Virtual Space:" : "Open Virtual Space:",
+        {
+          reply_markup: {
+            inline_keyboard: [[
+              {
+                text: lang === "ru" ? "🚀 Открыть приложение" : "🚀 Open the app",
+                web_app: { url: miniAppUrl() },
+              },
+            ]],
+          },
+        },
+      );
+      return;
+
     case "/tasks":
       await handleTasks(link, chatId, lang);
       return;
