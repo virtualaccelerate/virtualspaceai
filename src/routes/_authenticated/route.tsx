@@ -3,7 +3,7 @@ import fusionLogo from "@/assets/fusion-logo.png.asset.json";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
-  Bot, Users, Bell, Search, Plus, Settings,
+  Bot, Users, Bell, Search, Settings,
   ChevronDown, ChevronRight, UserPlus, Copy, Check, Sparkles,
   MessageSquare, Wallet, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
   FileText, KanbanSquare, TrendingUp, Plug, GraduationCap,
