@@ -1,11 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-function webhookUrl(): string {
-  const base =
-    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://virtualspaceai.lovable.app";
-  return `${base}/api/public/telegram/webhook`;
+function appBase(): string {
+  return (
+    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://virtualspaceai.lovable.app"
+  );
 }
+
+function webhookUrl(): string {
+  return `${appBase()}/api/public/telegram/webhook`;
+}
+
+export function miniAppUrl(): string {
+  return `${appBase()}/tg`;
+}
+
 
 /** Current Telegram link state + bot username for the connect deep link. */
 export const getTelegramStatus = createServerFn({ method: "GET" })
