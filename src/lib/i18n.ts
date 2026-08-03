@@ -193,6 +193,8 @@ const resources = {
             faq: { title: "FAQ", body: "Answers to common questions." },
           },
         },
+        mentors: { title: "Mentors", subtitle: "Book expert sessions and get guidance for your team." },
+        solutions: { title: "Solutions", subtitle: "Startup marketplace and ready-made business solutions." },
         telegram: {
           title: "Telegram bot", subtitle: "Manage Virtual Space right from Telegram: tasks, statuses, reports and the AI assistant.", connected: "Connected", disconnect: "Disconnect",
           howto: "Open the bot in Telegram and send this command:", copy: "Copy", open: "Open the bot", hint: "The code is personal — everything the bot does happens inside your account.",
@@ -495,6 +497,8 @@ const resources = {
             faq: { title: "FAQ", body: "Ответы на частые вопросы." },
           },
         },
+        mentors: { title: "Менторы", subtitle: "Забронируйте экспертную сессию и получите поддержку для команды." },
+        solutions: { title: "Решения", subtitle: "Маркетплейс стартапов и готовых бизнес-решений." },
         telegram: {
           title: "Телеграм-бот", subtitle: "Управляйте Virtual Space прямо из Telegram: задачи, статусы, отчёты и AI-ассистент.", connected: "Подключено", disconnect: "Отвязать",
           howto: "Откройте бота в Telegram и отправьте эту команду:", copy: "Копировать", open: "Открыть бота", hint: "Код персональный — всё, что делает бот, происходит в вашем аккаунте.",
@@ -774,6 +778,8 @@ const resources = {
             faq: { title: "FAQ", body: "Жиі сұрақтарға жауаптар." },
           },
         },
+        mentors: { title: "Менторлар", subtitle: "Сарапшы сессиясын брондап, командаға арналған нұсқаулық алыңыз." },
+        solutions: { title: "Шешімдер", subtitle: "Стартап маркетплейсі және дайын бизнес шешімдері." },
         telegram: {
           title: "Телеграм-бот", subtitle: "Virtual Space-ті Telegram арқылы басқарыңыз: тапсырмалар, мәртебелер, есептер және AI-көмекші.", connected: "Қосылған", disconnect: "Ажырату",
           howto: "Telegram-да ботты ашып, осы команданы жіберіңіз:", copy: "Көшіру", open: "Ботты ашу", hint: "Код жеке — бот жасайтын әрекеттер сіздің аккаунтыңызда орындалады.",
