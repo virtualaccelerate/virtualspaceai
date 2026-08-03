@@ -304,69 +304,31 @@ function AuthenticatedLayout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 mt-1">
-          {mainNav.map((item) => <NavButton key={item.to} item={item} />)}
+        <nav className="flex-1 overflow-y-auto p-2 space-y-4 mt-1">
+          <div className="space-y-0.5">
+            {topNav.map((item) => <NavButton key={item.to} item={item} />)}
+          </div>
 
-          {/* AI Agents group */}
-          {showLabels ? (
-            <button
-              onClick={() => setAgentsOpen((v) => !v)}
-              className="w-full mt-2 flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition"
-            >
-              <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-white/60">
-                <Bot className="h-[18px] w-[18px]" />
-              </span>
-              <span className="flex-1 text-left truncate">{t("app.nav.aiAgents")}</span>
-              <ChevronRight className={`h-4 w-4 text-white/40 transition ${agentsOpen ? "rotate-90" : ""}`} />
-            </button>
-          ) : (
-            <div className="mt-2 flex items-center justify-center py-1" title={t("app.nav.aiAgents")}>
-              <div className="h-px w-6 bg-white/10" />
-            </div>
-          )}
-
-          {(agentsOpen || !showLabels) && (
-            <div className={showLabels ? "ml-3 pl-3 border-l border-white/10 space-y-0.5" : "space-y-0.5"}>
-              {agentsNav.map((item) => <NavButton key={item.to} item={item} />)}
-              {/* Fusion AI — disabled */}
-              <div
-                title={`${t("app.nav.agentsFusion", "Sales")} — Fusion AI`}
-                className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-white/40 cursor-not-allowed ${
-                  showLabels ? "" : "justify-center"
-                }`}
-              >
-                <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-white/60">
-                  {showLabels ? (
-                    <TrendingUp className="h-[18px] w-[18px]" />
-                  ) : (
-                    <span className="h-[18px] w-[18px] rounded bg-white p-0.5 flex items-center justify-center">
-                      <img
-                        src={fusionLogo.url}
-                        alt="Fusion"
-                        className="h-full w-auto object-contain"
-                      />
-                    </span>
-                  )}
-                </span>
-                {showLabels && (
-                  <>
-                    <span className="leading-tight break-words min-w-0">{t("app.nav.agentsFusion")}</span>
-                    <span className="ml-auto h-6 rounded-md flex items-center justify-center shrink-0 bg-white px-2">
-                      <img
-                        src={fusionLogo.url}
-                        alt="Fusion"
-                        className="h-4 w-auto object-contain"
-                      />
-                    </span>
-                  </>
-                )}
+          {showLabels && (
+            <div className="px-2.5 pt-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
+                {t("app.nav.workspace", "Workspace")}
               </div>
-
             </div>
           )}
+          <div className="space-y-0.5">
+            {workspaceNav.map((item) => <NavButton key={item.to} item={item} />)}
+          </div>
 
-          <div className="mt-2 space-y-0.5">
-            {afterNav.map((item) => <NavButton key={item.to} item={item} />)}
+          {showLabels && (
+            <div className="px-2.5 pt-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
+                {t("app.nav.communication", "Communication")}
+              </div>
+            </div>
+          )}
+          <div className="space-y-0.5">
+            {communicationNav.map((item) => <NavButton key={item.to} item={item} />)}
           </div>
         </nav>
 
