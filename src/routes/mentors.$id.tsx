@@ -53,8 +53,6 @@ function MentorDetail() {
   const { mentor } = Route.useLoaderData();
   const { t } = useTranslation();
   const rate = formatRate(mentor.hourly_rate, mentor.currency);
-  const bookHref = mentor.booking_url || "/book-demo";
-  const external = Boolean(mentor.booking_url);
 
   return (
     <main className="min-h-screen px-4 sm:px-6 py-10 sm:py-16">
