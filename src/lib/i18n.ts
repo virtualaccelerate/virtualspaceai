@@ -118,6 +118,13 @@ const resources = {
           { title: "Implementation Plan", body: "Receive a practical roadmap for getting started." },
         ],
       },
+      startups: {
+        title: "Technology solutions for growing your business",
+        subtitle: "A curated catalog of startups and products from our ecosystem — ready to plug into your workflow.",
+        cta: "Visit website",
+        soon: "Coming soon",
+        soonBody: "A new solution will appear here soon.",
+      },
       pricingTeaser: {
         title: "Start simple. Scale with your business.",
         subtitle: "Whether you are testing AI agents for the first time or building a full AI-powered operating system for your company, Virtual Space can grow with your needs.",
@@ -422,6 +429,13 @@ const resources = {
           { title: "План внедрения", body: "Получите практическую дорожную карту для старта." },
         ],
       },
+      startups: {
+        title: "Технологические решения для роста вашего бизнеса",
+        subtitle: "Подборка стартапов и продуктов нашей экосистемы — готовы к внедрению в ваши процессы.",
+        cta: "Перейти на сайт",
+        soon: "Скоро",
+        soonBody: "Здесь скоро появится новое решение.",
+      },
       pricingTeaser: {
         title: "Начните просто. Масштабируйтесь вместе с бизнесом.",
         subtitle: "Тестируете ИИ-агентов впервые или строите полноценную AI-систему для компании — Virtual Space растёт вместе с вами.",
@@ -711,6 +725,13 @@ const resources = {
           { title: "Енгізу жоспары", body: "Іске қосу үшін практикалық жол картасын алыңыз." },
         ],
       },
+      startups: {
+        title: "Бизнесіңіздің өсуіне арналған технологиялық шешімдер",
+        subtitle: "Экожүйеміздің стартаптары мен өнімдерінің таңдауы.",
+        cta: "Сайтқа өту",
+        soon: "Жақында",
+        soonBody: "Мұнда жақында жаңа шешім пайда болады.",
+      },
       pricingTeaser: {
         title: "Қарапайымнан бастаңыз. Бизнеспен бірге масштабтаңыз.",
         subtitle: "Virtual Space сізбен бірге өседі.",
@@ -983,6 +1004,13 @@ const resources = {
           { title: "Жеке сценарийлер", body: "ИИ уюмуңуздун процесстерин кантип жакшыртарын билиңиз." },
           { title: "Ишке ашыруу планы", body: "Баштоо үчүн практикалык жол картасын алыңыз." },
         ],
+      },
+      startups: {
+        title: "Бизнесиңиздин өсүшү үчүн технологиялык чечимдер",
+        subtitle: "Экосистемабыздагы стартаптардын жана продуктулардын тандоосу.",
+        cta: "Сайтка өтүү",
+        soon: "Жакында",
+        soonBody: "Бул жерде жакында жаңы чечим пайда болот.",
       },
       pricingTeaser: {
         title: "Жөнөкөйдөн баштаңыз. Бизнес менен бирге өсүңүз.",
@@ -1257,6 +1285,13 @@ const resources = {
           { title: "Joriy etish rejasi", body: "Boshlash uchun amaliy yoʻl xaritasini oling." },
         ],
       },
+      startups: {
+        title: "Biznesingiz oʻsishi uchun texnologik yechimlar",
+        subtitle: "Ekotizimimizdagi startaplar va mahsulotlar toʻplami.",
+        cta: "Saytga oʻtish",
+        soon: "Tez orada",
+        soonBody: "Bu yerda tez orada yangi yechim paydo boʻladi.",
+      },
       pricingTeaser: {
         title: "Oddiydan boshlang. Biznes bilan birga oʻsing.",
         subtitle: "Virtual Space siz bilan birga oʻsadi.",
@@ -1529,6 +1564,13 @@ const resources = {
           { title: "Сенарияҳои шахсӣ", body: "Бифаҳмед, ки AI чӣ гуна равандҳои ташкилоти шуморо беҳтар мекунад." },
           { title: "Нақшаи татбиқ", body: "Барои оғоз харитаи амалиро гиред." },
         ],
+      },
+      startups: {
+        title: "Ҳалли технологӣ барои рушди бизнеси шумо",
+        subtitle: "Интихоби стартапҳо ва маҳсулоти экосистемаи мо.",
+        cta: "Ба сайт гузаштан",
+        soon: "Ба зудӣ",
+        soonBody: "Дар ин ҷо ба зудӣ ҳалли нав пайдо мешавад.",
       },
       pricingTeaser: {
         title: "Аз оддӣ оғоз кунед. Бо бизнес рушд кунед.",
