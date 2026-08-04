@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  Plug, HardDrive, FileText, MessageSquare, Database,
+  Plug, FileText, MessageSquare, Database,
   Sheet, Cloud, StickyNote, Briefcase, Check, Clock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -61,6 +61,7 @@ function IntegrationsPage() {
           {t("app.integrations.available", "Available")}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <GoogleDriveCard />
           {available.map((s) => (
             <SourceCard key={s.id} source={s} />
           ))}
