@@ -5,6 +5,7 @@ import {
   Sheet, Cloud, StickyNote, Briefcase, Check, Clock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { GoogleDriveCard } from "@/components/GoogleDriveCard";
 
 export const Route = createFileRoute("/_authenticated/app/integrations")({
   component: IntegrationsPage,
@@ -23,7 +24,7 @@ function IntegrationsPage() {
   const { t } = useTranslation();
 
   const sources: Source[] = [
-    { id: "google_drive", name: "Google Drive", desc: t("app.integrations.desc.gdrive", "Documents, spreadsheets and folders"), icon: HardDrive, accent: "text-yellow-400", status: "available" },
+    
     { id: "google_sheets", name: "Google Sheets", desc: t("app.integrations.desc.gsheets", "Live tables and finance data"), icon: Sheet, accent: "text-green-400", status: "available" },
     { id: "notion", name: "Notion", desc: t("app.integrations.desc.notion", "Wiki, pages and databases"), icon: FileText, accent: "text-white", status: "available" },
     { id: "slack", name: "Slack", desc: t("app.integrations.desc.slack", "Team messages and channels"), icon: MessageSquare, accent: "text-purple-400", status: "available" },
