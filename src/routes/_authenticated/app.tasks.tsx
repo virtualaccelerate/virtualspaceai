@@ -120,6 +120,11 @@ function formatDateRange(due: string) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function formatCreatedAt(value: string) {
+  const d = new Date(value);
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
 type TaskDraft = {
   title: string;
   description: string;
