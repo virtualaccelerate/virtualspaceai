@@ -172,7 +172,8 @@ export function CoursesGrid({ items }: { items: CourseRow[] }) {
     setNotice(null);
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
-      void navigate({ to: "/auth", search: { next: "/courses" } as never });
+      try { localStorage.setItem("vs-after-auth", "/courses"); } catch { /* ignore */ }
+      void navigate({ to: "/auth" });
       return;
     }
     setBusyId(course.id);
