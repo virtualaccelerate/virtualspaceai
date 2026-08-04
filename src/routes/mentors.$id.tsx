@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowUpRight, Languages, Briefcase, Award, Target } from "lucide-react";
 import { getMentor } from "@/lib/mentors.functions";
 import { formatRate, initials } from "@/components/MentorsCatalog";
+import { MentorBookingDialog } from "@/components/MentorBookingDialog";
+
 
 export const Route = createFileRoute("/mentors/$id")({
   loader: async ({ params }) => {
@@ -51,8 +53,6 @@ function MentorDetail() {
   const { mentor } = Route.useLoaderData();
   const { t } = useTranslation();
   const rate = formatRate(mentor.hourly_rate, mentor.currency);
-  const bookHref = mentor.booking_url || "/book-demo";
-  const external = Boolean(mentor.booking_url);
 
   return (
     <main className="min-h-screen px-4 sm:px-6 py-10 sm:py-16">
@@ -92,13 +92,12 @@ function MentorDetail() {
                 <span className="text-white/50">{t("mentors.perHour", "/ hour")}</span>
               </p>
             )}
-            <a
-              href={bookHref}
-              {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:bg-primary/90 transition"
-            >
-              {t("mentors.book", "Book a mentor")} <ArrowUpRight className="h-4 w-4" />
-            </a>
+            <MentorBookingDialog mentorName={mentor.full_name} rate={rate}>
+              <button className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:bg-primary/90 transition">
+                {t("mentors.book", "Book a mentor")} <ArrowUpRight className="h-4 w-4" />
+              </button>
+            </MentorBookingDialog>
+
           </div>
         </header>
 
