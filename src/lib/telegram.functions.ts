@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 function appBase(): string {
   return (
-    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://virtualspaceai.lovable.app"
+    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://ai-virtualspace.com"
   );
 }
 
