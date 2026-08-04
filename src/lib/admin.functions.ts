@@ -272,7 +272,7 @@ export type AdminPurchaseRow = {
 };
 
 export const adminListPurchases = createServerFn({ method: "GET" }).handler(async () => {
-  if (!(await isAdmin())) return [] as PurchaseRow[];
+  if (!(await isAdmin())) return [] as AdminPurchaseRow[];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("course_purchases")
