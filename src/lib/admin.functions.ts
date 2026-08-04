@@ -215,7 +215,7 @@ export const adminDeleteMentor = createServerFn({ method: "POST" })
 export type AdminCourseRow = CourseRow & { video_url: string | null };
 
 export const adminListCourses = createServerFn({ method: "GET" }).handler(async () => {
-  if (!(await isAdmin())) return [] as CourseRow[];
+  if (!(await isAdmin())) return [] as AdminCourseRow[];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { COURSE_COLUMNS } = await import("@/lib/courses.functions");
   const { data, error } = await supabaseAdmin
@@ -272,7 +272,7 @@ export type AdminPurchaseRow = {
 };
 
 export const adminListPurchases = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
+  if (!(await isAdmin())) return [] as PurchaseRow[];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("course_purchases")
