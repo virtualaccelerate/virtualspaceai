@@ -6,10 +6,11 @@ import { formatRate, initials } from "@/components/MentorsCatalog";
 
 export const Route = createFileRoute("/mentors/$id")({
   loader: async ({ params }) => {
-    const mentor = await getMentor({ data: { id: params.id } });
+    const mentor = await getMentor({ data: { id: params.id } }).catch(() => null);
     if (!mentor) throw notFound();
     return { mentor };
   },
+
   head: ({ loaderData }) => {
     if (!loaderData) {
       return { meta: [{ title: "Mentor — Virtual Space" }, { name: "robots", content: "noindex" }] };
