@@ -289,6 +289,75 @@ export type Database = {
           },
         ]
       }
+      mentors: {
+        Row: {
+          achievements: string
+          booking_url: string | null
+          company: string
+          created_at: string
+          currency: string
+          experience: string
+          expertise: string[]
+          full_bio: string
+          full_name: string
+          hourly_rate: number | null
+          id: string
+          industries: string[]
+          languages: string[]
+          photo_url: string | null
+          position: number
+          published: boolean
+          role_title: string
+          short_bio: string
+          topics: string
+          updated_at: string
+        }
+        Insert: {
+          achievements?: string
+          booking_url?: string | null
+          company?: string
+          created_at?: string
+          currency?: string
+          experience?: string
+          expertise?: string[]
+          full_bio?: string
+          full_name: string
+          hourly_rate?: number | null
+          id?: string
+          industries?: string[]
+          languages?: string[]
+          photo_url?: string | null
+          position?: number
+          published?: boolean
+          role_title?: string
+          short_bio?: string
+          topics?: string
+          updated_at?: string
+        }
+        Update: {
+          achievements?: string
+          booking_url?: string | null
+          company?: string
+          created_at?: string
+          currency?: string
+          experience?: string
+          expertise?: string[]
+          full_bio?: string
+          full_name?: string
+          hourly_rate?: number | null
+          id?: string
+          industries?: string[]
+          languages?: string[]
+          photo_url?: string | null
+          position?: number
+          published?: boolean
+          role_title?: string
+          short_bio?: string
+          topics?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
