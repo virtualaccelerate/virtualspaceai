@@ -10,9 +10,13 @@ import {
   adminSaveStartup,
   adminDeleteStartup,
   adminUploadStartupLogo,
+  adminListMentors,
+  adminSaveMentor,
+  adminDeleteMentor,
   type DemoRequestRow,
 } from "@/lib/admin.functions";
 import type { StartupRow } from "@/lib/startups.functions";
+import type { MentorRow } from "@/lib/mentors.functions";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -34,6 +38,7 @@ const TABS = [
   { id: "speakers", label: "Спикеры" },
   { id: "courses", label: "Курсы" },
   { id: "startups", label: "Стартапы" },
+  { id: "mentors", label: "Менторы" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -227,6 +232,8 @@ function AdminPage() {
           </section>
         ) : tab === "startups" ? (
           <StartupsAdmin />
+        ) : tab === "mentors" ? (
+          <MentorsAdmin />
         ) : (
           <section className="glass rounded-2xl p-10 text-center">
             <h2 className="font-display text-lg mb-2">{TABS.find((t) => t.id === tab)?.label}</h2>
@@ -460,6 +467,295 @@ function StartupsAdmin() {
           </table>
         ) : (
           <p className="p-8 text-center text-sm text-muted-foreground">Пока пусто</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+type MentorForm = {
+  id: string | null;
+  full_name: string;
+  photo_url: string;
+  role_title: string;
+  company: string;
+  short_bio: string;
+  full_bio: string;
+  experience: string;
+  achievements: string;
+  topics: string;
+  expertise: string;
+  industries: string;
+  languages: string;
+  hourly_rate: string;
+  currency: string;
+  booking_url: string;
+  position: number;
+  published: boolean;
+};
+
+const emptyMentor: MentorForm = {
+  id: null,
+  full_name: "",
+  photo_url: "",
+  role_title: "",
+  company: "",
+  short_bio: "",
+  full_bio: "",
+  experience: "",
+  achievements: "",
+  topics: "",
+  expertise: "",
+  industries: "",
+  languages: "",
+  hourly_rate: "",
+  currency: "USD",
+  booking_url: "",
+  position: 0,
+  published: true,
+};
+
+function MentorsAdmin() {
+  const [items, setItems] = useState<MentorRow[] | null>(null);
+  const [form, setForm] = useState<MentorForm | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = async () => {
+    try {
+      setItems(await adminListMentors());
+    } catch {
+      setItems([]);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const uploadPhoto = async (file: File) => {
+    setUploading(true);
+    setErr(null);
+    try {
+      const buf = await file.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      const res = await adminUploadStartupLogo({
+        data: { fileName: file.name, contentType: file.type || "image/png", dataBase64: btoa(binary) },
+      });
+      setForm((f) => (f ? { ...f, photo_url: res.url } : f));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Не удалось загрузить файл");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const edit = (r: MentorRow) =>
+    setForm({
+      id: r.id,
+      full_name: r.full_name,
+      photo_url: r.photo_url ?? "",
+      role_title: r.role_title ?? "",
+      company: r.company ?? "",
+      short_bio: r.short_bio ?? "",
+      full_bio: r.full_bio ?? "",
+      experience: r.experience ?? "",
+      achievements: r.achievements ?? "",
+      topics: r.topics ?? "",
+      expertise: (r.expertise ?? []).join(", "),
+      industries: (r.industries ?? []).join(", "),
+      languages: (r.languages ?? []).join(", "),
+      hourly_rate: r.hourly_rate == null ? "" : String(r.hourly_rate),
+      currency: r.currency || "USD",
+      booking_url: r.booking_url ?? "",
+      position: r.position,
+      published: r.published,
+    });
+
+  const list = (v: string) => v.split(",").map((s) => s.trim()).filter(Boolean);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form || saving) return;
+    setSaving(true);
+    setErr(null);
+    try {
+      await adminSaveMentor({
+        data: {
+          id: form.id,
+          values: {
+            full_name: form.full_name,
+            photo_url: form.photo_url,
+            role_title: form.role_title,
+            company: form.company,
+            short_bio: form.short_bio,
+            full_bio: form.full_bio,
+            experience: form.experience,
+            achievements: form.achievements,
+            topics: form.topics,
+            expertise: list(form.expertise),
+            industries: list(form.industries),
+            languages: list(form.languages),
+            hourly_rate: form.hourly_rate.trim() === "" ? null : Number(form.hourly_rate),
+            currency: form.currency || "USD",
+            booking_url: form.booking_url,
+            position: Number(form.position) || 0,
+            published: form.published,
+          },
+        },
+      });
+      setForm(null);
+      await load();
+    } catch (e2) {
+      setErr(e2 instanceof Error ? e2.message : "Не удалось сохранить");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Удалить ментора?")) return;
+    await adminDeleteMentor({ data: { id } });
+    await load();
+  };
+
+  const field = "glass w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50";
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Менторы ({items?.length ?? 0})</h2>
+        <button
+          onClick={() => setForm({ ...emptyMentor, position: (items?.length ?? 0) + 1 })}
+          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition"
+        >
+          <Plus className="h-3.5 w-3.5" /> Добавить
+        </button>
+      </div>
+
+      {form && (
+        <form onSubmit={save} className="glass rounded-2xl p-5 grid gap-3 sm:grid-cols-2">
+          <input className={field} placeholder="Имя и фамилия" required value={form.full_name}
+            onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+          <input className={field} placeholder="Должность (например, CFO)" value={form.role_title}
+            onChange={(e) => setForm({ ...form, role_title: e.target.value })} />
+          <input className={field} placeholder="Компания" value={form.company}
+            onChange={(e) => setForm({ ...form, company: e.target.value })} />
+          <input className={field} placeholder="Ссылка на бронирование (необязательно)" value={form.booking_url}
+            onChange={(e) => setForm({ ...form, booking_url: e.target.value })} />
+
+          <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
+            {form.photo_url ? (
+              <div className="relative">
+                <img src={form.photo_url} alt="Фото" className="h-16 w-16 rounded-xl object-cover border border-border/60" />
+                <button type="button" onClick={() => setForm({ ...form, photo_url: "" })}
+                  className="absolute -right-2 -top-2 rounded-full bg-background border border-border p-1">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : null}
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition">
+              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
+              {uploading ? "Загрузка…" : form.photo_url ? "Заменить фото" : "Загрузить фото"}
+              <input type="file" accept="image/*" className="hidden" disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void uploadPhoto(f);
+                }} />
+            </label>
+            <span className="text-[11px] text-muted-foreground">JPG/PNG до 5 МБ</span>
+          </div>
+
+          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Краткий бэкграунд (для карточки)"
+            value={form.short_bio} onChange={(e) => setForm({ ...form, short_bio: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={4} placeholder="Полное профессиональное досье"
+            value={form.full_bio} onChange={(e) => setForm({ ...form, full_bio: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Опыт работы"
+            value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Ключевые достижения"
+            value={form.achievements} onChange={(e) => setForm({ ...form, achievements: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Темы консультаций"
+            value={form.topics} onChange={(e) => setForm({ ...form, topics: e.target.value })} />
+
+          <input className={field} placeholder="Экспертиза через запятую" value={form.expertise}
+            onChange={(e) => setForm({ ...form, expertise: e.target.value })} />
+          <input className={field} placeholder="Отрасли через запятую" value={form.industries}
+            onChange={(e) => setForm({ ...form, industries: e.target.value })} />
+          <input className={field} placeholder="Языки консультаций (Русский, English…)" value={form.languages}
+            onChange={(e) => setForm({ ...form, languages: e.target.value })} />
+          <div className="grid grid-cols-[1fr_100px] gap-3">
+            <input className={field} type="number" step="0.01" placeholder="Стоимость часа" value={form.hourly_rate}
+              onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} />
+            <input className={field} placeholder="USD" value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+          </div>
+          <input className={field} type="number" placeholder="Порядок" value={form.position}
+            onChange={(e) => setForm({ ...form, position: Number(e.target.value) })} />
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" checked={form.published}
+              onChange={(e) => setForm({ ...form, published: e.target.checked })} />
+            Опубликован
+          </label>
+
+          {err && <p className="text-xs text-destructive sm:col-span-2">{err}</p>}
+          <div className="sm:col-span-2 flex gap-2">
+            <button type="submit" disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-xs font-semibold disabled:opacity-60">
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Сохранить
+            </button>
+            <button type="button" onClick={() => setForm(null)}
+              className="rounded-full border border-border px-5 py-2.5 text-xs hover:bg-muted/40 transition">
+              Отмена
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="glass rounded-2xl overflow-hidden">
+        {items && items.length > 0 ? (
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground">
+              <tr className="border-b border-border/50">
+                <th className="text-left font-medium px-5 py-3">#</th>
+                <th className="text-left font-medium px-5 py-3">Имя</th>
+                <th className="text-left font-medium px-5 py-3">Должность</th>
+                <th className="text-left font-medium px-5 py-3">Час</th>
+                <th className="text-left font-medium px-5 py-3">Статус</th>
+                <th className="px-5 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((r) => (
+                <tr key={r.id} className="border-b border-border/30 last:border-0">
+                  <td className="px-5 py-3 text-muted-foreground">{r.position}</td>
+                  <td className="px-5 py-3">{r.full_name}</td>
+                  <td className="px-5 py-3 text-muted-foreground truncate max-w-[220px]">
+                    {[r.role_title, r.company].filter(Boolean).join(" · ") || "—"}
+                  </td>
+                  <td className="px-5 py-3 text-muted-foreground">
+                    {r.hourly_rate == null ? "—" : `${r.hourly_rate} ${r.currency}`}
+                  </td>
+                  <td className="px-5 py-3 text-muted-foreground">{r.published ? "Опубликован" : "Скрыт"}</td>
+                  <td className="px-5 py-3 text-right whitespace-nowrap">
+                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title="Редактировать">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title="Удалить">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="p-8 text-center text-sm text-muted-foreground">Менторов пока нет</p>
         )}
       </div>
     </section>

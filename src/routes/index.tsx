@@ -13,6 +13,7 @@ import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
 import { StartupsSection } from "@/components/StartupsCatalog";
+import { MentorsSection } from "@/components/MentorsCatalog";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
@@ -177,9 +178,10 @@ function Header() {
                 transition={{ duration: 0.2 }}
                 className="glass-strong absolute left-0 mt-3 w-40 rounded-2xl p-2 z-50"
               >
-                <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
+                <a href="#mentors" className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition">
                   {t("nav.mentors")}
-                </span>
+                </a>
+
                 <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
                   {t("nav.courses")}
                 </span>
@@ -228,9 +230,9 @@ function Header() {
                     </button>
                     {mobileLearnOpen && (
                       <div className="flex flex-col gap-2 mt-2 ml-4">
-                        <span className="text-base text-white/40 cursor-default">
+                        <a href="#mentors" onClick={() => setMobileOpen(false)} className="text-base text-white/80 hover:text-white transition">
                           {t("nav.mentors")}
-                        </span>
+                        </a>
                         <span className="text-base text-white/40 cursor-default">
                           {t("nav.courses")}
                         </span>
@@ -576,6 +578,8 @@ function Landing() {
       {/* STARTUPS CATALOG */}
       <StartupsSection />
 
+      <MentorsSection />
+
       {/* NEW ERA */}
       <section id="new-era" className="relative">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
@@ -802,7 +806,7 @@ function Landing() {
             <div>
               <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.learnLabel")}</p>
               <ul className="space-y-2 text-sm text-white/60">
-                <li><span className="hover:text-white transition cursor-default">{t("nav.mentors")}</span></li>
+                <li><a href="/#mentors" className="hover:text-white transition">{t("nav.mentors")}</a></li>
                 <li><span className="hover:text-white transition cursor-default">{t("nav.courses")}</span></li>
                 <li><span className="hover:text-white transition cursor-default">{t("footer.resources")}</span></li>
               </ul>
