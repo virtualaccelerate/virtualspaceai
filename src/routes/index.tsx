@@ -136,11 +136,11 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 sm:pt-4">
       <div className="glass mx-auto max-w-6xl rounded-full px-3 sm:px-5 h-14 flex items-center justify-between">
-        <a href="#top" className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <a href="#top" className="flex items-center gap-2">
             <VirtualSpaceLogo className="text-primary" size={28} />
             <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
-          </div>
+          </a>
           <a
             href="https://www.virtualaccelerate.com/"
             target="_blank"
@@ -159,7 +159,8 @@ function Header() {
               className="va-logo-light h-3.5 sm:h-5 w-auto mt-0.5"
             />
           </a>
-        </a>
+        </div>
+
 
         <nav className="hidden md:flex items-center gap-4 lg:gap-5 text-sm mx-4 flex-1 justify-center">
           <div className="relative">
