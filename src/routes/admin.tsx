@@ -220,6 +220,8 @@ function AdminPage() {
               <p className="p-8 text-center text-sm text-muted-foreground">Заявок пока нет</p>
             )}
           </section>
+        ) : tab === "startups" ? (
+          <StartupsAdmin />
         ) : (
           <section className="glass rounded-2xl p-10 text-center">
             <h2 className="font-display text-lg mb-2">{TABS.find((t) => t.id === tab)?.label}</h2>
@@ -228,6 +230,7 @@ function AdminPage() {
             </p>
           </section>
         )}
+
       </main>
     </div>
   );
