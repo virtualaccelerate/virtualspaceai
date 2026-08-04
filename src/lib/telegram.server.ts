@@ -119,6 +119,16 @@ const STATUS_LABEL: Record<string, Record<Lang, string>> = {
   review: { ru: "На проверке", en: "Review" },
   done: { ru: "Готово", en: "Done" },
 };
+// Цвет статуса задачи (совпадает с цветами колонок в веб-приложении)
+const STATUS_ICON: Record<string, string> = {
+  backlog: "⬜️",
+  in_progress: "🟪",
+  review: "🟨",
+  done: "🟩",
+};
+const statusTag = (status: string, lang: Lang) =>
+  `${STATUS_ICON[status] ?? "⬜️"} ${STATUS_LABEL[status]?.[lang] ?? status}`;
+
 const PRIORITY_ICON: Record<string, string> = {
   low: "⚪️",
   medium: "🔵",
