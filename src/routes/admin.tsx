@@ -10,6 +10,13 @@ import {
   adminSaveStartup,
   adminDeleteStartup,
   adminUploadStartupLogo,
+  adminListCourses,
+  adminSaveCourse,
+  adminDeleteCourse,
+  adminListPurchases,
+  adminSetPurchaseStatus,
+  type AdminCourseRow,
+  type AdminPurchaseRow,
   adminListMentors,
   adminSaveMentor,
   adminDeleteMentor,
@@ -234,6 +241,8 @@ function AdminPage() {
           <StartupsAdmin />
         ) : tab === "mentors" ? (
           <MentorsAdmin />
+        ) : tab === "courses" ? (
+          <CoursesAdmin />
         ) : (
           <section className="glass rounded-2xl p-10 text-center">
             <h2 className="font-display text-lg mb-2">{TABS.find((t) => t.id === tab)?.label}</h2>
@@ -756,6 +765,313 @@ function MentorsAdmin() {
           </table>
         ) : (
           <p className="p-8 text-center text-sm text-muted-foreground">Менторов пока нет</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+
+type CourseForm = {
+  id: string | null;
+  title: string;
+  description: string;
+  cover_url: string;
+  price: string;
+  currency: string;
+  level: string;
+  duration: string;
+  lessons_count: string;
+  video_url: string;
+  finik_payment_url: string;
+  position: number;
+  published: boolean;
+};
+
+const emptyCourse: CourseForm = {
+  id: null,
+  title: "",
+  description: "",
+  cover_url: "",
+  price: "0",
+  currency: "KGS",
+  level: "",
+  duration: "",
+  lessons_count: "0",
+  video_url: "",
+  finik_payment_url: "",
+  position: 0,
+  published: true,
+};
+
+function CoursesAdmin() {
+  const [items, setItems] = useState<AdminCourseRow[] | null>(null);
+  const [purchases, setPurchases] = useState<AdminPurchaseRow[] | null>(null);
+  const [form, setForm] = useState<CourseForm | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = async () => {
+    try {
+      setItems(await adminListCourses());
+    } catch {
+      setItems([]);
+    }
+    try {
+      setPurchases(await adminListPurchases());
+    } catch {
+      setPurchases([]);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const uploadCover = async (file: File) => {
+    setUploading(true);
+    setErr(null);
+    try {
+      const buf = await file.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      const res = await adminUploadStartupLogo({
+        data: { fileName: file.name, contentType: file.type || "image/png", dataBase64: btoa(binary) },
+      });
+      setForm((f) => (f ? { ...f, cover_url: res.url } : f));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Не удалось загрузить файл");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const edit = (r: AdminCourseRow) =>
+    setForm({
+      id: r.id,
+      title: r.title_ru || r.title,
+      description: r.description_ru || r.description || "",
+      cover_url: r.cover_url ?? "",
+      price: String(r.price ?? 0),
+      currency: r.currency || "KGS",
+      level: r.level || "",
+      duration: r.duration || "",
+      lessons_count: String(r.lessons_count ?? 0),
+      video_url: r.video_url ?? "",
+      finik_payment_url: r.finik_payment_url ?? "",
+      position: r.position ?? 0,
+      published: r.published,
+    });
+
+  const save = async () => {
+    if (!form) return;
+    setSaving(true);
+    setErr(null);
+    try {
+      await adminSaveCourse({
+        data: {
+          id: form.id,
+          values: {
+            title: form.title.trim(),
+            title_ru: form.title.trim(),
+            description: form.description.trim(),
+            description_ru: form.description.trim(),
+            cover_url: form.cover_url.trim(),
+            price: Number(form.price) || 0,
+            currency: form.currency.trim() || "KGS",
+            level: form.level.trim(),
+            duration: form.duration.trim(),
+            lessons_count: Number(form.lessons_count) || 0,
+            video_url: form.video_url.trim(),
+            finik_payment_url: form.finik_payment_url.trim(),
+            position: Number(form.position) || 0,
+            published: form.published,
+          },
+        },
+      });
+      setForm(null);
+      await load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Не удалось сохранить");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Удалить курс?")) return;
+    await adminDeleteCourse({ data: { id } });
+    await load();
+  };
+
+  const setStatus = async (id: string, status: "pending" | "paid" | "failed") => {
+    await adminSetPurchaseStatus({ data: { id, status } });
+    await load();
+  };
+
+  const inputCls =
+    "w-full rounded-xl bg-background/60 border border-border px-3 py-2 text-sm outline-none focus:border-primary/60";
+
+  return (
+    <section className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-lg">Курсы</h2>
+        <div className="flex gap-2">
+          <button onClick={() => void load()} className="glass rounded-xl px-3 py-2 text-sm inline-flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" /> Обновить
+          </button>
+          <button
+            onClick={() => setForm({ ...emptyCourse })}
+            className="rounded-xl bg-primary text-primary-foreground px-3 py-2 text-sm font-semibold inline-flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Новый курс
+          </button>
+        </div>
+      </div>
+
+      {err && <p className="text-sm text-destructive">{err}</p>}
+
+      {form && (
+        <div className="glass rounded-2xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm">{form.id ? "Редактирование курса" : "Новый курс"}</h3>
+            <button onClick={() => setForm(null)} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <input
+            className={inputCls}
+            placeholder="Название курса"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+          <textarea
+            className={`${inputCls} min-h-[100px]`}
+            placeholder="Описание"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <input className={inputCls} placeholder="Цена" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            <input className={inputCls} placeholder="Валюта" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+            <input className={inputCls} placeholder="Уровень" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} />
+            <input className={inputCls} placeholder="Длительность (напр. 6 недель)" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
+            <input className={inputCls} placeholder="Кол-во уроков" value={form.lessons_count} onChange={(e) => setForm({ ...form, lessons_count: e.target.value })} />
+            <input className={inputCls} placeholder="Позиция" value={form.position} onChange={(e) => setForm({ ...form, position: Number(e.target.value) || 0 })} />
+          </div>
+
+          <input
+            className={inputCls}
+            placeholder="Ссылка оплаты Finik"
+            value={form.finik_payment_url}
+            onChange={(e) => setForm({ ...form, finik_payment_url: e.target.value })}
+          />
+          <input
+            className={inputCls}
+            placeholder="Закрытая ссылка на YouTube (видео можно добавить позже)"
+            value={form.video_url}
+            onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+          />
+
+          <div className="flex items-center gap-3">
+            {form.cover_url && <img src={form.cover_url} alt="" className="h-12 w-20 rounded-lg object-cover" />}
+            <label className="glass rounded-xl px-3 py-2 text-sm inline-flex items-center gap-2 cursor-pointer">
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+              Обложка
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void uploadCover(f);
+                }}
+              />
+            </label>
+            <label className="text-sm inline-flex items-center gap-2">
+              <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} />
+              Опубликован
+            </label>
+          </div>
+
+          <button
+            onClick={() => void save()}
+            disabled={saving || !form.title.trim()}
+            className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold disabled:opacity-60"
+          >
+            {saving ? "Сохранение…" : "Сохранить"}
+          </button>
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {(items ?? []).map((c) => (
+          <div key={c.id} className="glass rounded-2xl p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-sm">{c.title_ru || c.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {c.price} {c.currency} {c.published ? "" : "• черновик"}
+                </p>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => edit(c)} className="p-2 text-muted-foreground hover:text-foreground">
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button onClick={() => void remove(c.id)} className="p-2 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {items && items.length === 0 && <p className="text-sm text-muted-foreground">Курсов пока нет</p>}
+      </div>
+
+      <div className="glass rounded-2xl p-5">
+        <h3 className="font-semibold text-sm mb-3">Покупки</h3>
+        {purchases && purchases.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs text-muted-foreground">
+                <tr>
+                  <th className="text-left py-2">Email</th>
+                  <th className="text-left py-2">Курс</th>
+                  <th className="text-left py-2">Сумма</th>
+                  <th className="text-left py-2">Статус</th>
+                  <th className="text-left py-2">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {purchases.map((p) => (
+                  <tr key={p.id} className="border-t border-border/50">
+                    <td className="py-2">{p.email ?? "—"}</td>
+                    <td className="py-2">{(items ?? []).find((c) => c.id === p.course_id)?.title ?? p.course_id.slice(0, 8)}</td>
+                    <td className="py-2">
+                      {p.amount} {p.currency}
+                    </td>
+                    <td className="py-2">{p.status}</td>
+                    <td className="py-2 flex gap-2">
+                      <button onClick={() => void setStatus(p.id, "paid")} className="text-xs underline">
+                        Оплачено
+                      </button>
+                      <button onClick={() => void setStatus(p.id, "failed")} className="text-xs underline">
+                        Отменить
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Покупок пока нет</p>
         )}
       </div>
     </section>
