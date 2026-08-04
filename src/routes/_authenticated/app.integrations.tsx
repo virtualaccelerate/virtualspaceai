@@ -60,10 +60,10 @@ function IntegrationsPage() {
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
           {t("app.integrations.available", "Available")}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="flex flex-col gap-2.5">
           <GoogleDriveCard />
           {available.map((s) => (
-            <SourceCard key={s.id} source={s} />
+            <SourceRow key={s.id} source={s} />
           ))}
         </div>
       </section>
@@ -72,9 +72,9 @@ function IntegrationsPage() {
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
           {t("app.integrations.soon", "Coming soon")}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="flex flex-col gap-2.5">
           {soon.map((s) => (
-            <SourceCard key={s.id} source={s} />
+            <SourceRow key={s.id} source={s} />
           ))}
         </div>
       </section>
@@ -82,49 +82,43 @@ function IntegrationsPage() {
   );
 }
 
-function SourceCard({ source }: { source: Source }) {
+function SourceRow({ source }: { source: Source }) {
   const { t } = useTranslation();
   const disabled = source.status === "soon";
   return (
-    <div className="glass-strong rounded-2xl p-4 border border-white/10 flex flex-col gap-3">
-      <div className="flex items-start gap-3">
-        <div className={`h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 ${source.accent}`}>
-          <source.icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <div className="font-semibold text-white text-sm truncate">{source.name}</div>
-            {disabled && (
-              <span className="text-[9px] uppercase tracking-wider text-white/50 border border-white/10 rounded-full px-1.5 py-0.5 flex items-center gap-1">
-                <Clock className="h-2.5 w-2.5" />
-                {t("app.integrations.soonBadge", "Soon")}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-white/55 mt-0.5 leading-snug">{source.desc}</p>
-        </div>
+    <div className="glass-strong rounded-2xl border border-white/10 px-4 py-3.5 flex items-center gap-4">
+      <div className={`h-11 w-11 rounded-xl bg-white/5 flex items-center justify-center shrink-0 ${source.accent}`}>
+        <source.icon className="h-5 w-5" />
       </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-white text-[15px] truncate">{source.name}</span>
+          {disabled && (
+            <span className="text-[9px] uppercase tracking-wider text-white/50 border border-white/10 rounded-full px-1.5 py-0.5 inline-flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" />
+              {t("app.integrations.soonBadge", "Soon")}
+            </span>
+          )}
+        </div>
+        <p className="hidden sm:block text-xs text-white/50 mt-0.5 leading-snug truncate">{source.desc}</p>
+      </div>
+
       <button
         disabled={disabled}
         onClick={() => {
           if (disabled) return;
           alert(t("app.integrations.wip", "Connection flow coming next — the UI is ready."));
         }}
-        className={`w-full rounded-lg px-3 py-2 text-xs font-semibold transition ${
+        className={`shrink-0 rounded-xl px-5 py-2.5 text-sm font-medium transition border ${
           disabled
-            ? "bg-white/5 text-white/40 cursor-not-allowed"
-            : "bg-primary text-primary-foreground hover:bg-primary/90"
+            ? "bg-white/5 text-white/35 border-white/5 cursor-not-allowed"
+            : "bg-white/10 text-white border-white/15 hover:bg-white/15"
         }`}
       >
-        {disabled ? (
-          t("app.integrations.notify", "Notify me")
-        ) : (
-          <span className="inline-flex items-center gap-1.5 justify-center">
-            <Check className="h-3.5 w-3.5" />
-            {t("app.integrations.connect", "Connect")}
-          </span>
-        )}
+        {disabled ? t("app.integrations.notify", "Notify me") : t("app.integrations.connect", "Connect")}
       </button>
     </div>
   );
 }
+
