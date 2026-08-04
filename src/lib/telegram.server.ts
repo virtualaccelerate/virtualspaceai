@@ -5,7 +5,7 @@ export const TELEGRAM_API = "https://api.telegram.org";
 
 export function miniAppUrl(): string {
   const base =
-    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://virtualspaceai.lovable.app";
+    process.env.PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://ai-virtualspace.com";
   return `${base}/tg`;
 }
 
