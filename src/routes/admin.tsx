@@ -311,8 +311,8 @@ function StartupsAdmin() {
     setForm({
       id: r.id,
       name: r.name,
-      description: r.description ?? "",
-      description_ru: r.description_ru ?? "",
+      description: r.description_ru || r.description || "",
+      description_ru: r.description_ru || r.description || "",
       image_url: r.image_url ?? "",
       website_url: r.website_url ?? "",
       cta_label: r.cta_label ?? "",
@@ -378,10 +378,8 @@ function StartupsAdmin() {
             onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input className={field} placeholder="Ссылка на сайт (https://...)" value={form.website_url}
             onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Описание (EN)" value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Описание (RU)" value={form.description_ru}
-            onChange={(e) => setForm({ ...form, description_ru: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Описание" value={form.description_ru}
+            onChange={(e) => setForm({ ...form, description_ru: e.target.value, description: e.target.value })} />
           <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
             {form.image_url ? (
               <div className="relative">
