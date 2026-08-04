@@ -93,13 +93,11 @@ export function MentorCard({ item, index }: { item: MentorRow; index: number }) 
       )}
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <Link
-          to="/mentors/$id"
-          params={{ id: item.id }}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold hover:bg-primary/90 transition"
-        >
-          {t("mentors.book", "Book a mentor")} <ArrowUpRight className="h-4 w-4" />
-        </Link>
+        <MentorBookingDialog mentorName={item.full_name} rate={rate}>
+          <button className="inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold hover:bg-primary/90 transition">
+            {t("mentors.book", "Book a mentor")} <ArrowUpRight className="h-4 w-4" />
+          </button>
+        </MentorBookingDialog>
         <Link
           to="/mentors/$id"
           params={{ id: item.id }}
@@ -108,6 +106,7 @@ export function MentorCard({ item, index }: { item: MentorRow; index: number }) 
           {t("mentors.details", "Details")}
         </Link>
       </div>
+
     </motion.article>
   );
 }
