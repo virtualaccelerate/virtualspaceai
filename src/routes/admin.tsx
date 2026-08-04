@@ -311,8 +311,8 @@ function StartupsAdmin() {
     setForm({
       id: r.id,
       name: r.name,
-      description: r.description ?? "",
-      description_ru: r.description_ru ?? "",
+      description: r.description_ru || r.description || "",
+      description_ru: r.description_ru || r.description || "",
       image_url: r.image_url ?? "",
       website_url: r.website_url ?? "",
       cta_label: r.cta_label ?? "",
