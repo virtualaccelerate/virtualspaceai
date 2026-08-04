@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowUpRight, Languages, Briefcase, Award, Target } from "lucide-react";
 import { getMentor } from "@/lib/mentors.functions";
 import { formatRate, initials } from "@/components/MentorsCatalog";
+import { MentorBookingDialog } from "@/components/MentorBookingDialog";
+
 
 export const Route = createFileRoute("/mentors/$id")({
   loader: async ({ params }) => {
