@@ -112,7 +112,7 @@ function MentorDetail() {
                 <div>
                   <h2 className="font-display text-lg text-white">{t("mentors.expertise", "Areas of expertise")}</h2>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {mentor.expertise.map((tag) => (
+                    {mentor.expertise.map((tag: string) => (
                       <span key={tag} className="text-[11px] text-white/60 border border-white/10 rounded-full px-3 py-1">{tag}</span>
                     ))}
                   </div>
@@ -122,7 +122,7 @@ function MentorDetail() {
                 <div>
                   <h2 className="font-display text-lg text-white">{t("mentors.industries", "Industries")}</h2>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {mentor.industries.map((tag) => (
+                    {mentor.industries.map((tag: string) => (
                       <span key={tag} className="text-[11px] text-white/60 border border-white/10 rounded-full px-3 py-1">{tag}</span>
                     ))}
                   </div>
