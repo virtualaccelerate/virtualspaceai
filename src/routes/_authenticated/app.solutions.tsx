@@ -24,11 +24,11 @@ function SolutionsPage() {
           <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
             <Briefcase className="h-5 w-5 text-primary" />
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl text-white">
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">
             {t("app.solutions.title", "Solutions")}
           </h1>
         </div>
-        <p className="mt-2 text-sm text-white/60 max-w-2xl">{t("startups.subtitle")}</p>
+        <p className="mt-2 text-sm text-muted-foreground max-w-2xl">{t("startups.subtitle")}</p>
       </div>
 
       {isLoading ? (
