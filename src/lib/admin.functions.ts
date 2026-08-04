@@ -82,13 +82,17 @@ export const adminGetDemoRequests = createServerFn({ method: "GET" }).handler(as
 const STARTUP_COLUMNS =
   "id, name, description, description_ru, image_url, website_url, cta_label, tags, position, published";
 
-async function requireAdmin() {
+async function isAdmin() {
   const session = await useSession<AdminSession>(sessionConfig());
-  if (!session.data.admin) throw new Error("Unauthorized");
+  return session.data.admin === true;
+}
+
+async function requireAdmin() {
+  if (!(await isAdmin())) throw new Error("Unauthorized");
 }
 
 export const adminListStartups = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
+  if (!(await isAdmin())) return [] as StartupRow[];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("startups")
@@ -163,7 +167,7 @@ export const adminUploadStartupLogo = createServerFn({ method: "POST" })
 // ---------------- Mentors ----------------
 
 export const adminListMentors = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
+  if (!(await isAdmin())) return [] as MentorRow[];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { MENTOR_COLUMNS } = await import("@/lib/mentors.functions");
   const { data, error } = await supabaseAdmin
@@ -211,7 +215,7 @@ export const adminDeleteMentor = createServerFn({ method: "POST" })
 export type AdminCourseRow = CourseRow & { video_url: string | null };
 
 export const adminListCourses = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
+  if (!(await isAdmin())) return [] as CourseRow[];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { COURSE_COLUMNS } = await import("@/lib/courses.functions");
   const { data, error } = await supabaseAdmin
