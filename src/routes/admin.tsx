@@ -1,13 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Lock, LogOut, RefreshCw, User } from "lucide-react";
+import { Loader2, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2, User } from "lucide-react";
 import {
   adminGetDemoRequests,
   adminLogin,
   adminLogout,
   adminSessionStatus,
+  adminListStartups,
+  adminSaveStartup,
+  adminDeleteStartup,
   type DemoRequestRow,
 } from "@/lib/admin.functions";
+import type { StartupRow } from "@/lib/startups.functions";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -233,5 +237,190 @@ function AdminPage() {
 
       </main>
     </div>
+  );
+}
+
+type StartupForm = {
+  id: string | null;
+  name: string;
+  description: string;
+  description_ru: string;
+  image_url: string;
+  website_url: string;
+  cta_label: string;
+  tags: string;
+  position: number;
+  published: boolean;
+};
+
+const emptyStartup: StartupForm = {
+  id: null,
+  name: "",
+  description: "",
+  description_ru: "",
+  image_url: "",
+  website_url: "",
+  cta_label: "",
+  tags: "",
+  position: 0,
+  published: true,
+};
+
+function StartupsAdmin() {
+  const [items, setItems] = useState<StartupRow[] | null>(null);
+  const [form, setForm] = useState<StartupForm | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = async () => {
+    try {
+      setItems(await adminListStartups());
+    } catch {
+      setItems([]);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const edit = (r: StartupRow) =>
+    setForm({
+      id: r.id,
+      name: r.name,
+      description: r.description ?? "",
+      description_ru: r.description_ru ?? "",
+      image_url: r.image_url ?? "",
+      website_url: r.website_url ?? "",
+      cta_label: r.cta_label ?? "",
+      tags: (r.tags ?? []).join(", "),
+      position: r.position,
+      published: r.published,
+    });
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form || saving) return;
+    setSaving(true);
+    setErr(null);
+    try {
+      await adminSaveStartup({
+        data: {
+          id: form.id,
+          values: {
+            name: form.name,
+            description: form.description,
+            description_ru: form.description_ru,
+            image_url: form.image_url,
+            website_url: form.website_url,
+            cta_label: form.cta_label,
+            tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
+            position: Number(form.position) || 0,
+            published: form.published,
+          },
+        },
+      });
+      setForm(null);
+      await load();
+    } catch (e2) {
+      setErr(e2 instanceof Error ? e2.message : "Не удалось сохранить");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Удалить стартап?")) return;
+    await adminDeleteStartup({ data: { id } });
+    await load();
+  };
+
+  const field = "glass w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50";
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Стартапы каталога ({items?.length ?? 0})</h2>
+        <button
+          onClick={() => setForm({ ...emptyStartup, position: (items?.length ?? 0) + 1 })}
+          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition"
+        >
+          <Plus className="h-3.5 w-3.5" /> Добавить
+        </button>
+      </div>
+
+      {form && (
+        <form onSubmit={save} className="glass rounded-2xl p-5 grid gap-3 sm:grid-cols-2">
+          <input className={field} placeholder="Название" required value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className={field} placeholder="Ссылка на сайт (https://...)" value={form.website_url}
+            onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Описание (EN)" value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Описание (RU)" value={form.description_ru}
+            onChange={(e) => setForm({ ...form, description_ru: e.target.value })} />
+          <input className={field} placeholder="URL логотипа / картинки" value={form.image_url}
+            onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+          <input className={field} placeholder="Текст кнопки (по умолчанию «Перейти на сайт»)" value={form.cta_label}
+            onChange={(e) => setForm({ ...form, cta_label: e.target.value })} />
+          <input className={field} placeholder="Теги через запятую" value={form.tags}
+            onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+          <input className={field} type="number" placeholder="Порядок" value={form.position}
+            onChange={(e) => setForm({ ...form, position: Number(e.target.value) })} />
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" checked={form.published}
+              onChange={(e) => setForm({ ...form, published: e.target.checked })} />
+            Опубликован
+          </label>
+          {err && <p className="text-xs text-destructive sm:col-span-2">{err}</p>}
+          <div className="sm:col-span-2 flex gap-2">
+            <button type="submit" disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-xs font-semibold disabled:opacity-60">
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Сохранить
+            </button>
+            <button type="button" onClick={() => setForm(null)}
+              className="rounded-full border border-border px-5 py-2.5 text-xs hover:bg-muted/40 transition">
+              Отмена
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="glass rounded-2xl overflow-hidden">
+        {items && items.length > 0 ? (
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground">
+              <tr className="border-b border-border/50">
+                <th className="text-left font-medium px-5 py-3">#</th>
+                <th className="text-left font-medium px-5 py-3">Название</th>
+                <th className="text-left font-medium px-5 py-3">Сайт</th>
+                <th className="text-left font-medium px-5 py-3">Статус</th>
+                <th className="px-5 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((r) => (
+                <tr key={r.id} className="border-b border-border/30 last:border-0">
+                  <td className="px-5 py-3 text-muted-foreground">{r.position}</td>
+                  <td className="px-5 py-3">{r.name}</td>
+                  <td className="px-5 py-3 text-muted-foreground truncate max-w-[220px]">{r.website_url ?? "—"}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{r.published ? "Опубликован" : "Скрыт"}</td>
+                  <td className="px-5 py-3 text-right whitespace-nowrap">
+                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title="Редактировать">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title="Удалить">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="p-8 text-center text-sm text-muted-foreground">Пока пусто</p>
+        )}
+      </div>
+    </section>
   );
 }
