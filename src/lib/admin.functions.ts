@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { useSession } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { startupInputSchema, type StartupRow } from "@/lib/startups.functions";
+import { z } from "zod";
+
 
 type AdminSession = { admin?: boolean };
 
