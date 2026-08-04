@@ -13,6 +13,7 @@ import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
 import { StartupsSection } from "@/components/StartupsCatalog";
+import { MentorsSection } from "@/components/MentorsCatalog";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
@@ -575,6 +576,8 @@ function Landing() {
 
       {/* STARTUPS CATALOG */}
       <StartupsSection />
+
+      <MentorsSection />
 
       {/* NEW ERA */}
       <section id="new-era" className="relative">
