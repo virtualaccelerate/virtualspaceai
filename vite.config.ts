@@ -8,6 +8,9 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 export default defineConfig({
+  // Cloudflare made `nodejs_compat` implicit on 2026-08-04 and now rejects builds
+  // that still declare it, so pin the compatibility date just before that change.
+  nitro: { compatibilityDate: "2026-08-03" } as never,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
