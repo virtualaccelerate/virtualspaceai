@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2, User } from "lucide-react";
+import { ImagePlus, Loader2, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2, User, X } from "lucide-react";
 import {
   adminGetDemoRequests,
   adminLogin,
@@ -9,6 +9,7 @@ import {
   adminListStartups,
   adminSaveStartup,
   adminDeleteStartup,
+  adminUploadStartupLogo,
   type DemoRequestRow,
 } from "@/lib/admin.functions";
 import type { StartupRow } from "@/lib/startups.functions";
