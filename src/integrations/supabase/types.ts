@@ -130,6 +130,119 @@ export type Database = {
           },
         ]
       }
+      course_purchases: {
+        Row: {
+          amount: number
+          course_id: string
+          created_at: string
+          currency: string
+          email: string | null
+          id: string
+          paid_at: string | null
+          provider: string
+          provider_ref: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          course_id: string
+          created_at?: string
+          currency?: string
+          email?: string | null
+          id?: string
+          paid_at?: string | null
+          provider?: string
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          course_id?: string
+          created_at?: string
+          currency?: string
+          email?: string | null
+          id?: string
+          paid_at?: string | null
+          provider?: string
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_purchases_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          currency: string
+          description: string
+          description_ru: string | null
+          duration: string
+          finik_payment_url: string | null
+          id: string
+          lessons_count: number
+          level: string
+          position: number
+          price: number
+          published: boolean
+          title: string
+          title_ru: string | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string
+          description_ru?: string | null
+          duration?: string
+          finik_payment_url?: string | null
+          id?: string
+          lessons_count?: number
+          level?: string
+          position?: number
+          price?: number
+          published?: boolean
+          title: string
+          title_ru?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string
+          description_ru?: string | null
+          duration?: string
+          finik_payment_url?: string | null
+          id?: string
+          lessons_count?: number
+          level?: string
+          position?: number
+          price?: number
+          published?: boolean
+          title?: string
+          title_ru?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       demo_requests: {
         Row: {
           company: string | null
