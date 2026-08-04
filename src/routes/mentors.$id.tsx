@@ -92,13 +92,12 @@ function MentorDetail() {
                 <span className="text-white/50">{t("mentors.perHour", "/ hour")}</span>
               </p>
             )}
-            <a
-              href={bookHref}
-              {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:bg-primary/90 transition"
-            >
-              {t("mentors.book", "Book a mentor")} <ArrowUpRight className="h-4 w-4" />
-            </a>
+            <MentorBookingDialog mentorName={mentor.full_name} rate={rate}>
+              <button className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:bg-primary/90 transition">
+                {t("mentors.book", "Book a mentor")} <ArrowUpRight className="h-4 w-4" />
+              </button>
+            </MentorBookingDialog>
+
           </div>
         </header>
 

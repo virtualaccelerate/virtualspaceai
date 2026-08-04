@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Languages, Sparkles } from "lucide-react";
 import { listMentors, type MentorRow } from "@/lib/mentors.functions";
+import { MentorBookingDialog } from "@/components/MentorBookingDialog";
+
 
 export function useMentors() {
   return useQuery({
