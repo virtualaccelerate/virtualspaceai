@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { useSession } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { startupInputSchema, type StartupRow } from "@/lib/startups.functions";
+import { mentorInputSchema, type MentorRow } from "@/lib/mentors.functions";
 import { z } from "zod";
 
 
@@ -157,3 +158,48 @@ export const adminUploadStartupLogo = createServerFn({ method: "POST" })
     return { url: `/api/public/startup-logo/${path}` };
   });
 
+
+// ---------------- Mentors ----------------
+
+export const adminListMentors = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { MENTOR_COLUMNS } = await import("@/lib/mentors.functions");
+  const { data, error } = await supabaseAdmin
+    .from("mentors")
+    .select(MENTOR_COLUMNS)
+    .order("position", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as MentorRow[];
+});
+
+export const adminSaveMentor = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid().optional().nullable(), values: mentorInputSchema }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload = {
+      ...data.values,
+      photo_url: data.values.photo_url || null,
+      booking_url: data.values.booking_url || null,
+      hourly_rate: data.values.hourly_rate ?? null,
+    };
+    const query = data.id
+      ? supabaseAdmin.from("mentors").update(payload).eq("id", data.id)
+      : supabaseAdmin.from("mentors").insert(payload);
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const adminDeleteMentor = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("mentors").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
