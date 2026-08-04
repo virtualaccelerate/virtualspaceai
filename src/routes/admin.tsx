@@ -378,10 +378,8 @@ function StartupsAdmin() {
             onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input className={field} placeholder="Ссылка на сайт (https://...)" value={form.website_url}
             onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Описание (EN)" value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Описание (RU)" value={form.description_ru}
-            onChange={(e) => setForm({ ...form, description_ru: e.target.value })} />
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Описание" value={form.description_ru}
+            onChange={(e) => setForm({ ...form, description_ru: e.target.value, description: e.target.value })} />
           <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
             {form.image_url ? (
               <div className="relative">
