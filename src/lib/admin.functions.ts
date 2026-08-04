@@ -127,3 +127,33 @@ export const adminDeleteStartup = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+export const adminUploadStartupLogo = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        fileName: z.string().min(1).max(200),
+        contentType: z.string().min(1).max(100),
+        dataBase64: z.string().min(1).max(8_000_000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    if (!data.contentType.startsWith("image/")) throw new Error("Можно загружать только изображения");
+
+    const bytes = Buffer.from(data.dataBase64, "base64");
+    if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Файл больше 5 МБ");
+
+    const ext = (data.fileName.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+    const path = `${crypto.randomUUID()}.${ext}`;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.storage
+      .from("startup-logos")
+      .upload(path, bytes, { contentType: data.contentType, upsert: false });
+    if (error) throw new Error(error.message);
+
+    return { url: `/api/public/startup-logo/${path}` };
+  });
+

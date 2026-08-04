@@ -43,6 +43,7 @@ import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
+import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
 
 const TgRoute = TgRouteImport.update({
@@ -226,6 +227,12 @@ const ApiPublicTelegramMiniappAuthRoute =
     path: '/api/public/telegram/miniapp-auth',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicStartupLogoSplatRoute =
+  ApiPublicStartupLogoSplatRouteImport.update({
+    id: '/api/public/startup-logo/$',
+    path: '/api/public/startup-logo/$',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAppCConversationIdRoute =
   AuthenticatedAppCConversationIdRouteImport.update({
     id: '/c/$conversationId',
@@ -266,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -301,6 +309,7 @@ export interface FileRoutesByTo {
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -339,6 +348,7 @@ export interface FileRoutesById {
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/app/time'
     | '/app/'
     | '/app/c/$conversationId'
+    | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/app/time'
     | '/app'
     | '/app/c/$conversationId'
+    | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
   id:
@@ -449,6 +461,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/time'
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
+    | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
@@ -468,6 +481,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicStartupLogoSplatRoute: typeof ApiPublicStartupLogoSplatRoute
   ApiPublicTelegramMiniappAuthRoute: typeof ApiPublicTelegramMiniappAuthRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
@@ -712,6 +726,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramMiniappAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/startup-logo/$': {
+      id: '/api/public/startup-logo/$'
+      path: '/api/public/startup-logo/$'
+      fullPath: '/api/public/startup-logo/$'
+      preLoaderRoute: typeof ApiPublicStartupLogoSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/c/$conversationId': {
       id: '/_authenticated/app/c/$conversationId'
       path: '/c/$conversationId'
@@ -794,6 +815,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicStartupLogoSplatRoute: ApiPublicStartupLogoSplatRoute,
   ApiPublicTelegramMiniappAuthRoute: ApiPublicTelegramMiniappAuthRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
