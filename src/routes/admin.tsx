@@ -272,6 +272,28 @@ function StartupsAdmin() {
   const [form, setForm] = useState<StartupForm | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadLogo = async (file: File) => {
+    setUploading(true);
+    setErr(null);
+    try {
+      const buf = await file.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      const res = await adminUploadStartupLogo({
+        data: { fileName: file.name, contentType: file.type || "image/png", dataBase64: btoa(binary) },
+      });
+      setForm((f) => (f ? { ...f, image_url: res.url } : f));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Не удалось загрузить файл");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const load = async () => {
     try {
