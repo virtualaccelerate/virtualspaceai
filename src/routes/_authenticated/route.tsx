@@ -139,7 +139,7 @@ function AuthenticatedLayout() {
   ];
 
   const workspaceNav: NavItem[] = [
-    { to: "/app/docs", label: t("app.nav.documents", "Documents"), subtitle: t("app.nav.documentsSubtitle", "Company knowledge base"), icon: FileText },
+    { to: "/app/docs", label: t("app.nav.knowledgeBase", "Knowledge Base"), icon: FileText },
     { to: "/app/tasks", label: t("app.nav.taskBoard", "Task Board"), subtitle: t("app.nav.taskBoardSubtitle", "Team tasks & deadlines"), icon: KanbanSquare },
     { to: "/app/agents", label: t("app.nav.aiAgents"), subtitle: t("app.nav.aiAgentsSubtitle", "Automated assistants"), icon: Bot },
     { to: "/app/financials", label: t("app.nav.financials"), subtitle: t("app.nav.financialsSubtitle", "Key metrics & reports"), icon: TrendingUp },
