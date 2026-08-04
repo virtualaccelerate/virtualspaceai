@@ -57,6 +57,7 @@ type Task = {
   assignee_name: string | null;
   due_date: string | null;
   position: number;
+  created_at?: string | null;
 };
 
 const COLUMNS: {
