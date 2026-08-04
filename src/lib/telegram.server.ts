@@ -192,7 +192,7 @@ function tasksKeyboard(tasks: any[], lang: Lang) {
   return {
     inline_keyboard: tasks.slice(0, 8).map((task) => [
       {
-        text: `${task.status === "in_progress" ? "▶️" : "⏸"} ${task.title.slice(0, 24)}`,
+        text: `${STATUS_ICON[task.status] ?? "⬜️"} ${task.title.slice(0, 24)}`,
         callback_data: `cycle:${task.id}`,
       },
       { text: `✅`, callback_data: `done:${task.id}` },
