@@ -213,14 +213,22 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
     await sendMessage(chatId, t(lang).noTasks);
     return;
   }
-  const body = tasks
-    .map(
-      (task, i) =>
-        `${i + 1}. ${PRIORITY_ICON[task.priority] ?? ""} ${task.title} — ${
-          STATUS_LABEL[task.status]?.[lang] ?? task.status
-        }${task.due_date ? ` (до ${task.due_date})` : ""}`,
-    )
-    .join("\n");
+  const order = ["in_progress", "review", "backlog"];
+  const body = order
+    .filter((s) => tasks.some((task) => task.status === s))
+    .map((s) => {
+      const rows = tasks
+        .filter((task) => task.status === s)
+        .map(
+          (task) =>
+            `${STATUS_ICON[s] ?? "⬜️"} ${PRIORITY_ICON[task.priority] ?? ""} ${task.title}${
+              task.due_date ? ` (до ${task.due_date})` : ""
+            }`,
+        )
+        .join("\n");
+      return `${statusTag(s, lang)}\n${rows}`;
+    })
+    .join("\n\n");
   await sendMessage(chatId, `${t(lang).tasksHeader}\n\n${body}`, {
     reply_markup: tasksKeyboard(tasks, lang),
   });
