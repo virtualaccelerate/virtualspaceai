@@ -76,3 +76,54 @@ export const adminGetDemoRequests = createServerFn({ method: "GET" }).handler(as
   if (error) throw new Error(error.message);
   return (data ?? []) as DemoRequestRow[];
 });
+
+const STARTUP_COLUMNS =
+  "id, name, description, description_ru, image_url, website_url, cta_label, tags, position, published";
+
+async function requireAdmin() {
+  const session = await useSession<AdminSession>(sessionConfig());
+  if (!session.data.admin) throw new Error("Unauthorized");
+}
+
+export const adminListStartups = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("startups")
+    .select(STARTUP_COLUMNS)
+    .order("position", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StartupRow[];
+});
+
+export const adminSaveStartup = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid().optional().nullable(), values: startupInputSchema }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload = {
+      ...data.values,
+      description_ru: data.values.description_ru || null,
+      image_url: data.values.image_url || null,
+      website_url: data.values.website_url || null,
+      cta_label: data.values.cta_label || null,
+    };
+    const query = data.id
+      ? supabaseAdmin.from("startups").update(payload).eq("id", data.id)
+      : supabaseAdmin.from("startups").insert(payload);
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const adminDeleteStartup = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("startups").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
