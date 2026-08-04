@@ -178,9 +178,10 @@ function Header() {
                 transition={{ duration: 0.2 }}
                 className="glass-strong absolute left-0 mt-3 w-40 rounded-2xl p-2 z-50"
               >
-                <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
+                <a href="#mentors" className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition">
                   {t("nav.mentors")}
-                </span>
+                </a>
+
                 <span className="block rounded-xl px-3 py-2 text-sm text-white/40 cursor-default">
                   {t("nav.courses")}
                 </span>
