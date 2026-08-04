@@ -12,6 +12,7 @@ import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
+import { StartupsSection } from "@/components/StartupsCatalog";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
@@ -693,6 +694,9 @@ function Landing() {
       </section>
 
       <Brandbook />
+
+      {/* STARTUPS CATALOG */}
+      <StartupsSection />
 
       {/* PRICING TEASER */}
       <section id="pricing" className="relative">
