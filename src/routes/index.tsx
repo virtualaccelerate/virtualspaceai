@@ -696,9 +696,6 @@ function Landing() {
 
       <Brandbook />
 
-      {/* STARTUPS CATALOG */}
-      <StartupsSection />
-
       {/* PRICING TEASER */}
       <section id="pricing" className="relative">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-24">
