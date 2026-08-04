@@ -230,9 +230,9 @@ function Header() {
                     </button>
                     {mobileLearnOpen && (
                       <div className="flex flex-col gap-2 mt-2 ml-4">
-                        <span className="text-base text-white/40 cursor-default">
+                        <a href="#mentors" onClick={() => setMobileOpen(false)} className="text-base text-white/80 hover:text-white transition">
                           {t("nav.mentors")}
-                        </span>
+                        </a>
                         <span className="text-base text-white/40 cursor-default">
                           {t("nav.courses")}
                         </span>
@@ -806,7 +806,7 @@ function Landing() {
             <div>
               <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.learnLabel")}</p>
               <ul className="space-y-2 text-sm text-white/60">
-                <li><span className="hover:text-white transition cursor-default">{t("nav.mentors")}</span></li>
+                <li><a href="/#mentors" className="hover:text-white transition">{t("nav.mentors")}</a></li>
                 <li><span className="hover:text-white transition cursor-default">{t("nav.courses")}</span></li>
                 <li><span className="hover:text-white transition cursor-default">{t("footer.resources")}</span></li>
               </ul>
