@@ -382,8 +382,28 @@ function StartupsAdmin() {
             onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Описание (RU)" value={form.description_ru}
             onChange={(e) => setForm({ ...form, description_ru: e.target.value })} />
-          <input className={field} placeholder="URL логотипа / картинки" value={form.image_url}
-            onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+          <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
+            {form.image_url ? (
+              <div className="relative">
+                <img src={form.image_url} alt="Логотип" className="h-16 w-16 rounded-xl object-cover border border-border/60" />
+                <button type="button" onClick={() => setForm({ ...form, image_url: "" })}
+                  className="absolute -right-2 -top-2 rounded-full bg-background border border-border p-1">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : null}
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition">
+              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
+              {uploading ? "Загрузка…" : form.image_url ? "Заменить логотип" : "Загрузить логотип"}
+              <input type="file" accept="image/*" className="hidden" disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void uploadLogo(f);
+                }} />
+            </label>
+            <span className="text-[11px] text-muted-foreground">PNG/JPG/SVG до 5 МБ</span>
+          </div>
           <input className={field} placeholder="Текст кнопки (по умолчанию «Перейти на сайт»)" value={form.cta_label}
             onChange={(e) => setForm({ ...form, cta_label: e.target.value })} />
           <input className={field} placeholder="Теги через запятую" value={form.tags}
