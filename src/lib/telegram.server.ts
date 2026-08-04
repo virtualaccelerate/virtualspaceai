@@ -119,6 +119,16 @@ const STATUS_LABEL: Record<string, Record<Lang, string>> = {
   review: { ru: "На проверке", en: "Review" },
   done: { ru: "Готово", en: "Done" },
 };
+// Цвет статуса задачи (совпадает с цветами колонок в веб-приложении)
+const STATUS_ICON: Record<string, string> = {
+  backlog: "⬜️",
+  in_progress: "🟪",
+  review: "🟨",
+  done: "🟩",
+};
+const statusTag = (status: string, lang: Lang) =>
+  `${STATUS_ICON[status] ?? "⬜️"} ${STATUS_LABEL[status]?.[lang] ?? status}`;
+
 const PRIORITY_ICON: Record<string, string> = {
   low: "⚪️",
   medium: "🔵",
@@ -182,7 +192,7 @@ function tasksKeyboard(tasks: any[], lang: Lang) {
   return {
     inline_keyboard: tasks.slice(0, 8).map((task) => [
       {
-        text: `${task.status === "in_progress" ? "▶️" : "⏸"} ${task.title.slice(0, 24)}`,
+        text: `${STATUS_ICON[task.status] ?? "⬜️"} ${task.title.slice(0, 24)}`,
         callback_data: `cycle:${task.id}`,
       },
       { text: `✅`, callback_data: `done:${task.id}` },
@@ -203,14 +213,22 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
     await sendMessage(chatId, t(lang).noTasks);
     return;
   }
-  const body = tasks
-    .map(
-      (task, i) =>
-        `${i + 1}. ${PRIORITY_ICON[task.priority] ?? ""} ${task.title} — ${
-          STATUS_LABEL[task.status]?.[lang] ?? task.status
-        }${task.due_date ? ` (до ${task.due_date})` : ""}`,
-    )
-    .join("\n");
+  const order = ["in_progress", "review", "backlog"];
+  const body = order
+    .filter((s) => tasks.some((task) => task.status === s))
+    .map((s) => {
+      const rows = tasks
+        .filter((task) => task.status === s)
+        .map(
+          (task) =>
+            `${STATUS_ICON[s] ?? "⬜️"} ${PRIORITY_ICON[task.priority] ?? ""} ${task.title}${
+              task.due_date ? ` (до ${task.due_date})` : ""
+            }`,
+        )
+        .join("\n");
+      return `${statusTag(s, lang)}\n${rows}`;
+    })
+    .join("\n\n");
   await sendMessage(chatId, `${t(lang).tasksHeader}\n\n${body}`, {
     reply_markup: tasksKeyboard(tasks, lang),
   });
@@ -486,7 +504,7 @@ async function handleCallback(cb: any) {
     callback_query_id: cb.id,
     text: t(lang).statusSet((task as any).title, STATUS_LABEL[next]?.[lang] ?? next),
   });
-  await sendMessage(chatId, t(lang).statusSet((task as any).title, STATUS_LABEL[next]?.[lang] ?? next));
+  await sendMessage(chatId, t(lang).statusSet((task as any).title, statusTag(next, lang)));
 }
 
 // ---------------- entry ----------------
