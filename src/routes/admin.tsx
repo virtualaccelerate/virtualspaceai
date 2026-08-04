@@ -42,7 +42,7 @@ export const Route = createFileRoute("/admin")({
 
 const TABS = [
   { id: "leads", label: "Заявки на демо" },
-  { id: "speakers", label: "Спикеры" },
+  
   { id: "courses", label: "Курсы" },
   { id: "startups", label: "Стартапы" },
   { id: "mentors", label: "Менторы" },
