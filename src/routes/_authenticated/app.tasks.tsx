@@ -57,6 +57,7 @@ type Task = {
   assignee_name: string | null;
   due_date: string | null;
   position: number;
+  created_at?: string | null;
 };
 
 const COLUMNS: {
@@ -117,6 +118,11 @@ function initialsOf(name?: string | null) {
 function formatDateRange(due: string) {
   const d = new Date(due);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function formatCreatedAt(value: string) {
+  const d = new Date(value);
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 }
 
 type TaskDraft = {
@@ -446,6 +452,12 @@ function TasksPage() {
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                             </span>
                           </div>
+
+                          {task.created_at && (
+                            <p className="mt-2 text-[10px] text-muted-foreground">
+                              {t("app.tasks.createdAt", "Создано")}: {formatCreatedAt(task.created_at)}
+                            </p>
+                          )}
                         </article>
                       );
                     })}
