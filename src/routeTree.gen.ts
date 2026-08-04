@@ -14,6 +14,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as BookDemoRouteImport } from './routes/book-demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -38,6 +39,7 @@ import { Route as AuthenticatedAppLearnRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
 import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
 import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticated/app.docs'
+import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app.courses'
 import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
@@ -46,6 +48,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
 import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
+import { Route as ApiPublicFinikWebhookRouteImport } from './routes/api/public/finik.webhook'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
 
 const TgRoute = TgRouteImport.update({
@@ -71,6 +74,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesRoute = CoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookDemoRoute = BookDemoRouteImport.update({
@@ -200,6 +208,11 @@ const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
   path: '/docs',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppCoursesRoute = AuthenticatedAppCoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppClientsRoute = AuthenticatedAppClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
@@ -245,6 +258,11 @@ const ApiPublicStartupLogoSplatRoute =
     path: '/api/public/startup-logo/$',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicFinikWebhookRoute = ApiPublicFinikWebhookRouteImport.update({
+  id: '/api/public/finik/webhook',
+  path: '/api/public/finik/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppCConversationIdRoute =
   AuthenticatedAppCConversationIdRouteImport.update({
     id: '/c/$conversationId',
@@ -257,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
+  '/courses': typeof CoursesRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -271,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/app/agents': typeof AuthenticatedAppAgentsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
+  '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
   '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
@@ -287,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -296,6 +317,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
+  '/courses': typeof CoursesRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -309,6 +331,7 @@ export interface FileRoutesByTo {
   '/app/agents': typeof AuthenticatedAppAgentsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
+  '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
   '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
@@ -325,6 +348,7 @@ export interface FileRoutesByTo {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -336,6 +360,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/book-demo': typeof BookDemoRoute
+  '/courses': typeof CoursesRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -350,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/app/agents': typeof AuthenticatedAppAgentsRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
+  '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/docs': typeof AuthenticatedAppDocsRoute
   '/_authenticated/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
@@ -366,6 +392,7 @@ export interface FileRoutesById {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -377,6 +404,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/book-demo'
+    | '/courses'
     | '/mcp'
     | '/onboarding'
     | '/reset-password'
@@ -391,6 +419,7 @@ export interface FileRouteTypes {
     | '/app/agents'
     | '/app/analytics'
     | '/app/clients'
+    | '/app/courses'
     | '/app/docs'
     | '/app/financials'
     | '/app/integrations'
@@ -407,6 +436,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app/'
     | '/app/c/$conversationId'
+    | '/api/public/finik/webhook'
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
@@ -416,6 +446,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/book-demo'
+    | '/courses'
     | '/mcp'
     | '/onboarding'
     | '/reset-password'
@@ -429,6 +460,7 @@ export interface FileRouteTypes {
     | '/app/agents'
     | '/app/analytics'
     | '/app/clients'
+    | '/app/courses'
     | '/app/docs'
     | '/app/financials'
     | '/app/integrations'
@@ -445,6 +477,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app'
     | '/app/c/$conversationId'
+    | '/api/public/finik/webhook'
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
@@ -455,6 +488,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/book-demo'
+    | '/courses'
     | '/mcp'
     | '/onboarding'
     | '/reset-password'
@@ -469,6 +503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/agents'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/clients'
+    | '/_authenticated/app/courses'
     | '/_authenticated/app/docs'
     | '/_authenticated/app/financials'
     | '/_authenticated/app/integrations'
@@ -485,6 +520,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
+    | '/api/public/finik/webhook'
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
@@ -496,6 +532,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   BookDemoRoute: typeof BookDemoRoute
+  CoursesRoute: typeof CoursesRoute
   McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -507,6 +544,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   OauthGoogleDriveReturnRoute: typeof OauthGoogleDriveReturnRoute
+  ApiPublicFinikWebhookRoute: typeof ApiPublicFinikWebhookRoute
   ApiPublicStartupLogoSplatRoute: typeof ApiPublicStartupLogoSplatRoute
   ApiPublicTelegramMiniappAuthRoute: typeof ApiPublicTelegramMiniappAuthRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
@@ -547,6 +585,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses': {
+      id: '/courses'
+      path: '/courses'
+      fullPath: '/courses'
+      preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book-demo': {
@@ -717,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/courses': {
+      id: '/_authenticated/app/courses'
+      path: '/courses'
+      fullPath: '/app/courses'
+      preLoaderRoute: typeof AuthenticatedAppCoursesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/clients': {
       id: '/_authenticated/app/clients'
       path: '/clients'
@@ -773,6 +825,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStartupLogoSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/finik/webhook': {
+      id: '/api/public/finik/webhook'
+      path: '/api/public/finik/webhook'
+      fullPath: '/api/public/finik/webhook'
+      preLoaderRoute: typeof ApiPublicFinikWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/c/$conversationId': {
       id: '/_authenticated/app/c/$conversationId'
       path: '/c/$conversationId'
@@ -787,6 +846,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAgentsRoute: typeof AuthenticatedAppAgentsRoute
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
+  AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppDocsRoute: typeof AuthenticatedAppDocsRoute
   AuthenticatedAppFinancialsRoute: typeof AuthenticatedAppFinancialsRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
@@ -808,6 +868,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAgentsRoute: AuthenticatedAppAgentsRoute,
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
+  AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppDocsRoute: AuthenticatedAppDocsRoute,
   AuthenticatedAppFinancialsRoute: AuthenticatedAppFinancialsRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
@@ -845,6 +906,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   BookDemoRoute: BookDemoRoute,
+  CoursesRoute: CoursesRoute,
   McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -857,6 +919,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   OauthGoogleDriveReturnRoute: OauthGoogleDriveReturnRoute,
+  ApiPublicFinikWebhookRoute: ApiPublicFinikWebhookRoute,
   ApiPublicStartupLogoSplatRoute: ApiPublicStartupLogoSplatRoute,
   ApiPublicTelegramMiniappAuthRoute: ApiPublicTelegramMiniappAuthRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,

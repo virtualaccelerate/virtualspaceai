@@ -3,6 +3,7 @@ import { useSession } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { startupInputSchema, type StartupRow } from "@/lib/startups.functions";
 import { mentorInputSchema, type MentorRow } from "@/lib/mentors.functions";
+import { courseInputSchema, type CourseRow } from "@/lib/courses.functions";
 import { z } from "zod";
 
 
@@ -200,6 +201,95 @@ export const adminDeleteMentor = createServerFn({ method: "POST" })
     await requireAdmin();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("mentors").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+
+// ---------------- Courses ----------------
+
+export type AdminCourseRow = CourseRow & { video_url: string | null };
+
+export const adminListCourses = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { COURSE_COLUMNS } = await import("@/lib/courses.functions");
+  const { data, error } = await supabaseAdmin
+    .from("courses")
+    .select(`${COURSE_COLUMNS}, video_url`)
+    .order("position", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as AdminCourseRow[];
+});
+
+export const adminSaveCourse = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid().optional().nullable(), values: courseInputSchema }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload = {
+      ...data.values,
+      title_ru: data.values.title_ru || data.values.title,
+      description_ru: data.values.description_ru || data.values.description,
+      cover_url: data.values.cover_url || null,
+      video_url: data.values.video_url || null,
+      finik_payment_url: data.values.finik_payment_url || null,
+    };
+    const query = data.id
+      ? supabaseAdmin.from("courses").update(payload).eq("id", data.id)
+      : supabaseAdmin.from("courses").insert(payload);
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const adminDeleteCourse = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("courses").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export type AdminPurchaseRow = {
+  id: string;
+  course_id: string;
+  email: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  provider_ref: string | null;
+  paid_at: string | null;
+  created_at: string;
+};
+
+export const adminListPurchases = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("course_purchases")
+    .select("id, course_id, email, amount, currency, status, provider_ref, paid_at, created_at")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AdminPurchaseRow[];
+});
+
+export const adminSetPurchaseStatus = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), status: z.enum(["pending", "paid", "failed"]) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("course_purchases")
+      .update({ status: data.status, paid_at: data.status === "paid" ? new Date().toISOString() : null })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
