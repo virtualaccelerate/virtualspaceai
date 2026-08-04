@@ -23,6 +23,11 @@ function sessionConfig() {
   };
 }
 
+async function isAdmin() {
+  const session = await useSession<AdminSession>(sessionConfig());
+  return session.data.admin === true;
+}
+
 function matches(input: string, expected: string): boolean {
   const a = createHash("sha256").update(input, "utf8").digest();
   const b = createHash("sha256").update(expected, "utf8").digest();
@@ -65,8 +70,7 @@ export type DemoRequestRow = {
 };
 
 export const adminGetDemoRequests = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await useSession<AdminSession>(sessionConfig());
-  if (!session.data.admin) throw new Error("Unauthorized");
+  if (!(await isAdmin())) return [] as DemoRequestRow[];
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
@@ -81,11 +85,6 @@ export const adminGetDemoRequests = createServerFn({ method: "GET" }).handler(as
 
 const STARTUP_COLUMNS =
   "id, name, description, description_ru, image_url, website_url, cta_label, tags, position, published";
-
-async function isAdmin() {
-  const session = await useSession<AdminSession>(sessionConfig());
-  return session.data.admin === true;
-}
 
 async function requireAdmin() {
   if (!(await isAdmin())) throw new Error("Unauthorized");
