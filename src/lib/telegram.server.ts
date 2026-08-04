@@ -504,7 +504,7 @@ async function handleCallback(cb: any) {
     callback_query_id: cb.id,
     text: t(lang).statusSet((task as any).title, STATUS_LABEL[next]?.[lang] ?? next),
   });
-  await sendMessage(chatId, t(lang).statusSet((task as any).title, STATUS_LABEL[next]?.[lang] ?? next));
+  await sendMessage(chatId, t(lang).statusSet((task as any).title, statusTag(next, lang)));
 }
 
 // ---------------- entry ----------------
