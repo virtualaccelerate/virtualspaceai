@@ -303,6 +303,51 @@ export type Database = {
           },
         ]
       }
+      startups: {
+        Row: {
+          created_at: string
+          cta_label: string | null
+          description: string
+          description_ru: string | null
+          id: string
+          image_url: string | null
+          name: string
+          position: number
+          published: boolean
+          tags: string[]
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          cta_label?: string | null
+          description?: string
+          description_ru?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          position?: number
+          published?: boolean
+          tags?: string[]
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          cta_label?: string | null
+          description?: string
+          description_ru?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          position?: number
+          published?: boolean
+          tags?: string[]
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assignee_name: string | null
