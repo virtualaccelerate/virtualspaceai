@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Send, Copy, Check, Loader2, Unplug, RefreshCw } from "lucide-react";
+import { Send, Copy, Check, Loader2, Unplug, RefreshCw, CalendarClock } from "lucide-react";
+import { getDigestSettings, setDigestSettings, getCalendarFeedUrl } from "@/lib/calendar.functions";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -175,6 +176,8 @@ function TelegramPage() {
         </div>
       </section>
 
+      <DigestSettings />
+
       <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
 
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
@@ -214,5 +217,98 @@ function TelegramPage() {
         </button>
       </section>
     </div>
+  );
+}
+
+function DigestSettings() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const load = useServerFn(getDigestSettings);
+  const save = useServerFn(setDigestSettings);
+  const feed = useServerFn(getCalendarFeedUrl);
+  const [copied, setCopied] = useState(false);
+
+  const { data } = useQuery({ queryKey: ["tg-digest"], queryFn: () => load() });
+  const { data: cal } = useQuery({ queryKey: ["cal-feed"], queryFn: () => feed() });
+
+  const mutation = useMutation({
+    mutationFn: (input: { enabled: boolean; hour: number }) => save({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tg-digest"] });
+      toast.success(t("app.telegram.digestSaved", "Настройки сохранены"));
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Error"),
+  });
+
+  const enabled = data?.enabled ?? true;
+  const hour = data?.hour ?? 4;
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+      <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
+        {t("app.telegram.digest", "Задачи и календарь")}
+      </h2>
+      <p className="text-sm text-white/70">
+        {t(
+          "app.telegram.digestHint",
+          "Каждый день бот пришлёт список задач на сегодня, просроченные и приближающиеся дедлайны.",
+        )}
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => mutation.mutate({ enabled: !enabled, hour })}
+          className={`rounded-xl px-3 py-2 text-xs font-medium transition ${
+            enabled ? "bg-primary text-primary-foreground" : "border border-white/15 text-white/70"
+          }`}
+        >
+          {enabled
+            ? t("app.telegram.digestOn", "Ежедневные напоминания включены")
+            : t("app.telegram.digestOff", "Напоминания выключены")}
+        </button>
+
+        <label className="flex items-center gap-2 text-xs text-white/60">
+          <CalendarClock className="h-4 w-4" />
+          {t("app.telegram.digestTime", "Время (UTC)")}
+          <select
+            value={hour}
+            onChange={(e) => mutation.mutate({ enabled, hour: Number(e.target.value) })}
+            className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-white"
+          >
+            {Array.from({ length: 24 }, (_, i) => (
+              <option key={i} value={i}>
+                {String(i).padStart(2, "0")}:00
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="mt-5">
+        <div className="text-xs text-white/50 mb-2">
+          {t(
+            "app.telegram.calendarHint",
+            "Ссылка-подписка на задачи с дедлайнами — добавьте её в Google Calendar (Другие календари → Подписка по URL) или Apple Calendar.",
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <code className="rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-xs text-white/70 break-all">
+            {cal?.url ?? "…"}
+          </code>
+          <button
+            onClick={() => {
+              if (!cal?.url) return;
+              void navigator.clipboard.writeText(cal.url);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs text-white/80 hover:bg-white/5"
+          >
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            {t("app.telegram.copy", "Копировать")}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
