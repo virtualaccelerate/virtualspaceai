@@ -54,6 +54,7 @@ type Task = {
   description: string | null;
   status: TaskStatus;
   priority: TaskPriority;
+  user_id: string;
   assignee_name: string | null;
   due_date: string | null;
   position: number;
