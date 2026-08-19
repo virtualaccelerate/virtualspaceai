@@ -19,6 +19,22 @@ export const createTask = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => CreateSchema.parse(raw))
   .handler(async ({ data, context }) => {
     const status = data.status ?? "backlog";
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("current_teamspace_id")
+      .eq("id", context.userId)
+      .maybeSingle();
+    let teamspaceId = (profile as any)?.current_teamspace_id as string | null | undefined;
+    if (!teamspaceId) {
+      const { data: membership } = await context.supabase
+        .from("teamspace_members")
+        .select("teamspace_id")
+        .eq("user_id", context.userId)
+        .limit(1)
+        .maybeSingle();
+      teamspaceId = (membership as any)?.teamspace_id ?? null;
+    }
+
     const { count } = await context.supabase
       .from("tasks")
       .select("id", { count: "exact", head: true })
@@ -30,6 +46,7 @@ export const createTask = createServerFn({ method: "POST" })
       .from("tasks")
       .insert({
         user_id: context.userId,
+        teamspace_id: teamspaceId ?? null,
         title: data.title,
         description: data.description ?? null,
         status,
