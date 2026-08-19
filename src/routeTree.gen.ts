@@ -48,6 +48,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
 import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
+import { Route as ApiPublicHooksTasksDailyRouteImport } from './routes/api/public/hooks/tasks-daily'
 import { Route as ApiPublicFinikWebhookRouteImport } from './routes/api/public/finik.webhook'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
 
@@ -258,6 +259,12 @@ const ApiPublicStartupLogoSplatRoute =
     path: '/api/public/startup-logo/$',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksTasksDailyRoute =
+  ApiPublicHooksTasksDailyRouteImport.update({
+    id: '/api/public/hooks/tasks-daily',
+    path: '/api/public/hooks/tasks-daily',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicFinikWebhookRoute = ApiPublicFinikWebhookRouteImport.update({
   id: '/api/public/finik/webhook',
   path: '/api/public/finik/webhook',
@@ -308,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
+  '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -349,6 +357,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
+  '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -393,6 +402,7 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
+  '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/c/$conversationId'
     | '/api/public/finik/webhook'
+    | '/api/public/hooks/tasks-daily'
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/c/$conversationId'
     | '/api/public/finik/webhook'
+    | '/api/public/hooks/tasks-daily'
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
@@ -521,6 +533,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
     | '/api/public/finik/webhook'
+    | '/api/public/hooks/tasks-daily'
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
@@ -545,6 +558,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   OauthGoogleDriveReturnRoute: typeof OauthGoogleDriveReturnRoute
   ApiPublicFinikWebhookRoute: typeof ApiPublicFinikWebhookRoute
+  ApiPublicHooksTasksDailyRoute: typeof ApiPublicHooksTasksDailyRoute
   ApiPublicStartupLogoSplatRoute: typeof ApiPublicStartupLogoSplatRoute
   ApiPublicTelegramMiniappAuthRoute: typeof ApiPublicTelegramMiniappAuthRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
@@ -825,6 +839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStartupLogoSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/tasks-daily': {
+      id: '/api/public/hooks/tasks-daily'
+      path: '/api/public/hooks/tasks-daily'
+      fullPath: '/api/public/hooks/tasks-daily'
+      preLoaderRoute: typeof ApiPublicHooksTasksDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/finik/webhook': {
       id: '/api/public/finik/webhook'
       path: '/api/public/finik/webhook'
@@ -920,6 +941,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   OauthGoogleDriveReturnRoute: OauthGoogleDriveReturnRoute,
   ApiPublicFinikWebhookRoute: ApiPublicFinikWebhookRoute,
+  ApiPublicHooksTasksDailyRoute: ApiPublicHooksTasksDailyRoute,
   ApiPublicStartupLogoSplatRoute: ApiPublicStartupLogoSplatRoute,
   ApiPublicTelegramMiniappAuthRoute: ApiPublicTelegramMiniappAuthRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
