@@ -145,6 +145,37 @@ function KnowledgeBase() {
     if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
   };
 
+  const refresh = async () => {
+    const tsId = teamspaceId ?? (await getActiveTeamspaceId());
+    if (!tsId) return;
+    try {
+      const rows = await list({ data: { teamspace_id: tsId } });
+      setDocs(rows as Doc[]);
+    } catch { /* ignore */ }
+  };
+
+  const reindexDoc = async (id: string) => {
+    setError(null);
+    setIndexing((p) => ({ ...p, [id]: true }));
+    try {
+      await extract({ data: { id, force: true } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось прочитать файл");
+    } finally {
+      setIndexing((p) => {
+        const n = { ...p };
+        delete n[id];
+        return n;
+      });
+      await refresh();
+    }
+  };
+
+  const reindexAllMissing = async () => {
+    const targets = docs.filter((d) => (d.text_len ?? 0) === 0).map((d) => d.id);
+    for (const id of targets) await reindexDoc(id);
+  };
+
   const openDoc = async (id: string) => {
     try {
       const { url } = await sign({ data: { id } });
@@ -153,6 +184,7 @@ function KnowledgeBase() {
       setError(e instanceof Error ? e.message : "Could not open file");
     }
   };
+
 
   const removeDoc = async (id: string) => {
     if (!confirm(t("app.docs.confirmDelete", "Delete this file?"))) return;
