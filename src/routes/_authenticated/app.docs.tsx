@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import {
   listDocuments,
   createDocument,
@@ -61,15 +62,10 @@ function KnowledgeBase() {
       try {
         const { data } = await supabase.auth.getUser();
         if (!data.user) return;
-        const { data: mem } = await supabase
-          .from("teamspace_members")
-          .select("teamspace_id")
-          .eq("user_id", data.user.id)
-          .limit(1)
-          .maybeSingle();
-        if (!mem) return;
-        setTeamspaceId(mem.teamspace_id);
-        const rows = await list({ data: { teamspace_id: mem.teamspace_id } });
+        const tsId = await getActiveTeamspaceId();
+        if (!tsId) return;
+        setTeamspaceId(tsId);
+        const rows = await list({ data: { teamspace_id: tsId } });
         setDocs(rows as Doc[]);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");

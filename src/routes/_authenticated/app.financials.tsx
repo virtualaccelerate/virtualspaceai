@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import {
   listFinancialSources,
   addSheetSource,
@@ -117,20 +118,15 @@ function FinancialsPage() {
       try {
         const { data } = await supabase.auth.getUser();
         if (!data.user) return;
-        const { data: mem } = await supabase
-          .from("teamspace_members")
-          .select("teamspace_id")
-          .eq("user_id", data.user.id)
-          .limit(1)
-          .maybeSingle();
-        if (!mem) return;
-        setTeamspaceId(mem.teamspace_id);
-        const rows = (await list({ data: { teamspace_id: mem.teamspace_id } })) as Src[];
+        const tsId = await getActiveTeamspaceId();
+        if (!tsId) return;
+        setTeamspaceId(tsId);
+        const rows = (await list({ data: { teamspace_id: tsId } })) as Src[];
         setSources(rows);
         const cached = rows.find((r) => r.analysis)?.analysis;
         if (cached) setAnalysis(cached);
         try {
-          const history = await loadChat({ data: { teamspace_id: mem.teamspace_id } });
+          const history = await loadChat({ data: { teamspace_id: tsId } });
           setMessages(history.map((h) => ({ role: h.role, content: h.content })));
         } catch { /* ignore chat load errors */ }
       } catch (e) {

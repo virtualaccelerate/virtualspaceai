@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Bot, ShieldAlert, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import { createConversation } from "@/lib/chat-history.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/app/agents")({
@@ -48,13 +49,8 @@ function AgentsPage() {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return;
-      const { data: mem } = await supabase
-        .from("teamspace_members")
-        .select("teamspace_id")
-        .eq("user_id", data.user.id)
-        .limit(1)
-        .maybeSingle();
-      if (mem?.teamspace_id) setTeamspaceId(mem.teamspace_id);
+      const tsId = await getActiveTeamspaceId();
+      if (tsId) setTeamspaceId(tsId);
     })();
   }, []);
 

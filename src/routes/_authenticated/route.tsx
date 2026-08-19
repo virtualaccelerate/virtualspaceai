@@ -5,7 +5,7 @@ import {
   Bot, Users, Bell, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
+  Plus, FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
 import { FloatingChat } from "@/components/FloatingChat";
+import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode } from "@/lib/active-teamspace";
 
 
 
@@ -80,6 +81,8 @@ function AuthenticatedLayout() {
 
   const [email, setEmail] = useState<string | null>(null);
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
+  const [teamspaces, setTeamspaces] = useState<Teamspace[]>([]);
+  const [joinOpen, setJoinOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -90,26 +93,25 @@ function AuthenticatedLayout() {
     }
   }, [expanded]);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      setEmail(data.user?.email ?? null);
-      if (!data.user) return;
-      const { data: mem } = await supabase
-        .from("teamspace_members")
-        .select("teamspace_id")
-        .eq("user_id", data.user.id)
-        .limit(1)
-        .maybeSingle();
-      if (!mem) return;
-      const { data: ts } = await supabase
-        .from("teamspaces")
-        .select("id, name, invite_code")
-        .eq("id", mem.teamspace_id)
-        .maybeSingle();
-      if (ts) setTeamspace(ts as Teamspace);
-    })();
-  }, []);
+  const loadTeamspaces = async () => {
+    const { data } = await supabase.auth.getUser();
+    setEmail(data.user?.email ?? null);
+    if (!data.user) return;
+    const [all, activeId] = await Promise.all([listMyTeamspaces(), getActiveTeamspaceId()]);
+    setTeamspaces(all);
+    setTeamspace(all.find((ts: Teamspace) => ts.id === activeId) ?? all[0] ?? null);
+  };
+
+  useEffect(() => { void loadTeamspaces(); }, []);
+
+  const switchTeamspace = async (id: string) => {
+    if (id === teamspace?.id) { setMenuOpen(false); return; }
+    await setActiveTeamspace(id);
+    setMenuOpen(false);
+    queryClient.clear();
+    window.location.reload();
+  };
+
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -284,6 +286,28 @@ function AuthenticatedLayout() {
               </div>
               <MenuItem icon={User} label={t("app.nav.profile")}
                 onClick={() => { setMenuOpen(false); navigate({ to: "/app/profile" }); }} />
+              {teamspaces.length > 1 && (
+                <div className="border-b border-white/5 py-1">
+                  <div className="px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider text-white/40">
+                    {t("app.header.switchTeamspace", "Рабочие пространства")}
+                  </div>
+                  {teamspaces.map((ts) => (
+                    <button
+                      key={ts.id}
+                      onClick={() => void switchTeamspace(ts.id)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/5 transition text-left"
+                    >
+                      <span className="h-6 w-6 rounded-md bg-primary/20 text-primary flex items-center justify-center text-[11px] font-bold shrink-0">
+                        {(ts.name?.[0] ?? "T").toUpperCase()}
+                      </span>
+                      <span className="truncate flex-1">{ts.name}</span>
+                      {ts.id === teamspace?.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <MenuItem icon={Plus} label={t("app.header.joinTeamspace", "Присоединиться к пространству")}
+                onClick={() => { setMenuOpen(false); setJoinOpen(true); }} />
               <MenuItem icon={UserPlus} label={t("app.header.inviteMembers")}
                 onClick={() => { setMenuOpen(false); setInviteOpen(true); }} />
               <MenuItem icon={Settings} label={t("app.header.teamspaceSettings")}
@@ -425,6 +449,13 @@ function AuthenticatedLayout() {
         </ul>
       </nav>
 
+      {joinOpen && (
+        <JoinModal
+          onClose={() => setJoinOpen(false)}
+          onJoined={async () => { setJoinOpen(false); queryClient.clear(); window.location.reload(); }}
+        />
+      )}
+
       {inviteOpen && teamspace && (
         <InviteModal teamspace={teamspace} onClose={() => setInviteOpen(false)} />
       )}
@@ -536,6 +567,64 @@ function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: ()
           {t("app.invite.hint")}
         </p>
 
+      </div>
+    </div>
+  );
+}
+
+function JoinModal({ onClose, onJoined }: { onClose: () => void; onJoined: () => void }) {
+  const { t } = useTranslation();
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!code.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const id = await joinTeamspaceByCode(code);
+      if (!id) throw new Error(t("app.join.notFound", "Код не найден"));
+      onJoined();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-sm rounded-2xl border border-white/10 bg-[color:var(--card)] p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display text-lg text-white">
+            {t("app.header.joinTeamspace", "Присоединиться к пространству")}
+          </h3>
+          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="text-xs text-white/50 mb-3">
+          {t("app.join.hint", "Введите код приглашения, полученный от владельца пространства.")}
+        </p>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
+          placeholder="ABC123"
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-primary/50 tracking-widest uppercase"
+        />
+        {error && <div className="mt-2 text-xs text-red-400">{error}</div>}
+        <button
+          onClick={() => void submit()}
+          disabled={loading || !code.trim()}
+          className="mt-4 w-full rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {loading ? "…" : t("app.join.submit", "Присоединиться")}
+        </button>
       </div>
     </div>
   );
