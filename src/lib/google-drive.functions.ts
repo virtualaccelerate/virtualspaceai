@@ -61,3 +61,10 @@ export const googleDriveMoveFile = createServerFn({ method: "POST" })
 export const googleDriveDisconnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => gd.disconnect(context.userId));
+
+export const googleDriveCreateDocWithContent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { name: string; content?: string; parentId?: string }) => data)
+  .handler(async ({ data, context }) =>
+    gd.createDocWithContent(context.userId, data.name, data.content, data.parentId),
+  );
