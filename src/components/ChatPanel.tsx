@@ -482,7 +482,9 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     if (currentConv && (currentConv.title === "New chat" || currentConv.title === t("app.chat.newChat", "New chat") || !currentConv.title)) {
       const title = raw.slice(0, 60);
       setConversations((prev) => prev.map((c) => c.id === convId ? { ...c, title } : c));
-      renameConv({ data: { id: convId, title } }).catch(() => {});
+      renameConv({ data: { id: convId, title } })
+        .then(() => window.dispatchEvent(new Event("virtualspace:chats-changed")))
+        .catch(() => {});
     }
 
 
@@ -530,6 +532,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     try {
       const conv = await createConv({ data: { teamspace_id: teamspaceId, title: t("app.chat.newChat", "New chat") } });
       setConversations((prev) => [conv, ...prev]);
+      window.dispatchEvent(new Event("virtualspace:chats-changed"));
       setThreadsOpen(false);
       if (isCompact) {
         setActiveId(conv.id);
@@ -565,6 +568,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     try {
       await removeConv({ data: { id } });
       setConversations((prev) => prev.filter((c) => c.id !== id));
+      window.dispatchEvent(new Event("virtualspace:chats-changed"));
       if (activeId === id) {
         const next = conversations.find((c) => c.id !== id);
         if (next) {
@@ -585,7 +589,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   const rootClass = isCompact
     ? "h-full flex flex-col"
-    : "h-[calc(100vh-3.5rem-2rem)] sm:h-[calc(100vh-3.5rem-3rem)] flex gap-4";
+    : "h-[calc(100vh-3.5rem-2rem)] sm:h-[calc(100vh-3.5rem-3rem)] flex";
 
   const ThreadsSidebar = (
     <aside className="hidden md:flex w-64 shrink-0 flex-col rounded-2xl border border-border bg-card/50 overflow-hidden">
@@ -699,7 +703,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   );
 
   const ChatColumn = (
-    <div className={isCompact ? "flex-1 flex flex-col min-h-0" : "flex-1 min-w-0 flex flex-col max-w-3xl mx-auto w-full"}>
+    <div className={isCompact ? "flex-1 flex flex-col min-h-0" : "flex-1 min-w-0 flex flex-col max-w-4xl mx-auto w-full"}>
       {isCompact ? CompactHeader : (
         <div className="flex items-center gap-2 pb-3 md:hidden">
           <button
@@ -1017,7 +1021,6 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   return (
     <div className={rootClass}>
-      {ThreadsSidebar}
       {ChatColumn}
     </div>
   );
