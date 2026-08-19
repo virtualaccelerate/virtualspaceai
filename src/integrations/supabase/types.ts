@@ -591,6 +591,7 @@ export type Database = {
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
           status: Database["public"]["Enums"]["task_status"]
+          teamspace_id: string | null
           title: string
           updated_at: string
           user_id: string
@@ -604,6 +605,7 @@ export type Database = {
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
+          teamspace_id?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -617,11 +619,20 @@ export type Database = {
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
+          teamspace_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teamspace_members: {
         Row: {
