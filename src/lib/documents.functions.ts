@@ -1,6 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  TEXT_MIME,
+  TEXT_EXT,
+  toBase64,
+  callGateway,
+  EXTRACT_SYSTEM_PROMPT,
+} from "./documents-extract.server";
+
 
 const CreateSchema = z.object({
   teamspace_id: z.string().uuid(),
@@ -19,12 +27,22 @@ export const listDocuments = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("documents")
-      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id")
+      .select(
+        "id, name, storage_path, mime_type, size_bytes, created_at, user_id, extract_status, extract_error",
+      )
       .eq("teamspace_id", data.teamspace_id)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return rows ?? [];
+
+    const { data: stats } = await context.supabase.rpc("documents_index_status", {
+      p_teamspace: data.teamspace_id,
+    });
+    const lenById = new Map<string, number>(
+      ((stats ?? []) as { id: string; text_len: number }[]).map((s) => [s.id, s.text_len]),
+    );
+    return (rows ?? []).map((r) => ({ ...r, text_len: lenById.get(r.id) ?? 0 }));
   });
+
 
 export const createDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -82,12 +100,32 @@ export const getDocumentSignedUrl = createServerFn({ method: "POST" })
     return { url: signed.signedUrl, name: doc.name };
   });
 
-// Extract text from PDFs and images using Gemini multimodal.
-// Fire-and-forget from the client after upload; updates documents.extracted_text.
+// ---- Text extraction (PDF / images / plain text) ----------------------------
+
+
+
+/**
+ * Extract text from a stored document and save it to documents.extracted_text.
+ * Handles plain-text files locally and PDFs/images through Gemini multimodal OCR,
+ * continuing in a second pass when the model truncates a long document.
+ */
 export const extractDocumentText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
+  .inputValidator((raw: unknown) =>
+    z.object({ id: z.string().uuid(), force: z.boolean().optional() }).parse(raw),
+  )
   .handler(async ({ data, context }) => {
+    const setStatus = async (status: string, err?: string | null, text?: string) => {
+      const patch: {
+        extract_status: string;
+        extract_error: string | null;
+        extracted_text?: string;
+      } = { extract_status: status, extract_error: err ?? null };
+      if (typeof text === "string") patch.extracted_text = text;
+      await context.supabase.from("documents").update(patch).eq("id", data.id);
+    };
+
+
     const { data: doc, error } = await context.supabase
       .from("documents")
       .select("id, name, storage_path, mime_type, extracted_text")
@@ -95,86 +133,131 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!doc) throw new Error("Document not found");
-    if (doc.extracted_text && doc.extracted_text.length > 0) {
-      return { ok: true, skipped: true as const };
+
+    if (!data.force && doc.extracted_text && doc.extracted_text.length > 0) {
+      return { ok: true, skipped: true as const, length: doc.extracted_text.length };
     }
 
-    const mime = (doc.mime_type || "").toLowerCase();
-    const isPdf = mime === "application/pdf" || /\.pdf$/i.test(doc.name);
-    const isImage = mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(doc.name);
-    if (!isPdf && !isImage) {
-      return { ok: true, unsupported: true as const };
+    try {
+      await setStatus("processing");
+
+      const mime = (doc.mime_type || "").toLowerCase();
+      const isPdf = mime === "application/pdf" || /\.pdf$/i.test(doc.name);
+      const isImage =
+        mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(doc.name);
+      const isText = TEXT_MIME.test(mime) || TEXT_EXT.test(doc.name);
+
+      if (!isPdf && !isImage && !isText) {
+        await setStatus(
+          "unsupported",
+          "Формат не поддерживается для автоматического чтения (поддерживаются PDF, изображения и текстовые файлы). Экспортируйте файл в PDF и загрузите снова.",
+        );
+        return { ok: false, unsupported: true as const };
+      }
+
+      const { data: blob, error: dlErr } = await context.supabase.storage
+        .from("documents")
+        .download(doc.storage_path);
+      if (dlErr || !blob) throw new Error(dlErr?.message || "Не удалось скачать файл из хранилища");
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      if (bytes.byteLength === 0) throw new Error("Файл пустой");
+
+      if (isText) {
+        const text = new TextDecoder().decode(bytes).slice(0, 180_000);
+        await setStatus(text.trim() ? "ready" : "empty", text.trim() ? null : "В файле нет текста", text);
+        return { ok: true, length: text.length };
+      }
+
+      if (bytes.byteLength > 15 * 1024 * 1024) {
+        await setStatus("too_large", "Файл больше 15 МБ — разделите его на части.");
+        return { ok: false, tooLarge: true as const };
+      }
+
+      const key = process.env.LOVABLE_API_KEY;
+      if (!key) throw new Error("Missing LOVABLE_API_KEY");
+
+      const effectiveMime = isPdf ? "application/pdf" : mime || "image/png";
+      const dataUrl = `data:${effectiveMime};base64,${toBase64(bytes)}`;
+      const mediaBlock = isPdf
+        ? { type: "file", file: { filename: doc.name, file_data: dataUrl } }
+        : { type: "image_url", image_url: { url: dataUrl } };
+
+      const system = EXTRACT_SYSTEM_PROMPT;
+
+
+      let text = (
+        await callGateway(key, {
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: system },
+            {
+              role: "user",
+              content: [
+                mediaBlock,
+                {
+                  type: "text",
+                  text: "Extract ALL text from this document from the very beginning to the very end.",
+                },
+              ],
+            },
+          ],
+        })
+      ).trim();
+
+      // Continuation pass when the model appears to stop early on a long document.
+      for (let pass = 0; pass < 2 && text.length > 6000; pass++) {
+        const tail = text.slice(-1200);
+        const more = (
+          await callGateway(key, {
+            model: "google/gemini-3-flash-preview",
+            messages: [
+              { role: "system", content: system },
+              {
+                role: "user",
+                content: [
+                  mediaBlock,
+                  {
+                    type: "text",
+                    text: `Continue extracting this document strictly AFTER the following already-extracted fragment. If nothing remains, answer exactly END.\n\n---\n${tail}\n---`,
+                  },
+                ],
+              },
+            ],
+          })
+        ).trim();
+        if (!more || /^END\b/i.test(more) || more.length < 40) break;
+        text = `${text}\n${more}`;
+        if (text.length > 180_000) break;
+      }
+
+      text = text.slice(0, 180_000);
+      if (!text.trim()) {
+        await setStatus("empty", "ИИ не нашёл текста в файле (возможно, это скан низкого качества).");
+        return { ok: false, empty: true as const };
+      }
+
+      await setStatus("ready", null, text);
+      return { ok: true, length: text.length };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Extraction failed";
+      await setStatus("failed", msg.slice(0, 500));
+      throw new Error(msg);
     }
+  });
 
-    const { data: blob, error: dlErr } = await context.supabase.storage
-      .from("documents")
-      .download(doc.storage_path);
-    if (dlErr || !blob) throw new Error(dlErr?.message || "Download failed");
-    const bytes = new Uint8Array(await blob.arrayBuffer());
-    if (bytes.byteLength > 15 * 1024 * 1024) {
-      return { ok: true, tooLarge: true as const };
-    }
-
-    // Base64 encode
-    let bin = "";
-    const chunk = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunk) {
-      bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
-    }
-    const b64 = btoa(bin);
-    const effectiveMime = isPdf ? "application/pdf" : (mime || "image/png");
-    const dataUrl = `data:${effectiveMime};base64,${b64}`;
-
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-
-    const userContent = isPdf
-      ? [
-          {
-            type: "file",
-            file: { filename: doc.name, file_data: dataUrl },
-          },
-          {
-            type: "text",
-            text: "Extract ALL readable text from this document verbatim, preserving order. Output plain text only, no commentary.",
-          },
-        ]
-      : [
-          { type: "image_url", image_url: { url: dataUrl } },
-          {
-            type: "text",
-            text: "Extract ALL readable text from this image verbatim (OCR). Output plain text only, no commentary.",
-          },
-        ];
-
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "You are an OCR/text extraction tool. Output only the extracted text." },
-          { role: "user", content: userContent },
-        ],
-      }),
+/** Re-run extraction for every document in a teamspace that has no usable text. */
+export const reindexTeamspaceDocuments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ teamspace_id: z.string().uuid() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: stats, error } = await context.supabase.rpc("documents_index_status", {
+      p_teamspace: data.teamspace_id,
     });
-    if (res.status === 429) throw new Error("Rate limit exceeded, try again shortly.");
-    if (res.status === 402) throw new Error("AI credits exhausted.");
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      throw new Error(`AI extract failed (${res.status}): ${t.slice(0, 200)}`);
-    }
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    const text = (json.choices?.[0]?.message?.content || "").slice(0, 180_000);
-
-    const { error: upErr } = await context.supabase
-      .from("documents")
-      .update({ extracted_text: text })
-      .eq("id", doc.id);
-    if (upErr) throw new Error(upErr.message);
-
-    return { ok: true, length: text.length };
+    if (error) throw new Error(error.message);
+    const pending = ((stats ?? []) as { id: string; text_len: number }[]).filter(
+      (s) => s.text_len === 0,
+    );
+    return { pending: pending.map((p) => p.id) };
   });
