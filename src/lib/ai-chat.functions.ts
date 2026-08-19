@@ -173,10 +173,12 @@ export const askZukha = createServerFn({ method: "POST" })
     // Tasks context (deadlines, statuses)
     let tasksBlock = "";
     {
-      const { data: myTasks } = await context.supabase
+      let tq = context.supabase
         .from("tasks")
         .select("title, status, priority, due_date, assignee_name")
-        .neq("status", "done")
+        .neq("status", "done");
+      if (data.teamspace_id) tq = tq.eq("teamspace_id", data.teamspace_id);
+      const { data: myTasks } = await tq
         .order("due_date", { ascending: true })
         .limit(60);
       if (myTasks && myTasks.length) {
