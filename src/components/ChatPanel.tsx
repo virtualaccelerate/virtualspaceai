@@ -28,7 +28,34 @@ import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 type CreatedTask = { id: string; title: string };
 export type ChatMsg = { role: "user" | "assistant"; content: string; tasks?: CreatedTask[] };
 
-const FILE_TOKEN = /\[\[file:([0-9a-f-]{36})\|([^\]]+)\]\]/gi;
+// Accepts [[file:UUID|Name]], [[file:driveId|Name]] and malformed variants
+// without the pipe, e.g. [[file:driveIdSome file name]].
+const FILE_TOKEN = /\[\[file:([^\]]+?)\]\]/gi;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Split a raw token body into a usable { id, name } pair. */
+function parseFileToken(body: string): { id: string; name: string } {
+  const raw = body.trim();
+  const pipe = raw.indexOf("|");
+  if (pipe > -1) {
+    const id = raw.slice(0, pipe).trim();
+    const name = raw.slice(pipe + 1).trim();
+    return { id, name: name || "Файл" };
+  }
+  // No pipe: the model glued the id and the name together.
+  const space = raw.indexOf(" ");
+  if (space > -1) {
+    const head = raw.slice(0, space);
+    const tail = raw.slice(space + 1).trim();
+    // Strip the id part from the head, keep any human text stuck to it.
+    const m = head.match(/^([0-9A-Za-z_-]{20,})?(.*)$/);
+    const id = m?.[1] ?? head;
+    const namePrefix = (m?.[2] ?? "").trim();
+    const name = [namePrefix, tail].filter(Boolean).join(" ").trim();
+    return { id, name: name || "Файл" };
+  }
+  return { id: raw, name: "Файл" };
+}
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
 const AGENT_TAG = /@(contracts|tasks|advisor)\b/i;
 type AgentId = "contracts" | "tasks" | "advisor";
