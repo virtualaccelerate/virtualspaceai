@@ -90,26 +90,25 @@ function AuthenticatedLayout() {
     }
   }, [expanded]);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      setEmail(data.user?.email ?? null);
-      if (!data.user) return;
-      const { data: mem } = await supabase
-        .from("teamspace_members")
-        .select("teamspace_id")
-        .eq("user_id", data.user.id)
-        .limit(1)
-        .maybeSingle();
-      if (!mem) return;
-      const { data: ts } = await supabase
-        .from("teamspaces")
-        .select("id, name, invite_code")
-        .eq("id", mem.teamspace_id)
-        .maybeSingle();
-      if (ts) setTeamspace(ts as Teamspace);
-    })();
-  }, []);
+  const loadTeamspaces = async () => {
+    const { data } = await supabase.auth.getUser();
+    setEmail(data.user?.email ?? null);
+    if (!data.user) return;
+    const [all, activeId] = await Promise.all([listMyTeamspaces(), getActiveTeamspaceId()]);
+    setTeamspaces(all);
+    setTeamspace(all.find((ts) => ts.id === activeId) ?? all[0] ?? null);
+  };
+
+  useEffect(() => { void loadTeamspaces(); }, []);
+
+  const switchTeamspace = async (id: string) => {
+    if (id === teamspace?.id) { setMenuOpen(false); return; }
+    await setActiveTeamspace(id);
+    setMenuOpen(false);
+    queryClient.clear();
+    window.location.reload();
+  };
+
 
   useEffect(() => {
     if (!menuOpen) return;
