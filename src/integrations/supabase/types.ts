@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          created_at: string
+          key: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       app_user_connections: {
         Row: {
           account_email: string | null
@@ -777,6 +795,7 @@ export type Database = {
         Returns: boolean
       }
       join_teamspace_by_code: { Args: { _code: string }; Returns: string }
+      send_daily_task_digest: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

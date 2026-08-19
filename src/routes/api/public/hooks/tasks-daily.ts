@@ -45,13 +45,20 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env["CRON_SECRET"];
         const provided = request.headers.get("x-cron-secret") ?? "";
-        if (!secret || provided !== secret) {
+        if (!provided) return new Response("Unauthorized", { status: 401 });
+
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: setting } = await supabaseAdmin
+          .from("app_settings")
+          .select("value")
+          .eq("key", "cron_secret")
+          .maybeSingle();
+        const expected = (setting as any)?.value ?? process.env["CRON_SECRET"];
+        if (!expected || provided !== expected) {
           return new Response("Unauthorized", { status: 401 });
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { sendMessage } = await import("@/lib/telegram.server");
 
         const hourNow = new Date().getUTCHours();
