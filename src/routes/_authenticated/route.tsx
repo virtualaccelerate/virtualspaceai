@@ -137,6 +137,7 @@ function AuthenticatedLayout() {
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
   const topNav: NavItem[] = [
+    { to: "/app", label: t("app.nav.chat", "Chat"), subtitle: t("app.nav.chatSubtitle", "Team conversations"), icon: MessageSquare, exact: true },
     { to: "/app/overview", label: t("app.nav.overview"), subtitle: t("app.nav.overviewSubtitle", "Workspace insights"), icon: LayoutDashboard },
   ];
 
@@ -152,7 +153,6 @@ function AuthenticatedLayout() {
   ];
 
   const communicationNav: NavItem[] = [
-    { to: "/app", label: t("app.nav.chat", "Chat"), subtitle: t("app.nav.chatSubtitle", "Team conversations"), icon: MessageSquare, exact: true },
     { to: "/app/telegram", label: t("app.nav.telegramBot", "Telegram Bot"), subtitle: t("app.nav.telegramBotSubtitle", "Bot commands & updates"), icon: TelegramIcon },
     { to: "/app/team", label: t("app.nav.team"), subtitle: t("app.nav.teamSubtitle", "Members & roles"), icon: Users },
   ];
