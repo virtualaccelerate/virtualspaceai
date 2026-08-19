@@ -102,12 +102,17 @@ function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: s
   const re = new RegExp(FILE_TOKEN.source, "gi");
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) nodes.push(text.slice(last, m.index));
-    const id = m[1];
-    const name = m[2];
+    const { id, name } = parseFileToken(m[1]);
+    const isDoc = UUID_RE.test(id);
     nodes.push(
       <button
         key={`${id}-${m.index}`}
-        onClick={() => onOpenFile(id)}
+        onClick={() =>
+          isDoc
+            ? onOpenFile(id)
+            : window.open(`https://drive.google.com/file/d/${id}/view`, "_blank", "noopener")
+        }
+        title={name}
         className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary hover:bg-primary/25 px-1.5 py-0.5 text-xs font-medium align-baseline mx-0.5 transition"
       >
         <FileText className="h-3 w-3" />
