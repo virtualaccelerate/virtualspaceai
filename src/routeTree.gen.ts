@@ -50,6 +50,7 @@ import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/p
 import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
 import { Route as ApiPublicHooksTasksDailyRouteImport } from './routes/api/public/hooks/tasks-daily'
 import { Route as ApiPublicFinikWebhookRouteImport } from './routes/api/public/finik.webhook'
+import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
 
 const TgRoute = TgRouteImport.update({
@@ -270,6 +271,11 @@ const ApiPublicFinikWebhookRoute = ApiPublicFinikWebhookRouteImport.update({
   path: '/api/public/finik/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
+  id: '/api/public/calendar/$token',
+  path: '/api/public/calendar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppCConversationIdRoute =
   AuthenticatedAppCConversationIdRouteImport.update({
     id: '/c/$conversationId',
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
@@ -446,6 +455,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app/'
     | '/app/c/$conversationId'
+    | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
     | '/api/public/startup-logo/$'
@@ -488,6 +498,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app'
     | '/app/c/$conversationId'
+    | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
     | '/api/public/startup-logo/$'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
+    | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
     | '/api/public/startup-logo/$'
@@ -557,6 +569,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   OauthGoogleDriveReturnRoute: typeof OauthGoogleDriveReturnRoute
+  ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicFinikWebhookRoute: typeof ApiPublicFinikWebhookRoute
   ApiPublicHooksTasksDailyRoute: typeof ApiPublicHooksTasksDailyRoute
   ApiPublicStartupLogoSplatRoute: typeof ApiPublicStartupLogoSplatRoute
@@ -853,6 +866,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFinikWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/calendar/$token': {
+      id: '/api/public/calendar/$token'
+      path: '/api/public/calendar/$token'
+      fullPath: '/api/public/calendar/$token'
+      preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/c/$conversationId': {
       id: '/_authenticated/app/c/$conversationId'
       path: '/c/$conversationId'
@@ -940,6 +960,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   OauthGoogleDriveReturnRoute: OauthGoogleDriveReturnRoute,
+  ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicFinikWebhookRoute: ApiPublicFinikWebhookRoute,
   ApiPublicHooksTasksDailyRoute: ApiPublicHooksTasksDailyRoute,
   ApiPublicStartupLogoSplatRoute: ApiPublicStartupLogoSplatRoute,
