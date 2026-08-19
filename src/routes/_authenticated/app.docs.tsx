@@ -28,10 +28,14 @@ type Doc = {
   size_bytes: number | null;
   created_at: string;
   user_id: string;
+  extract_status?: string | null;
+  extract_error?: string | null;
+  text_len?: number;
 };
 
 const TEXT_MIMES = /^(text\/|application\/(json|xml|x-yaml|yaml|javascript|typescript|sql|csv|markdown))/i;
 const TEXT_EXTS = /\.(txt|md|markdown|csv|tsv|json|xml|yml|yaml|html|htm|js|ts|tsx|jsx|py|sql|log|rtf)$/i;
+
 
 function formatBytes(n: number | null) {
   if (!n) return "";
@@ -113,24 +117,19 @@ function KnowledgeBase() {
         setDocs((prev) => [row as Doc, ...prev]);
         // Fire-and-forget: OCR/PDF text extraction via Gemini for supported binaries.
         if (!extracted && row?.id) {
-          const mime = (file.type || "").toLowerCase();
-          const eligible =
-            mime === "application/pdf" ||
-            mime.startsWith("image/") ||
-            /\.(pdf|png|jpe?g|webp|gif|heic)$/i.test(file.name);
-          if (eligible) {
-            setIndexing((p) => ({ ...p, [row.id]: true }));
-            extract({ data: { id: row.id } })
-              .catch(() => { /* silent */ })
-              .finally(() => {
-                setIndexing((p) => {
-                  const n = { ...p };
-                  delete n[row.id];
-                  return n;
-                });
+          setIndexing((p) => ({ ...p, [row.id]: true }));
+          extract({ data: { id: row.id } })
+            .catch(() => { /* status is persisted server-side */ })
+            .finally(() => {
+              setIndexing((p) => {
+                const n = { ...p };
+                delete n[row.id];
+                return n;
               });
-          }
+              void refresh();
+            });
         }
+
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");

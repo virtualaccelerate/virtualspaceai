@@ -79,7 +79,7 @@ export const askZukha = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
-    // Load knowledge base context for this teamspace
+    // Load knowledge base context for this teamspace (relevance-ranked)
     let knowledgeBlock = "";
     if (data.teamspace_id) {
       const { data: docs } = await context.supabase
@@ -87,25 +87,64 @@ export const askZukha = createServerFn({ method: "POST" })
         .select("id, name, mime_type, extracted_text")
         .eq("teamspace_id", data.teamspace_id)
         .order("created_at", { ascending: false })
-        .limit(40);
+        .limit(60);
 
       if (docs && docs.length > 0) {
-        const CHAR_BUDGET = 40_000;
+        const question = [...data.messages]
+          .reverse()
+          .find((m) => m.role === "user")?.content ?? "";
+        const terms = Array.from(
+          new Set(
+            question
+              .toLowerCase()
+              .split(/[^\p{L}\p{N}]+/u)
+              .filter((w) => w.length > 3),
+          ),
+        ).slice(0, 12);
+
+        const scored = docs.map((d) => {
+          const hay = `${d.name}\n${d.extracted_text ?? ""}`.toLowerCase();
+          let score = 0;
+          for (const t of terms) {
+            if (d.name.toLowerCase().includes(t)) score += 5;
+            const hits = hay.split(t).length - 1;
+            score += Math.min(hits, 10);
+          }
+          if (d.extracted_text && d.extracted_text.length > 0) score += 1;
+          return { d, score };
+        });
+        scored.sort((a, b) => b.score - a.score);
+
+        const CHAR_BUDGET = 120_000;
+        const PER_DOC = 60_000;
         let used = 0;
         const parts: string[] = [];
-        for (const d of docs) {
-          const header = `FILE id=${d.id} name="${d.name}"${d.mime_type ? ` type=${d.mime_type}` : ""}`;
-          const body = d.extracted_text ? d.extracted_text.slice(0, 12_000) : "(binary file — no text extracted; you know it exists and can reference it by id/name)";
-          const chunk = `${header}\n${body}\n---\n`;
+        const missing: string[] = [];
+        for (const { d } of scored) {
+          if (!d.extracted_text || d.extracted_text.length === 0) {
+            missing.push(`"${d.name}"`);
+            continue;
+          }
+          const header = `FILE id=${d.id} name="${d.name}"${d.mime_type ? ` type=${d.mime_type}` : ""} chars=${d.extracted_text.length}`;
+          const body = d.extracted_text.slice(0, PER_DOC);
+          const truncated =
+            d.extracted_text.length > PER_DOC ? "\n[…текст файла обрезан…]" : "";
+          const chunk = `${header}\n${body}${truncated}\n---\n`;
           if (used + chunk.length > CHAR_BUDGET) break;
           parts.push(chunk);
           used += chunk.length;
         }
-        knowledgeBlock =
-          "\n\nKNOWLEDGE BASE (files uploaded by the team — use them to answer):\n" +
-          parts.join("");
+        if (parts.length || missing.length) {
+          knowledgeBlock =
+            "\n\nKNOWLEDGE BASE (files uploaded by the team — answer strictly from this content, quote exact figures/dates, and cite the file name; if the answer is not in these files, say so explicitly instead of guessing):\n" +
+            parts.join("") +
+            (missing.length
+              ? `\nNOTE: these files have no extracted text yet, so their content is unknown — tell the user to re-index them in Knowledge Base: ${missing.slice(0, 10).join(", ")}\n`
+              : "");
+        }
       }
     }
+
 
     // Load financial sources (Google Sheets + uploaded CSV/XLSX) and refresh sheets live
     let financeBlock = "";

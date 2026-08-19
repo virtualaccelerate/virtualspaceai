@@ -294,6 +294,8 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
+          extract_error: string | null
+          extract_status: string
           extracted_text: string | null
           id: string
           mime_type: string | null
@@ -306,6 +308,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          extract_error?: string | null
+          extract_status?: string
           extracted_text?: string | null
           id?: string
           mime_type?: string | null
@@ -318,6 +322,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          extract_error?: string | null
+          extract_status?: string
           extracted_text?: string | null
           id?: string
           mime_type?: string | null
@@ -790,6 +796,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      documents_index_status: {
+        Args: { p_teamspace: string }
+        Returns: {
+          extract_error: string
+          extract_status: string
+          id: string
+          text_len: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
