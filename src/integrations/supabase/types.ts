@@ -474,6 +474,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          calendar_token: string
           company: string | null
           created_at: string
           current_teamspace_id: string | null
@@ -485,6 +486,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          calendar_token?: string
           company?: string | null
           created_at?: string
           current_teamspace_id?: string | null
@@ -496,6 +498,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          calendar_token?: string
           company?: string | null
           created_at?: string
           current_teamspace_id?: string | null
@@ -671,6 +674,8 @@ export type Database = {
         Row: {
           chat_id: number | null
           created_at: string
+          daily_digest: boolean
+          digest_hour: number
           id: string
           language: string | null
           link_code: string
@@ -682,6 +687,8 @@ export type Database = {
         Insert: {
           chat_id?: number | null
           created_at?: string
+          daily_digest?: boolean
+          digest_hour?: number
           id?: string
           language?: string | null
           link_code?: string
@@ -693,6 +700,8 @@ export type Database = {
         Update: {
           chat_id?: number | null
           created_at?: string
+          daily_digest?: boolean
+          digest_hour?: number
           id?: string
           language?: string | null
           link_code?: string
