@@ -254,10 +254,25 @@ function KnowledgeBase() {
       )}
 
       <div className="rounded-2xl border border-white/10 bg-[color:var(--card)] overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3">
           <div className="text-sm font-semibold text-white">
             {t("app.docs.files", "Files")} <span className="text-white/40 font-normal">({docs.length})</span>
+            {docs.length > 0 && (
+              <span className="text-white/40 font-normal">
+                {" · "}
+                {t("app.docs.indexed", "прочитано ИИ")}: {docs.filter((d) => (d.text_len ?? 0) > 0).length}/{docs.length}
+              </span>
+            )}
           </div>
+          {docs.some((d) => (d.text_len ?? 0) === 0) && (
+            <button
+              onClick={reindexAllMissing}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/15 hover:bg-primary/25 rounded-lg px-2.5 py-1.5 transition"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              {t("app.docs.reindexAll", "Переиндексировать непрочитанные")}
+            </button>
+          )}
         </div>
         {loading ? (
           <div className="p-8 flex items-center justify-center text-white/50 text-sm">
@@ -282,14 +297,35 @@ function KnowledgeBase() {
                   <div className="text-sm text-white truncate group-hover:underline">{d.name}</div>
                   <div className="text-xs text-white/40 truncate">
                     {formatBytes(d.size_bytes)} · {new Date(d.created_at).toLocaleDateString()}
+                    {(d.text_len ?? 0) > 0 && ` · ${(d.text_len ?? 0).toLocaleString()} ${t("app.docs.chars", "символов текста")}`}
+                    {d.extract_error && ` · ${d.extract_error}`}
                   </div>
                 </button>
-                {indexing[d.id] && (
+                {indexing[d.id] ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/15 rounded-full px-2 py-1">
                     <Loader2 className="h-3 w-3 animate-spin" />
                     {t("app.docs.indexing", "Indexing…")}
                   </span>
+                ) : (d.text_len ?? 0) > 0 ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 bg-emerald-400/10 rounded-full px-2 py-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {t("app.docs.ready", "ИИ читает")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-400/10 rounded-full px-2 py-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {t("app.docs.notIndexed", "нет текста")}
+                  </span>
                 )}
+                <button
+                  onClick={() => reindexDoc(d.id)}
+                  disabled={!!indexing[d.id]}
+                  className="p-2 text-white/50 hover:text-primary hover:bg-white/5 rounded-lg transition disabled:opacity-40"
+                  aria-label={t("app.docs.reindex", "Переиндексировать")}
+                  title={t("app.docs.reindex", "Переиндексировать")}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
                 <button
                   onClick={() => openDoc(d.id)}
                   className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition"
@@ -297,6 +333,7 @@ function KnowledgeBase() {
                 >
                   <Download className="h-4 w-4" />
                 </button>
+
                 <button
                   onClick={() => removeDoc(d.id)}
                   className="p-2 text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
