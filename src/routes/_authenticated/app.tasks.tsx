@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -156,6 +157,7 @@ function TasksPage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
+  const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,11 +165,11 @@ function TasksPage() {
       const { data: session } = await supabase.auth.getUser();
       if (!session.user) return;
       if (!cancelled) setUserId(session.user.id);
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("status")
-        .order("position");
+      const ts = await getActiveTeamspaceId();
+      if (!cancelled) setTeamspaceId(ts);
+      let query = supabase.from("tasks").select("*");
+      query = ts ? query.eq("teamspace_id", ts) : query.eq("user_id", session.user.id);
+      const { data, error } = await query.order("status").order("position");
       if (error) {
         toast.error(error.message);
       } else if (!cancelled) {
@@ -240,7 +242,7 @@ function TasksPage() {
       const position = (grouped[draft.status]?.length ?? 0) * 1000;
       const { data, error } = await supabase
         .from("tasks")
-        .insert({ ...payload, user_id: userId, position })
+        .insert({ ...payload, user_id: userId, teamspace_id: teamspaceId, position })
         .select()
         .single();
       if (error) return toast.error(error.message);
