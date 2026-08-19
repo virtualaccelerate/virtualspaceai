@@ -54,6 +54,7 @@ type Task = {
   description: string | null;
   status: TaskStatus;
   priority: TaskPriority;
+  user_id: string;
   assignee_name: string | null;
   due_date: string | null;
   position: number;
@@ -154,6 +155,7 @@ function TasksPage() {
   const [draft, setDraft] = useState<TaskDraft>(emptyDraft());
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
+  const [onlyMine, setOnlyMine] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -293,9 +295,18 @@ function TasksPage() {
             Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами.
           </p>
         </div>
-        <Button onClick={() => openCreate()} className="gap-2">
-          <Plus className="h-4 w-4" /> New task
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={onlyMine ? "default" : "outline"}
+            onClick={() => setOnlyMine((v) => !v)}
+            className="gap-2"
+          >
+            <User className="h-4 w-4" /> {t("app.tasks.myTasks", "Мои задачи")}
+          </Button>
+          <Button onClick={() => openCreate()} className="gap-2">
+            <Plus className="h-4 w-4" /> New task
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -355,6 +366,7 @@ function TasksPage() {
                   <div className="flex-1 space-y-2 min-h-[80px]">
                     {items.map((task) => {
                       const meta = PRIORITY_META[task.priority];
+                      const isMine = !!userId && task.user_id === userId;
                       return (
                         <article
                           key={task.id}
@@ -368,6 +380,8 @@ function TasksPage() {
                           className={cn(
                             "group cursor-grab active:cursor-grabbing rounded-xl border border-border bg-card p-3 shadow-sm hover:border-primary/30 hover:bg-accent/30 transition",
                             dragId === task.id && "opacity-50",
+                            onlyMine && isMine && "border-primary/60 ring-2 ring-primary/30 bg-primary/[0.06]",
+                            onlyMine && !isMine && "opacity-35 grayscale",
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
