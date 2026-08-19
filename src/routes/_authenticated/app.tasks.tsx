@@ -240,9 +240,11 @@ function TasksPage() {
       toast.success(t("app.tasks.okUpdate", "Task updated"));
     } else {
       const position = (grouped[draft.status]?.length ?? 0) * 1000;
+      const ts = teamspaceId ?? (await getActiveTeamspaceId());
+      if (!ts) return toast.error(t("app.tasks.noWorkspace", "No active workspace"));
       const { data, error } = await supabase
         .from("tasks")
-        .insert({ ...payload, user_id: userId, teamspace_id: teamspaceId, position })
+        .insert({ ...payload, user_id: userId, teamspace_id: ts, position })
         .select()
         .single();
       if (error) return toast.error(error.message);
