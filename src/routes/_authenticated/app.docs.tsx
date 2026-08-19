@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon } from "lucide-react";
+import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
