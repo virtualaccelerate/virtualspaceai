@@ -56,6 +56,7 @@ const T = {
     help:
       "Что я умею:\n\n" +
       "/tasks — активные задачи и смена статуса\n" +
+      "/today — задачи на сегодня и ближайшие дедлайны\n" +
       "/new Название задачи — создать задачу\n" +
       "/done Название — отметить задачу выполненной\n" +
       "/report day | week | month — отчёт за период\n" +
@@ -86,6 +87,7 @@ const T = {
     help:
       "What I can do:\n\n" +
       "/tasks — open tasks and status changes\n" +
+      "/today — today's tasks and upcoming deadlines\n" +
       "/new Task title — create a task\n" +
       "/done Title — mark a task done\n" +
       "/report day | week | month — period report\n" +
@@ -278,6 +280,36 @@ async function handleDone(link: Link, chatId: number, query: string, lang: Lang)
   }
   await supabaseAdmin.from("tasks").update({ status: "done" }).eq("id", task.id);
   await sendMessage(chatId, t(lang).doneOk(task.title));
+}
+
+async function handleToday(link: Link, chatId: number, lang: Lang) {
+  const today = new Date().toISOString().slice(0, 10);
+  const soonDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+  const { data } = await supabaseAdmin
+    .from("tasks")
+    .select("title, status, priority, due_date")
+    .eq("user_id", link.user_id)
+    .neq("status", "done")
+    .order("due_date", { ascending: true });
+  const rows = ((data as any[]) ?? []) as any[];
+  const fmtRow = (x: any) =>
+    `${STATUS_ICON[x.status] ?? "⬜️"} ${PRIORITY_ICON[x.priority] ?? ""} ${x.title}${x.due_date ? ` — ${x.due_date}` : ""}`;
+  const overdue = rows.filter((x) => x.due_date && x.due_date < today);
+  const dueToday = rows.filter((x) => x.due_date === today);
+  const soon = rows.filter((x) => x.due_date && x.due_date > today && x.due_date <= soonDate);
+  const blocks: string[] = [];
+  if (overdue.length) blocks.push(`${lang === "en" ? "🔥 Overdue" : "🔥 Просрочено"}\n${overdue.map(fmtRow).join("\n")}`);
+  if (dueToday.length) blocks.push(`${lang === "en" ? "📌 Today" : "📌 Сегодня"}\n${dueToday.map(fmtRow).join("\n")}`);
+  if (soon.length)
+    blocks.push(
+      `${lang === "en" ? "⏳ Upcoming deadlines (3 days)" : "⏳ Ближайшие дедлайны (3 дня)"}\n${soon.map(fmtRow).join("\n")}`,
+    );
+  const header = lang === "en" ? "📅 Today's tasks" : "📅 Задачи на сегодня";
+  const empty =
+    lang === "en"
+      ? `No deadlines today. Open tasks: ${rows.length}`
+      : `На сегодня дедлайнов нет. Активных задач: ${rows.length}`;
+  await sendMessage(chatId, `${header}\n\n${blocks.length ? blocks.join("\n\n") : empty}`);
 }
 
 async function handleReport(link: Link, chatId: number, periodArg: string, lang: Lang) {
@@ -563,6 +595,10 @@ export async function handleUpdate(update: any) {
       );
       return;
 
+    case "/today":
+    case "/deadlines":
+      await handleToday(link, chatId, lang);
+      return;
     case "/tasks":
       await handleTasks(link, chatId, lang);
       return;
