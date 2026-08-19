@@ -321,6 +321,46 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     })();
   }, [activeId, loadHistory]);
 
+  const [acceptingIdx, setAcceptingIdx] = useState<string | null>(null);
+
+  const acceptTask = async (msgIdx: number, taskIdx: number) => {
+    const msg = messages[msgIdx];
+    const tk = msg?.proposed?.[taskIdx];
+    if (!tk) return;
+    setAcceptingIdx(`${msgIdx}-${taskIdx}`);
+    try {
+      const row = await mkTask({ data: tk });
+      setMessages((prev) =>
+        prev.map((m, i) =>
+          i !== msgIdx
+            ? m
+            : {
+                ...m,
+                proposed: (m.proposed ?? []).filter((_, j) => j !== taskIdx),
+                tasks: [...(m.tasks ?? []), { id: row.id, title: row.title }],
+              },
+        ),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create task");
+    } finally {
+      setAcceptingIdx(null);
+    }
+  };
+
+  const rejectTask = (msgIdx: number, taskIdx: number) => {
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i !== msgIdx ? m : { ...m, proposed: (m.proposed ?? []).filter((_, j) => j !== taskIdx) },
+      ),
+    );
+  };
+
+  const acceptAll = async (msgIdx: number) => {
+    const list = messages[msgIdx]?.proposed ?? [];
+    for (let i = list.length - 1; i >= 0; i--) await acceptTask(msgIdx, i);
+  };
+
   const openFile = async (id: string) => {
     // Open a blank tab synchronously in the click handler so popup blockers
     // don't kill it while we await the signed URL. If the browser still
@@ -800,6 +840,45 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                     {m.role === "assistant"
                       ? <MessageContent text={m.content} onOpenFile={openFile} />
                       : <MessageContent text={m.content} onOpenFile={openFile} />}
+                    {m.role === "assistant" && m.proposed && m.proposed.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {m.proposed.map((tk, j) => (
+                          <div
+                            key={`${tk.title}-${j}`}
+                            className="rounded-xl border border-border bg-card/60 px-3 py-2 flex items-start gap-2"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-medium text-foreground truncate">{tk.title}</div>
+                              <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2 mt-0.5">
+                                {tk.priority && <span>{tk.priority}</span>}
+                                {tk.due_date && <span>{tk.due_date}</span>}
+                              </div>
+                            </div>
+                            <button
+                              disabled={acceptingIdx === `${i}-${j}`}
+                              onClick={() => void acceptTask(i, j)}
+                              className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
+                            >
+                              {acceptingIdx === `${i}-${j}` ? "…" : t("app.chat.acceptTask", "Принять")}
+                            </button>
+                            <button
+                              onClick={() => rejectTask(i, j)}
+                              className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
+                            >
+                              {t("app.chat.rejectTask", "Отклонить")}
+                            </button>
+                          </div>
+                        ))}
+                        {m.proposed.length > 1 && (
+                          <button
+                            onClick={() => void acceptAll(i)}
+                            className="text-[11px] font-semibold text-primary hover:underline"
+                          >
+                            {t("app.chat.acceptAllTasks", "Принять все")}
+                          </button>
+                        )}
+                      </div>
+                    )}
                     {m.role === "assistant" && m.tasks && m.tasks.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {m.tasks.map((tk) => (
