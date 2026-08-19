@@ -591,50 +591,6 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     ? "h-full flex flex-col"
     : "h-[calc(100vh-3.5rem-2rem)] sm:h-[calc(100vh-3.5rem-3rem)] flex";
 
-  const ThreadsSidebar = (
-    <aside className="hidden md:flex w-64 shrink-0 flex-col rounded-2xl border border-border bg-card/50 overflow-hidden">
-      <div className="p-2 border-b border-border">
-        <button
-          onClick={onNewChat}
-          className="w-full inline-flex items-center gap-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 px-3 py-2 text-sm font-semibold transition"
-        >
-          <MessageSquarePlus className="h-4 w-4" />
-          {t("app.chat.newChat", "New chat")}
-        </button>
-      </div>
-      <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-        <History className="h-3 w-3" />
-        {t("app.chat.history", "History")}
-        <span className="ml-auto">{conversations.length}</span>
-      </div>
-      <div className="flex-1 overflow-y-auto px-1.5 pb-2 space-y-0.5">
-        {conversations.length === 0 ? (
-          <div className="p-3 text-xs text-muted-foreground text-center">
-            {t("app.chat.noHistory", "No previous chats yet")}
-          </div>
-        ) : conversations.map((c) => (
-          <div
-            key={c.id}
-            onClick={() => onSwitchThread(c.id)}
-            className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/50 ${
-              c.id === activeId ? "bg-accent/60 text-foreground" : "text-foreground/80"
-            }`}
-          >
-            {c.agent_id ? <Bot className="h-3.5 w-3.5 text-primary shrink-0" /> : <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-            <span className="flex-1 truncate">{c.title}</span>
-            <button
-              onClick={(e) => onDeleteThread(c.id, e)}
-              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
-              aria-label="delete"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
-      </div>
-    </aside>
-  );
-
   const CompactHeader = (
     <div className="flex items-center gap-2 pb-2">
       <button
@@ -840,7 +796,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                   transition={{ duration: 0.2 }}
                   className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
+                  <div className={`max-w-[85%] rounded-2xl ${isCompact ? "px-4 py-2.5 text-sm" : "px-5 py-3 text-[15px]"} whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
                     {m.role === "assistant"
                       ? <MessageContent text={m.content} onOpenFile={openFile} />
                       : <MessageContent text={m.content} onOpenFile={openFile} />}
