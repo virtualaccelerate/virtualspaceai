@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
 import { FloatingChat } from "@/components/FloatingChat";
+import { SidebarChatHistory } from "@/components/SidebarChatHistory";
 import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode } from "@/lib/active-teamspace";
 
 
@@ -322,6 +323,7 @@ function AuthenticatedLayout() {
         <nav className="flex-1 overflow-y-auto p-2 space-y-4 mt-1">
           <div className="space-y-0.5">
             {topNav.map((item) => <NavButton key={item.to} item={item} />)}
+            <SidebarChatHistory showLabels={showLabels} />
           </div>
 
           {showLabels && (
