@@ -170,6 +170,61 @@ export const askZukha = createServerFn({ method: "POST" })
       }
     }
 
+    // Tasks context (deadlines, statuses)
+    let tasksBlock = "";
+    {
+      const { data: myTasks } = await context.supabase
+        .from("tasks")
+        .select("title, status, priority, due_date, assignee_name")
+        .neq("status", "done")
+        .order("due_date", { ascending: true })
+        .limit(60);
+      if (myTasks && myTasks.length) {
+        tasksBlock =
+          `\n\nCURRENT TASKS (today is ${new Date().toISOString().slice(0, 10)}; use for questions about workload and deadlines):\n` +
+          myTasks
+            .map(
+              (x: any) =>
+                `- ${x.title} [${x.status}/${x.priority}${x.due_date ? `, due ${x.due_date}` : ", no due date"}${x.assignee_name ? `, ${x.assignee_name}` : ""}]`,
+            )
+            .join("\n");
+      }
+    }
+
+    // Google Drive context (files of the connected user)
+    let driveBlock = "";
+    try {
+      const gd = await import("./google-drive.server");
+      const status = await gd.connectionStatus(context.userId);
+      if ((status as any)?.connected) {
+        const files = await gd.listFiles(context.userId);
+        if (files.length) {
+          driveBlock =
+            "\n\nGOOGLE DRIVE FILES (connected account — you can reference them and read their content on request):\n" +
+            files
+              .slice(0, 40)
+              .map((f) => `- id=${f.id} "${f.name}" (${f.mimeType})${f.webViewLink ? ` ${f.webViewLink}` : ""}`)
+              .join("\n");
+
+          // If the last user message names a file, read it inline.
+          const q = (lastUser?.content ?? "").toLowerCase();
+          const matches = files
+            .filter((f) => f.name && q.includes(f.name.toLowerCase().split(".")[0]))
+            .slice(0, 2);
+          for (const f of matches) {
+            try {
+              const doc = await gd.readFile(context.userId, f.id);
+              driveBlock += `\n\n### DRIVE FILE: ${f.name}\n${String(doc.content ?? "").slice(0, 15_000)}`;
+            } catch {
+              /* skip unreadable file */
+            }
+          }
+        }
+      }
+    } catch {
+      /* Drive not connected or unavailable — continue without it */
+    }
+
     const agentPreamble = data.agent_id && AGENT_PROMPTS[data.agent_id]
       ? `ACTIVE AGENT MODE: ${AGENT_PROMPTS[data.agent_id]}\n\n`
       : "";
@@ -188,7 +243,9 @@ export const askZukha = createServerFn({ method: "POST" })
       "Rules: priority ∈ low|medium|high|urgent (default medium). Date is optional — leave empty as ||||. Description optional. Example: [[task:Prepare Q3 report||high||2026-08-01||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
       knowledgeBlock +
       financeBlock +
-      inlineSheetBlock;
+      inlineSheetBlock +
+      tasksBlock +
+      driveBlock;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
