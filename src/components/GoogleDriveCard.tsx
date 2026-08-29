@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import {
   startGoogleDriveConnect,
+  completeGoogleDriveConnect,
   googleDriveStatus,
   googleDriveListFiles,
   googleDriveDisconnect,
@@ -29,7 +30,7 @@ type DriveFile = {
 };
 
 function waitForOAuthCompletion(popup: Window) {
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<string | null>((resolve, reject) => {
     let poll: number | undefined;
     const cleanup = () => {
       window.removeEventListener("message", onMessage);
@@ -44,7 +45,9 @@ function waitForOAuthCompletion(popup: Window) {
       )
         return;
       cleanup();
-      if (type === "appUserConnectorOAuthComplete") return resolve();
+       if (type === "appUserConnectorOAuthComplete") {
+         return resolve(typeof event.data?.code === "string" ? event.data.code : null);
+       }
       popup.close();
       reject(new Error("OAuth failed"));
     };
@@ -138,7 +141,8 @@ export function GoogleDriveCard() {
       const { authorizationUrl } = await startGoogleDriveConnect();
       const done = waitForOAuthCompletion(popup);
       popup.location.href = authorizationUrl;
-      await done;
+      const code = await done;
+      if (code) await completeGoogleDriveConnect({ data: { code } });
       await refresh();
     } catch (e) {
       popup.close();

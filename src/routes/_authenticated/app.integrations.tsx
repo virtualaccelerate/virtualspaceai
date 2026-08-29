@@ -91,7 +91,7 @@ function SourceRow({ source }: { source: Source }) {
   const [open, setOpen] = useState(false);
   const disabled = source.status === "soon";
   return (
-    <div className="glass-strong rounded-2xl border border-white/10 px-4 py-3.5 flex items-center gap-4">
+    <div className="glass-strong rounded-2xl border border-white/10 px-4 py-3.5 flex flex-wrap items-center gap-4">
       <div className={`h-11 w-11 rounded-xl bg-white/5 flex items-center justify-center shrink-0 ${source.accent}`}>
         <source.icon className="h-5 w-5" />
       </div>
