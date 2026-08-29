@@ -103,10 +103,12 @@ function MessageContent({
   text,
   onOpenFile,
   knownDocIds,
+  knownDriveIds,
 }: {
   text: string;
   onOpenFile: (id: string) => void;
   knownDocIds?: Set<string>;
+  knownDriveIds?: Set<string>;
 }) {
   const nodes: React.ReactNode[] = [];
   let last = 0;
@@ -116,9 +118,11 @@ function MessageContent({
     if (m.index > last) nodes.push(text.slice(last, m.index));
     const { id, name } = parseFileToken(m[1]);
     const isDoc = UUID_RE.test(id);
-    // Never render a link for a document id that doesn't exist in this
-    // workspace — the model sometimes invents file references.
-    if (isDoc && knownDocIds && knownDocIds.size > 0 && !knownDocIds.has(id.toLowerCase())) {
+    // Never render a link for a file id that doesn't exist for this user —
+    // the model sometimes invents document or Drive references.
+    const unknownDoc = isDoc && !!knownDocIds && knownDocIds.size > 0 && !knownDocIds.has(id.toLowerCase());
+    const unknownDrive = !isDoc && (!knownDriveIds || !knownDriveIds.has(id));
+    if (unknownDoc || unknownDrive) {
       nodes.push(name && name !== "Файл" ? name : "");
       last = m.index + m[0].length;
       continue;
@@ -143,6 +147,7 @@ function MessageContent({
   if (last < text.length) nodes.push(text.slice(last));
   return <>{nodes}</>;
 }
+
 
 
 type Props = {
