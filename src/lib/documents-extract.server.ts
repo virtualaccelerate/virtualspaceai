@@ -18,11 +18,22 @@ export async function extractSpreadsheetText(bytes: Uint8Array) {
   for (const name of workbook.SheetNames) {
     const sheet = workbook.Sheets[name];
     if (!sheet) continue;
+    for (const address of Object.keys(sheet)) {
+      if (address.startsWith("!")) continue;
+      const cell = sheet[address];
+      if (cell?.t === "d") {
+        cell.z = "yyyy-mm-dd";
+        delete cell.w;
+      }
+    }
     const csv = XLSX.utils.sheet_to_csv(sheet, {
       blankrows: false,
       dateNF: "yyyy-mm-dd",
     }).trim();
-    sections.push(`## SHEET: ${name}\n${csv || "[empty sheet]"}`);
+    const limited = csv.slice(0, 60_000);
+    sections.push(
+      `## SHEET: ${name}\n${limited || "[empty sheet]"}${csv.length > limited.length ? "\n[sheet truncated]" : ""}`,
+    );
   }
 
   return sections.join("\n\n").slice(0, 200_000);

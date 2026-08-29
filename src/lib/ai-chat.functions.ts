@@ -241,7 +241,7 @@ export const askZukha = createServerFn({ method: "POST" })
         const files = await gd.listFiles(driveUser);
         if (files.length) {
           driveBlock =
-            "\n\nGOOGLE DRIVE FILES (the signed-in user's personal connected account — their content below is authoritative):\n" +
+            "\n\nGOOGLE DRIVE FILES (metadata only; do not infer file contents from this list. Only files followed by a ### DRIVE FILE content section were actually read):\n" +
             files
               .slice(0, 60)
               .map((f) => `- id=${f.id} "${f.name}" (${f.mimeType})${f.webViewLink ? ` ${f.webViewLink}` : ""}`)
