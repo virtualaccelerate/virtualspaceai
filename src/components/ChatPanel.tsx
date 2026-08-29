@@ -99,7 +99,15 @@ function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] }
   return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks };
 }
 
-function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: string) => void }) {
+function MessageContent({
+  text,
+  onOpenFile,
+  knownDocIds,
+}: {
+  text: string;
+  onOpenFile: (id: string) => void;
+  knownDocIds?: Set<string>;
+}) {
   const nodes: React.ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
@@ -108,6 +116,13 @@ function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: s
     if (m.index > last) nodes.push(text.slice(last, m.index));
     const { id, name } = parseFileToken(m[1]);
     const isDoc = UUID_RE.test(id);
+    // Never render a link for a document id that doesn't exist in this
+    // workspace — the model sometimes invents file references.
+    if (isDoc && knownDocIds && knownDocIds.size > 0 && !knownDocIds.has(id.toLowerCase())) {
+      nodes.push(name && name !== "Файл" ? name : "");
+      last = m.index + m[0].length;
+      continue;
+    }
     nodes.push(
       <button
         key={`${id}-${m.index}`}
@@ -128,6 +143,7 @@ function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: s
   if (last < text.length) nodes.push(text.slice(last));
   return <>{nodes}</>;
 }
+
 
 type Props = {
   variant?: "full" | "compact";
