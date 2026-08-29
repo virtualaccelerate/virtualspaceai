@@ -309,6 +309,21 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     })();
   }, []);
 
+  // Known knowledge-base document ids, used to drop invented file citations.
+  const [knownDocIds, setKnownDocIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!teamspaceId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("documents")
+        .select("id")
+        .eq("teamspace_id", teamspaceId);
+      if (data) setKnownDocIds(new Set(data.map((d) => String(d.id).toLowerCase())));
+    })();
+  }, [teamspaceId]);
+
+
+
   // Sync forced id
   useEffect(() => {
     if (forcedId) setActiveId(forcedId);
