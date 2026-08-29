@@ -24,7 +24,7 @@ export function NotificationsBell() {
 
   const refresh = async () => {
     try {
-      const rows = (await load({ data: {} })) as Notice[];
+      const rows = (await load()) as Notice[];
       setItems(rows ?? []);
     } catch { /* ignore */ }
   };
