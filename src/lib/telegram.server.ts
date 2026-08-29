@@ -582,6 +582,40 @@ async function handleCallback(cb: any) {
 
 // ---------------- entry ----------------
 
+// ---------------- voice ----------------
+
+async function transcribeTelegramFile(fileId: string, mime: string): Promise<string> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) return "";
+  try {
+    const info = await tg<any>("getFile", { file_id: fileId });
+    const path = info?.result?.file_path;
+    if (!path) return "";
+    const fileRes = await fetch(`${TELEGRAM_API}/file/bot${botToken()}/${path}`);
+    if (!fileRes.ok) return "";
+    const bytes = await fileRes.arrayBuffer();
+    if (bytes.byteLength < 512) return "";
+    const ext = path.split(".").pop() || "ogg";
+    const form = new FormData();
+    form.append("model", "openai/gpt-4o-mini-transcribe");
+    form.append("file", new Blob([bytes], { type: mime }), `voice.${ext}`);
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}` },
+      body: form,
+    });
+    if (!res.ok) {
+      console.error("[telegram] transcription failed", res.status, await res.text().catch(() => ""));
+      return "";
+    }
+    const json = (await res.json()) as { text?: string };
+    return (json.text ?? "").trim();
+  } catch (e) {
+    console.error("[telegram] voice error", e);
+    return "";
+  }
+}
+
 export async function handleUpdate(update: any) {
   if (update.callback_query) {
     await handleCallback(update.callback_query);
@@ -589,8 +623,42 @@ export async function handleUpdate(update: any) {
   }
   const message = update.message ?? update.edited_message;
   const chatId = message?.chat?.id;
-  const text: string = (message?.text ?? "").trim();
+  let text: string = (message?.text ?? message?.caption ?? "").trim();
+
+  const voice = message?.voice ?? message?.audio ?? message?.video_note;
+  if (chatId && !text && voice?.file_id) {
+    const link0 = await findLink(chatId);
+    if (!link0) {
+      await sendMessage(chatId, t("ru").needLink);
+      return;
+    }
+    const lang0 = pickLang(link0.language);
+    await tg("sendChatAction", { chat_id: chatId, action: "typing" });
+    const spoken = await transcribeTelegramFile(
+      voice.file_id,
+      voice.mime_type ?? "audio/ogg",
+    );
+    if (!spoken) {
+      await sendMessage(
+        chatId,
+        lang0 === "ru"
+          ? "Не удалось распознать голосовое сообщение. Попробуйте ещё раз."
+          : "Could not recognize the voice message. Please try again.",
+      );
+      return;
+    }
+    await sendMessage(chatId, `🎤 ${spoken}`);
+    const { data: prof0 } = await supabaseAdmin
+      .from("profiles")
+      .select("language")
+      .eq("id", link0.user_id)
+      .maybeSingle();
+    await handleAiMessage(link0, chatId, spoken, pickLang((prof0 as any)?.language ?? link0.language));
+    return;
+  }
+
   if (!chatId || !text) return;
+
 
   const [rawCmd, ...rest] = text.split(/\s+/);
   const arg = text.slice(rawCmd.length).trim();
