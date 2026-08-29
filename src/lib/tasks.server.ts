@@ -36,6 +36,55 @@ async function assigneeName(teamspaceId: string, assigneeId?: string | null) {
   const { data: profile } = await db.from("profiles").select("full_name, email").eq("id", assigneeId).maybeSingle();
   return profile?.full_name || profile?.email || "Team member";
 }
+/** Sends both the in-app notification and the Telegram message to the assignee. */
+async function notifyAssignment(input: {
+  assigneeId: string | null;
+  actorId: string;
+  teamspaceId: string | null;
+  kind: "assigned" | "updated" | "deleted";
+  taskId?: string | null;
+  title: string;
+  status?: string | null;
+  priority?: string | null;
+  dueDate?: string | null;
+}) {
+  if (!input.assigneeId || input.assigneeId === input.actorId) return;
+  const { createNotification, displayName } = await import("./notifications.server");
+  const actorName = await displayName(input.actorId).catch(() => null);
+  const heading =
+    input.kind === "assigned" ? "Вам назначена задача"
+      : input.kind === "deleted" ? "Задача удалена"
+        : "Задача обновлена";
+  const body = [
+    input.title,
+    actorName ? `Кто: ${actorName}` : null,
+    input.status ? `Статус: ${input.status}` : null,
+    input.priority ? `Приоритет: ${input.priority}` : null,
+    input.dueDate ? `Срок: ${input.dueDate}` : null,
+  ].filter(Boolean).join("\n");
+  await createNotification({
+    userId: input.assigneeId,
+    teamspaceId: input.teamspaceId,
+    kind: `task_${input.kind}`,
+    title: heading,
+    body,
+    actorId: input.actorId,
+    actorName,
+    taskId: input.taskId ?? null,
+  }).catch(() => {});
+  const { notifyTaskAssignee } = await import("./telegram.server");
+  await notifyTaskAssignee({
+    assigneeId: input.assigneeId,
+    actorId: input.actorId,
+    actorName,
+    kind: input.kind,
+    title: input.title,
+    status: input.status,
+    priority: input.priority,
+    dueDate: input.dueDate,
+  }).catch(() => {});
+}
+
 
 export async function createTaskForUser(userId: string, data: CreateTaskInput) {
   const db = await admin();
@@ -56,8 +105,8 @@ export async function createTaskForUser(userId: string, data: CreateTaskInput) {
     position: (count ?? 0) * 1000,
   }).select("*").single();
   if (error) throw new Error(error.message);
-  const { notifyTaskAssignee } = await import("./telegram.server");
-  await notifyTaskAssignee({ assigneeId: row.assignee_id, actorId: userId, kind: "assigned", title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date }).catch(() => {});
+  await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId, kind: "assigned", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
+
   return row;
 }
 
@@ -96,8 +145,8 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   const newlyAssigned = row.assignee_id && row.assignee_id !== current.assignee_id;
   const changed = row.title !== current.title || row.status !== current.status || row.priority !== current.priority || row.due_date !== current.due_date;
   if (newlyAssigned || (changed && row.assignee_id)) {
-    const { notifyTaskAssignee } = await import("./telegram.server");
-    await notifyTaskAssignee({ assigneeId: row.assignee_id, actorId: userId, kind: newlyAssigned ? "assigned" : "updated", title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date }).catch(() => {});
+    await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: newlyAssigned ? "assigned" : "updated", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
+
   }
   return row;
 }
@@ -111,8 +160,8 @@ export async function deleteTaskForUser(userId: string, id: string) {
   const { error } = await db.from("tasks").delete().eq("id", id);
   if (error) throw new Error(error.message);
   if (current.assignee_id) {
-    const { notifyTaskAssignee } = await import("./telegram.server");
-    await notifyTaskAssignee({ assigneeId: current.assignee_id, actorId: userId, kind: "deleted", title: current.title }).catch(() => {});
+    await notifyAssignment({ assigneeId: current.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: "deleted", taskId: current.id, title: current.title });
+
   }
   return { ok: true };
 }

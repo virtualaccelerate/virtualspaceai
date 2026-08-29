@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
-  Bot, Users, Bell, Search, Settings,
+  Bot, Users, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
   Plus, FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
@@ -15,6 +15,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
 import { FloatingChat } from "@/components/FloatingChat";
 import { SidebarChatHistory } from "@/components/SidebarChatHistory";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode } from "@/lib/active-teamspace";
 
 
@@ -398,13 +399,8 @@ function AuthenticatedLayout() {
             </button>
             <LangSwitcher />
             <ThemeToggle />
-            <button
-              className="relative h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
-            </button>
+            <NotificationsBell />
+
 
             <button
               onClick={() => navigate({ to: "/app/settings" })}
