@@ -282,7 +282,6 @@ export async function createDocWithContent(
 ) {
   if (!content || !content.trim()) return createDoc(userId, name, parentId);
 
-  const connectionAPIKey = await keyOrThrow(userId);
   const boundary = `vsb${Math.random().toString(36).slice(2)}`;
   const metadata = {
     name,
@@ -295,17 +294,16 @@ export async function createDocWithContent(
     `--${boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n` +
     `${content}\r\n--${boundary}--`;
 
-  const res = await callAsAppUser({
-    gatewayBaseUrl: GATEWAY_BASE_URL,
-    connectionAPIKey,
-    connectorId: CONNECTOR_ID,
-    path: "/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink",
-    init: {
+  const res = await driveFetch(
+    userId,
+    "/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink",
+    {
       method: "POST",
       headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
       body,
     },
-  });
+  );
+
   const text = await res.text();
   if (!res.ok) throw new Error(`Google Docs create failed [${res.status}]: ${text}`);
   return JSON.parse(text) as DriveFile;
