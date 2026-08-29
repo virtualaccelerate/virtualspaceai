@@ -105,8 +105,8 @@ export async function createTaskForUser(userId: string, data: CreateTaskInput) {
     position: (count ?? 0) * 1000,
   }).select("*").single();
   if (error) throw new Error(error.message);
-  const { notifyTaskAssignee } = await import("./telegram.server");
-  await notifyTaskAssignee({ assigneeId: row.assignee_id, actorId: userId, kind: "assigned", title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date }).catch(() => {});
+  await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId, kind: "assigned", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
+
   return row;
 }
 
