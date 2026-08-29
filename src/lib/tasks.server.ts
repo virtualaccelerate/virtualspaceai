@@ -36,6 +36,55 @@ async function assigneeName(teamspaceId: string, assigneeId?: string | null) {
   const { data: profile } = await db.from("profiles").select("full_name, email").eq("id", assigneeId).maybeSingle();
   return profile?.full_name || profile?.email || "Team member";
 }
+/** Sends both the in-app notification and the Telegram message to the assignee. */
+async function notifyAssignment(input: {
+  assigneeId: string | null;
+  actorId: string;
+  teamspaceId: string | null;
+  kind: "assigned" | "updated" | "deleted";
+  taskId?: string | null;
+  title: string;
+  status?: string | null;
+  priority?: string | null;
+  dueDate?: string | null;
+}) {
+  if (!input.assigneeId || input.assigneeId === input.actorId) return;
+  const { createNotification, displayName } = await import("./notifications.server");
+  const actorName = await displayName(input.actorId).catch(() => null);
+  const heading =
+    input.kind === "assigned" ? "Вам назначена задача"
+      : input.kind === "deleted" ? "Задача удалена"
+        : "Задача обновлена";
+  const body = [
+    input.title,
+    actorName ? `Кто: ${actorName}` : null,
+    input.status ? `Статус: ${input.status}` : null,
+    input.priority ? `Приоритет: ${input.priority}` : null,
+    input.dueDate ? `Срок: ${input.dueDate}` : null,
+  ].filter(Boolean).join("\n");
+  await createNotification({
+    userId: input.assigneeId,
+    teamspaceId: input.teamspaceId,
+    kind: `task_${input.kind}`,
+    title: heading,
+    body,
+    actorId: input.actorId,
+    actorName,
+    taskId: input.taskId ?? null,
+  }).catch(() => {});
+  const { notifyTaskAssignee } = await import("./telegram.server");
+  await notifyTaskAssignee({
+    assigneeId: input.assigneeId,
+    actorId: input.actorId,
+    actorName,
+    kind: input.kind,
+    title: input.title,
+    status: input.status,
+    priority: input.priority,
+    dueDate: input.dueDate,
+  }).catch(() => {});
+}
+
 
 export async function createTaskForUser(userId: string, data: CreateTaskInput) {
   const db = await admin();
