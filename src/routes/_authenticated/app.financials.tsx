@@ -134,6 +134,25 @@ function FinancialsPage() {
   const ask = useServerFn(askFinancials);
   const loadChat = useServerFn(listFinChat);
   const clearChat = useServerFn(clearFinChat);
+  const getContent = useServerFn(getFinancialSourceContent);
+
+  const [preview, setPreview] = useState<{ name: string; sheets: { name: string; rows: string[][] }[] } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const openPreview = async (id: string, name: string) => {
+    setPreviewLoading(true);
+    setPreview({ name, sheets: [] });
+    try {
+      const row = await getContent({ data: { id } });
+      setPreview({ name: row.name || name, sheets: splitSheets(row.raw_csv || "") });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to open");
+      setPreview(null);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
 
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [sources, setSources] = useState<Src[]>([]);
