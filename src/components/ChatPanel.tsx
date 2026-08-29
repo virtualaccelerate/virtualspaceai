@@ -594,7 +594,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   const rootClass = isCompact
     ? "h-full flex flex-col"
-    : "h-[calc(100vh-3.5rem-2rem)] sm:h-[calc(100vh-3.5rem-3rem)] flex";
+    : "h-[calc(100vh-3.5rem-1rem-5rem)] sm:h-[calc(100vh-3.5rem-1.5rem-5rem)] lg:h-[calc(100vh-3.5rem-4rem)] flex";
 
   const CompactHeader = (
     <div className="flex items-center gap-2 pb-2">
