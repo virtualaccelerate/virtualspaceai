@@ -54,11 +54,12 @@ export const createConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => CreateConvSchema.parse(raw))
   .handler(async ({ data, context }): Promise<Conversation> => {
+    const tsId = data.teamspace_id ?? (await currentTeamspaceId(context));
     const { data: row, error } = await context.supabase
       .from("chat_conversations")
       .insert({
         user_id: context.userId,
-        teamspace_id: data.teamspace_id ?? null,
+        teamspace_id: tsId,
         title: data.title?.trim() || "New chat",
         agent_id: data.agent_id ?? null,
       })
@@ -179,11 +180,14 @@ export const logChatEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => LogEventSchema.parse(raw))
   .handler(async ({ data, context }) => {
-    // Find most recent conversation, or create one
-    const { data: conv } = await context.supabase
+    const tsId = data.teamspace_id ?? (await currentTeamspaceId(context));
+    // Find most recent conversation in this workspace, or create one
+    let convQ = context.supabase
       .from("chat_conversations")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("user_id", context.userId);
+    convQ = tsId ? convQ.eq("teamspace_id", tsId) : convQ.is("teamspace_id", null);
+    const { data: conv } = await convQ
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -193,7 +197,7 @@ export const logChatEvent = createServerFn({ method: "POST" })
         .from("chat_conversations")
         .insert({
           user_id: context.userId,
-          teamspace_id: data.teamspace_id ?? null,
+          teamspace_id: tsId,
           title: "Activity",
         })
         .select("id")
@@ -204,7 +208,7 @@ export const logChatEvent = createServerFn({ method: "POST" })
     const { error } = await context.supabase.from("chat_messages").insert({
       user_id: context.userId,
       conversation_id: convId,
-      teamspace_id: data.teamspace_id ?? null,
+      teamspace_id: tsId,
       role: "assistant",
       content: data.content,
       tasks: data.tasks ?? null,
