@@ -18,12 +18,51 @@ import {
   askFinancials,
   listFinChat,
   clearFinChat,
+  getFinancialSourceContent,
 } from "@/lib/financials.functions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
   BarChart, Bar, Legend,
 } from "recharts";
 import * as XLSX from "xlsx";
+
+function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (q) {
+      if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (c === '"') q = false;
+      else cur += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { out.push(cur); cur = ""; }
+    else cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+
+function splitSheets(csv: string): { name: string; rows: string[][] }[] {
+  const lines = csv.split(/\r?\n/);
+  const sheets: { name: string; rows: string[][] }[] = [];
+  let current = { name: "", rows: [] as string[][] };
+  for (const line of lines) {
+    const m = line.match(/^#+\s*(?:Sheet|SHEET)\s*:\s*(.+)$/);
+    if (m) {
+      if (current.rows.length) sheets.push(current);
+      current = { name: m[1].trim(), rows: [] };
+      continue;
+    }
+    if (line.trim() === "") continue;
+    current.rows.push(parseCsvLine(line));
+  }
+  if (current.rows.length) sheets.push(current);
+  return sheets;
+}
+
 
 export const Route = createFileRoute("/_authenticated/app/financials")({
   component: FinancialsPage,
