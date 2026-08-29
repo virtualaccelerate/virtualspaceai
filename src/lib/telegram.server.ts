@@ -595,10 +595,15 @@ async function transcribeTelegramFile(fileId: string, mime: string): Promise<str
     if (!fileRes.ok) return "";
     const bytes = await fileRes.arrayBuffer();
     if (bytes.byteLength < 512) return "";
-    const ext = path.split(".").pop() || "ogg";
+    const rawExt = (path.split(".").pop() || "ogg").toLowerCase();
+    // OpenAI transcription rejects "oga"/"opus" — Telegram voice is Ogg/Opus, send it as .ogg
+    const extMap: Record<string, string> = { oga: "ogg", opus: "ogg", oggx: "ogg" };
+    const ext = extMap[rawExt] ?? rawExt;
+    const type = ext === "ogg" ? "audio/ogg" : mime;
     const form = new FormData();
     form.append("model", "openai/gpt-4o-mini-transcribe");
-    form.append("file", new Blob([bytes], { type: mime }), `voice.${ext}`);
+    form.append("file", new Blob([bytes], { type }), `voice.${ext}`);
+
     const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}` },
