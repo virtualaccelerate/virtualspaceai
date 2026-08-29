@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, supabaseForUser } from "../supabase";
+import { errorResult } from "../supabase";
+import { createTaskForUser } from "@/lib/tasks.server";
 
 export default defineTool({
   name: "create_task",
@@ -27,29 +28,20 @@ export default defineTool({
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
     if (!ctx.isAuthenticated()) return errorResult("Not authenticated");
-    const supabase = supabaseForUser(ctx);
-    const status = input.status ?? "backlog";
-    const { count } = await supabase
-      .from("tasks")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", ctx.getUserId())
-      .eq("status", status);
-
-    const { data, error } = await supabase
-      .from("tasks")
-      .insert({
-        user_id: ctx.getUserId(),
+    const userId = ctx.getUserId();
+    if (!userId) return errorResult("Not authenticated");
+    let data;
+    try {
+      data = await createTaskForUser(userId, {
         title: input.title,
-        description: input.description ?? null,
-        status,
-        priority: input.priority ?? "medium",
-        due_date: input.due_date ?? null,
-        assignee_name: input.assignee_name ?? null,
-        position: (count ?? 0) * 1000,
-      })
-      .select("id, title, status, priority, due_date")
-      .single();
-    if (error) return errorResult(error.message);
+        description: input.description,
+        status: input.status,
+        priority: input.priority,
+        due_date: input.due_date,
+      });
+    } catch (error) {
+      return errorResult(error instanceof Error ? error.message : String(error));
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data) }],
       structuredContent: { task: data },

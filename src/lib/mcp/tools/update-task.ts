@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, supabaseForUser } from "../supabase";
+import { errorResult } from "../supabase";
+import { updateTaskForUser } from "@/lib/tasks.server";
 
 export default defineTool({
   name: "update_task",
@@ -19,18 +20,18 @@ export default defineTool({
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   handler: async ({ id, ...patch }, ctx) => {
     if (!ctx.isAuthenticated()) return errorResult("Not authenticated");
+    const userId = ctx.getUserId();
+    if (!userId) return errorResult("Not authenticated");
     const fields = Object.fromEntries(
       Object.entries(patch).filter(([, v]) => v !== undefined),
     );
     if (Object.keys(fields).length === 0) return errorResult("No fields to update");
-    const { data, error } = await supabaseForUser(ctx)
-      .from("tasks")
-      .update(fields)
-      .eq("id", id)
-      .select("id, title, status, priority, due_date")
-      .maybeSingle();
-    if (error) return errorResult(error.message);
-    if (!data) return errorResult("Task not found");
+    let data;
+    try {
+      data = await updateTaskForUser(userId, { id, ...fields });
+    } catch (error) {
+      return errorResult(error instanceof Error ? error.message : String(error));
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data) }],
       structuredContent: { task: data },

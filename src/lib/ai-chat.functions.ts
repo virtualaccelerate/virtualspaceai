@@ -236,12 +236,12 @@ export const askZukha = createServerFn({ method: "POST" })
     let driveBlock = "";
     try {
       const gd = await import("./google-drive.server");
-      const driveUser = await gd.resolveDriveUserId(context.userId, data.teamspace_id ?? null);
+      const driveUser = await gd.resolveDriveUserId(context.userId);
       if (driveUser) {
         const files = await gd.listFiles(driveUser);
         if (files.length) {
           driveBlock =
-            "\n\nGOOGLE DRIVE FILES (workspace-connected account — their content below is authoritative):\n" +
+            "\n\nGOOGLE DRIVE FILES (the signed-in user's personal connected account — their content below is authoritative):\n" +
             files
               .slice(0, 60)
               .map((f) => `- id=${f.id} "${f.name}" (${f.mimeType})${f.webViewLink ? ` ${f.webViewLink}` : ""}`)

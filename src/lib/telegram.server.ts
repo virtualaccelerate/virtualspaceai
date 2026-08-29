@@ -45,6 +45,39 @@ export async function sendMessage(
   return tg("sendMessage", { chat_id: chatId, text, disable_web_page_preview: true, ...extra });
 }
 
+type TaskNoticeKind = "assigned" | "updated" | "deleted";
+
+export async function notifyTaskAssignee(input: {
+  assigneeId: string | null;
+  actorId: string;
+  kind: TaskNoticeKind;
+  title: string;
+  status?: string | null;
+  priority?: string | null;
+  dueDate?: string | null;
+}) {
+  if (!input.assigneeId || input.assigneeId === input.actorId) return;
+  const { data: link } = await supabaseAdmin
+    .from("telegram_links")
+    .select("chat_id, language")
+    .eq("user_id", input.assigneeId)
+    .not("chat_id", "is", null)
+    .maybeSingle();
+  if (!link?.chat_id) return;
+
+  const lang = pickLang(link.language);
+  const heading = lang === "en"
+    ? input.kind === "assigned" ? "📌 A task was assigned to you" : input.kind === "deleted" ? "🗑 Task deleted" : "✏️ Task updated"
+    : input.kind === "assigned" ? "📌 Вам назначена задача" : input.kind === "deleted" ? "🗑 Задача удалена" : "✏️ Задача обновлена";
+  const details = [
+    input.title,
+    input.status ? `${lang === "en" ? "Status" : "Статус"}: ${statusTag(input.status, lang)}` : null,
+    input.priority ? `${lang === "en" ? "Priority" : "Приоритет"}: ${input.priority}` : null,
+    input.dueDate ? `${lang === "en" ? "Due" : "Срок"}: ${input.dueDate}` : null,
+  ].filter(Boolean);
+  await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`);
+}
+
 // ---------------- i18n (ru default / en) ----------------
 type Lang = "ru" | "en";
 const T = {

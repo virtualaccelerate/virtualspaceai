@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { completeGoogleDriveConnect } from "@/lib/google-drive.functions";
 
 export const Route = createFileRoute("/oauth/google-drive/return")({
   component: OAuthReturn,
@@ -13,9 +12,10 @@ function OAuthReturn() {
     const params = new URLSearchParams(window.location.search);
     const notify = (
       type: "appUserConnectorOAuthComplete" | "appUserConnectorOAuthFailed",
+      code?: string,
     ) => {
       window.opener?.postMessage(
-        { type, connectorId: "google_drive" },
+        { type, connectorId: "google_drive", code: code ?? null },
         window.location.origin,
       );
       window.close();
@@ -36,12 +36,7 @@ function OAuthReturn() {
       notify("appUserConnectorOAuthFailed");
       return;
     }
-    void completeGoogleDriveConnect({ data: { code } })
-      .then(() => notify("appUserConnectorOAuthComplete"))
-      .catch(() => {
-        setMessage("Не удалось сохранить подключение.");
-        notify("appUserConnectorOAuthFailed");
-      });
+    notify("appUserConnectorOAuthComplete", code);
   }, []);
 
   return (

@@ -85,7 +85,7 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
           const { data: tasks } = await supabaseAdmin
             .from("tasks")
             .select("title, status, priority, due_date")
-            .eq("user_id", link.user_id)
+            .eq("assignee_id", link.user_id)
             .neq("status", "done")
             .order("due_date", { ascending: true });
 

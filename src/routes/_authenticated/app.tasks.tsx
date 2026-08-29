@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
+import { createTask, deleteTask, listTaskMembers, updateTask } from "@/lib/tasks.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: TasksPage,
@@ -56,6 +67,7 @@ type Task = {
   status: TaskStatus;
   priority: TaskPriority;
   user_id: string;
+  assignee_id: string | null;
   assignee_name: string | null;
   due_date: string | null;
   position: number;
@@ -132,7 +144,7 @@ type TaskDraft = {
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
-  assignee_name: string;
+  assignee_id: string;
   due_date: string;
 };
 
@@ -141,13 +153,17 @@ const emptyDraft = (status: TaskStatus = "backlog"): TaskDraft => ({
   description: "",
   status,
   priority: "medium",
-  assignee_name: "",
+  assignee_id: "",
   due_date: "",
 });
 
 function TasksPage() {
   const { t } = useTranslation();
   const logEvent = useServerFn(logChatEvent);
+  const createTaskFn = useServerFn(createTask);
+  const updateTaskFn = useServerFn(updateTask);
+  const deleteTaskFn = useServerFn(deleteTask);
+  const listMembersFn = useServerFn(listTaskMembers);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -158,6 +174,9 @@ function TasksPage() {
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
+  const [members, setMembers] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,6 +186,10 @@ function TasksPage() {
       if (!cancelled) setUserId(session.user.id);
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
+      if (ts) {
+        const rows = await listMembersFn({ data: { teamspace_id: ts } }).catch(() => []);
+        if (!cancelled) setMembers(rows);
+      }
       let query = supabase.from("tasks").select("*");
       query = ts ? query.eq("teamspace_id", ts) : query.eq("user_id", session.user.id);
       const { data, error } = await query.order("status").order("position");
@@ -180,7 +203,7 @@ function TasksPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [listMembersFn]);
 
   const grouped = useMemo(() => {
     const map: Record<TaskStatus, Task[]> = {
@@ -206,7 +229,7 @@ function TasksPage() {
       description: task.description ?? "",
       status: task.status,
       priority: task.priority,
-      assignee_name: task.assignee_name ?? "",
+      assignee_id: task.assignee_id ?? "",
       due_date: task.due_date ?? "",
     });
     setDialogOpen(true);
@@ -224,53 +247,41 @@ function TasksPage() {
       description: draft.description.trim() || null,
       status: draft.status,
       priority: draft.priority,
-      assignee_name: draft.assignee_name.trim() || null,
+      assignee_id: draft.assignee_id || null,
       due_date: draft.due_date || null,
     };
 
-    if (editing) {
-      const { data, error } = await supabase
-        .from("tasks")
-        .update(payload)
-        .eq("id", editing.id)
-        .select()
-        .single();
-      if (error) return toast.error(error.message);
-      setTasks((prev) => prev.map((t) => (t.id === editing.id ? (data as Task) : t)));
-      toast.success(t("app.tasks.okUpdate", "Task updated"));
-    } else {
-      const position = (grouped[draft.status]?.length ?? 0) * 1000;
-      const ts = teamspaceId ?? (await getActiveTeamspaceId());
-      if (!ts) return toast.error(t("app.tasks.noWorkspace", "No active workspace"));
-      const { data, error } = await supabase
-        .from("tasks")
-        .insert({ ...payload, user_id: userId, teamspace_id: ts, position })
-        .select()
-        .single();
-      if (error) return toast.error(error.message);
-      const created = data as Task;
-      setTasks((prev) => [...prev, created]);
-      toast.success(t("app.tasks.okCreate", "Task created"));
-      // Log manual task creation into chat history so the user has a record
-      logEvent({
-        data: {
-          content: `${t("app.tasks.chatLog", "Task created manually")}: ${created.title}`,
-          tasks: [{ id: created.id, title: created.title }],
-        },
-      }).catch(() => {});
+    setSaving(true);
+    try {
+      if (editing) {
+        const data = await updateTaskFn({ data: { id: editing.id, ...payload } });
+        setTasks((prev) => prev.map((task) => (task.id === editing.id ? (data as Task) : task)));
+        toast.success(t("app.tasks.okUpdate", "Task updated"));
+      } else {
+        const ts = teamspaceId ?? (await getActiveTeamspaceId());
+        if (!ts) return toast.error(t("app.tasks.noWorkspace", "No active workspace"));
+        const created = (await createTaskFn({ data: { ...payload, teamspace_id: ts } })) as Task;
+        setTasks((prev) => [...prev, created]);
+        toast.success(t("app.tasks.okCreate", "Task created"));
+        logEvent({ data: { content: `${t("app.tasks.chatLog", "Task created manually")}: ${created.title}`, tasks: [{ id: created.id, title: created.title }] } }).catch(() => {});
+      }
+      setDialogOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSaving(false);
     }
-    setDialogOpen(false);
   }
 
   async function handleDelete(id: string) {
     const prev = tasks;
     setTasks((p) => p.filter((t) => t.id !== id));
-    const { error } = await supabase.from("tasks").delete().eq("id", id);
-    if (error) {
-      setTasks(prev);
-      toast.error(error.message);
-    } else {
+    try {
+      await deleteTaskFn({ data: { id } });
       toast.success(t("app.tasks.okDelete", "Task deleted"));
+    } catch (error) {
+      setTasks(prev);
+      toast.error(error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -280,13 +291,11 @@ function TasksPage() {
     const position = (grouped[status]?.length ?? 0) * 1000;
     const prev = tasks;
     setTasks((p) => p.map((t) => (t.id === id ? { ...t, status, position } : t)));
-    const { error } = await supabase
-      .from("tasks")
-      .update({ status, position })
-      .eq("id", id);
-    if (error) {
+    try {
+      await updateTaskFn({ data: { id, status, position } });
+    } catch (error) {
       setTasks(prev);
-      toast.error(error.message);
+      toast.error(error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -370,7 +379,7 @@ function TasksPage() {
                   <div className="flex-1 space-y-2 min-h-[80px]">
                     {items.map((task) => {
                       const meta = PRIORITY_META[task.priority];
-                      const isMine = !!userId && task.user_id === userId;
+                       const isMine = !!userId && task.assignee_id === userId;
                       return (
                         <article
                           key={task.id}
@@ -413,7 +422,7 @@ function TasksPage() {
                                 ))}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={() => handleDelete(task.id)}
+                                   onClick={() => setDeleteTarget(task)}
                                   className="text-rose-600 dark:text-rose-300 focus:text-rose-700 dark:focus:text-rose-200"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" /> Delete
@@ -558,12 +567,15 @@ function TasksPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="task-assignee">{t("app.tasks.fAssignee", "Assignee")}</Label>
-                <Input
-                  id="task-assignee"
-                  value={draft.assignee_name}
-                  onChange={(e) => setDraft((d) => ({ ...d, assignee_name: e.target.value }))}
-                  placeholder={t("app.tasks.phAssignee", "Name or email")}
-                />
+                <Select value={draft.assignee_id || "unassigned"} onValueChange={(value) => setDraft((d) => ({ ...d, assignee_id: value === "unassigned" ? "" : value }))}>
+                  <SelectTrigger id="task-assignee"><SelectValue placeholder={t("app.tasks.phAssignee", "Choose a member")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">{t("app.tasks.unassigned", "Unassigned")}</SelectItem>
+                    {members.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="task-due">{t("app.tasks.fDue", "Due date")}</Label>
@@ -582,18 +594,35 @@ function TasksPage() {
                 variant="ghost"
                 className="text-rose-300 hover:text-rose-200 mr-auto"
                 onClick={() => {
-                  handleDelete(editing.id);
-                  setDialogOpen(false);
+                  setDeleteTarget(editing);
                 }}
               >
                 <Trash2 className="h-4 w-4 mr-2" /> {t("app.tasks.delete", "Delete")}
               </Button>
             )}
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>{t("app.tasks.cancel", "Cancel")}</Button>
-            <Button onClick={handleSave}>{editing ? t("app.tasks.save", "Save") : t("app.tasks.create", "Create task")}</Button>
+            <Button disabled={saving} onClick={handleSave}>{editing ? t("app.tasks.save", "Save") : t("app.tasks.create", "Create task")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("app.tasks.confirmDeleteTitle", "Delete task?")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("app.tasks.confirmDeleteBody", "This action cannot be undone.")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("app.tasks.cancel", "Cancel")}</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => {
+              const target = deleteTarget;
+              setDeleteTarget(null);
+              setDialogOpen(false);
+              if (target) void handleDelete(target.id);
+            }}>{t("app.tasks.delete", "Delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
