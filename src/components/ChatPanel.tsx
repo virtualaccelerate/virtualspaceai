@@ -327,6 +327,19 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     })();
   }, [teamspaceId]);
 
+  // Known Google Drive file ids of the signed-in user, same purpose.
+  const [knownDriveIds, setKnownDriveIds] = useState<Set<string>>(new Set());
+  const listDriveFiles = useServerFn(googleDriveListFiles);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await listDriveFiles({ data: {} });
+        setKnownDriveIds(new Set((res?.files ?? []).map((f: { id: string }) => f.id)));
+      } catch { /* Drive not connected — all Drive citations stay plain text */ }
+    })();
+  }, []);
+
+
 
 
   // Sync forced id
