@@ -1,3 +1,4 @@
+import { googleDriveListFiles } from "@/lib/google-drive.functions";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -852,8 +853,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                 >
                   <div className={`max-w-[85%] rounded-2xl ${isCompact ? "px-4 py-2.5 text-sm" : "px-5 py-3 text-[15px]"} whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
                     {m.role === "assistant"
-                      ? <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} />
-                      : <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} />}
+                      ? <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />
+                      : <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />}
 
                     {m.role === "assistant" && m.proposed && m.proposed.length > 0 && (
                       <div className="mt-2 space-y-1.5">
