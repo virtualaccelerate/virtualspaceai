@@ -156,13 +156,11 @@ export async function listFiles(userId: string, search?: string, folderId?: stri
 }
 
 /** Export a Google Sheet as XLSX and flatten EVERY tab into CSV text. */
-async function readSpreadsheetAllTabs(connectionAPIKey: string, fileId: string) {
-  const res = await callAsAppUser({
-    gatewayBaseUrl: GATEWAY_BASE_URL,
-    connectionAPIKey,
-    connectorId: CONNECTOR_ID,
-    path: `/drive/v3/files/${fileId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`,
-  });
+async function readSpreadsheetAllTabs(userId: string, fileId: string) {
+  const res = await driveFetch(
+    userId,
+    `/drive/v3/files/${fileId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`,
+  );
   if (!res.ok) throw new Error(`Sheets export failed [${res.status}]: ${await res.text()}`);
   const buf = new Uint8Array(await res.arrayBuffer());
   return extractSpreadsheetText(buf);
@@ -174,7 +172,6 @@ export async function readFile(userId: string, fileId: string) {
     `/drive/v3/files/${fileId}?fields=id,name,mimeType,webViewLink`,
   )) as DriveFile;
 
-  const connectionAPIKey = await keyOrThrow(userId);
   const mime = meta.mimeType || "";
   const isSheet =
     mime === "application/vnd.google-apps.spreadsheet" ||
@@ -183,16 +180,11 @@ export async function readFile(userId: string, fileId: string) {
 
   if (isSheet) {
     if (mime === "application/vnd.google-apps.spreadsheet") {
-      const content = await readSpreadsheetAllTabs(connectionAPIKey, fileId);
+      const content = await readSpreadsheetAllTabs(userId, fileId);
       return { ...meta, content: content.slice(0, 200_000) };
     }
     // Uploaded xlsx/xls — download raw bytes and parse all sheets.
-    const raw = await callAsAppUser({
-      gatewayBaseUrl: GATEWAY_BASE_URL,
-      connectionAPIKey,
-      connectorId: CONNECTOR_ID,
-      path: `/drive/v3/files/${fileId}?alt=media`,
-    });
+    const raw = await driveFetch(userId, `/drive/v3/files/${fileId}?alt=media`);
     if (!raw.ok) throw new Error(`Google Drive read failed [${raw.status}]: ${await raw.text()}`);
     const content = await extractSpreadsheetText(new Uint8Array(await raw.arrayBuffer()));
     return { ...meta, content };
@@ -202,16 +194,12 @@ export async function readFile(userId: string, fileId: string) {
   const path = isGoogleDoc
     ? `/drive/v3/files/${fileId}/export?mimeType=text/plain`
     : `/drive/v3/files/${fileId}?alt=media`;
-  const res = await callAsAppUser({
-    gatewayBaseUrl: GATEWAY_BASE_URL,
-    connectionAPIKey,
-    connectorId: CONNECTOR_ID,
-    path,
-  });
+  const res = await driveFetch(userId, path);
   const body = await res.text();
   if (!res.ok) throw new Error(`Google Drive read failed [${res.status}]: ${body}`);
   return { ...meta, content: body.slice(0, 200_000) };
 }
+
 
 /** Drive credentials are always personal and never borrowed from teammates. */
 export async function resolveDriveUserId(userId: string, _teamspaceId?: string | null) {
