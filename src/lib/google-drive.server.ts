@@ -11,6 +11,7 @@ import {
   getConnectionRowForUser,
   saveConnectionKeyForUser,
 } from "./app-user-connections.server";
+import { extractSpreadsheetText, SPREADSHEET_EXT, SPREADSHEET_MIME } from "./documents-extract.server";
 
 export const GATEWAY_BASE_URL = "https://connector-gateway.lovable.dev";
 export const CONNECTOR_ID = "google_drive";
@@ -136,11 +137,8 @@ async function readSpreadsheetAllTabs(connectionAPIKey: string, fileId: string) 
   if (!res.ok) throw new Error(`Sheets export failed [${res.status}]: ${await res.text()}`);
   const buf = new Uint8Array(await res.arrayBuffer());
   const XLSX = await import("xlsx");
-  const wb = XLSX.read(buf, { type: "array" });
-  return wb.SheetNames.map((name) => {
-    const csv = XLSX.utils.sheet_to_csv(wb.Sheets[name]);
-    return `## SHEET: ${name}\n${csv.slice(0, 60_000)}`;
-  }).join("\n\n");
+  void XLSX;
+  return extractSpreadsheetText(buf);
 }
 
 export async function readFile(userId: string, fileId: string) {
@@ -153,8 +151,8 @@ export async function readFile(userId: string, fileId: string) {
   const mime = meta.mimeType || "";
   const isSheet =
     mime === "application/vnd.google-apps.spreadsheet" ||
-    mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-    mime === "application/vnd.ms-excel";
+    SPREADSHEET_MIME.test(mime) ||
+    SPREADSHEET_EXT.test(meta.name || "");
 
   if (isSheet) {
     if (mime === "application/vnd.google-apps.spreadsheet") {
@@ -169,12 +167,8 @@ export async function readFile(userId: string, fileId: string) {
       path: `/drive/v3/files/${fileId}?alt=media`,
     });
     if (!raw.ok) throw new Error(`Google Drive read failed [${raw.status}]: ${await raw.text()}`);
-    const XLSX = await import("xlsx");
-    const wb = XLSX.read(new Uint8Array(await raw.arrayBuffer()), { type: "array" });
-    const content = wb.SheetNames.map(
-      (name) => `## SHEET: ${name}\n${XLSX.utils.sheet_to_csv(wb.Sheets[name]).slice(0, 60_000)}`,
-    ).join("\n\n");
-    return { ...meta, content: content.slice(0, 200_000) };
+    const content = await extractSpreadsheetText(new Uint8Array(await raw.arrayBuffer()));
+    return { ...meta, content };
   }
 
   const isGoogleDoc = mime.startsWith("application/vnd.google-apps");

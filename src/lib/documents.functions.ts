@@ -4,6 +4,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   TEXT_MIME,
   TEXT_EXT,
+  SPREADSHEET_MIME,
+  SPREADSHEET_EXT,
+  extractSpreadsheetText,
   toBase64,
   callGateway,
   EXTRACT_SYSTEM_PROMPT,
@@ -146,11 +149,12 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       const isImage =
         mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(doc.name);
       const isText = TEXT_MIME.test(mime) || TEXT_EXT.test(doc.name);
+      const isSpreadsheet = SPREADSHEET_MIME.test(mime) || SPREADSHEET_EXT.test(doc.name);
 
-      if (!isPdf && !isImage && !isText) {
+      if (!isPdf && !isImage && !isText && !isSpreadsheet) {
         await setStatus(
           "unsupported",
-          "Формат не поддерживается для автоматического чтения (поддерживаются PDF, изображения и текстовые файлы). Экспортируйте файл в PDF и загрузите снова.",
+          "Формат не поддерживается для автоматического чтения (поддерживаются PDF, изображения, таблицы и текстовые файлы).",
         );
         return { ok: false, unsupported: true as const };
       }
@@ -165,6 +169,12 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       if (isText) {
         const text = new TextDecoder().decode(bytes).slice(0, 180_000);
         await setStatus(text.trim() ? "ready" : "empty", text.trim() ? null : "В файле нет текста", text);
+        return { ok: true, length: text.length };
+      }
+
+      if (isSpreadsheet) {
+        const text = await extractSpreadsheetText(bytes);
+        await setStatus(text.trim() ? "ready" : "empty", text.trim() ? null : "В таблице нет данных", text);
         return { ok: true, length: text.length };
       }
 

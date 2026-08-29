@@ -5,6 +5,29 @@ export const TEXT_MIME =
 export const TEXT_EXT =
   /\.(txt|md|markdown|csv|tsv|json|xml|yml|yaml|html?|log|js|ts|py|sql)$/i;
 
+export const SPREADSHEET_MIME =
+  /application\/(vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|vnd\.ms-excel|vnd\.ms-excel\.sheet\.macroenabled\.12|vnd\.ms-excel\.sheet\.binary\.macroenabled\.12|vnd\.oasis\.opendocument\.spreadsheet)/i;
+export const SPREADSHEET_EXT = /\.(xlsx|xls|xlsm|xlsb|ods)$/i;
+
+/** Convert every workbook sheet to readable CSV while preserving displayed values. */
+export async function extractSpreadsheetText(bytes: Uint8Array) {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.read(bytes, { type: "array", cellDates: true });
+  const sections: string[] = [];
+
+  for (const name of workbook.SheetNames) {
+    const sheet = workbook.Sheets[name];
+    if (!sheet) continue;
+    const csv = XLSX.utils.sheet_to_csv(sheet, {
+      blankrows: false,
+      dateNF: "yyyy-mm-dd",
+    }).trim();
+    sections.push(`## SHEET: ${name}\n${csv || "[empty sheet]"}`);
+  }
+
+  return sections.join("\n\n").slice(0, 200_000);
+}
+
 export function toBase64(bytes: Uint8Array) {
   let bin = "";
   const chunk = 0x8000;
