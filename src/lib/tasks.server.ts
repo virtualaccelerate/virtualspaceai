@@ -145,8 +145,8 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   const newlyAssigned = row.assignee_id && row.assignee_id !== current.assignee_id;
   const changed = row.title !== current.title || row.status !== current.status || row.priority !== current.priority || row.due_date !== current.due_date;
   if (newlyAssigned || (changed && row.assignee_id)) {
-    const { notifyTaskAssignee } = await import("./telegram.server");
-    await notifyTaskAssignee({ assigneeId: row.assignee_id, actorId: userId, kind: newlyAssigned ? "assigned" : "updated", title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date }).catch(() => {});
+    await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: newlyAssigned ? "assigned" : "updated", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
+
   }
   return row;
 }
