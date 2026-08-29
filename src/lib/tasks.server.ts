@@ -160,8 +160,8 @@ export async function deleteTaskForUser(userId: string, id: string) {
   const { error } = await db.from("tasks").delete().eq("id", id);
   if (error) throw new Error(error.message);
   if (current.assignee_id) {
-    const { notifyTaskAssignee } = await import("./telegram.server");
-    await notifyTaskAssignee({ assigneeId: current.assignee_id, actorId: userId, kind: "deleted", title: current.title }).catch(() => {});
+    await notifyAssignment({ assigneeId: current.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: "deleted", taskId: current.id, title: current.title });
+
   }
   return { ok: true };
 }
