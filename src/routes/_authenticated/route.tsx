@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   LayoutDashboard, User, LogOut, X, CheckSquare, BookOpen,
-  Bot, Users, Bell, Search, Settings,
+  Bot, Users, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
   Plus, FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
@@ -15,6 +15,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
 import { FloatingChat } from "@/components/FloatingChat";
 import { SidebarChatHistory } from "@/components/SidebarChatHistory";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode } from "@/lib/active-teamspace";
 
 
