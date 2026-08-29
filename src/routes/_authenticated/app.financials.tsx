@@ -383,12 +383,18 @@ function FinancialsPage() {
                 <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   {s.kind === "sheet" ? <Link2 className="h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4" />}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-foreground truncate">{s.name}</div>
+                <button
+                  type="button"
+                  onClick={() => openPreview(s.id, s.name)}
+                  className="flex-1 min-w-0 text-left group"
+                  title={t("app.fin.open", "Open table")}
+                >
+                  <div className="text-sm text-foreground truncate group-hover:text-primary transition-colors">{s.name}</div>
                   <div className="text-xs text-muted-foreground truncate">
                     {s.kind === "sheet" ? "Google Sheet" : "Upload"} · {new Date(s.created_at).toLocaleDateString()}
                   </div>
-                </div>
+                </button>
+
                 {s.kind === "sheet" && s.source_url && (
                   <>
                     <a
