@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CreateTaskInput, UpdateTaskInput } from "./tasks.schemas";
 
 async function admin() {
@@ -66,9 +65,29 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   const db = await admin();
   const { data: current } = await db.from("tasks").select("*").eq("id", data.id).maybeSingle();
   if (!current) throw new Error("Task not found");
+  if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
-  const patch: Record<string, unknown> = { ...data };
-  delete patch.id;
+  const patch: {
+    title?: string;
+    description?: string | null;
+    status?: "backlog" | "in_progress" | "review" | "done";
+    priority?: "low" | "medium" | "high" | "urgent";
+    assignee_id?: string | null;
+    assignee_name?: string | null;
+    due_date?: string | null;
+    position?: number;
+  } = {
+    title: data.title,
+    description: data.description,
+    status: data.status,
+    priority: data.priority,
+    assignee_id: data.assignee_id,
+    due_date: data.due_date,
+    position: data.position,
+  };
+  for (const key of Object.keys(patch) as (keyof typeof patch)[]) {
+    if (patch[key] === undefined) delete patch[key];
+  }
   if (Object.prototype.hasOwnProperty.call(data, "assignee_id")) {
     patch.assignee_name = await assigneeName(current.teamspace_id, data.assignee_id);
   }
@@ -87,6 +106,7 @@ export async function deleteTaskForUser(userId: string, id: string) {
   const db = await admin();
   const { data: current } = await db.from("tasks").select("*").eq("id", id).maybeSingle();
   if (!current) throw new Error("Task not found");
+  if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
   const { error } = await db.from("tasks").delete().eq("id", id);
   if (error) throw new Error(error.message);
