@@ -23,18 +23,12 @@ export const googleDriveStatus = createServerFn({ method: "POST" })
 export const googleDriveListFiles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { search?: string; folderId?: string }) => data ?? {})
-  .handler(async ({ data, context }) => {
-    const uid = (await gd.effectiveDriveUserId(context.userId)) ?? context.userId;
-    return gd.listFiles(uid, data.search, data.folderId);
-  });
+  .handler(async ({ data, context }) => gd.listFiles(context.userId, data.search, data.folderId));
 
 export const googleDriveReadFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { fileId: string }) => data)
-  .handler(async ({ data, context }) => {
-    const uid = (await gd.effectiveDriveUserId(context.userId)) ?? context.userId;
-    return gd.readFile(uid, data.fileId);
-  });
+  .handler(async ({ data, context }) => gd.readFile(context.userId, data.fileId));
 
 export const googleDriveCreateFolder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

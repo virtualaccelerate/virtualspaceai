@@ -92,7 +92,12 @@ async function drive(userId: string, path: string, init?: RequestInit) {
     init,
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`Google Drive request failed [${res.status}]: ${text}`);
+  if (!res.ok) {
+    if (text.includes("credential_refresh_token_expired") || text.includes("must re-authorize")) {
+      throw new Error("GOOGLE_DRIVE_RECONNECT_REQUIRED");
+    }
+    throw new Error(`Google Drive request failed [${res.status}]: ${text.slice(0, 500)}`);
+  }
   return text ? JSON.parse(text) : {};
 }
 
@@ -187,24 +192,9 @@ export async function readFile(userId: string, fileId: string) {
   return { ...meta, content: body.slice(0, 200_000) };
 }
 
-/**
- * Resolve which user's Drive connection to use for a teamspace:
- * the caller's own connection, otherwise any connected member of the teamspace
- * (Drive access is shared across the workspace).
- */
-export async function resolveDriveUserId(userId: string, teamspaceId?: string | null) {
-  if (await getConnectionKeyForUser(userId, CONNECTOR_ID)) return userId;
-  if (!teamspaceId) return null;
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: members } = await supabaseAdmin
-    .from("teamspace_members")
-    .select("user_id")
-    .eq("teamspace_id", teamspaceId);
-  for (const m of members ?? []) {
-    if (m.user_id === userId) continue;
-    if (await getConnectionKeyForUser(m.user_id, CONNECTOR_ID)) return m.user_id;
-  }
-  return null;
+/** Drive credentials are always personal and never borrowed from teammates. */
+export async function resolveDriveUserId(userId: string, _teamspaceId?: string | null) {
+  return (await getConnectionKeyForUser(userId, CONNECTOR_ID)) ? userId : null;
 }
 
 export async function createFolder(userId: string, name: string, parentId?: string) {
@@ -312,28 +302,13 @@ export async function createDocWithContent(
   return JSON.parse(text) as DriveFile;
 }
 
-/** Drive user for the caller's current workspace (shared across members). */
+/** Return the caller only when that caller connected Drive. */
 export async function effectiveDriveUserId(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("current_teamspace_id")
-    .eq("id", userId)
-    .maybeSingle();
-  return resolveDriveUserId(userId, profile?.current_teamspace_id ?? null);
+  return resolveDriveUserId(userId);
 }
 
-/** Status that also reports a workspace-shared connection owned by a teammate. */
+/** Personal connection status. */
 export async function sharedConnectionStatus(userId: string) {
   const own = await connectionStatus(userId);
-  if (own.connected) return { ...own, shared: false as const };
-  const other = await effectiveDriveUserId(userId);
-  if (!other) return { ...own, shared: false as const };
-  const row = await getConnectionRowForUser(other, CONNECTOR_ID);
-  return {
-    connected: true,
-    email: row?.account_email ?? null,
-    connectedAt: row?.updated_at ?? null,
-    shared: true as const,
-  };
+  return { ...own, shared: false as const };
 }
