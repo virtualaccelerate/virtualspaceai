@@ -18,15 +18,29 @@ export type Conversation = {
   created_at: string;
 };
 
+/** Active workspace of the caller (chat history is per user AND per workspace). */
+async function currentTeamspaceId(context: {
+  supabase: any;
+  userId: string;
+}): Promise<string | null> {
+  const { data } = await context.supabase
+    .from("profiles")
+    .select("current_teamspace_id")
+    .eq("id", context.userId)
+    .maybeSingle();
+  return (data?.current_teamspace_id as string | null) ?? null;
+}
+
 export const listConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Conversation[]> => {
-    const { data, error } = await context.supabase
+    const tsId = await currentTeamspaceId(context);
+    let q = context.supabase
       .from("chat_conversations")
       .select("id, title, agent_id, updated_at, created_at")
-      .eq("user_id", context.userId)
-      .order("updated_at", { ascending: false })
-      .limit(100);
+      .eq("user_id", context.userId);
+    q = tsId ? q.eq("teamspace_id", tsId) : q.is("teamspace_id", null);
+    const { data, error } = await q.order("updated_at", { ascending: false }).limit(100);
     if (error) throw new Error(error.message);
     return (data ?? []) as Conversation[];
   });
