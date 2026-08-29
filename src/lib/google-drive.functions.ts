@@ -23,7 +23,20 @@ export const googleDriveStatus = createServerFn({ method: "POST" })
 export const googleDriveListFiles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { search?: string; folderId?: string }) => data ?? {})
-  .handler(async ({ data, context }) => gd.listFiles(context.userId, data.search, data.folderId));
+  .handler(async ({ data, context }) => {
+    // Never throw for an expired/absent connection: a thrown server-fn error
+    // surfaces as an unhandled runtime error (blank screen) in the client.
+    try {
+      const files = await gd.listFiles(context.userId, data.search, data.folderId);
+      return { files, reconnectRequired: false, error: null as string | null };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      const reconnectRequired =
+        message.includes("GOOGLE_DRIVE_RECONNECT_REQUIRED") || message.includes("not connected");
+      if (!reconnectRequired) throw e;
+      return { files: [] as gd.DriveFile[], reconnectRequired: true, error: message };
+    }
+  });
 
 export const googleDriveReadFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
