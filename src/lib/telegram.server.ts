@@ -50,6 +50,7 @@ type TaskNoticeKind = "assigned" | "updated" | "deleted";
 export async function notifyTaskAssignee(input: {
   assigneeId: string | null;
   actorId: string;
+  actorName?: string | null;
   kind: TaskNoticeKind;
   title: string;
   status?: string | null;
@@ -69,14 +70,21 @@ export async function notifyTaskAssignee(input: {
   const heading = lang === "en"
     ? input.kind === "assigned" ? "📌 A task was assigned to you" : input.kind === "deleted" ? "🗑 Task deleted" : "✏️ Task updated"
     : input.kind === "assigned" ? "📌 Вам назначена задача" : input.kind === "deleted" ? "🗑 Задача удалена" : "✏️ Задача обновлена";
+  const when = new Date().toLocaleString(lang === "en" ? "en-GB" : "ru-RU", {
+    timeZone: "Asia/Bishkek",
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
   const details = [
     input.title,
+    input.actorName ? `${lang === "en" ? "By" : "Кто"}: ${input.actorName}` : null,
+    `${lang === "en" ? "When" : "Когда"}: ${when}`,
     input.status ? `${lang === "en" ? "Status" : "Статус"}: ${statusTag(input.status, lang)}` : null,
     input.priority ? `${lang === "en" ? "Priority" : "Приоритет"}: ${input.priority}` : null,
     input.dueDate ? `${lang === "en" ? "Due" : "Срок"}: ${input.dueDate}` : null,
   ].filter(Boolean);
   await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`);
 }
+
 
 // ---------------- i18n (ru default / en) ----------------
 type Lang = "ru" | "en";
