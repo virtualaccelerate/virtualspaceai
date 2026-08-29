@@ -77,13 +77,34 @@ export async function connectionStatus(userId: string) {
   };
 }
 
+export const RECONNECT_REQUIRED = "GOOGLE_DRIVE_RECONNECT_REQUIRED";
+
+function isExpired(status: number, text: string) {
+  return (
+    text.includes("credential_refresh_token_expired") ||
+    text.includes("must re-authorize") ||
+    text.includes("invalid_grant") ||
+    ((status === 401 || status === 403) && text.includes("credential"))
+  );
+}
+
+/** Drop a dead credential so the UI immediately shows "reconnect". */
+async function markExpired(userId: string) {
+  try {
+    await deleteConnectionForUser(userId, CONNECTOR_ID);
+  } catch {
+    /* status refresh will retry */
+  }
+}
+
 async function keyOrThrow(userId: string) {
   const key = await getConnectionKeyForUser(userId, CONNECTOR_ID);
-  if (!key) throw new Error("Google Drive is not connected for this user");
+  if (!key) throw new Error(RECONNECT_REQUIRED);
   return key;
 }
 
-async function drive(userId: string, path: string, init?: RequestInit) {
+/** Raw gateway call with shared expiry handling. */
+export async function driveFetch(userId: string, path: string, init?: RequestInit) {
   const connectionAPIKey = await keyOrThrow(userId);
   const res = await callAsAppUser({
     gatewayBaseUrl: GATEWAY_BASE_URL,
@@ -92,15 +113,23 @@ async function drive(userId: string, path: string, init?: RequestInit) {
     path,
     init,
   });
-  const text = await res.text();
   if (!res.ok) {
-    if (text.includes("credential_refresh_token_expired") || text.includes("must re-authorize")) {
-      throw new Error("GOOGLE_DRIVE_RECONNECT_REQUIRED");
+    const text = await res.clone().text();
+    if (isExpired(res.status, text)) {
+      await markExpired(userId);
+      throw new Error(RECONNECT_REQUIRED);
     }
-    throw new Error(`Google Drive request failed [${res.status}]: ${text.slice(0, 500)}`);
   }
+  return res;
+}
+
+async function drive(userId: string, path: string, init?: RequestInit) {
+  const res = await driveFetch(userId, path, init);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Google Drive request failed [${res.status}]: ${text.slice(0, 500)}`);
   return text ? JSON.parse(text) : {};
 }
+
 
 export type DriveFile = {
   id: string;
@@ -127,13 +156,11 @@ export async function listFiles(userId: string, search?: string, folderId?: stri
 }
 
 /** Export a Google Sheet as XLSX and flatten EVERY tab into CSV text. */
-async function readSpreadsheetAllTabs(connectionAPIKey: string, fileId: string) {
-  const res = await callAsAppUser({
-    gatewayBaseUrl: GATEWAY_BASE_URL,
-    connectionAPIKey,
-    connectorId: CONNECTOR_ID,
-    path: `/drive/v3/files/${fileId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`,
-  });
+async function readSpreadsheetAllTabs(userId: string, fileId: string) {
+  const res = await driveFetch(
+    userId,
+    `/drive/v3/files/${fileId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`,
+  );
   if (!res.ok) throw new Error(`Sheets export failed [${res.status}]: ${await res.text()}`);
   const buf = new Uint8Array(await res.arrayBuffer());
   return extractSpreadsheetText(buf);
@@ -145,7 +172,6 @@ export async function readFile(userId: string, fileId: string) {
     `/drive/v3/files/${fileId}?fields=id,name,mimeType,webViewLink`,
   )) as DriveFile;
 
-  const connectionAPIKey = await keyOrThrow(userId);
   const mime = meta.mimeType || "";
   const isSheet =
     mime === "application/vnd.google-apps.spreadsheet" ||
@@ -154,16 +180,11 @@ export async function readFile(userId: string, fileId: string) {
 
   if (isSheet) {
     if (mime === "application/vnd.google-apps.spreadsheet") {
-      const content = await readSpreadsheetAllTabs(connectionAPIKey, fileId);
+      const content = await readSpreadsheetAllTabs(userId, fileId);
       return { ...meta, content: content.slice(0, 200_000) };
     }
     // Uploaded xlsx/xls — download raw bytes and parse all sheets.
-    const raw = await callAsAppUser({
-      gatewayBaseUrl: GATEWAY_BASE_URL,
-      connectionAPIKey,
-      connectorId: CONNECTOR_ID,
-      path: `/drive/v3/files/${fileId}?alt=media`,
-    });
+    const raw = await driveFetch(userId, `/drive/v3/files/${fileId}?alt=media`);
     if (!raw.ok) throw new Error(`Google Drive read failed [${raw.status}]: ${await raw.text()}`);
     const content = await extractSpreadsheetText(new Uint8Array(await raw.arrayBuffer()));
     return { ...meta, content };
@@ -173,16 +194,12 @@ export async function readFile(userId: string, fileId: string) {
   const path = isGoogleDoc
     ? `/drive/v3/files/${fileId}/export?mimeType=text/plain`
     : `/drive/v3/files/${fileId}?alt=media`;
-  const res = await callAsAppUser({
-    gatewayBaseUrl: GATEWAY_BASE_URL,
-    connectionAPIKey,
-    connectorId: CONNECTOR_ID,
-    path,
-  });
+  const res = await driveFetch(userId, path);
   const body = await res.text();
   if (!res.ok) throw new Error(`Google Drive read failed [${res.status}]: ${body}`);
   return { ...meta, content: body.slice(0, 200_000) };
 }
+
 
 /** Drive credentials are always personal and never borrowed from teammates. */
 export async function resolveDriveUserId(userId: string, _teamspaceId?: string | null) {
@@ -265,7 +282,6 @@ export async function createDocWithContent(
 ) {
   if (!content || !content.trim()) return createDoc(userId, name, parentId);
 
-  const connectionAPIKey = await keyOrThrow(userId);
   const boundary = `vsb${Math.random().toString(36).slice(2)}`;
   const metadata = {
     name,
@@ -278,17 +294,16 @@ export async function createDocWithContent(
     `--${boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n` +
     `${content}\r\n--${boundary}--`;
 
-  const res = await callAsAppUser({
-    gatewayBaseUrl: GATEWAY_BASE_URL,
-    connectionAPIKey,
-    connectorId: CONNECTOR_ID,
-    path: "/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink",
-    init: {
+  const res = await driveFetch(
+    userId,
+    "/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink",
+    {
       method: "POST",
       headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
       body,
     },
-  });
+  );
+
   const text = await res.text();
   if (!res.ok) throw new Error(`Google Docs create failed [${res.status}]: ${text}`);
   return JSON.parse(text) as DriveFile;
