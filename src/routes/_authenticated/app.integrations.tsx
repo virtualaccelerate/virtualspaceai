@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   Plug, FileText, MessageSquare, Database,
-  Sheet, Cloud, StickyNote, Briefcase, Check, Clock,
+  Sheet, Cloud, StickyNote, Briefcase, Clock, ChevronDown,
 } from "lucide-react";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { GoogleDriveCard } from "@/components/GoogleDriveCard";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/integrations")({
   component: IntegrationsPage,
@@ -17,7 +19,8 @@ type Source = {
   desc: string;
   icon: LucideIcon;
   accent: string;
-  status: "available" | "soon";
+  status: "setup" | "soon";
+  guide: string[];
 };
 
 function IntegrationsPage() {
@@ -25,16 +28,17 @@ function IntegrationsPage() {
 
   const sources: Source[] = [
     
-    { id: "google_sheets", name: "Google Sheets", desc: t("app.integrations.desc.gsheets", "Live tables and finance data"), icon: Sheet, accent: "text-green-400", status: "available" },
-    { id: "notion", name: "Notion", desc: t("app.integrations.desc.notion", "Wiki, pages and databases"), icon: FileText, accent: "text-white", status: "available" },
-    { id: "slack", name: "Slack", desc: t("app.integrations.desc.slack", "Team messages and channels"), icon: MessageSquare, accent: "text-purple-400", status: "available" },
-    { id: "onedrive", name: "OneDrive", desc: t("app.integrations.desc.onedrive", "Files stored in Microsoft 365"), icon: Cloud, accent: "text-blue-400", status: "available" },
-    { id: "onenote", name: "OneNote", desc: t("app.integrations.desc.onenote", "Notebooks and quick notes"), icon: StickyNote, accent: "text-fuchsia-400", status: "soon" },
-    { id: "1c", name: "1C", desc: t("app.integrations.desc.1c", "Accounting and inventory"), icon: Database, accent: "text-orange-400", status: "soon" },
-    { id: "bitrix", name: "Bitrix24", desc: t("app.integrations.desc.bitrix", "CRM, deals and tasks"), icon: Briefcase, accent: "text-sky-400", status: "soon" },
+    { id: "google_sheets", name: "Google Sheets", desc: t("app.integrations.desc.gsheets", "Live tables and finance data"), icon: Sheet, accent: "text-green-400", status: "setup", guide: [t("app.integrations.guides.sheets1", "Connect Google Drive above."), t("app.integrations.guides.sheets2", "The assistant reads every tab in accessible spreadsheets.")] },
+    { id: "notion", name: "Notion", desc: t("app.integrations.desc.notion", "Wiki, pages and databases"), icon: FileText, accent: "text-foreground", status: "setup", guide: [t("app.integrations.guides.notion1", "A workspace administrator must configure a public Notion OAuth integration."), t("app.integrations.guides.notion2", "After setup, every user will choose the pages they want to share.")] },
+    { id: "slack", name: "Slack", desc: t("app.integrations.desc.slack", "Team messages and channels"), icon: MessageSquare, accent: "text-purple-400", status: "setup", guide: [t("app.integrations.guides.slack1", "A workspace administrator must configure a Slack OAuth app."), t("app.integrations.guides.slack2", "After setup, every user will connect their own Slack workspace.")] },
+    { id: "onedrive", name: "OneDrive", desc: t("app.integrations.desc.onedrive", "Files stored in Microsoft 365"), icon: Cloud, accent: "text-blue-400", status: "setup", guide: [t("app.integrations.guides.onedrive1", "A workspace administrator must configure a Microsoft Entra app."), t("app.integrations.guides.onedrive2", "After setup, every user will connect their own Microsoft account.")] },
+    { id: "dropbox", name: "Dropbox", desc: t("app.integrations.desc.dropbox", "Files and shared folders"), icon: Cloud, accent: "text-sky-400", status: "soon", guide: [t("app.integrations.guides.dropbox", "Dropbox is not available in the connector catalog yet.")] },
+    { id: "onenote", name: "OneNote", desc: t("app.integrations.desc.onenote", "Notebooks and quick notes"), icon: StickyNote, accent: "text-fuchsia-400", status: "soon", guide: [] },
+    { id: "1c", name: "1C", desc: t("app.integrations.desc.1c", "Accounting and inventory"), icon: Database, accent: "text-orange-400", status: "soon", guide: [] },
+    { id: "bitrix", name: "Bitrix24", desc: t("app.integrations.desc.bitrix", "CRM, deals and tasks"), icon: Briefcase, accent: "text-sky-400", status: "soon", guide: [] },
   ];
 
-  const available = sources.filter((s) => s.status === "available");
+  const available = sources.filter((s) => s.status === "setup");
   const soon = sources.filter((s) => s.status === "soon");
 
   return (
@@ -84,6 +88,7 @@ function IntegrationsPage() {
 
 function SourceRow({ source }: { source: Source }) {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
   const disabled = source.status === "soon";
   return (
     <div className="glass-strong rounded-2xl border border-white/10 px-4 py-3.5 flex items-center gap-4">
@@ -94,30 +99,26 @@ function SourceRow({ source }: { source: Source }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-white text-[15px] truncate">{source.name}</span>
-          {disabled && (
+           {disabled ? (
             <span className="text-[9px] uppercase tracking-wider text-white/50 border border-white/10 rounded-full px-1.5 py-0.5 inline-flex items-center gap-1">
               <Clock className="h-2.5 w-2.5" />
               {t("app.integrations.soonBadge", "Soon")}
             </span>
-          )}
+           ) : (
+             <span className="text-[9px] uppercase tracking-wider text-amber-600 dark:text-amber-300 border border-amber-500/30 rounded-full px-1.5 py-0.5">{t("app.integrations.setupNeeded", "Setup needed")}</span>
+           )}
         </div>
         <p className="hidden sm:block text-xs text-white/50 mt-0.5 leading-snug truncate">{source.desc}</p>
       </div>
 
-      <button
-        disabled={disabled}
-        onClick={() => {
-          if (disabled) return;
-          alert(t("app.integrations.wip", "Connection flow coming next — the UI is ready."));
-        }}
-        className={`shrink-0 rounded-xl px-5 py-2.5 text-sm font-medium transition border ${
-          disabled
-            ? "bg-white/5 text-white/35 border-white/5 cursor-not-allowed"
-            : "bg-white/10 text-white border-white/15 hover:bg-white/15"
-        }`}
-      >
-        {disabled ? t("app.integrations.notify", "Notify me") : t("app.integrations.connect", "Connect")}
-      </button>
+      <Button variant="outline" size="sm" onClick={() => setOpen((value) => !value)} className="shrink-0">
+        {t("app.integrations.guide", "Setup guide")} <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </Button>
+      {open && source.guide.length > 0 && (
+        <ol className="basis-full order-last list-decimal space-y-1 border-t border-border pt-3 pl-5 text-xs text-muted-foreground">
+          {source.guide.map((step) => <li key={step}>{step}</li>)}
+        </ol>
+      )}
     </div>
   );
 }
