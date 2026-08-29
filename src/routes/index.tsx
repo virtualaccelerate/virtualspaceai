@@ -820,6 +820,9 @@ function Landing() {
                 <li><a href="#price" className="hover:text-white transition">{t("nav.pricing")}</a></li>
                 <li><a href="/book-demo" className="hover:text-white transition">{t("nav.bookDemo")}</a></li>
                 <li><span className="hover:text-white transition cursor-default">{t("footer.contact")}</span></li>
+                <li><Link to="/terms" className="hover:text-white transition">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
+
               </ul>
             </div>
             <div>
