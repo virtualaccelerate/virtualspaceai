@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TgRouteImport } from './routes/tg'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as CoursesRouteImport } from './routes/courses'
@@ -66,6 +67,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/courses': typeof CoursesRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tg': typeof TgRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tg': typeof TgRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/courses': typeof CoursesRoute
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tg': typeof TgRoute
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/mcp'
     | '/onboarding'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/tg'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/mcp'
     | '/onboarding'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/tg'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/mcp'
     | '/onboarding'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/tg'
@@ -560,6 +572,7 @@ export interface RootRouteChildren {
   CoursesRoute: typeof CoursesRoute
   McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TgRoute: typeof TgRoute
@@ -598,6 +611,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -950,6 +970,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesRoute: CoursesRoute,
   McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TgRoute: TgRoute,
