@@ -427,6 +427,50 @@ function FinancialsPage() {
           </ul>
         )}
       </div>
+      {/* Table preview */}
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="truncate">{preview?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto flex-1 -mx-2 px-2">
+            {previewLoading ? (
+              <div className="p-8 flex items-center justify-center text-muted-foreground text-sm">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("app.fin.loading", "Loading…")}
+              </div>
+            ) : !preview?.sheets.length ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                {t("app.fin.noContent", "No readable content in this table.")}
+              </div>
+            ) : (
+              preview.sheets.map((sheet, si) => (
+                <div key={si} className="mb-6">
+                  {sheet.name && (
+                    <div className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide">{sheet.name}</div>
+                  )}
+                  <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        {sheet.rows.slice(0, 300).map((row, ri) => (
+                          <tr key={ri} className={ri === 0 ? "bg-muted/50 font-semibold" : "border-t border-border"}>
+                            {row.map((cell, ci) => (
+                              <td key={ci} className="px-2 py-1 whitespace-nowrap text-foreground">{cell}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {sheet.rows.length > 300 && (
+                    <div className="text-xs text-muted-foreground mt-1">+{sheet.rows.length - 300} rows</div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Dashboard */}
       {analysis && (
