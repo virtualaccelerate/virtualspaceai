@@ -431,10 +431,15 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
           },
         });
         setAttached((prev) => [...prev, { id: row!.id, name: row!.name }]);
-        // Fire-and-forget OCR for PDFs/images
+        // Fire-and-forget extraction for supported binary documents.
         if (!extracted) {
           const mime = (file.type || "").toLowerCase();
-          if (mime === "application/pdf" || mime.startsWith("image/") || /\.(pdf|png|jpe?g|webp|gif|heic)$/i.test(file.name)) {
+          if (
+            mime === "application/pdf" ||
+            mime.startsWith("image/") ||
+            /spreadsheet|excel|macroenabled|opendocument\.spreadsheet/i.test(mime) ||
+            /\.(pdf|png|jpe?g|webp|gif|heic|xlsx|xls|xlsm|xlsb|ods)$/i.test(file.name)
+          ) {
             extract({ data: { id: row!.id } }).catch(() => {});
           }
         }

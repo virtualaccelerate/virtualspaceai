@@ -136,8 +136,6 @@ async function readSpreadsheetAllTabs(connectionAPIKey: string, fileId: string) 
   });
   if (!res.ok) throw new Error(`Sheets export failed [${res.status}]: ${await res.text()}`);
   const buf = new Uint8Array(await res.arrayBuffer());
-  const XLSX = await import("xlsx");
-  void XLSX;
   return extractSpreadsheetText(buf);
 }
 
