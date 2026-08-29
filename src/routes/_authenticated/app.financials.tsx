@@ -18,12 +18,51 @@ import {
   askFinancials,
   listFinChat,
   clearFinChat,
+  getFinancialSourceContent,
 } from "@/lib/financials.functions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
   BarChart, Bar, Legend,
 } from "recharts";
 import * as XLSX from "xlsx";
+
+function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (q) {
+      if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (c === '"') q = false;
+      else cur += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { out.push(cur); cur = ""; }
+    else cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+
+function splitSheets(csv: string): { name: string; rows: string[][] }[] {
+  const lines = csv.split(/\r?\n/);
+  const sheets: { name: string; rows: string[][] }[] = [];
+  let current = { name: "", rows: [] as string[][] };
+  for (const line of lines) {
+    const m = line.match(/^#+\s*(?:Sheet|SHEET)\s*:\s*(.+)$/);
+    if (m) {
+      if (current.rows.length) sheets.push(current);
+      current = { name: m[1].trim(), rows: [] };
+      continue;
+    }
+    if (line.trim() === "") continue;
+    current.rows.push(parseCsvLine(line));
+  }
+  if (current.rows.length) sheets.push(current);
+  return sheets;
+}
+
 
 export const Route = createFileRoute("/_authenticated/app/financials")({
   component: FinancialsPage,
@@ -95,6 +134,25 @@ function FinancialsPage() {
   const ask = useServerFn(askFinancials);
   const loadChat = useServerFn(listFinChat);
   const clearChat = useServerFn(clearFinChat);
+  const getContent = useServerFn(getFinancialSourceContent);
+
+  const [preview, setPreview] = useState<{ name: string; sheets: { name: string; rows: string[][] }[] } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const openPreview = async (id: string, name: string) => {
+    setPreviewLoading(true);
+    setPreview({ name, sheets: [] });
+    try {
+      const row = await getContent({ data: { id } });
+      setPreview({ name: row.name || name, sheets: splitSheets(row.raw_csv || "") });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to open");
+      setPreview(null);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
 
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [sources, setSources] = useState<Src[]>([]);
@@ -325,12 +383,18 @@ function FinancialsPage() {
                 <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   {s.kind === "sheet" ? <Link2 className="h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4" />}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-foreground truncate">{s.name}</div>
+                <button
+                  type="button"
+                  onClick={() => openPreview(s.id, s.name)}
+                  className="flex-1 min-w-0 text-left group"
+                  title={t("app.fin.open", "Open table")}
+                >
+                  <div className="text-sm text-foreground truncate group-hover:text-primary transition-colors">{s.name}</div>
                   <div className="text-xs text-muted-foreground truncate">
                     {s.kind === "sheet" ? "Google Sheet" : "Upload"} · {new Date(s.created_at).toLocaleDateString()}
                   </div>
-                </div>
+                </button>
+
                 {s.kind === "sheet" && s.source_url && (
                   <>
                     <a
@@ -363,6 +427,50 @@ function FinancialsPage() {
           </ul>
         )}
       </div>
+      {/* Table preview */}
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="truncate">{preview?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto flex-1 -mx-2 px-2">
+            {previewLoading ? (
+              <div className="p-8 flex items-center justify-center text-muted-foreground text-sm">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("app.fin.loading", "Loading…")}
+              </div>
+            ) : !preview?.sheets.length ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                {t("app.fin.noContent", "No readable content in this table.")}
+              </div>
+            ) : (
+              preview.sheets.map((sheet, si) => (
+                <div key={si} className="mb-6">
+                  {sheet.name && (
+                    <div className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide">{sheet.name}</div>
+                  )}
+                  <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        {sheet.rows.slice(0, 300).map((row, ri) => (
+                          <tr key={ri} className={ri === 0 ? "bg-muted/50 font-semibold" : "border-t border-border"}>
+                            {row.map((cell, ci) => (
+                              <td key={ci} className="px-2 py-1 whitespace-nowrap text-foreground">{cell}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {sheet.rows.length > 300 && (
+                    <div className="text-xs text-muted-foreground mt-1">+{sheet.rows.length - 300} rows</div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Dashboard */}
       {analysis && (

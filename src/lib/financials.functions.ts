@@ -39,6 +39,21 @@ export const listFinancialSources = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+// ---------- Get raw content (preview) ----------
+export const getFinancialSourceContent = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("financial_sources")
+      .select("id, name, kind, source_url, raw_csv")
+      .eq("id", data.id)
+      .single();
+    if (error) throw new Error(error.message);
+    return row as { id: string; name: string; kind: string; source_url: string | null; raw_csv: string | null };
+  });
+
+
 // ---------- Add Google Sheet ----------
 export const addSheetSource = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
