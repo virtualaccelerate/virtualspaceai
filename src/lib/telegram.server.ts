@@ -598,23 +598,44 @@ async function transcribeTelegramFile(fileId: string, mime: string): Promise<str
     const rawExt = (path.split(".").pop() || "ogg").toLowerCase();
     // OpenAI transcription rejects "oga"/"opus" — Telegram voice is Ogg/Opus, send it as .ogg
     const extMap: Record<string, string> = { oga: "ogg", opus: "ogg", oggx: "ogg" };
-    const ext = extMap[rawExt] ?? rawExt;
-    const type = ext === "ogg" ? "audio/ogg" : mime;
-    const form = new FormData();
-    form.append("model", "openai/gpt-4o-mini-transcribe");
-    form.append("file", new Blob([bytes], { type }), `voice.${ext}`);
+    const primary = extMap[rawExt] ?? rawExt;
+    const candidates: Array<[string, string]> = [
+      [primary, primary === "ogg" ? "audio/ogg" : mime],
+      ["ogg", "audio/ogg"],
+      ["mp4", "audio/mp4"],
+      ["wav", "audio/wav"],
+    ];
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}` },
-      body: form,
-    });
-    if (!res.ok) {
-      console.error("[telegram] transcription failed", res.status, await res.text().catch(() => ""));
+    const seen = new Set<string>();
+    for (const [ext, type] of candidates) {
+      if (seen.has(ext)) continue;
+      seen.add(ext);
+
+      const form = new FormData();
+      form.append("model", "openai/gpt-4o-mini-transcribe");
+      form.append("file", new Blob([bytes], { type }), `voice.${ext}`);
+
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}` },
+        body: form,
+      });
+      if (!res.ok) {
+        console.error(
+          "[telegram] transcription failed",
+          ext,
+          res.status,
+          await res.text().catch(() => ""),
+        );
+        continue;
+      }
+      const json = (await res.json()) as { text?: string };
+      const text = (json.text ?? "").trim();
+      if (text) return text;
       return "";
     }
-    const json = (await res.json()) as { text?: string };
-    return (json.text ?? "").trim();
+    return "";
+
   } catch (e) {
     console.error("[telegram] voice error", e);
     return "";
