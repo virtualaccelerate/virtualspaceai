@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Mail, Lock, ArrowRight, Check, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
 export const Route = createFileRoute("/auth")({
@@ -140,20 +139,22 @@ function AuthPage() {
     setError(null);
     try {
       const next = getNextPath();
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`,
+      const redirectTo = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: { prompt: "select_account" },
+        },
       });
-      if (result.error) throw result.error;
-      if (!result.redirected) {
-        if (next) window.location.href = next;
-        else navigate({ to: "/app", replace: true });
-      }
+      if (err) throw err;
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "Google sign-in failed");
       setGoogleLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
