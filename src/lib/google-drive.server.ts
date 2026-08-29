@@ -311,3 +311,29 @@ export async function createDocWithContent(
   if (!res.ok) throw new Error(`Google Docs create failed [${res.status}]: ${text}`);
   return JSON.parse(text) as DriveFile;
 }
+
+/** Drive user for the caller's current workspace (shared across members). */
+export async function effectiveDriveUserId(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("current_teamspace_id")
+    .eq("id", userId)
+    .maybeSingle();
+  return resolveDriveUserId(userId, profile?.current_teamspace_id ?? null);
+}
+
+/** Status that also reports a workspace-shared connection owned by a teammate. */
+export async function sharedConnectionStatus(userId: string) {
+  const own = await connectionStatus(userId);
+  if (own.connected) return { ...own, shared: false as const };
+  const other = await effectiveDriveUserId(userId);
+  if (!other) return { ...own, shared: false as const };
+  const row = await getConnectionRowForUser(other, CONNECTOR_ID);
+  return {
+    connected: true,
+    email: row?.account_email ?? null,
+    connectedAt: row?.updated_at ?? null,
+    shared: true as const,
+  };
+}
