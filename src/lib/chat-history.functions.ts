@@ -18,15 +18,29 @@ export type Conversation = {
   created_at: string;
 };
 
+/** Active workspace of the caller (chat history is per user AND per workspace). */
+async function currentTeamspaceId(context: {
+  supabase: any;
+  userId: string;
+}): Promise<string | null> {
+  const { data } = await context.supabase
+    .from("profiles")
+    .select("current_teamspace_id")
+    .eq("id", context.userId)
+    .maybeSingle();
+  return (data?.current_teamspace_id as string | null) ?? null;
+}
+
 export const listConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Conversation[]> => {
-    const { data, error } = await context.supabase
+    const tsId = await currentTeamspaceId(context);
+    let q = context.supabase
       .from("chat_conversations")
       .select("id, title, agent_id, updated_at, created_at")
-      .eq("user_id", context.userId)
-      .order("updated_at", { ascending: false })
-      .limit(100);
+      .eq("user_id", context.userId);
+    q = tsId ? q.eq("teamspace_id", tsId) : q.is("teamspace_id", null);
+    const { data, error } = await q.order("updated_at", { ascending: false }).limit(100);
     if (error) throw new Error(error.message);
     return (data ?? []) as Conversation[];
   });
@@ -40,11 +54,12 @@ export const createConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => CreateConvSchema.parse(raw))
   .handler(async ({ data, context }): Promise<Conversation> => {
+    const tsId = data.teamspace_id ?? (await currentTeamspaceId(context));
     const { data: row, error } = await context.supabase
       .from("chat_conversations")
       .insert({
         user_id: context.userId,
-        teamspace_id: data.teamspace_id ?? null,
+        teamspace_id: tsId,
         title: data.title?.trim() || "New chat",
         agent_id: data.agent_id ?? null,
       })
@@ -165,11 +180,14 @@ export const logChatEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => LogEventSchema.parse(raw))
   .handler(async ({ data, context }) => {
-    // Find most recent conversation, or create one
-    const { data: conv } = await context.supabase
+    const tsId = data.teamspace_id ?? (await currentTeamspaceId(context));
+    // Find most recent conversation in this workspace, or create one
+    let convQ = context.supabase
       .from("chat_conversations")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("user_id", context.userId);
+    convQ = tsId ? convQ.eq("teamspace_id", tsId) : convQ.is("teamspace_id", null);
+    const { data: conv } = await convQ
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -179,7 +197,7 @@ export const logChatEvent = createServerFn({ method: "POST" })
         .from("chat_conversations")
         .insert({
           user_id: context.userId,
-          teamspace_id: data.teamspace_id ?? null,
+          teamspace_id: tsId,
           title: "Activity",
         })
         .select("id")
@@ -190,7 +208,7 @@ export const logChatEvent = createServerFn({ method: "POST" })
     const { error } = await context.supabase.from("chat_messages").insert({
       user_id: context.userId,
       conversation_id: convId,
-      teamspace_id: data.teamspace_id ?? null,
+      teamspace_id: tsId,
       role: "assistant",
       content: data.content,
       tasks: data.tasks ?? null,
