@@ -1,3 +1,4 @@
+import { googleDriveListFiles } from "@/lib/google-drive.functions";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -103,10 +104,12 @@ function MessageContent({
   text,
   onOpenFile,
   knownDocIds,
+  knownDriveIds,
 }: {
   text: string;
   onOpenFile: (id: string) => void;
   knownDocIds?: Set<string>;
+  knownDriveIds?: Set<string>;
 }) {
   const nodes: React.ReactNode[] = [];
   let last = 0;
@@ -116,9 +119,11 @@ function MessageContent({
     if (m.index > last) nodes.push(text.slice(last, m.index));
     const { id, name } = parseFileToken(m[1]);
     const isDoc = UUID_RE.test(id);
-    // Never render a link for a document id that doesn't exist in this
-    // workspace — the model sometimes invents file references.
-    if (isDoc && knownDocIds && knownDocIds.size > 0 && !knownDocIds.has(id.toLowerCase())) {
+    // Never render a link for a file id that doesn't exist for this user —
+    // the model sometimes invents document or Drive references.
+    const unknownDoc = isDoc && !!knownDocIds && knownDocIds.size > 0 && !knownDocIds.has(id.toLowerCase());
+    const unknownDrive = !isDoc && (!knownDriveIds || !knownDriveIds.has(id));
+    if (unknownDoc || unknownDrive) {
       nodes.push(name && name !== "Файл" ? name : "");
       last = m.index + m[0].length;
       continue;
@@ -143,6 +148,7 @@ function MessageContent({
   if (last < text.length) nodes.push(text.slice(last));
   return <>{nodes}</>;
 }
+
 
 
 type Props = {
@@ -321,6 +327,19 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       if (data) setKnownDocIds(new Set(data.map((d) => String(d.id).toLowerCase())));
     })();
   }, [teamspaceId]);
+
+  // Known Google Drive file ids of the signed-in user, same purpose.
+  const [knownDriveIds, setKnownDriveIds] = useState<Set<string>>(new Set());
+  const listDriveFiles = useServerFn(googleDriveListFiles);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await listDriveFiles({ data: {} });
+        setKnownDriveIds(new Set((res?.files ?? []).map((f: { id: string }) => f.id)));
+      } catch { /* Drive not connected — all Drive citations stay plain text */ }
+    })();
+  }, []);
+
 
 
 
@@ -834,8 +853,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                 >
                   <div className={`max-w-[85%] rounded-2xl ${isCompact ? "px-4 py-2.5 text-sm" : "px-5 py-3 text-[15px]"} whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
                     {m.role === "assistant"
-                      ? <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} />
-                      : <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} />}
+                      ? <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />
+                      : <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />}
 
                     {m.role === "assistant" && m.proposed && m.proposed.length > 0 && (
                       <div className="mt-2 space-y-1.5">
