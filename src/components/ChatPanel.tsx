@@ -99,7 +99,15 @@ function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] }
   return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks };
 }
 
-function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: string) => void }) {
+function MessageContent({
+  text,
+  onOpenFile,
+  knownDocIds,
+}: {
+  text: string;
+  onOpenFile: (id: string) => void;
+  knownDocIds?: Set<string>;
+}) {
   const nodes: React.ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
@@ -108,6 +116,13 @@ function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: s
     if (m.index > last) nodes.push(text.slice(last, m.index));
     const { id, name } = parseFileToken(m[1]);
     const isDoc = UUID_RE.test(id);
+    // Never render a link for a document id that doesn't exist in this
+    // workspace — the model sometimes invents file references.
+    if (isDoc && knownDocIds && knownDocIds.size > 0 && !knownDocIds.has(id.toLowerCase())) {
+      nodes.push(name && name !== "Файл" ? name : "");
+      last = m.index + m[0].length;
+      continue;
+    }
     nodes.push(
       <button
         key={`${id}-${m.index}`}
@@ -128,6 +143,7 @@ function MessageContent({ text, onOpenFile }: { text: string; onOpenFile: (id: s
   if (last < text.length) nodes.push(text.slice(last));
   return <>{nodes}</>;
 }
+
 
 type Props = {
   variant?: "full" | "compact";
@@ -292,6 +308,21 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       } catch { /* ignore */ }
     })();
   }, []);
+
+  // Known knowledge-base document ids, used to drop invented file citations.
+  const [knownDocIds, setKnownDocIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!teamspaceId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("documents")
+        .select("id")
+        .eq("teamspace_id", teamspaceId);
+      if (data) setKnownDocIds(new Set(data.map((d) => String(d.id).toLowerCase())));
+    })();
+  }, [teamspaceId]);
+
+
 
   // Sync forced id
   useEffect(() => {
@@ -803,8 +834,9 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                 >
                   <div className={`max-w-[85%] rounded-2xl ${isCompact ? "px-4 py-2.5 text-sm" : "px-5 py-3 text-[15px]"} whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
                     {m.role === "assistant"
-                      ? <MessageContent text={m.content} onOpenFile={openFile} />
-                      : <MessageContent text={m.content} onOpenFile={openFile} />}
+                      ? <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} />
+                      : <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} />}
+
                     {m.role === "assistant" && m.proposed && m.proposed.length > 0 && (
                       <div className="mt-2 space-y-1.5">
                         {m.proposed.map((tk, j) => (

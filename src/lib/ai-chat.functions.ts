@@ -300,9 +300,10 @@ export const askZukha = createServerFn({ method: "POST" })
       "Reply as plain text only: do NOT use Markdown, asterisks (*), underscores (_), backticks, headings (#), or bullet symbols. " +
       "Write in normal sentences and short paragraphs; if you need a list, use numbers like '1.' or plain lines. " +
       "When you reference or cite a file from the KNOWLEDGE BASE, ALWAYS use this exact inline syntax: [[file:UUID|File name]] — the app will render it as a clickable link. " +
-      "Never invent file ids. Only use ids that appear in the KNOWLEDGE BASE below. " +
+      "STRICT: only emit a [[file:...]] token whose id AND name appear verbatim in the KNOWLEDGE BASE or GOOGLE DRIVE FILES list below. Never invent, guess, translate, or reconstruct a file id or file name. If no matching file exists, write the answer without any file token and say that the file was not found in the knowledge base. Do not claim a file exists, was created, or was uploaded unless it is listed below. " +
        "A file name or a GOOGLE DRIVE FILES list is metadata, not file content. Never infer or invent what is inside a file from its name. Only describe rows, tasks, figures, or facts that appear in an included FILE or DRIVE FILE content block. If the requested file has no content block or could not be read, say clearly that you could not read it and ask the user to reconnect or re-index it. For spreadsheets, inspect every included SHEET section before answering and preserve the exact task names from the cells. " +
       "If the user asks for a report, summary, or something derived from a file, produce the answer as text and cite the relevant [[file:...]] links so they can open the source.\n\n" +
+
       "TASK CREATION: When the user asks you to create, add, or plan a task (задача, таск, todo, task), emit ONE token per task on its own line using EXACTLY this syntax:\n" +
       "[[task:Title||priority||YYYY-MM-DD||description]]\n" +
       "Rules: priority ∈ low|medium|high|urgent (default medium). Date is optional — leave empty as ||||. Description optional. Example: [[task:Prepare Q3 report||high||2026-08-01||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
