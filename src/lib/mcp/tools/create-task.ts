@@ -28,9 +28,11 @@ export default defineTool({
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
     if (!ctx.isAuthenticated()) return errorResult("Not authenticated");
+    const userId = ctx.getUserId();
+    if (!userId) return errorResult("Not authenticated");
     let data;
     try {
-      data = await createTaskForUser(ctx.getUserId(), {
+      data = await createTaskForUser(userId, {
         title: input.title,
         description: input.description,
         status: input.status,

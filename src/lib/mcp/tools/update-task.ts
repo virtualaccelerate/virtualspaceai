@@ -20,13 +20,15 @@ export default defineTool({
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   handler: async ({ id, ...patch }, ctx) => {
     if (!ctx.isAuthenticated()) return errorResult("Not authenticated");
+    const userId = ctx.getUserId();
+    if (!userId) return errorResult("Not authenticated");
     const fields = Object.fromEntries(
       Object.entries(patch).filter(([, v]) => v !== undefined),
     );
     if (Object.keys(fields).length === 0) return errorResult("No fields to update");
     let data;
     try {
-      data = await updateTaskForUser(ctx.getUserId(), { id, ...fields });
+      data = await updateTaskForUser(userId, { id, ...fields });
     } catch (error) {
       return errorResult(error instanceof Error ? error.message : String(error));
     }
