@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Mail, Lock, ArrowRight, Check, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 
 export const Route = createFileRoute("/auth")({
