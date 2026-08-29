@@ -236,30 +236,50 @@ export const askZukha = createServerFn({ method: "POST" })
     let driveBlock = "";
     try {
       const gd = await import("./google-drive.server");
-      const status = await gd.connectionStatus(context.userId);
-      if ((status as any)?.connected) {
-        const files = await gd.listFiles(context.userId);
+      const driveUser = await gd.resolveDriveUserId(context.userId, data.teamspace_id ?? null);
+      if (driveUser) {
+        const files = await gd.listFiles(driveUser);
         if (files.length) {
           driveBlock =
-            "\n\nGOOGLE DRIVE FILES (connected account — you can reference them and read their content on request):\n" +
+            "\n\nGOOGLE DRIVE FILES (workspace-connected account — their content below is authoritative):\n" +
             files
-              .slice(0, 40)
+              .slice(0, 60)
               .map((f) => `- id=${f.id} "${f.name}" (${f.mimeType})${f.webViewLink ? ` ${f.webViewLink}` : ""}`)
               .join("\n");
 
-          // If the last user message names a file, read it inline.
+          // Pick files the user is likely asking about: name-word overlap,
+          // plus spreadsheets when the question is about tables/numbers.
           const q = (lastUser?.content ?? "").toLowerCase();
-          const matches = files
-            .filter((f) => f.name && q.includes(f.name.toLowerCase().split(".")[0]))
-            .slice(0, 2);
-          for (const f of matches) {
+          const words = q.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 3);
+          const wantsSheet = /(таблиц|sheet|excel|csv|отчет|отчёт|финанс|budget|бюджет|данн)/i.test(q);
+          const scored = files
+            .map((f) => {
+              const base = (f.name || "").toLowerCase();
+              let score = 0;
+              if (base && q.includes(base.split(".")[0])) score += 10;
+              for (const w of words) if (base.includes(w)) score += 2;
+              if (wantsSheet && /spreadsheet|excel|sheet/i.test(f.mimeType || "")) score += 3;
+              return { f, score };
+            })
+            .filter((x) => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
+
+          for (const { f } of scored) {
             try {
-              const doc = await gd.readFile(context.userId, f.id);
-              driveBlock += `\n\n### DRIVE FILE: ${f.name}\n${String(doc.content ?? "").slice(0, 15_000)}`;
-            } catch {
-              /* skip unreadable file */
+              const doc = await gd.readFile(driveUser, f.id);
+              const content = String(doc.content ?? "").trim();
+              driveBlock += content
+                ? `\n\n### DRIVE FILE: ${f.name} (id=${f.id})\n${content.slice(0, 60_000)}`
+                : `\n\n### DRIVE FILE: ${f.name} (id=${f.id}) — файл пустой или нечитаемый.`;
+            } catch (e) {
+              driveBlock += `\n\n### DRIVE FILE: ${f.name} (id=${f.id}) — не удалось прочитать: ${
+                e instanceof Error ? e.message.slice(0, 200) : "ошибка"
+              }`;
             }
           }
+          driveBlock +=
+            "\n\nWhen a Google Sheet is included above, every tab is present as '## SHEET: <name>' — read ALL tabs before answering.";
         }
       }
     } catch {
