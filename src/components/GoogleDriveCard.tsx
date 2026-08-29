@@ -118,7 +118,12 @@ export function GoogleDriveCard() {
         setFiles([]);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
+      if (message.includes("GOOGLE_DRIVE_RECONNECT_REQUIRED")) {
+        setConnected(false);
+        setFiles([]);
+      }
     } finally {
       setLoading(false);
     }
