@@ -9,6 +9,8 @@ import {
   Folder,
   ExternalLink,
   FilePlus2,
+  AlertTriangle,
+  ChevronDown,
 } from "lucide-react";
 import {
   startGoogleDriveConnect,
@@ -17,6 +19,7 @@ import {
   googleDriveDisconnect,
   googleDriveCreateDocWithContent,
 } from "@/lib/google-drive.functions";
+import { Button } from "@/components/ui/button";
 
 type DriveFile = {
   id: string;
@@ -66,6 +69,12 @@ export function GoogleDriveCard() {
   const [docName, setDocName] = useState("");
   const [docContent, setDocContent] = useState("");
   const [createdLink, setCreatedLink] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
+
+  const reconnectRequired = error?.includes("GOOGLE_DRIVE_RECONNECT_REQUIRED") ?? false;
+  const friendlyError = reconnectRequired
+    ? t("app.integrations.reconnectRequired", "Срок доступа истёк. Подключите Google Drive повторно.")
+    : error;
 
   const createDoc = async () => {
     if (!docName.trim()) return;
@@ -86,7 +95,9 @@ export function GoogleDriveCard() {
       );
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
+      if (message.includes("GOOGLE_DRIVE_RECONNECT_REQUIRED")) setConnected(false);
     } finally {
       setBusy(false);
     }
@@ -177,13 +188,15 @@ export function GoogleDriveCard() {
           </p>
         </div>
         {connected && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => void refresh()}
-            className="text-white/50 hover:text-white transition p-1"
+            className="text-muted-foreground"
             title={t("app.integrations.refresh", "Обновить")}
           >
             <RefreshCw className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -215,13 +228,14 @@ export function GoogleDriveCard() {
       {connected && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-2">
           {!creating ? (
-            <button
+            <Button
+              variant="secondary"
               onClick={() => setCreating(true)}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary/15 text-primary px-3 py-2 text-xs font-semibold hover:bg-primary/25 transition"
+              className="w-full text-xs"
             >
               <FilePlus2 className="h-3.5 w-3.5" />
               {t("app.integrations.createDoc", "Создать документ в Google Docs")}
-            </button>
+            </Button>
           ) : (
             <>
               <input
@@ -238,20 +252,21 @@ export function GoogleDriveCard() {
                 className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder:text-white/35 outline-none focus:border-primary/50 resize-y"
               />
               <div className="flex gap-2">
-                <button
+                <Button
                   disabled={busy || !docName.trim()}
                   onClick={() => void createDoc()}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-60"
+                  className="flex-1 text-xs"
                 >
                   {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {t("app.integrations.create", "Создать")}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => setCreating(false)}
-                  className="rounded-lg bg-white/5 px-3 py-2 text-xs text-white/70 hover:bg-white/10 transition"
+                  className="text-xs"
                 >
                   {t("common.cancel", "Отмена")}
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -269,22 +284,38 @@ export function GoogleDriveCard() {
         </div>
       )}
 
-      {error && <p className="text-xs text-red-400 break-words">{error}</p>}
+      {friendlyError && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{friendlyError}</span>
+        </div>
+      )}
 
-      <button
+      <button type="button" onClick={() => setGuideOpen((value) => !value)} className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground">
+        <span>{t("app.integrations.guide", "Как подключить")}</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${guideOpen ? "rotate-180" : ""}`} />
+      </button>
+      {guideOpen && (
+        <ol className="list-decimal space-y-1 pl-5 text-xs leading-relaxed text-muted-foreground">
+          <li>{t("app.integrations.driveGuide1", "Нажмите «Подключить» и выберите свой Google-аккаунт.")}</li>
+          <li>{t("app.integrations.driveGuide2", "Разрешите доступ к файлам и документам Drive.")}</li>
+          <li>{t("app.integrations.driveGuide3", "После подключения AI сможет читать доступные вам файлы и все листы таблиц.")}</li>
+        </ol>
+      )}
+
+      <Button
         disabled={busy || loading}
-        onClick={() => void (connected ? disconnect() : connect())}
-        className={`w-full rounded-lg px-3 py-2 text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 ${
-          connected
-            ? "bg-white/5 text-white/70 hover:bg-white/10"
-            : "bg-primary text-primary-foreground hover:bg-primary/90"
-        } disabled:opacity-60`}
+        variant={connected ? "outline" : "default"}
+        onClick={() => void (connected && !reconnectRequired ? disconnect() : connect())}
+        className="w-full text-xs"
       >
         {(busy || loading) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {connected
           ? t("app.integrations.disconnect", "Отключить")
-          : t("app.integrations.connect", "Подключить")}
-      </button>
+          : reconnectRequired
+            ? t("app.integrations.reconnect", "Подключить повторно")
+            : t("app.integrations.connect", "Подключить")}
+      </Button>
     </div>
   );
 }
