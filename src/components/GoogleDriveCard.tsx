@@ -112,8 +112,14 @@ export function GoogleDriveCard() {
       setConnected(status.connected);
       setEmail(status.email);
       if (status.connected) {
-        const list = await googleDriveListFiles({ data: {} });
-        setFiles((list as DriveFile[]).slice(0, 6));
+        const res = await googleDriveListFiles({ data: {} });
+        if (res.reconnectRequired) {
+          setConnected(false);
+          setFiles([]);
+          setError("GOOGLE_DRIVE_RECONNECT_REQUIRED");
+        } else {
+          setFiles((res.files as DriveFile[]).slice(0, 6));
+        }
       } else {
         setFiles([]);
       }
