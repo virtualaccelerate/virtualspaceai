@@ -120,6 +120,24 @@ export async function listFiles(userId: string, search?: string, folderId?: stri
   return (data.files ?? []) as DriveFile[];
 }
 
+/** Export a Google Sheet as XLSX and flatten EVERY tab into CSV text. */
+async function readSpreadsheetAllTabs(connectionAPIKey: string, fileId: string) {
+  const res = await callAsAppUser({
+    gatewayBaseUrl: GATEWAY_BASE_URL,
+    connectionAPIKey,
+    connectorId: CONNECTOR_ID,
+    path: `/drive/v3/files/${fileId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`,
+  });
+  if (!res.ok) throw new Error(`Sheets export failed [${res.status}]: ${await res.text()}`);
+  const buf = new Uint8Array(await res.arrayBuffer());
+  const XLSX = await import("xlsx");
+  const wb = XLSX.read(buf, { type: "array" });
+  return wb.SheetNames.map((name) => {
+    const csv = XLSX.utils.sheet_to_csv(wb.Sheets[name]);
+    return `## SHEET: ${name}\n${csv.slice(0, 60_000)}`;
+  }).join("\n\n");
+}
+
 export async function readFile(userId: string, fileId: string) {
   const meta = (await drive(
     userId,
@@ -127,7 +145,34 @@ export async function readFile(userId: string, fileId: string) {
   )) as DriveFile;
 
   const connectionAPIKey = await keyOrThrow(userId);
-  const isGoogleDoc = meta.mimeType?.startsWith("application/vnd.google-apps");
+  const mime = meta.mimeType || "";
+  const isSheet =
+    mime === "application/vnd.google-apps.spreadsheet" ||
+    mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    mime === "application/vnd.ms-excel";
+
+  if (isSheet) {
+    if (mime === "application/vnd.google-apps.spreadsheet") {
+      const content = await readSpreadsheetAllTabs(connectionAPIKey, fileId);
+      return { ...meta, content: content.slice(0, 200_000) };
+    }
+    // Uploaded xlsx/xls — download raw bytes and parse all sheets.
+    const raw = await callAsAppUser({
+      gatewayBaseUrl: GATEWAY_BASE_URL,
+      connectionAPIKey,
+      connectorId: CONNECTOR_ID,
+      path: `/drive/v3/files/${fileId}?alt=media`,
+    });
+    if (!raw.ok) throw new Error(`Google Drive read failed [${raw.status}]: ${await raw.text()}`);
+    const XLSX = await import("xlsx");
+    const wb = XLSX.read(new Uint8Array(await raw.arrayBuffer()), { type: "array" });
+    const content = wb.SheetNames.map(
+      (name) => `## SHEET: ${name}\n${XLSX.utils.sheet_to_csv(wb.Sheets[name]).slice(0, 60_000)}`,
+    ).join("\n\n");
+    return { ...meta, content: content.slice(0, 200_000) };
+  }
+
+  const isGoogleDoc = mime.startsWith("application/vnd.google-apps");
   const path = isGoogleDoc
     ? `/drive/v3/files/${fileId}/export?mimeType=text/plain`
     : `/drive/v3/files/${fileId}?alt=media`;
@@ -140,6 +185,26 @@ export async function readFile(userId: string, fileId: string) {
   const body = await res.text();
   if (!res.ok) throw new Error(`Google Drive read failed [${res.status}]: ${body}`);
   return { ...meta, content: body.slice(0, 200_000) };
+}
+
+/**
+ * Resolve which user's Drive connection to use for a teamspace:
+ * the caller's own connection, otherwise any connected member of the teamspace
+ * (Drive access is shared across the workspace).
+ */
+export async function resolveDriveUserId(userId: string, teamspaceId?: string | null) {
+  if (await getConnectionKeyForUser(userId, CONNECTOR_ID)) return userId;
+  if (!teamspaceId) return null;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: members } = await supabaseAdmin
+    .from("teamspace_members")
+    .select("user_id")
+    .eq("teamspace_id", teamspaceId);
+  for (const m of members ?? []) {
+    if (m.user_id === userId) continue;
+    if (await getConnectionKeyForUser(m.user_id, CONNECTOR_ID)) return m.user_id;
+  }
+  return null;
 }
 
 export async function createFolder(userId: string, name: string, parentId?: string) {
@@ -245,4 +310,30 @@ export async function createDocWithContent(
   const text = await res.text();
   if (!res.ok) throw new Error(`Google Docs create failed [${res.status}]: ${text}`);
   return JSON.parse(text) as DriveFile;
+}
+
+/** Drive user for the caller's current workspace (shared across members). */
+export async function effectiveDriveUserId(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("current_teamspace_id")
+    .eq("id", userId)
+    .maybeSingle();
+  return resolveDriveUserId(userId, profile?.current_teamspace_id ?? null);
+}
+
+/** Status that also reports a workspace-shared connection owned by a teammate. */
+export async function sharedConnectionStatus(userId: string) {
+  const own = await connectionStatus(userId);
+  if (own.connected) return { ...own, shared: false as const };
+  const other = await effectiveDriveUserId(userId);
+  if (!other) return { ...own, shared: false as const };
+  const row = await getConnectionRowForUser(other, CONNECTOR_ID);
+  return {
+    connected: true,
+    email: row?.account_email ?? null,
+    connectedAt: row?.updated_at ?? null,
+    shared: true as const,
+  };
 }
