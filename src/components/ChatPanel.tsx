@@ -119,10 +119,10 @@ function MessageContent({
     if (m.index > last) nodes.push(text.slice(last, m.index));
     const { id, name } = parseFileToken(m[1]);
     const isDoc = UUID_RE.test(id);
-    // Never render a link for a file id that doesn't exist for this user —
-    // the model sometimes invents document or Drive references.
+    // Only suppress the link when we positively know the id doesn't exist.
     const unknownDoc = isDoc && !!knownDocIds && knownDocIds.size > 0 && !knownDocIds.has(id.toLowerCase());
-    const unknownDrive = !isDoc && (!knownDriveIds || !knownDriveIds.has(id));
+    const unknownDrive =
+      !isDoc && !!knownDriveIds && knownDriveIds.size > 0 && !knownDriveIds.has(id);
     if (unknownDoc || unknownDrive) {
       nodes.push(name && name !== "Файл" ? name : "");
       last = m.index + m[0].length;
@@ -134,8 +134,9 @@ function MessageContent({
         onClick={() =>
           isDoc
             ? onOpenFile(id)
-            : window.open(`https://drive.google.com/file/d/${id}/view`, "_blank", "noopener")
+            : window.open(`https://drive.google.com/open?id=${id}`, "_blank", "noopener")
         }
+
         title={name}
         className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary hover:bg-primary/25 px-1.5 py-0.5 text-xs font-medium align-baseline mx-0.5 transition"
       >
