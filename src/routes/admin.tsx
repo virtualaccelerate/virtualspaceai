@@ -24,6 +24,7 @@ import {
 } from "@/lib/admin.functions";
 import type { StartupRow } from "@/lib/startups.functions";
 import type { MentorRow } from "@/lib/mentors.functions";
+import { AdminAnalytics } from "@/components/AdminAnalytics";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
