@@ -85,6 +85,13 @@ async function notifyAssignment(input: {
   }).catch(() => {});
 }
 
+async function track(userId: string, teamspaceId: string | null, feature: string, meta?: Record<string, unknown>) {
+  const { logActivity } = await import("./activity.server");
+  await logActivity({ userId, teamspaceId, kind: "action", feature, meta: meta ?? null }).catch(() => {});
+}
+
+
+
 
 export async function createTaskForUser(userId: string, data: CreateTaskInput) {
   const db = await admin();
@@ -105,6 +112,7 @@ export async function createTaskForUser(userId: string, data: CreateTaskInput) {
     position: (count ?? 0) * 1000,
   }).select("*").single();
   if (error) throw new Error(error.message);
+  await track(userId, teamspaceId, "Задачи: создание", { taskId: row.id });
   await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId, kind: "assigned", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
 
   return row;
@@ -142,6 +150,7 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   }
   const { data: row, error } = await db.from("tasks").update(patch).eq("id", data.id).select("*").single();
   if (error) throw new Error(error.message);
+  await track(userId, current.teamspace_id, "Задачи: изменение", { taskId: row.id });
   const newlyAssigned = row.assignee_id && row.assignee_id !== current.assignee_id;
   const changed = row.title !== current.title || row.status !== current.status || row.priority !== current.priority || row.due_date !== current.due_date;
   if (newlyAssigned || (changed && row.assignee_id)) {
@@ -159,6 +168,7 @@ export async function deleteTaskForUser(userId: string, id: string) {
   await activeTeamspace(userId, current.teamspace_id);
   const { error } = await db.from("tasks").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  await track(userId, current.teamspace_id, "Задачи: удаление", { taskId: id });
   if (current.assignee_id) {
     await notifyAssignment({ assigneeId: current.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: "deleted", taskId: current.id, title: current.title });
 

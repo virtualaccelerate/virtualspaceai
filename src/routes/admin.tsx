@@ -24,6 +24,7 @@ import {
 } from "@/lib/admin.functions";
 import type { StartupRow } from "@/lib/startups.functions";
 import type { MentorRow } from "@/lib/mentors.functions";
+import { AdminAnalytics } from "@/components/AdminAnalytics";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -41,8 +42,9 @@ export const Route = createFileRoute("/admin")({
 });
 
 const TABS = [
+  { id: "analytics", label: "Аналитика" },
   { id: "leads", label: "Заявки на демо" },
-  
+
   { id: "courses", label: "Курсы" },
   { id: "startups", label: "Стартапы" },
   { id: "mentors", label: "Менторы" },
@@ -57,7 +59,7 @@ function AdminPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState<TabId>("leads");
+  const [tab, setTab] = useState<TabId>("analytics");
   const [rows, setRows] = useState<DemoRequestRow[] | null>(null);
   const [loadingRows, setLoadingRows] = useState(false);
 
@@ -196,7 +198,9 @@ function AdminPage() {
       </nav>
 
       <main className="p-6">
-        {tab === "leads" ? (
+        {tab === "analytics" ? (
+          <AdminAnalytics />
+        ) : tab === "leads" ? (
           <section className="glass rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
               <h2 className="text-sm font-semibold">Заявки на демо</h2>
