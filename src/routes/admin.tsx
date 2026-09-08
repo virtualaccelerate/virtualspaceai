@@ -59,7 +59,7 @@ function AdminPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState<TabId>("leads");
+  const [tab, setTab] = useState<TabId>("analytics");
   const [rows, setRows] = useState<DemoRequestRow[] | null>(null);
   const [loadingRows, setLoadingRows] = useState(false);
 
