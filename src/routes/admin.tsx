@@ -197,7 +197,9 @@ function AdminPage() {
       </nav>
 
       <main className="p-6">
-        {tab === "leads" ? (
+        {tab === "analytics" ? (
+          <AdminAnalytics />
+        ) : tab === "leads" ? (
           <section className="glass rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
               <h2 className="text-sm font-semibold">Заявки на демо</h2>
