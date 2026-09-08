@@ -85,6 +85,13 @@ async function notifyAssignment(input: {
   }).catch(() => {});
 }
 
+async function track(userId: string, teamspaceId: string | null, feature: string, meta?: Record<string, unknown>) {
+  const { logActivity } = await import("./activity.server");
+  await logActivity({ userId, teamspaceId, kind: "action", feature, meta: meta ?? null }).catch(() => {});
+}
+
+
+
 
 export async function createTaskForUser(userId: string, data: CreateTaskInput) {
   const db = await admin();
