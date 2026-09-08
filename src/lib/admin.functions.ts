@@ -296,3 +296,12 @@ export const adminSetPurchaseStatus = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+// ---------------- Analytics ----------------
+
+export const adminGetAnalytics = createServerFn({ method: "GET" }).handler(async () => {
+  if (!(await isAdmin())) return null;
+  const { getAdminAnalytics } = await import("@/lib/admin-analytics.server");
+  return getAdminAnalytics(90);
+});
+
