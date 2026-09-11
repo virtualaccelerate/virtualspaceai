@@ -308,6 +308,8 @@ function AuthenticatedLayout() {
                   ))}
                 </div>
               )}
+              <MenuItem icon={Plus} label={t("app.header.createTeamspace", "Создать пространство")}
+                onClick={() => { setMenuOpen(false); setCreateOpen(true); }} />
               <MenuItem icon={Plus} label={t("app.header.joinTeamspace", "Присоединиться к пространству")}
                 onClick={() => { setMenuOpen(false); setJoinOpen(true); }} />
               <MenuItem icon={UserPlus} label={t("app.header.inviteMembers")}
