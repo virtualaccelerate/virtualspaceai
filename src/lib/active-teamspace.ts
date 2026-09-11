@@ -46,6 +46,30 @@ export async function setActiveTeamspace(teamspaceId: string): Promise<void> {
   await supabase.from("profiles").update({ current_teamspace_id: teamspaceId }).eq("id", auth.user.id);
 }
 
+/** Create a new teamspace owned by the current user and make it active. */
+export async function createTeamspace(input: {
+  name: string;
+  teamSize?: string;
+  businessType?: string;
+}): Promise<string> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) throw new Error("Not signed in");
+  const { data, error } = await supabase
+    .from("teamspaces")
+    .insert({
+      name: input.name.trim(),
+      team_size: (input.teamSize ?? "1-5") as any,
+      business_type: (input.businessType ?? "startup") as any,
+      owner_id: auth.user.id,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  const id = (data as any).id as string;
+  await setActiveTeamspace(id);
+  return id;
+}
+
 /** Join a teamspace by invite code and make it active. Returns the teamspace id. */
 export async function joinTeamspaceByCode(code: string): Promise<string> {
   const { data, error } = await supabase.rpc("join_teamspace_by_code", { _code: code.trim() });
