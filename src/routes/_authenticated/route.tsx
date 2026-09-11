@@ -16,7 +16,7 @@ import { LangSwitcher } from "@/components/LangSwitcher";
 import { FloatingChat } from "@/components/FloatingChat";
 import { SidebarChatHistory } from "@/components/SidebarChatHistory";
 import { NotificationsBell } from "@/components/NotificationsBell";
-import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode } from "@/lib/active-teamspace";
+import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode, createTeamspace } from "@/lib/active-teamspace";
 
 
 
@@ -632,6 +632,88 @@ function JoinModal({ onClose, onJoined }: { onClose: () => void; onJoined: () =>
           className="mt-4 w-full rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
           {loading ? "…" : t("app.join.submit", "Присоединиться")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CreateTeamspaceModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const { t } = useTranslation();
+  const [name, setName] = useState("");
+  const [teamSize, setTeamSize] = useState("1-5");
+  const [businessType, setBusinessType] = useState("startup");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!name.trim() || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await createTeamspace({ name, teamSize, businessType });
+      onCreated();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectCls =
+    "mt-1.5 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-primary/50";
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-sm rounded-2xl border border-white/10 bg-[color:var(--card)] p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display text-lg text-white">
+            {t("app.header.createTeamspace", "Создать пространство")}
+          </h3>
+          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <label className="text-[10px] uppercase tracking-wider text-white/50">
+          {t("app.create.name", "Название")}
+        </label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
+          placeholder={t("app.create.namePlaceholder", "Моя команда")}
+          className={selectCls}
+        />
+
+        <label className="mt-3 block text-[10px] uppercase tracking-wider text-white/50">
+          {t("app.create.teamSize", "Размер команды")}
+        </label>
+        <select value={teamSize} onChange={(e) => setTeamSize(e.target.value)} className={selectCls}>
+          {["1-5", "5-20", "20+", "50-100", "100+"].map((v) => (
+            <option key={v} value={v} className="bg-[color:var(--card)]">{v}</option>
+          ))}
+        </select>
+
+        <label className="mt-3 block text-[10px] uppercase tracking-wider text-white/50">
+          {t("app.create.businessType", "Тип бизнеса")}
+        </label>
+        <select value={businessType} onChange={(e) => setBusinessType(e.target.value)} className={selectCls}>
+          <option value="startup" className="bg-[color:var(--card)]">{t("app.create.startup", "Стартап")}</option>
+          <option value="agency" className="bg-[color:var(--card)]">{t("app.create.agency", "Агентство")}</option>
+          <option value="company" className="bg-[color:var(--card)]">{t("app.create.company", "Компания")}</option>
+        </select>
+
+        {error && <div className="mt-2 text-xs text-red-400">{error}</div>}
+        <button
+          onClick={() => void submit()}
+          disabled={loading || !name.trim()}
+          className="mt-4 w-full rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {loading ? "…" : t("app.create.submit", "Создать")}
         </button>
       </div>
     </div>
