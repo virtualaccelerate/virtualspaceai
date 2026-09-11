@@ -133,6 +133,24 @@ function AuthPage() {
     else setInfo("Письмо отправлено повторно.");
   };
 
+  const handleDemo = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email: "demo@ai-virtualspace.com",
+        password: "demoap",
+      });
+      if (err) throw err;
+    } catch (err) {
+      console.error(err);
+      setError(friendlyAuthError(err));
+      setLoading(false);
+    }
+  };
+
   const handleGoogle = async () => {
     if (googleLoading) return;
     setGoogleLoading(true);
