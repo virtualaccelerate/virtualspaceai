@@ -85,6 +85,7 @@ function AuthenticatedLayout() {
   const [teamspace, setTeamspace] = useState<Teamspace | null>(null);
   const [teamspaces, setTeamspaces] = useState<Teamspace[]>([]);
   const [joinOpen, setJoinOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -453,6 +454,13 @@ function AuthenticatedLayout() {
         <JoinModal
           onClose={() => setJoinOpen(false)}
           onJoined={async () => { setJoinOpen(false); queryClient.clear(); window.location.reload(); }}
+        />
+      )}
+
+      {createOpen && (
+        <CreateTeamspaceModal
+          onClose={() => setCreateOpen(false)}
+          onCreated={() => { setCreateOpen(false); queryClient.clear(); window.location.reload(); }}
         />
       )}
 
