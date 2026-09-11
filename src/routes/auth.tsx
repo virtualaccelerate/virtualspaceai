@@ -133,6 +133,24 @@ function AuthPage() {
     else setInfo("Письмо отправлено повторно.");
   };
 
+  const handleDemo = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email: "demo@ai-virtualspace.com",
+        password: "demoap",
+      });
+      if (err) throw err;
+    } catch (err) {
+      console.error(err);
+      setError(friendlyAuthError(err));
+      setLoading(false);
+    }
+  };
+
   const handleGoogle = async () => {
     if (googleLoading) return;
     setGoogleLoading(true);
@@ -333,6 +351,21 @@ function AuthPage() {
                   )}
                 </div>
               </form>
+
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                <p className="text-[11px] uppercase tracking-widest text-white/40">Demo</p>
+                <p className="mt-1 text-xs text-white/60">
+                  Попробуйте платформу без регистрации — демо-доступ.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleDemo}
+                  disabled={loading}
+                  className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Войти как demo <ArrowRight className="h-4 w-4" /></>}
+                </button>
+              </div>
 
             </>
           )}
