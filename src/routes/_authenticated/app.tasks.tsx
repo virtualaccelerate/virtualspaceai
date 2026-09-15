@@ -638,6 +638,12 @@ function TasksPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <TaskImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        teamspaceId={teamspaceId}
+        onImported={() => { void reloadTasks(); }}
+      />
     </div>
   );
 }
