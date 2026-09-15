@@ -237,6 +237,7 @@ async function handleStart(chatId: number, arg: string, username: string | null)
   await sendMessage(
     chatId,
     t(lang).linked((profile as any)?.full_name || (profile as any)?.email || ""),
+    { reply_markup: mainMenuKeyboard(lang) },
   );
 }
 
@@ -875,7 +876,8 @@ export async function handleUpdate(update: any) {
 
   switch (cmd) {
     case "/help":
-      await sendMessage(chatId, t(lang).help);
+    case "/menu":
+      await sendMessage(chatId, t(lang).help, { reply_markup: mainMenuKeyboard(lang) });
       return;
     case "/app":
     case "/open":
