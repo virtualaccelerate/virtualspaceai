@@ -293,6 +293,14 @@ export const askZukha = createServerFn({ method: "POST" })
       ? `ACTIVE AGENT MODE: ${AGENT_PROMPTS[data.agent_id]}\n\n`
       : "";
 
+    let companyBlock = "";
+    try {
+      const { buildCompanyContext } = await import("./company-context.server");
+      companyBlock = await buildCompanyContext(data.teamspace_id);
+    } catch {
+      companyBlock = "";
+    }
+
     const systemPrompt =
       agentPreamble +
       "You are Virtual Space AI, the assistant inside Virtual Space — an AI virtual office for teams. " +
@@ -307,6 +315,7 @@ export const askZukha = createServerFn({ method: "POST" })
       "TASK CREATION: When the user asks you to create, add, or plan a task (задача, таск, todo, task), emit ONE token per task on its own line using EXACTLY this syntax:\n" +
       "[[task:Title||priority||YYYY-MM-DD||description]]\n" +
       "Rules: priority ∈ low|medium|high|urgent (default medium). Date is optional — leave empty as ||||. Description optional. Example: [[task:Prepare Q3 report||high||2026-08-01||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
+      companyBlock +
       knowledgeBlock +
       financeBlock +
       inlineSheetBlock +

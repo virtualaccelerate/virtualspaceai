@@ -22,6 +22,13 @@
       "when": 1788888856057,
       "tag": "0002_create_activity_events",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789444300815,
+      "tag": "0003_task_proof_and_reminders",
+      "breakpoints": true
     }
   ]
 }

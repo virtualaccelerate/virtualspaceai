@@ -60,8 +60,14 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         }
 
         const { sendMessage } = await import("@/lib/telegram.server");
+        const { runDeadlineReminders, runEveningReport } = await import("@/lib/task-flow.server");
 
         const hourNow = new Date().getUTCHours();
+
+        // Deadline reminders (3h / 1h / overdue) run on every hourly sweep.
+        const reminders = await runDeadlineReminders().catch(() => ({ sent: 0 }));
+        // Evening workspace report at 19:00 Bishkek (13:00 UTC).
+        const evening = hourNow === 13 ? await runEveningReport().catch(() => ({ sent: 0 })) : { sent: 0 };
         const { data: links } = await supabaseAdmin
           .from("telegram_links")
           .select("user_id, chat_id, language, daily_digest, digest_hour")
@@ -73,7 +79,8 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         let sent = 0;
 
         for (const link of (links as any[]) ?? []) {
-          if ((link.digest_hour ?? 4) !== hourNow) continue;
+          // 09:00 Bishkek = 03:00 UTC by default
+          if ((link.digest_hour ?? 3) !== hourNow) continue;
 
           const { data: profile } = await supabaseAdmin
             .from("profiles")
@@ -112,7 +119,12 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
           sent++;
         }
 
-        return Response.json({ ok: true, sent });
+        return Response.json({
+          ok: true,
+          sent,
+          reminders: reminders.sent,
+          evening: evening.sent,
+        });
       },
     },
   },

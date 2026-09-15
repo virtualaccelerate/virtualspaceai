@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { CreateTaskSchema, DeleteTaskSchema, ListMembersSchema, UpdateTaskSchema } from "./tasks.schemas";
+import { CreateTaskSchema, DecideTaskSchema, DeleteTaskSchema, ListMembersSchema, SubmitProofSchema, UpdateTaskSchema } from "./tasks.schemas";
 
 export const createTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -32,4 +32,20 @@ export const listTaskMembers = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { listMembersForUser } = await import("./tasks.server");
     return listMembersForUser(context.userId, data.teamspace_id);
+  });
+
+export const submitTaskForReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => SubmitProofSchema.parse(raw))
+  .handler(async ({ data, context }) => {
+    const { submitProofForUser } = await import("./tasks.server");
+    return submitProofForUser(context.userId, data);
+  });
+
+export const reviewTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => DecideTaskSchema.parse(raw))
+  .handler(async ({ data, context }) => {
+    const { decideTaskForUser } = await import("./tasks.server");
+    return decideTaskForUser(context.userId, data);
   });

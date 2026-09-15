@@ -30,3 +30,15 @@ export const ListMembersSchema = z.object({ teamspace_id: z.string().uuid() });
 
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
+
+export const SubmitProofSchema = z.object({
+  id: z.string().uuid(),
+  proof_url: z.string().trim().max(2000).optional().nullable(),
+  proof_note: z.string().trim().max(2000).optional().nullable(),
+});
+
+export const DecideTaskSchema = z.object({
+  id: z.string().uuid(),
+  decision: z.enum(["approve", "rework"]),
+  comment: z.string().trim().max(2000).optional().nullable(),
+});

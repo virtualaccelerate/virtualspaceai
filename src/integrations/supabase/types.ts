@@ -678,6 +678,35 @@ export type Database = {
         }
         Relationships: []
       }
+      task_reminders: {
+        Row: {
+          id: string
+          kind: string
+          sent_at: string
+          task_id: string
+        }
+        Insert: {
+          id?: string
+          kind: string
+          sent_at?: string
+          task_id: string
+        }
+        Update: {
+          id?: string
+          kind?: string
+          sent_at?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_reminders_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee_id: string | null
@@ -688,7 +717,12 @@ export type Database = {
           id: string
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
+          proof_note: string | null
+          proof_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: Database["public"]["Enums"]["task_status"]
+          submitted_at: string | null
           teamspace_id: string | null
           title: string
           updated_at: string
@@ -703,7 +737,12 @@ export type Database = {
           id?: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          proof_note?: string | null
+          proof_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["task_status"]
+          submitted_at?: string | null
           teamspace_id?: string | null
           title: string
           updated_at?: string
@@ -718,7 +757,12 @@ export type Database = {
           id?: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          proof_note?: string | null
+          proof_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["task_status"]
+          submitted_at?: string | null
           teamspace_id?: string | null
           title?: string
           updated_at?: string
@@ -809,6 +853,7 @@ export type Database = {
           language: string | null
           link_code: string
           linked_at: string | null
+          pending_proof_task_id: string | null
           teamspace_id: string | null
           telegram_username: string | null
           user_id: string
@@ -822,6 +867,7 @@ export type Database = {
           language?: string | null
           link_code?: string
           linked_at?: string | null
+          pending_proof_task_id?: string | null
           teamspace_id?: string | null
           telegram_username?: string | null
           user_id: string
@@ -835,6 +881,7 @@ export type Database = {
           language?: string | null
           link_code?: string
           linked_at?: string | null
+          pending_proof_task_id?: string | null
           teamspace_id?: string | null
           telegram_username?: string | null
           user_id?: string

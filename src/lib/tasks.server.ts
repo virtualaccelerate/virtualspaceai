@@ -78,6 +78,7 @@ async function notifyAssignment(input: {
     actorId: input.actorId,
     actorName,
     kind: input.kind,
+    taskId: input.taskId ?? null,
     title: input.title,
     status: input.status,
     priority: input.priority,
@@ -188,4 +189,47 @@ export async function listMembersForUser(userId: string, teamspaceId: string) {
     const profile = profiles?.find((p) => p.id === m.user_id);
     return { id: m.user_id, role: m.role, full_name: profile?.full_name ?? null, email: profile?.email ?? null, avatar_url: profile?.avatar_url ?? null };
   });
+}
+/** Employee submits proof — the task goes to review and the approver is notified. */
+export async function submitProofForUser(
+  userId: string,
+  data: { id: string; proof_url?: string | null; proof_note?: string | null },
+) {
+  const db = await admin();
+  const { data: current } = await db.from("tasks").select("*").eq("id", data.id).maybeSingle();
+  if (!current) throw new Error("Task not found");
+  if (!current.teamspace_id) throw new Error("Task has no workspace");
+  await activeTeamspace(userId, current.teamspace_id);
+  const { submitTaskProof } = await import("./task-flow.server");
+  const row = await submitTaskProof({
+    taskId: data.id,
+    assigneeId: userId,
+    proofUrl: data.proof_url ?? null,
+    proofNote: data.proof_note ?? null,
+  });
+  await track(userId, current.teamspace_id, "Задачи: сдача на проверку", { taskId: data.id });
+  return row;
+}
+
+/** Owner/creator accepts the work or sends it back; the assignee is notified both ways. */
+export async function decideTaskForUser(
+  userId: string,
+  data: { id: string; decision: "approve" | "rework"; comment?: string | null },
+) {
+  const db = await admin();
+  const { data: current } = await db.from("tasks").select("*").eq("id", data.id).maybeSingle();
+  if (!current) throw new Error("Task not found");
+  if (!current.teamspace_id) throw new Error("Task has no workspace");
+  await activeTeamspace(userId, current.teamspace_id);
+  const { approverFor, decideTask } = await import("./task-flow.server");
+  const approverId = await approverFor(current as never);
+  if (approverId !== userId) throw new Error("Только автор задачи или владелец пространства может принять работу");
+  const row = await decideTask({
+    taskId: data.id,
+    reviewerId: userId,
+    decision: data.decision,
+    comment: data.comment ?? null,
+  });
+  await track(userId, current.teamspace_id, `Задачи: ${data.decision === "approve" ? "принята" : "на доработку"}`, { taskId: data.id });
+  return row;
 }

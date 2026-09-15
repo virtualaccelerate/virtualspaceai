@@ -56,6 +56,7 @@ export async function notifyTaskAssignee(input: {
   status?: string | null;
   priority?: string | null;
   dueDate?: string | null;
+  taskId?: string | null;
 }) {
   if (!input.assigneeId || input.assigneeId === input.actorId) return;
   const { data: link } = await supabaseAdmin
@@ -82,7 +83,14 @@ export async function notifyTaskAssignee(input: {
     input.priority ? `${lang === "en" ? "Priority" : "Приоритет"}: ${input.priority}` : null,
     input.dueDate ? `${lang === "en" ? "Due" : "Срок"}: ${input.dueDate}` : null,
   ].filter(Boolean);
-  await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`);
+  let reply_markup: Record<string, unknown> | undefined;
+  if (input.taskId && input.kind !== "deleted") {
+    const { assigneeKeyboard } = await import("./task-flow.server");
+    reply_markup = assigneeKeyboard(input.taskId, input.status ?? "backlog");
+  }
+  await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`, {
+    ...(reply_markup ? { reply_markup } : {}),
+  });
 }
 
 
@@ -184,12 +192,13 @@ type Link = {
   teamspace_id: string | null;
   chat_id: number | null;
   language: string | null;
+  pending_proof_task_id?: string | null;
 };
 
 async function findLink(chatId: number): Promise<Link | null> {
   const { data } = await supabaseAdmin
     .from("telegram_links")
-    .select("user_id, teamspace_id, chat_id, language")
+    .select("user_id, teamspace_id, chat_id, language, pending_proof_task_id")
     .eq("chat_id", chatId)
     .maybeSingle();
   return (data as Link) ?? null;
@@ -550,6 +559,62 @@ const CYCLE: Record<string, string> = {
   done: "backlog",
 };
 
+async function handleFlowCallback(
+  cb: any,
+  link: Link,
+  chatId: number,
+  action: string,
+  taskId: string,
+  lang: Lang,
+) {
+  const { data: task } = await supabaseAdmin
+    .from("tasks")
+    .select("id, title, status, assignee_id, user_id, teamspace_id")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (!task) {
+    await tg("answerCallbackQuery", { callback_query_id: cb.id, text: t(lang).notFound });
+    return;
+  }
+  const flow = await import("./task-flow.server");
+  const ack = (text: string) => tg("answerCallbackQuery", { callback_query_id: cb.id, text });
+
+  if (action === "begin") {
+    if (task.assignee_id !== link.user_id) return ack("Это не ваша задача");
+    await supabaseAdmin.from("tasks").update({ status: "in_progress" }).eq("id", task.id);
+    await ack("Взято в работу");
+    await sendMessage(chatId, `🟪 В работе: ${task.title}`, {
+      reply_markup: flow.assigneeKeyboard(task.id, "in_progress"),
+    });
+    return;
+  }
+
+  if (action === "submit") {
+    if (task.assignee_id !== link.user_id) return ack("Это не ваша задача");
+    await supabaseAdmin
+      .from("telegram_links")
+      .update({ pending_proof_task_id: task.id })
+      .eq("user_id", link.user_id);
+    await ack("Отправьте пруф");
+    await sendMessage(
+      chatId,
+      `📎 Сдача задачи: ${task.title}\n\nПришлите файл, скриншот или ссылку — можно с комментарием. Отмена: /cancel`,
+    );
+    return;
+  }
+
+  // approve / rework — only the reviewer (creator or workspace owner)
+  const approverId = await flow.approverFor(task as any);
+  if (approverId !== link.user_id) return ack("Решение принимает руководитель");
+  const decision = action === "approve" ? "approve" : "rework";
+  await flow.decideTask({ taskId: task.id, reviewerId: link.user_id, decision });
+  await ack(decision === "approve" ? "Принято" : "Отправлено на доработку");
+  await sendMessage(
+    chatId,
+    decision === "approve" ? `🟩 Принято: ${task.title}` : `↩️ На доработку: ${task.title}`,
+  );
+}
+
 async function handleCallback(cb: any) {
   const chatId = cb.message?.chat?.id;
   if (!chatId) return;
@@ -557,11 +622,18 @@ async function handleCallback(cb: any) {
   if (!link) return;
   const lang = pickLang(link.language);
   const [action, taskId] = String(cb.data ?? "").split(":");
+
+  // Task workflow buttons: start work, submit proof, approve / send back
+  if (["begin", "submit", "approve", "rework"].includes(action)) {
+    await handleFlowCallback(cb, link, chatId, action, taskId, lang);
+    return;
+  }
+
   const { data: task } = await supabaseAdmin
     .from("tasks")
     .select("id, title, status")
     .eq("id", taskId)
-    .eq("user_id", link.user_id)
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .maybeSingle();
   if (!task) {
     await tg("answerCallbackQuery", { callback_query_id: cb.id, text: t(lang).notFound });
@@ -650,6 +722,60 @@ export async function handleUpdate(update: any) {
   const message = update.message ?? update.edited_message;
   const chatId = message?.chat?.id;
   let text: string = (message?.text ?? message?.caption ?? "").trim();
+
+  // Proof submission: the employee pressed "Сдать" and now sends a file, screenshot or link
+  if (chatId) {
+    const pendingLink = await findLink(chatId);
+    if (pendingLink?.pending_proof_task_id) {
+      const clear = () =>
+        supabaseAdmin
+          .from("telegram_links")
+          .update({ pending_proof_task_id: null })
+          .eq("user_id", pendingLink.user_id);
+
+      if (/^\/cancel/i.test(text)) {
+        await clear();
+        await sendMessage(chatId, "Сдача отменена.");
+        return;
+      }
+
+      const fileId =
+        message?.document?.file_id ??
+        (Array.isArray(message?.photo) ? message.photo[message.photo.length - 1]?.file_id : null) ??
+        message?.video?.file_id ??
+        null;
+
+      let proofUrl: string | null = null;
+      if (fileId) {
+        const info = await tg<any>("getFile", { file_id: fileId });
+        const path = info?.result?.file_path;
+        if (path) proofUrl = `${TELEGRAM_API}/file/bot${botToken()}/${path}`;
+      }
+      const linkInText = text.match(/https?:\/\/\S+/)?.[0] ?? null;
+      if (!proofUrl && linkInText) proofUrl = linkInText;
+
+      if (!proofUrl && !text) {
+        await sendMessage(chatId, "Пришлите файл, скриншот или ссылку как подтверждение. Отмена: /cancel");
+        return;
+      }
+
+      const { submitTaskProof } = await import("./task-flow.server");
+      const row = await submitTaskProof({
+        taskId: pendingLink.pending_proof_task_id,
+        assigneeId: pendingLink.user_id,
+        proofUrl,
+        proofNote: text || null,
+      });
+      await clear();
+      await sendMessage(
+        chatId,
+        row
+          ? `🟨 Задача отправлена на проверку: ${row.title}\n\nРуководитель получил уведомление.`
+          : t("ru").notFound,
+      );
+      return;
+    }
+  }
 
   const voice = message?.voice ?? message?.audio ?? message?.video_note;
   if (chatId && !text && voice?.file_id) {

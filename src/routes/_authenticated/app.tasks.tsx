@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
-import { createTask, deleteTask, listTaskMembers, updateTask } from "@/lib/tasks.functions";
+import { createTask, deleteTask, listTaskMembers, reviewTask, submitTaskForReview, updateTask } from "@/lib/tasks.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,9 @@ type Task = {
   due_date: string | null;
   position: number;
   created_at?: string | null;
+  proof_url?: string | null;
+  proof_note?: string | null;
+  submitted_at?: string | null;
 };
 
 const COLUMNS: {
@@ -165,6 +168,8 @@ function TasksPage() {
   const updateTaskFn = useServerFn(updateTask);
   const deleteTaskFn = useServerFn(deleteTask);
   const listMembersFn = useServerFn(listTaskMembers);
+  const submitTaskFn = useServerFn(submitTaskForReview);
+  const reviewTaskFn = useServerFn(reviewTask);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -179,6 +184,34 @@ function TasksPage() {
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+
+  async function submitForReview(task: Task) {
+    const note = window.prompt("Ссылка или комментарий к сдаче (необязательно)") ?? "";
+    const isLink = /^https?:\/\//i.test(note.trim());
+    try {
+      await submitTaskFn({
+        data: {
+          id: task.id,
+          proof_url: isLink ? note.trim() : null,
+          proof_note: isLink ? null : note.trim() || null,
+        },
+      });
+      toast.success("Отправлено на проверку");
+      await reloadTasks();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Не удалось отправить");
+    }
+  }
+
+  async function decide(task: Task, decision: "approve" | "rework") {
+    try {
+      await reviewTaskFn({ data: { id: task.id, decision } });
+      toast.success(decision === "approve" ? "Задача принята" : "Возвращена на доработку");
+      await reloadTasks();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Не удалось сохранить решение");
+    }
+  }
 
   async function reloadTasks() {
     const { data: session } = await supabase.auth.getUser();
@@ -449,6 +482,53 @@ function TasksPage() {
                             <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
                               {task.description}
                             </p>
+                          )}
+
+                          {task.status === "review" && (
+                            <div
+                              className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {task.proof_note && (
+                                <p className="text-[11px] text-foreground/80 line-clamp-3">{task.proof_note}</p>
+                              )}
+                              {task.proof_url && (
+                                <a
+                                  href={task.proof_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-1 inline-block text-[11px] font-medium text-primary underline underline-offset-2"
+                                >
+                                  Открыть подтверждение
+                                </a>
+                              )}
+                              <div className="mt-2 flex gap-1.5">
+                                <button
+                                  onClick={() => decide(task, "approve")}
+                                  className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
+                                >
+                                  Принять
+                                </button>
+                                <button
+                                  onClick={() => decide(task, "rework")}
+                                  className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
+                                >
+                                  На доработку
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {isMine && task.status !== "review" && task.status !== "done" && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                submitForReview(task);
+                              }}
+                              className="mt-2 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
+                            >
+                              Сдать на проверку
+                            </button>
                           )}
 
                           <div className="mt-3 flex items-center gap-1.5">
