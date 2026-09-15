@@ -353,6 +353,26 @@ function TasksPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border p-0.5">
+            <button
+              onClick={() => changeView("board")}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-medium transition",
+                view === "board" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("app.tasks.viewBoard", "Доска")}
+            </button>
+            <button
+              onClick={() => changeView("table")}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-medium transition",
+                view === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("app.tasks.viewTable", "Таблица")}
+            </button>
+          </div>
           <Button
             variant={onlyMine ? "default" : "outline"}
             onClick={() => setOnlyMine((v) => !v)}
