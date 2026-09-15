@@ -69,7 +69,7 @@ function b64ToBytes(b64: string): Uint8Array {
 
 const HEADERS: Record<string, RegExp> = {
   title: /^(задач|название|заголовок|тема|что сделать|title|task|name|summary|subject)/i,
-  description: /^(опис|детал|коммент|подроб|description|details|notes?|comment)/i,
+  description: /^(опис|детал|коммент|подроб|следующ|результат|критер|description|details|notes?|comment|next step)/i,
   priority: /^(приоритет|важн|priority|prio)/i,
   status: /^(статус|состояние|этап|колонка|status|state|stage|column)/i,
   due_date: /^(срок|дедлайн|дата|до|due|deadline|date)/i,
@@ -108,6 +108,7 @@ function normPriority(v: string): Priority | undefined {
 function normStatus(v: string): Status | undefined {
   const s = v.trim().toLowerCase();
   if (!s) return undefined;
+  if (/^(не |not |ещё не|еще не)/.test(s) || /(ожида|not started|новая|new)/.test(s)) return "backlog";
   if (/(done|complete|готов|заверш|выполн|сделан|закрыт)/.test(s)) return "done";
   if (/(review|проверк|ревью|на согласован|тест)/.test(s)) return "review";
   if (/(progress|в работе|в процессе|делаю|начат|doing)/.test(s)) return "in_progress";
