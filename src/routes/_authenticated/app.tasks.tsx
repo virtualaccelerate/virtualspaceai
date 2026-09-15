@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { TaskTable } from "@/components/TaskTable";
 import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, Upload, User } from "lucide-react";
 import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { toast } from "sonner";
@@ -406,10 +407,10 @@ function TasksPage() {
         <TaskTable
           tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
           columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
-          priorityLabel={(p) => PRIORITIES.find((x) => x.id === p)?.label ?? p}
-          onOpen={(task) => openEdit(tasks.find((x) => x.id === task.id)!)}
-          onMove={(id, status) => moveTask(id, status)}
-          onDelete={(task) => setDeleteTarget(tasks.find((x) => x.id === task.id)!)}
+          priorityLabel={(p: TaskPriority) => PRIORITY_META[p]?.label ?? p}
+          onOpen={(task: { id: string }) => openEdit(tasks.find((x) => x.id === task.id)!)}
+          onMove={(id: string, status: TaskStatus) => moveTask(id, status)}
+          onDelete={(task: { id: string }) => setDeleteTarget(tasks.find((x) => x.id === task.id)!)}
           labels={{
             title: t("app.tasks.fTitle", "Задача"),
             status: t("app.tasks.fStatus", "Статус"),
