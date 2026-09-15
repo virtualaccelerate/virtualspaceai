@@ -242,13 +242,16 @@ function TasksPage() {
       if (!cancelled) setUserId(session.user.id);
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
-      if (ts) {
-        const rows = await listMembersFn({ data: { teamspace_id: ts } }).catch(() => []);
-        if (!cancelled) setMembers(rows);
-      }
+      // Tasks and members load in parallel — the board no longer waits for the member list.
       let query = supabase.from("tasks").select("*");
       query = ts ? query.eq("teamspace_id", ts) : query.eq("user_id", session.user.id);
+      const membersPromise = ts
+        ? listMembersFn({ data: { teamspace_id: ts } }).catch(() => [])
+        : Promise.resolve([]);
       const { data, error } = await query.order("status").order("position");
+      membersPromise.then((rows) => {
+        if (!cancelled) setMembers(rows);
+      });
       if (error) {
         toast.error(error.message);
       } else if (!cancelled) {
