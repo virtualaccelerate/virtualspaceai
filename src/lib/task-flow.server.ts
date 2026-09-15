@@ -17,11 +17,6 @@ async function tgApi() {
   return import("./telegram.server");
 }
 
-export function deadlineUtc(due: string): Date {
-  return new Date(`${due}T00:00:00.000Z`).getTime() +
-    (DEADLINE_HOUR_LOCAL - BISHKEK_OFFSET_HOURS) * 3600_000 as unknown as Date;
-}
-
 /** Milliseconds from now until the task deadline (negative = overdue). */
 export function msUntilDeadline(due: string, now = Date.now()): number {
   const base = new Date(`${due}T00:00:00.000Z`).getTime();
