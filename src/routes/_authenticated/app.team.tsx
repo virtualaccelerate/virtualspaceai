@@ -5,6 +5,7 @@ import { Users, Copy, Check, Send, Crown, Shield, User as UserIcon } from "lucid
 import { useTranslation } from "react-i18next";
 import { loadTeamOverview } from "@/lib/team.functions";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
+import TeamPerformance from "@/components/TeamPerformance";
 
 type Overview = Awaited<ReturnType<typeof loadTeamOverview>>;
 
@@ -19,12 +20,14 @@ function TeamPage() {
   const [data, setData] = useState<Overview>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [tsId, setTsId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     (async () => {
       try {
-        const tsId = await getActiveTeamspaceId();
-        const res = await load({ data: tsId ? { teamspace_id: tsId } : {} });
+        const active = (await getActiveTeamspaceId()) ?? undefined;
+        setTsId(active);
+        const res = await load({ data: active ? { teamspace_id: active } : {} });
         setData(res);
       } finally {
         setLoading(false);
@@ -124,6 +127,8 @@ function TeamPage() {
           </div>
         ))}
       </div>
+
+      <TeamPerformance teamspaceId={tsId} />
     </div>
   );
 }
