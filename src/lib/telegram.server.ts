@@ -237,6 +237,7 @@ async function handleStart(chatId: number, arg: string, username: string | null)
   await sendMessage(
     chatId,
     t(lang).linked((profile as any)?.full_name || (profile as any)?.email || ""),
+    { reply_markup: mainMenuKeyboard(lang) },
   );
 }
 
@@ -362,6 +363,36 @@ async function handleToday(link: Link, chatId: number, lang: Lang) {
   await sendMessage(chatId, `${header}\n\n${blocks.length ? blocks.join("\n\n") : empty}`);
 }
 
+// Period switcher shown under every report message
+function reportKeyboard(lang: Lang, active: "d" | "w" | "m") {
+  const mark = (k: string, label: string) => (k === active ? `• ${label}` : label);
+  return {
+    inline_keyboard: [[
+      { text: mark("d", lang === "ru" ? "День" : "Day"), callback_data: "report:d" },
+      { text: mark("w", lang === "ru" ? "Неделя" : "Week"), callback_data: "report:w" },
+      { text: mark("m", lang === "ru" ? "Месяц" : "Month"), callback_data: "report:m" },
+    ]],
+  };
+}
+
+// Persistent bottom menu so the report is always one tap away
+export function mainMenuKeyboard(lang: Lang) {
+  return {
+    keyboard: [
+      [
+        { text: lang === "ru" ? "📊 Отчёт" : "📊 Report" },
+        { text: lang === "ru" ? "🗓 Сегодня" : "🗓 Today" },
+      ],
+      [
+        { text: lang === "ru" ? "📋 Задачи" : "📋 Tasks" },
+        { text: lang === "ru" ? "🚀 Приложение" : "🚀 App" },
+      ],
+    ],
+    resize_keyboard: true,
+    is_persistent: true,
+  };
+}
+
 async function handleReport(link: Link, chatId: number, periodArg: string, lang: Lang) {
   const arg = periodArg.trim().toLowerCase();
   const days = arg.startsWith("m") || arg.startsWith("мес") ? 30 : arg.startsWith("w") || arg.startsWith("нед") ? 7 : 1;
@@ -410,7 +441,9 @@ async function handleReport(link: Link, chatId: number, periodArg: string, lang:
   );
   if (summary) text += `\n\n🧠 ${summary}`;
 
-  await sendMessage(chatId, text);
+  await sendMessage(chatId, text, {
+    reply_markup: reportKeyboard(lang, days === 30 ? "m" : days === 7 ? "w" : "d"),
+  });
 }
 
 async function aiSummary(lang: Lang, facts: string): Promise<string | null> {
@@ -623,6 +656,13 @@ async function handleCallback(cb: any) {
   const lang = pickLang(link.language);
   const [action, taskId] = String(cb.data ?? "").split(":");
 
+  if (action === "report") {
+    await tg("answerCallbackQuery", { callback_query_id: cb.id });
+    const period = taskId === "m" ? "month" : taskId === "w" ? "week" : "day";
+    await handleReport(link, chatId, period, lang);
+    return;
+  }
+
   // Task workflow buttons: start work, submit proof, approve / send back
   if (["begin", "submit", "approve", "rework"].includes(action)) {
     await handleFlowCallback(cb, link, chatId, action, taskId, lang);
@@ -812,6 +852,21 @@ export async function handleUpdate(update: any) {
   if (!chatId || !text) return;
 
 
+  // Menu buttons arrive as plain text — map them onto the matching command
+  const MENU_MAP: Record<string, string> = {
+    "📊 отчёт": "/report",
+    "📊 отчет": "/report",
+    "📊 report": "/report",
+    "🗓 сегодня": "/today",
+    "🗓 today": "/today",
+    "📋 задачи": "/tasks",
+    "📋 tasks": "/tasks",
+    "🚀 приложение": "/app",
+    "🚀 app": "/app",
+  };
+  const mapped = MENU_MAP[text.trim().toLowerCase()];
+  if (mapped) text = mapped;
+
   const [rawCmd, ...rest] = text.split(/\s+/);
   const arg = text.slice(rawCmd.length).trim();
   const cmd = rawCmd.toLowerCase().replace(/@[\w_]+$/, "");
@@ -836,7 +891,8 @@ export async function handleUpdate(update: any) {
 
   switch (cmd) {
     case "/help":
-      await sendMessage(chatId, t(lang).help);
+    case "/menu":
+      await sendMessage(chatId, t(lang).help, { reply_markup: mainMenuKeyboard(lang) });
       return;
     case "/app":
     case "/open":
