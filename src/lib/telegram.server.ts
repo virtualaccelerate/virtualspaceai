@@ -558,6 +558,62 @@ const CYCLE: Record<string, string> = {
   done: "backlog",
 };
 
+async function handleFlowCallback(
+  cb: any,
+  link: Link,
+  chatId: number,
+  action: string,
+  taskId: string,
+  lang: Lang,
+) {
+  const { data: task } = await supabaseAdmin
+    .from("tasks")
+    .select("id, title, status, assignee_id, user_id, teamspace_id")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (!task) {
+    await tg("answerCallbackQuery", { callback_query_id: cb.id, text: t(lang).notFound });
+    return;
+  }
+  const flow = await import("./task-flow.server");
+  const ack = (text: string) => tg("answerCallbackQuery", { callback_query_id: cb.id, text });
+
+  if (action === "begin") {
+    if (task.assignee_id !== link.user_id) return ack("Это не ваша задача");
+    await supabaseAdmin.from("tasks").update({ status: "in_progress" }).eq("id", task.id);
+    await ack("Взято в работу");
+    await sendMessage(chatId, `🟪 В работе: ${task.title}`, {
+      reply_markup: flow.assigneeKeyboard(task.id, "in_progress"),
+    });
+    return;
+  }
+
+  if (action === "submit") {
+    if (task.assignee_id !== link.user_id) return ack("Это не ваша задача");
+    await supabaseAdmin
+      .from("telegram_links")
+      .update({ pending_proof_task_id: task.id })
+      .eq("user_id", link.user_id);
+    await ack("Отправьте пруф");
+    await sendMessage(
+      chatId,
+      `📎 Сдача задачи: ${task.title}\n\nПришлите файл, скриншот или ссылку — можно с комментарием. Отмена: /cancel`,
+    );
+    return;
+  }
+
+  // approve / rework — only the reviewer (creator or workspace owner)
+  const approverId = await flow.approverFor(task as any);
+  if (approverId !== link.user_id) return ack("Решение принимает руководитель");
+  const decision = action === "approve" ? "approve" : "rework";
+  await flow.decideTask({ taskId: task.id, reviewerId: link.user_id, decision });
+  await ack(decision === "approve" ? "Принято" : "Отправлено на доработку");
+  await sendMessage(
+    chatId,
+    decision === "approve" ? `🟩 Принято: ${task.title}` : `↩️ На доработку: ${task.title}`,
+  );
+}
+
 async function handleCallback(cb: any) {
   const chatId = cb.message?.chat?.id;
   if (!chatId) return;
