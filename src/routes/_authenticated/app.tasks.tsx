@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { TaskTable } from "@/components/TaskTable";
 import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, Upload, User } from "lucide-react";
 import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { toast } from "sonner";
@@ -184,6 +185,17 @@ function TasksPage() {
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [view, setView] = useState<"board" | "table">("board");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("tasks:view");
+    if (saved === "table" || saved === "board") setView(saved);
+  }, []);
+
+  function changeView(next: "board" | "table") {
+    setView(next);
+    localStorage.setItem("tasks:view", next);
+  }
 
   async function submitForReview(task: Task) {
     const note = window.prompt("Ссылка или комментарий к сдаче (необязательно)") ?? "";
@@ -230,13 +242,16 @@ function TasksPage() {
       if (!cancelled) setUserId(session.user.id);
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
-      if (ts) {
-        const rows = await listMembersFn({ data: { teamspace_id: ts } }).catch(() => []);
-        if (!cancelled) setMembers(rows);
-      }
+      // Tasks and members load in parallel — the board no longer waits for the member list.
       let query = supabase.from("tasks").select("*");
       query = ts ? query.eq("teamspace_id", ts) : query.eq("user_id", session.user.id);
+      const membersPromise = ts
+        ? listMembersFn({ data: { teamspace_id: ts } }).catch(() => [])
+        : Promise.resolve([]);
       const { data, error } = await query.order("status").order("position");
+      membersPromise.then((rows) => {
+        if (!cancelled) setMembers(rows);
+      });
       if (error) {
         toast.error(error.message);
       } else if (!cancelled) {
@@ -353,6 +368,26 @@ function TasksPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border p-0.5">
+            <button
+              onClick={() => changeView("board")}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-medium transition",
+                view === "board" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("app.tasks.viewBoard", "Доска")}
+            </button>
+            <button
+              onClick={() => changeView("table")}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-medium transition",
+                view === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("app.tasks.viewTable", "Таблица")}
+            </button>
+          </div>
           <Button
             variant={onlyMine ? "default" : "outline"}
             onClick={() => setOnlyMine((v) => !v)}
@@ -371,6 +406,24 @@ function TasksPage() {
 
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
+      ) : view === "table" ? (
+        <TaskTable
+          tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
+          columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
+          priorityLabel={(p: TaskPriority) => PRIORITY_META[p]?.label ?? p}
+          onOpen={(task: { id: string }) => openEdit(tasks.find((x) => x.id === task.id)!)}
+          onMove={(id: string, status: TaskStatus) => moveTask(id, status)}
+          onDelete={(task: { id: string }) => setDeleteTarget(tasks.find((x) => x.id === task.id)!)}
+          labels={{
+            title: t("app.tasks.fTitle", "Задача"),
+            status: t("app.tasks.fStatus", "Статус"),
+            priority: t("app.tasks.fPriority", "Приоритет"),
+            assignee: t("app.tasks.fAssignee", "Исполнитель"),
+            due: t("app.tasks.fDue", "Срок"),
+            created: t("app.tasks.createdAt", "Создано"),
+            empty: t("app.tasks.empty", "Задач пока нет"),
+          }}
+        />
       ) : (
         <div className="-mx-4 sm:-mx-6 overflow-x-auto pb-4">
           <div className="flex gap-4 px-4 sm:px-6 min-w-max">
