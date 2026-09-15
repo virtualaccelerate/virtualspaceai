@@ -73,6 +73,9 @@ type Task = {
   due_date: string | null;
   position: number;
   created_at?: string | null;
+  proof_url?: string | null;
+  proof_note?: string | null;
+  submitted_at?: string | null;
 };
 
 const COLUMNS: {
