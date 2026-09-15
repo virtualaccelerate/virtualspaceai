@@ -54,18 +54,17 @@ export async function createTeamspace(input: {
 }): Promise<string> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Not signed in");
-  const { data, error } = await supabase
-    .from("teamspaces")
-    .insert({
-      name: input.name.trim(),
-      team_size: (input.teamSize ?? "1-5") as any,
-      business_type: (input.businessType ?? "startup") as any,
-      owner_id: auth.user.id,
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  const id = (data as any).id as string;
+  // The id is generated client-side: RETURNING is blocked by the SELECT policy,
+  // because membership is only added by an AFTER INSERT trigger.
+  const id = crypto.randomUUID();
+  const { error } = await supabase.from("teamspaces").insert({
+    id,
+    name: input.name.trim(),
+    team_size: (input.teamSize ?? "1-5") as any,
+    business_type: (input.businessType ?? "startup") as any,
+    owner_id: auth.user.id,
+  });
+  if (error) throw new Error(error.message || error.details || error.code || "Insert failed");
   await setActiveTeamspace(id);
   return id;
 }
