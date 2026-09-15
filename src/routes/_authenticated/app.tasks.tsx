@@ -454,6 +454,53 @@ function TasksPage() {
                             </p>
                           )}
 
+                          {task.status === "review" && (
+                            <div
+                              className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {task.proof_note && (
+                                <p className="text-[11px] text-foreground/80 line-clamp-3">{task.proof_note}</p>
+                              )}
+                              {task.proof_url && (
+                                <a
+                                  href={task.proof_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-1 inline-block text-[11px] font-medium text-primary underline underline-offset-2"
+                                >
+                                  Открыть подтверждение
+                                </a>
+                              )}
+                              <div className="mt-2 flex gap-1.5">
+                                <button
+                                  onClick={() => decide(task, "approve")}
+                                  className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
+                                >
+                                  Принять
+                                </button>
+                                <button
+                                  onClick={() => decide(task, "rework")}
+                                  className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
+                                >
+                                  На доработку
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {isMine && task.status !== "review" && task.status !== "done" && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                submitForReview(task);
+                              }}
+                              className="mt-2 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
+                            >
+                              Сдать на проверку
+                            </button>
+                          )}
+
                           <div className="mt-3 flex items-center gap-1.5">
                             {task.assignee_name ? (
                               <span
