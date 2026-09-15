@@ -723,6 +723,60 @@ export async function handleUpdate(update: any) {
   const chatId = message?.chat?.id;
   let text: string = (message?.text ?? message?.caption ?? "").trim();
 
+  // Proof submission: the employee pressed "Сдать" and now sends a file, screenshot or link
+  if (chatId) {
+    const pendingLink = await findLink(chatId);
+    if (pendingLink?.pending_proof_task_id) {
+      const clear = () =>
+        supabaseAdmin
+          .from("telegram_links")
+          .update({ pending_proof_task_id: null })
+          .eq("user_id", pendingLink.user_id);
+
+      if (/^\/cancel/i.test(text)) {
+        await clear();
+        await sendMessage(chatId, "Сдача отменена.");
+        return;
+      }
+
+      const fileId =
+        message?.document?.file_id ??
+        (Array.isArray(message?.photo) ? message.photo[message.photo.length - 1]?.file_id : null) ??
+        message?.video?.file_id ??
+        null;
+
+      let proofUrl: string | null = null;
+      if (fileId) {
+        const info = await tg<any>("getFile", { file_id: fileId });
+        const path = info?.result?.file_path;
+        if (path) proofUrl = `${TELEGRAM_API}/file/bot${botToken()}/${path}`;
+      }
+      const linkInText = text.match(/https?:\/\/\S+/)?.[0] ?? null;
+      if (!proofUrl && linkInText) proofUrl = linkInText;
+
+      if (!proofUrl && !text) {
+        await sendMessage(chatId, "Пришлите файл, скриншот или ссылку как подтверждение. Отмена: /cancel");
+        return;
+      }
+
+      const { submitTaskProof } = await import("./task-flow.server");
+      const row = await submitTaskProof({
+        taskId: pendingLink.pending_proof_task_id,
+        assigneeId: pendingLink.user_id,
+        proofUrl,
+        proofNote: text || null,
+      });
+      await clear();
+      await sendMessage(
+        chatId,
+        row
+          ? `🟨 Задача отправлена на проверку: ${row.title}\n\nРуководитель получил уведомление.`
+          : t("ru").notFound,
+      );
+      return;
+    }
+  }
+
   const voice = message?.voice ?? message?.audio ?? message?.video_note;
   if (chatId && !text && voice?.file_id) {
     const link0 = await findLink(chatId);
