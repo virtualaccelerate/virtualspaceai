@@ -79,7 +79,8 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         let sent = 0;
 
         for (const link of (links as any[]) ?? []) {
-          if ((link.digest_hour ?? 4) !== hourNow) continue;
+          // 09:00 Bishkek = 03:00 UTC by default
+          if ((link.digest_hour ?? 3) !== hourNow) continue;
 
           const { data: profile } = await supabaseAdmin
             .from("profiles")
