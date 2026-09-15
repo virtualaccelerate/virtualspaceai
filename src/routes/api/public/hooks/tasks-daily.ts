@@ -119,7 +119,12 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
           sent++;
         }
 
-        return Response.json({ ok: true, sent });
+        return Response.json({
+          ok: true,
+          sent,
+          reminders: reminders.sent,
+          evening: evening.sent,
+        });
       },
     },
   },
