@@ -178,6 +178,16 @@ function TasksPage() {
   const [members, setMembers] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
+  async function reloadTasks() {
+    const { data: session } = await supabase.auth.getUser();
+    if (!session.user) return;
+    let query = supabase.from("tasks").select("*");
+    query = teamspaceId ? query.eq("teamspace_id", teamspaceId) : query.eq("user_id", session.user.id);
+    const { data } = await query.order("status").order("position");
+    setTasks((data ?? []) as Task[]);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -316,6 +326,9 @@ function TasksPage() {
             className="gap-2"
           >
             <User className="h-4 w-4" /> {t("app.tasks.myTasks", "Мои задачи")}
+          </Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+            <Upload className="h-4 w-4" /> {t("app.tasks.import", "Импорт из таблицы")}
           </Button>
           <Button onClick={() => openCreate()} className="gap-2">
             <Plus className="h-4 w-4" /> New task
