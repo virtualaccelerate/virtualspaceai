@@ -60,8 +60,14 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         }
 
         const { sendMessage } = await import("@/lib/telegram.server");
+        const { runDeadlineReminders, runEveningReport } = await import("@/lib/task-flow.server");
 
         const hourNow = new Date().getUTCHours();
+
+        // Deadline reminders (3h / 1h / overdue) run on every hourly sweep.
+        const reminders = await runDeadlineReminders().catch(() => ({ sent: 0 }));
+        // Evening workspace report at 19:00 Bishkek (13:00 UTC).
+        const evening = hourNow === 13 ? await runEveningReport().catch(() => ({ sent: 0 })) : { sent: 0 };
         const { data: links } = await supabaseAdmin
           .from("telegram_links")
           .select("user_id, chat_id, language, daily_digest, digest_hour")
