@@ -852,6 +852,21 @@ export async function handleUpdate(update: any) {
   if (!chatId || !text) return;
 
 
+  // Menu buttons arrive as plain text — map them onto the matching command
+  const MENU_MAP: Record<string, string> = {
+    "📊 отчёт": "/report",
+    "📊 отчет": "/report",
+    "📊 report": "/report",
+    "🗓 сегодня": "/today",
+    "🗓 today": "/today",
+    "📋 задачи": "/tasks",
+    "📋 tasks": "/tasks",
+    "🚀 приложение": "/app",
+    "🚀 app": "/app",
+  };
+  const mapped = MENU_MAP[text.trim().toLowerCase()];
+  if (mapped) text = mapped;
+
   const [rawCmd, ...rest] = text.split(/\s+/);
   const arg = text.slice(rawCmd.length).trim();
   const cmd = rawCmd.toLowerCase().replace(/@[\w_]+$/, "");
