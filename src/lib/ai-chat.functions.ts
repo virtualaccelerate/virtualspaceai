@@ -293,6 +293,14 @@ export const askZukha = createServerFn({ method: "POST" })
       ? `ACTIVE AGENT MODE: ${AGENT_PROMPTS[data.agent_id]}\n\n`
       : "";
 
+    let companyBlock = "";
+    try {
+      const { buildCompanyContext } = await import("./company-context.server");
+      companyBlock = await buildCompanyContext(data.teamspace_id);
+    } catch {
+      companyBlock = "";
+    }
+
     const systemPrompt =
       agentPreamble +
       "You are Virtual Space AI, the assistant inside Virtual Space — an AI virtual office for teams. " +
