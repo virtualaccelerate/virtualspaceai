@@ -183,6 +183,34 @@ function TasksPage() {
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
+  async function submitForReview(task: Task) {
+    const note = window.prompt("Ссылка или комментарий к сдаче (необязательно)") ?? "";
+    const isLink = /^https?:\/\//i.test(note.trim());
+    try {
+      await submitTaskFn({
+        data: {
+          id: task.id,
+          proof_url: isLink ? note.trim() : null,
+          proof_note: isLink ? null : note.trim() || null,
+        },
+      });
+      toast.success("Отправлено на проверку");
+      await reloadTasks();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Не удалось отправить");
+    }
+  }
+
+  async function decide(task: Task, decision: "approve" | "rework") {
+    try {
+      await reviewTaskFn({ data: { id: task.id, decision } });
+      toast.success(decision === "approve" ? "Задача принята" : "Возвращена на доработку");
+      await reloadTasks();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Не удалось сохранить решение");
+    }
+  }
+
   async function reloadTasks() {
     const { data: session } = await supabase.auth.getUser();
     if (!session.user) return;
