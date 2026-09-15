@@ -654,7 +654,15 @@ function CreateTeamspaceModal({ onClose, onCreated }: { onClose: () => void; onC
       await createTeamspace({ name, teamSize, businessType });
       onCreated();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const msg =
+        e instanceof Error
+          ? e.message
+          : typeof e === "object" && e
+            ? ((e as { message?: string; details?: string }).message ??
+               (e as { details?: string }).details ??
+               JSON.stringify(e))
+            : String(e);
+      setError(msg);
     } finally {
       setLoading(false);
     }
