@@ -192,12 +192,13 @@ type Link = {
   teamspace_id: string | null;
   chat_id: number | null;
   language: string | null;
+  pending_proof_task_id?: string | null;
 };
 
 async function findLink(chatId: number): Promise<Link | null> {
   const { data } = await supabaseAdmin
     .from("telegram_links")
-    .select("user_id, teamspace_id, chat_id, language")
+    .select("user_id, teamspace_id, chat_id, language, pending_proof_task_id")
     .eq("chat_id", chatId)
     .maybeSingle();
   return (data as Link) ?? null;
