@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
-import { createTask, deleteTask, listTaskMembers, updateTask } from "@/lib/tasks.functions";
+import { createTask, deleteTask, listTaskMembers, reviewTask, submitTaskForReview, updateTask } from "@/lib/tasks.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,6 +168,8 @@ function TasksPage() {
   const updateTaskFn = useServerFn(updateTask);
   const deleteTaskFn = useServerFn(deleteTask);
   const listMembersFn = useServerFn(listTaskMembers);
+  const submitTaskFn = useServerFn(submitTaskForReview);
+  const reviewTaskFn = useServerFn(reviewTask);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
