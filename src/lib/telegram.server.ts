@@ -565,11 +565,18 @@ async function handleCallback(cb: any) {
   if (!link) return;
   const lang = pickLang(link.language);
   const [action, taskId] = String(cb.data ?? "").split(":");
+
+  // Task workflow buttons: start work, submit proof, approve / send back
+  if (["begin", "submit", "approve", "rework"].includes(action)) {
+    await handleFlowCallback(cb, link, chatId, action, taskId, lang);
+    return;
+  }
+
   const { data: task } = await supabaseAdmin
     .from("tasks")
     .select("id, title, status")
     .eq("id", taskId)
-    .eq("user_id", link.user_id)
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .maybeSingle();
   if (!task) {
     await tg("answerCallbackQuery", { callback_query_id: cb.id, text: t(lang).notFound });
