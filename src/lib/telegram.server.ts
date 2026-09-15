@@ -56,6 +56,7 @@ export async function notifyTaskAssignee(input: {
   status?: string | null;
   priority?: string | null;
   dueDate?: string | null;
+  taskId?: string | null;
 }) {
   if (!input.assigneeId || input.assigneeId === input.actorId) return;
   const { data: link } = await supabaseAdmin
