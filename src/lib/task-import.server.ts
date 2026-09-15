@@ -135,9 +135,37 @@ function normDate(v: string): string | null {
   return null;
 }
 
+const TRANSLIT: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i",
+  й: "i", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t",
+  у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "sch", ъ: "", ы: "y",
+  ь: "", э: "e", ю: "yu", я: "ya", ү: "u", ө: "o", ң: "n", ұ: "u", қ: "k", ә: "a", і: "i",
+};
+
+/** Cyrillic and Latin spellings of the same name compared on one alphabet. */
+function latinKey(v: string) {
+  return v
+    .toLowerCase()
+    .split("")
+    .map((c) => TRANSLIT[c] ?? c)
+    .join("")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/kh/g, "h")
+    .replace(/[aeiouy]/g, "")
+    .trim();
+}
+
 function matchMember(raw: string, members: { id: string; name: string; email: string | null }[]) {
   const s = raw.trim().toLowerCase();
   if (!s) return null;
+  const key = latinKey(s);
+  if (key.length > 1) {
+    const byKey = members.find((m) => {
+      const parts = [latinKey(m.name), latinKey((m.email ?? "").split("@")[0] ?? "")];
+      return parts.some((p) => p && (p === key || p.split(" ").includes(key) || p.startsWith(key)));
+    });
+    if (byKey) return byKey;
+  }
   const exact = members.find(
     (m) => m.name.toLowerCase() === s || (m.email ?? "").toLowerCase() === s,
   );
