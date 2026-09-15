@@ -83,7 +83,14 @@ export async function notifyTaskAssignee(input: {
     input.priority ? `${lang === "en" ? "Priority" : "Приоритет"}: ${input.priority}` : null,
     input.dueDate ? `${lang === "en" ? "Due" : "Срок"}: ${input.dueDate}` : null,
   ].filter(Boolean);
-  await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`);
+  let reply_markup: Record<string, unknown> | undefined;
+  if (input.taskId && input.kind !== "deleted") {
+    const { assigneeKeyboard } = await import("./task-flow.server");
+    reply_markup = assigneeKeyboard(input.taskId, input.status ?? "backlog");
+  }
+  await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`, {
+    ...(reply_markup ? { reply_markup } : {}),
+  });
 }
 
 
