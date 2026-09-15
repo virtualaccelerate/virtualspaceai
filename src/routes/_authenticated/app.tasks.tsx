@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, User } from "lucide-react";
+import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, Upload, User } from "lucide-react";
+import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
@@ -177,6 +178,16 @@ function TasksPage() {
   const [members, setMembers] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
+  async function reloadTasks() {
+    const { data: session } = await supabase.auth.getUser();
+    if (!session.user) return;
+    let query = supabase.from("tasks").select("*");
+    query = teamspaceId ? query.eq("teamspace_id", teamspaceId) : query.eq("user_id", session.user.id);
+    const { data } = await query.order("status").order("position");
+    setTasks((data ?? []) as Task[]);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -315,6 +326,9 @@ function TasksPage() {
             className="gap-2"
           >
             <User className="h-4 w-4" /> {t("app.tasks.myTasks", "Мои задачи")}
+          </Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+            <Upload className="h-4 w-4" /> {t("app.tasks.import", "Импорт из таблицы")}
           </Button>
           <Button onClick={() => openCreate()} className="gap-2">
             <Plus className="h-4 w-4" /> New task
@@ -624,6 +638,12 @@ function TasksPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <TaskImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        teamspaceId={teamspaceId}
+        onImported={() => { void reloadTasks(); }}
+      />
     </div>
   );
 }
