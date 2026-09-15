@@ -29,6 +29,13 @@
       "when": 1789444300815,
       "tag": "0003_task_proof_and_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789444908630,
+      "tag": "0004_perf_indexes",
+      "breakpoints": true
     }
   ]
 }

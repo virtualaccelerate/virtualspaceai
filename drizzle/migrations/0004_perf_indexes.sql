@@ -1,0 +1,10 @@
+CREATE INDEX IF NOT EXISTS idx_tasks_teamspace_status_position ON public.tasks (teamspace_id, status, position);
+CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON public.tasks (assignee_id) WHERE assignee_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON public.tasks (due_date) WHERE due_date IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON public.notifications (user_id, read_at, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation ON public.chat_messages (conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_conversations_user ON public.chat_conversations (user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_documents_teamspace ON public.documents (teamspace_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_activity_events_teamspace_created ON public.activity_events (teamspace_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_activity_events_created ON public.activity_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_teamspace_members_user ON public.teamspace_members (user_id);
