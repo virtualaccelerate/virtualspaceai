@@ -78,6 +78,7 @@ async function notifyAssignment(input: {
     actorId: input.actorId,
     actorName,
     kind: input.kind,
+    taskId: input.taskId ?? null,
     title: input.title,
     status: input.status,
     priority: input.priority,
