@@ -402,6 +402,24 @@ function TasksPage() {
 
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
+      ) : view === "table" ? (
+        <TaskTable
+          tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
+          columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
+          priorityLabel={(p) => PRIORITIES.find((x) => x.id === p)?.label ?? p}
+          onOpen={(task) => openEdit(tasks.find((x) => x.id === task.id)!)}
+          onMove={(id, status) => moveTask(id, status)}
+          onDelete={(task) => setDeleteTarget(tasks.find((x) => x.id === task.id)!)}
+          labels={{
+            title: t("app.tasks.fTitle", "Задача"),
+            status: t("app.tasks.fStatus", "Статус"),
+            priority: t("app.tasks.fPriority", "Приоритет"),
+            assignee: t("app.tasks.fAssignee", "Исполнитель"),
+            due: t("app.tasks.fDue", "Срок"),
+            created: t("app.tasks.createdAt", "Создано"),
+            empty: t("app.tasks.empty", "Задач пока нет"),
+          }}
+        />
       ) : (
         <div className="-mx-4 sm:-mx-6 overflow-x-auto pb-4">
           <div className="flex gap-4 px-4 sm:px-6 min-w-max">
