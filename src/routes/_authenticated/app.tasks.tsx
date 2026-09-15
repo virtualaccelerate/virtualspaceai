@@ -184,6 +184,17 @@ function TasksPage() {
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [view, setView] = useState<"board" | "table">("board");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("tasks:view");
+    if (saved === "table" || saved === "board") setView(saved);
+  }, []);
+
+  function changeView(next: "board" | "table") {
+    setView(next);
+    localStorage.setItem("tasks:view", next);
+  }
 
   async function submitForReview(task: Task) {
     const note = window.prompt("Ссылка или комментарий к сдаче (необязательно)") ?? "";
