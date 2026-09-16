@@ -431,9 +431,15 @@ function TasksPage() {
           tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
           columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
           priorityLabel={(p: TaskPriority) => PRIORITY_META[p]?.label ?? p}
-          onOpen={(task: { id: string }) => openEdit(tasks.find((x) => x.id === task.id)!)}
+          onOpen={(task: { id: string }) => {
+            const found = tasks.find((x) => x.id === task.id);
+            if (found) openEdit(found);
+          }}
           onMove={(id: string, status: TaskStatus) => moveTask(id, status)}
-          onDelete={(task: { id: string }) => setDeleteTarget(tasks.find((x) => x.id === task.id)!)}
+          onDelete={(task: { id: string }) => {
+            const found = tasks.find((x) => x.id === task.id);
+            if (found) setDeleteTarget(found);
+          }}
           labels={{
             title: t("app.tasks.fTitle", "Задача"),
             status: t("app.tasks.fStatus", "Статус"),
