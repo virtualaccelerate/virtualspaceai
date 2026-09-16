@@ -78,6 +78,12 @@ export const askZukha = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const currentDate = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Bishkek",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
 
     // Load knowledge base context for this teamspace (relevance-ranked)
     let knowledgeBlock = "";
@@ -222,7 +228,7 @@ export const askZukha = createServerFn({ method: "POST" })
         .limit(60);
       if (myTasks && myTasks.length) {
         tasksBlock =
-          `\n\nCURRENT TASKS (today is ${new Date().toISOString().slice(0, 10)}; use for questions about workload and deadlines):\n` +
+          `\n\nCURRENT TASKS (today is ${currentDate}; use for questions about workload and deadlines):\n` +
           myTasks
             .map(
               (x: any) =>
@@ -304,6 +310,7 @@ export const askZukha = createServerFn({ method: "POST" })
     const systemPrompt =
       agentPreamble +
       "You are Virtual Space AI, the assistant inside Virtual Space — an AI virtual office for teams. " +
+      `CURRENT DATE: ${currentDate} in Asia/Bishkek (UTC+6). This is authoritative. Never infer the current date from conversation history, examples, files, or model knowledge. When asked for today's date, use this exact date. ` +
       "Be concise, warm, and practical. Reply in the user's language. " +
       "Reply as plain text only: do NOT use Markdown, asterisks (*), underscores (_), backticks, headings (#), or bullet symbols. " +
       "Write in normal sentences and short paragraphs; if you need a list, use numbers like '1.' or plain lines. " +
@@ -314,7 +321,7 @@ export const askZukha = createServerFn({ method: "POST" })
 
       "TASK CREATION: When the user asks you to create, add, or plan a task (задача, таск, todo, task), emit ONE token per task on its own line using EXACTLY this syntax:\n" +
       "[[task:Title||priority||YYYY-MM-DD||description]]\n" +
-      "Rules: priority ∈ low|medium|high|urgent (default medium). Date is optional — leave empty as ||||. Description optional. Example: [[task:Prepare Q3 report||high||2026-08-01||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
+       "Rules: priority ∈ low|medium|high|urgent (default medium). Date is required and cannot be earlier than CURRENT DATE. Description optional. Example: [[task:Prepare Q3 report||high||2026-09-20||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
       companyBlock +
       knowledgeBlock +
       financeBlock +
