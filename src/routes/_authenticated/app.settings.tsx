@@ -64,21 +64,21 @@ function SettingsPage() {
         <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
           <SettingsIcon className="h-5 w-5 text-primary" />
         </div>
-        <h1 className="font-display text-2xl text-white">{t("app.nav.settings", "Settings")}</h1>
+        <h1 className="font-display text-2xl text-foreground">{t("app.nav.settings", "Settings")}</h1>
       </div>
       <div className="grid gap-3">
         {items.map((it) => (
           <Link
             key={it.to}
             to={it.to}
-            className="glass-strong rounded-2xl p-4 flex items-center gap-4 hover:bg-white/5 transition"
+            className="glass-strong rounded-lg p-4 flex items-center gap-4 hover:bg-accent/40 transition"
           >
-            <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center">
-              <it.icon className="h-4 w-4 text-white/70" />
+            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+              <it.icon className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <div className="text-sm font-semibold text-white">{it.title}</div>
-              <div className="text-xs text-white/50">{it.desc}</div>
+              <div className="text-sm font-semibold text-foreground">{it.title}</div>
+              <div className="text-xs text-muted-foreground">{it.desc}</div>
             </div>
           </Link>
         ))}
