@@ -568,9 +568,9 @@ function Landing() {
                     { icon: Zap, label: t("newEra.pill2") },
                     { icon: Workflow, label: t("newEra.pill3") },
                   ].map((p, i) => (
-                    <div key={i} className="glass rounded-2xl px-4 py-3 flex items-center gap-2.5">
-                      <p.icon className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
-                      <span className="text-sm text-white/85">{p.label}</span>
+                    <div key={i} className="glass rounded-2xl px-4 py-3 flex items-start gap-2.5 min-h-[56px]">
+                      <p.icon className="h-4 w-4 mt-0.5 text-primary shrink-0" strokeWidth={1.5} />
+                      <span className="min-w-0 text-sm leading-snug text-white/85 hyphens-auto break-words">{p.label}</span>
                     </div>
                   ))}
                 </div>
