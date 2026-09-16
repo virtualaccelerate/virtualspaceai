@@ -58,14 +58,12 @@ export async function notifyTaskAssignee(input: {
   dueDate?: string | null;
   taskId?: string | null;
 }) {
-  if (!input.assigneeId || input.assigneeId === input.actorId) return;
-  const { data: link } = await supabaseAdmin
-    .from("telegram_links")
-    .select("chat_id, language")
-    .eq("user_id", input.assigneeId)
-    .not("chat_id", "is", null)
-    .maybeSingle();
-  if (!link?.chat_id) return;
+  if (!input.assigneeId || input.assigneeId === input.actorId) return false;
+  const [{ data: link }, { data: profile }] = await Promise.all([
+    supabaseAdmin.from("telegram_links").select("chat_id, language").eq("user_id", input.assigneeId).not("chat_id", "is", null).maybeSingle(),
+    supabaseAdmin.from("profiles").select("email").eq("id", input.assigneeId).maybeSingle(),
+  ]);
+  if (!profile?.email || !link?.chat_id) return false;
 
   const lang = pickLang(link.language);
   const heading = lang === "en"
@@ -88,9 +86,10 @@ export async function notifyTaskAssignee(input: {
     const { assigneeKeyboard } = await import("./task-flow.server");
     reply_markup = assigneeKeyboard(input.taskId, input.status ?? "backlog");
   }
-  await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`, {
+  const response = await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`, {
     ...(reply_markup ? { reply_markup } : {}),
-  });
+  }) as { ok?: boolean };
+  return response.ok === true;
 }
 
 

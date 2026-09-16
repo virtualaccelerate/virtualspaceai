@@ -27,7 +27,8 @@ export const CreateTasksBulkSchema = z.object({
 export type PreviewTasksInput = z.infer<typeof PreviewTasksSchema>;
 export type ImportRow = z.infer<typeof ImportRowSchema>;
 
-export type PreviewRow = ImportRow & {
+export type PreviewRow = Omit<ImportRow, "due_date"> & {
+  due_date: string | null;
   sheet: string;
   row_number: number;
   assignee_raw: string | null;
