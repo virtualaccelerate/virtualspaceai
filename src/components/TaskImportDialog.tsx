@@ -94,14 +94,9 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...p } : r)));
 
   const selected = rows.filter((r) => r.include);
-  const missingDeadline = selected.some((r) => !r.due_date);
 
   const create = async () => {
     if (!teamspaceId || selected.length === 0) return;
-    if (missingDeadline) {
-      toast.error(t("app.import.deadlineRequired", "Укажите дедлайн для каждой выбранной задачи"));
-      return;
-    }
     setCreating(true);
     try {
       const res = await bulk({
