@@ -5,7 +5,7 @@ import {
   Bot, Users, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  Plus, FileText, KanbanSquare, TrendingUp, Plug, GraduationCap, Briefcase,
+  Plus, FileText, KanbanSquare, TrendingUp, Plug, Briefcase,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -149,8 +149,6 @@ function AuthenticatedLayout() {
     { to: "/app/tasks", label: t("app.nav.taskBoard", "Task Board"), subtitle: t("app.nav.taskBoardSubtitle", "Team tasks & deadlines"), icon: KanbanSquare },
     { to: "/app/agents", label: t("app.nav.aiAgents"), subtitle: t("app.nav.aiAgentsSubtitle", "Automated assistants"), icon: Bot },
     { to: "/app/financials", label: t("app.nav.financials"), subtitle: t("app.nav.financialsSubtitle", "Key metrics & reports"), icon: TrendingUp },
-    { to: "/app/mentors", label: t("app.nav.mentors", "Mentors"), subtitle: t("app.nav.mentorsSubtitle", "Book expert sessions"), icon: Users },
-    { to: "/app/courses", label: t("app.nav.courses", "Courses"), subtitle: t("app.nav.coursesSubtitle", "Learn & grow"), icon: BookOpen },
     { to: "/app/solutions", label: t("app.nav.solutions", "Solutions"), subtitle: t("app.nav.solutionsSubtitle", "Startup marketplace"), icon: Briefcase },
     { to: "/app/integrations", label: t("app.nav.integrations", "Integrations"), subtitle: t("app.nav.integrationsSubtitle", "Connect your tools"), icon: Plug },
   ];

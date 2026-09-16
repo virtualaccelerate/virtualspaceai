@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GraduationCap, BookOpen, Users, HelpCircle, PlayCircle } from "lucide-react";
+import { GraduationCap, BookOpen, HelpCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_authenticated/app/learn")({
@@ -11,8 +11,6 @@ function LearnPage() {
   const { t } = useTranslation();
 
   const cards = [
-    { key: "courses", icon: PlayCircle },
-    { key: "mentors", icon: Users },
     { key: "knowledge", icon: BookOpen },
     { key: "faq", icon: HelpCircle },
   ] as const;
@@ -29,7 +27,7 @@ function LearnPage() {
           </h1>
         </div>
         <p className="mt-2 text-sm text-white/60 max-w-2xl">
-          {t("app.learn.subtitle", "Courses, mentors and knowledge base — coming soon.")}
+            {t("app.learn.subtitle", "Knowledge base and helpful resources — coming soon.")}
         </p>
       </div>
 
