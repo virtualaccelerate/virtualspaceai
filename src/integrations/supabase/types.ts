@@ -816,6 +816,7 @@ export type Database = {
           created_at: string
           id: string
           invite_code: string
+          logo_path: string | null
           name: string
           owner_id: string
           team_size: Database["public"]["Enums"]["team_size"]
@@ -826,6 +827,7 @@ export type Database = {
           created_at?: string
           id?: string
           invite_code?: string
+          logo_path?: string | null
           name: string
           owner_id: string
           team_size: Database["public"]["Enums"]["team_size"]
@@ -836,6 +838,7 @@ export type Database = {
           created_at?: string
           id?: string
           invite_code?: string
+          logo_path?: string | null
           name?: string
           owner_id?: string
           team_size?: Database["public"]["Enums"]["team_size"]
