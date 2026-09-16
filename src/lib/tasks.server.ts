@@ -83,6 +83,7 @@ export async function notifyAssignment(input: {
     status: input.status,
     priority: input.priority,
     dueDate: input.dueDate,
+    teamspaceId: input.teamspaceId,
   }).catch(() => {});
 }
 

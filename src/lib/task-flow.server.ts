@@ -166,7 +166,7 @@ export async function runDeadlineReminders(): Promise<{ sent: number }> {
 
     const chatId = await chatIdFor(task.assignee_id);
     if (chatId) {
-      await sendMessage(chatId, `${heading}\n\n${taskCard(task)}`, {
+      await sendMessage(chatId, `${heading}\n\n${taskCard(task, await spaceName(task.teamspace_id))}`, {
         reply_markup: assigneeKeyboard(task.id, task.status),
       });
     }
@@ -295,7 +295,7 @@ export async function submitTaskProof(input: {
   const body = [
     `${who} сдал(а) задачу на проверку.`,
     "",
-    taskCard(row),
+    taskCard(row, await spaceName(row.teamspace_id)),
     row.proof_note ? `Комментарий: ${row.proof_note}` : null,
     row.proof_url ? `Пруф: ${row.proof_url}` : null,
   ]
@@ -355,7 +355,7 @@ export async function decideTask(input: {
   const reviewer = await displayName(input.reviewerId).catch(() => "Руководитель");
   const heading = input.decision === "approve" ? "✅ Задача принята" : "↩️ Задача возвращена на доработку";
   const body = [
-    taskCard(row),
+    taskCard(row, await spaceName(row.teamspace_id)),
     `Проверил: ${reviewer}`,
     input.comment ? `Комментарий: ${input.comment}` : null,
   ]
