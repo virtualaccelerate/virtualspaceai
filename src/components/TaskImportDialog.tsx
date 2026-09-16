@@ -108,7 +108,7 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
             status: r.status,
             priority: r.priority,
             assignee_id: r.assignee_id ?? null,
-            due_date: r.due_date as string,
+            due_date: r.due_date ?? null,
           })),
         },
       });
@@ -271,11 +271,7 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
                       value={r.due_date ?? ""}
                       onChange={(e) => patch(i, { due_date: e.target.value || null })}
                       className="h-8 w-[150px] text-xs"
-                      required
                     />
-                    {r.include && !r.due_date && (
-                      <span className="text-[11px] text-destructive">{t("app.import.deadlineRequiredShort", "Нужен дедлайн")}</span>
-                    )}
                   </div>
                 </div>
               ))}
@@ -292,7 +288,7 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={creating}>
             {t("common.cancel", "Cancel")}
           </Button>
-          <Button onClick={create} disabled={!result || creating || selected.length === 0 || missingDeadline}>
+          <Button onClick={create} disabled={!result || creating || selected.length === 0}>
             {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {t("app.import.create", "Create tasks")}
             {selected.length > 0 ? ` (${selected.length})` : ""}
