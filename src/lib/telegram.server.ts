@@ -276,30 +276,43 @@ function tasksKeyboard(tasks: any[], lang: Lang) {
 async function handleTasks(link: Link, chatId: number, lang: Lang) {
   const { data } = await supabaseAdmin
     .from("tasks")
-    .select("id, title, status, priority, due_date")
-    .eq("user_id", link.user_id)
+    .select("id, title, status, priority, due_date, teamspace_id")
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .neq("status", "done")
+    .eq("external_archived", false)
     .order("position", { ascending: true })
-    .limit(20);
+    .limit(30);
   const tasks = (data as any[]) ?? [];
   if (!tasks.length) {
     await sendMessage(chatId, t(lang).noTasks);
     return;
   }
+  const names = await spaceNames(tasks.map((x) => x.teamspace_id));
+  const noSpace = lang === "en" ? "Personal" : "Личные";
+  const groups = new Map<string, any[]>();
+  for (const task of tasks) {
+    const label = names.get(task.teamspace_id ?? "") ?? noSpace;
+    groups.set(label, [...(groups.get(label) ?? []), task]);
+  }
   const order = ["in_progress", "review", "backlog"];
-  const body = order
-    .filter((s) => tasks.some((task) => task.status === s))
-    .map((s) => {
-      const rows = tasks
-        .filter((task) => task.status === s)
-        .map(
-          (task) =>
-            `${STATUS_ICON[s] ?? "⬜️"} ${PRIORITY_ICON[task.priority] ?? ""} ${task.title}${
-              task.due_date ? ` (до ${task.due_date})` : ""
-            }`,
-        )
-        .join("\n");
-      return `${statusTag(s, lang)}\n${rows}`;
+  const body = Array.from(groups.entries())
+    .map(([space, list]) => {
+      const inner = order
+        .filter((s) => list.some((task) => task.status === s))
+        .map((s) => {
+          const rows = list
+            .filter((task) => task.status === s)
+            .map(
+              (task) =>
+                `${STATUS_ICON[s] ?? "⬜️"} ${PRIORITY_ICON[task.priority] ?? ""} ${task.title}${
+                  task.due_date ? ` (${lang === "en" ? "due" : "до"} ${task.due_date})` : ""
+                }`,
+            )
+            .join("\n");
+          return `${statusTag(s, lang)}\n${rows}`;
+        })
+        .join("\n\n");
+      return `🏢 ${space}\n${inner}`;
     })
     .join("\n\n");
   await sendMessage(chatId, `${t(lang).tasksHeader}\n\n${body}`, {
