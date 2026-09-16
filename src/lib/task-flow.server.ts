@@ -92,14 +92,23 @@ async function notifyInApp(input: {
   }).catch(() => {});
 }
 
-export function taskCard(task: TaskRow): string {
+export function taskCard(task: TaskRow, spaceName?: string | null): string {
   return [
     `${PRIORITY_ICON[task.priority] ?? ""} ${task.title}`,
+    spaceName ? `Пространство: ${spaceName}` : null,
     `Статус: ${STATUS_RU[task.status] ?? task.status}`,
     task.due_date ? `Дедлайн: ${task.due_date} до ${DEADLINE_HOUR_LOCAL}:00` : null,
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+/** Workspace name for a task, so every bot message says where it belongs. */
+async function spaceName(teamspaceId: string | null): Promise<string | null> {
+  if (!teamspaceId) return null;
+  const db = await admin();
+  const { data } = await db.from("teamspaces").select("name").eq("id", teamspaceId).maybeSingle();
+  return data?.name ?? null;
 }
 
 export function assigneeKeyboard(taskId: string, status: string) {
