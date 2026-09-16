@@ -371,13 +371,19 @@ async function handleToday(link: Link, chatId: number, lang: Lang) {
   const soonDate = bishkekDate(new Date(Date.now() + 3 * 86400000));
   const { data } = await supabaseAdmin
     .from("tasks")
-    .select("title, status, priority, due_date")
-    .eq("user_id", link.user_id)
+    .select("title, status, priority, due_date, teamspace_id")
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .neq("status", "done")
+    .eq("external_archived", false)
     .order("due_date", { ascending: true });
   const rows = ((data as any[]) ?? []) as any[];
-  const fmtRow = (x: any) =>
-    `${STATUS_ICON[x.status] ?? "⬜️"} ${PRIORITY_ICON[x.priority] ?? ""} ${x.title}${x.due_date ? ` — ${x.due_date}` : ""}`;
+  const names = await spaceNames(rows.map((x) => x.teamspace_id));
+  const fmtRow = (x: any) => {
+    const space = names.get(x.teamspace_id ?? "");
+    return `${STATUS_ICON[x.status] ?? "⬜️"} ${PRIORITY_ICON[x.priority] ?? ""} ${x.title}${
+      x.due_date ? ` — ${x.due_date}` : ""
+    }${space ? ` · 🏢 ${space}` : ""}`;
+  };
   const overdue = rows.filter((x) => x.due_date && x.due_date < today);
   const dueToday = rows.filter((x) => x.due_date === today);
   const soon = rows.filter((x) => x.due_date && x.due_date > today && x.due_date <= soonDate);
