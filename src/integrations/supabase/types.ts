@@ -707,6 +707,71 @@ export type Database = {
           },
         ]
       }
+      task_sync_sources: {
+        Row: {
+          api_key_ciphertext: string
+          column_map: Json
+          created_at: string
+          created_by: string
+          enabled: boolean
+          id: string
+          last_error: string | null
+          last_sync_at: string | null
+          project_id: string | null
+          project_name: string | null
+          provider: string
+          teamspace_id: string
+          updated_at: string
+          user_map: Json
+          webhook_id: string | null
+          webhook_secret: string
+        }
+        Insert: {
+          api_key_ciphertext: string
+          column_map?: Json
+          created_at?: string
+          created_by: string
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          provider: string
+          teamspace_id: string
+          updated_at?: string
+          user_map?: Json
+          webhook_id?: string | null
+          webhook_secret: string
+        }
+        Update: {
+          api_key_ciphertext?: string
+          column_map?: Json
+          created_at?: string
+          created_by?: string
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          provider?: string
+          teamspace_id?: string
+          updated_at?: string
+          user_map?: Json
+          webhook_id?: string | null
+          webhook_secret?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_sync_sources_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee_id: string | null
@@ -714,6 +779,14 @@ export type Database = {
           created_at: string
           description: string | null
           due_date: string | null
+          external_archived: boolean
+          external_board: string | null
+          external_column_id: string | null
+          external_id: string | null
+          external_project: string | null
+          external_source: string | null
+          external_updated_at: string | null
+          external_url: string | null
           id: string
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
@@ -734,6 +807,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          external_archived?: boolean
+          external_board?: string | null
+          external_column_id?: string | null
+          external_id?: string | null
+          external_project?: string | null
+          external_source?: string | null
+          external_updated_at?: string | null
+          external_url?: string | null
           id?: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
@@ -754,6 +835,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          external_archived?: boolean
+          external_board?: string | null
+          external_column_id?: string | null
+          external_id?: string | null
+          external_project?: string | null
+          external_source?: string | null
+          external_updated_at?: string | null
+          external_url?: string | null
           id?: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
