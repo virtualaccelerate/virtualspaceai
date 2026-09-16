@@ -45,6 +45,22 @@ export async function sendMessage(
   return tg("sendMessage", { chat_id: chatId, text, disable_web_page_preview: true, ...extra });
 }
 
+/** Workspace names for the given ids — the bot always says where a task comes from. */
+export async function spaceNames(ids: (string | null | undefined)[]): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(ids.filter((x): x is string => !!x)));
+  const map = new Map<string, string>();
+  if (!unique.length) return map;
+  const { data } = await supabaseAdmin.from("teamspaces").select("id, name").in("id", unique);
+  for (const row of data ?? []) map.set(row.id, row.name);
+  return map;
+}
+
+export async function spaceNameOf(id: string | null | undefined): Promise<string | null> {
+  if (!id) return null;
+  const map = await spaceNames([id]);
+  return map.get(id) ?? null;
+}
+
 type TaskNoticeKind = "assigned" | "updated" | "deleted";
 
 export async function notifyTaskAssignee(input: {
