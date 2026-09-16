@@ -61,9 +61,11 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
 
         const { sendMessage } = await import("@/lib/telegram.server");
         const { runDeadlineReminders, runEveningReport } = await import("@/lib/task-flow.server");
+        const { syncAllYouGileSources } = await import("@/lib/yougile.server");
 
         const hourNow = new Date().getUTCHours();
 
+        const yougile = await syncAllYouGileSources().catch(() => ({ synced: 0, failed: 1 }));
         // Deadline reminders (3h / 1h / overdue) run on every hourly sweep.
         const reminders = await runDeadlineReminders().catch(() => ({ sent: 0 }));
         // Evening workspace report at 19:00 Bishkek (13:00 UTC).
@@ -93,6 +95,7 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
             .from("tasks")
             .select("title, status, priority, due_date")
             .eq("assignee_id", link.user_id)
+            .eq("external_archived", false)
             .neq("status", "done")
             .order("due_date", { ascending: true });
 
@@ -124,6 +127,7 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
           sent,
           reminders: reminders.sent,
           evening: evening.sent,
+          yougile,
         });
       },
     },

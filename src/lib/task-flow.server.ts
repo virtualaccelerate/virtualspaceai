@@ -124,6 +124,7 @@ export async function runDeadlineReminders(): Promise<{ sent: number }> {
     .from("tasks")
     .select("id, title, status, priority, due_date, assignee_id, assignee_name, user_id, teamspace_id")
     .neq("status", "done")
+    .eq("external_archived", false)
     .not("assignee_id", "is", null)
     .not("due_date", "is", null)
     .limit(500);
@@ -206,18 +207,21 @@ export async function runEveningReport(): Promise<{ sent: number }> {
         .from("tasks")
         .select("title, status, priority, assignee_name, due_date")
         .eq("teamspace_id", space.id)
+        .eq("external_archived", false)
         .gte("created_at", sinceUtc)
         .order("created_at", { ascending: true });
       const { data: closed } = await db
         .from("tasks")
         .select("title")
         .eq("teamspace_id", space.id)
+        .eq("external_archived", false)
         .eq("status", "done")
         .gte("updated_at", sinceUtc);
       const { data: review } = await db
         .from("tasks")
         .select("title, assignee_name")
         .eq("teamspace_id", space.id)
+        .eq("external_archived", false)
         .eq("status", "review");
 
       const rows = created ?? [];
@@ -256,6 +260,11 @@ export async function submitTaskProof(input: {
   proofNote?: string | null;
 }): Promise<TaskRow | null> {
   const db = await admin();
+  const { data: sourceTask } = await db.from("tasks").select("external_source").eq("id", input.taskId).maybeSingle();
+  if (sourceTask?.external_source === "yougile") {
+    const { updateYouGileTaskStatus } = await import("./yougile.server");
+    await updateYouGileTaskStatus(input.taskId, "review", input.assigneeId);
+  }
   const { data: task } = await db
     .from("tasks")
     .update({
@@ -315,6 +324,11 @@ export async function decideTask(input: {
   comment?: string | null;
 }): Promise<TaskRow | null> {
   const db = await admin();
+  const { data: sourceTask } = await db.from("tasks").select("external_source").eq("id", input.taskId).maybeSingle();
+  if (sourceTask?.external_source === "yougile") {
+    const { updateYouGileTaskStatus } = await import("./yougile.server");
+    await updateYouGileTaskStatus(input.taskId, input.decision === "approve" ? "done" : "in_progress", input.reviewerId);
+  }
   const { data: task } = await db
     .from("tasks")
     .update({

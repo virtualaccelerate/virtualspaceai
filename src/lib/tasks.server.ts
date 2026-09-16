@@ -37,7 +37,7 @@ async function assigneeName(teamspaceId: string, assigneeId?: string | null) {
   return profile?.full_name || profile?.email || "Team member";
 }
 /** Sends both the in-app notification and the Telegram message to the assignee. */
-async function notifyAssignment(input: {
+export async function notifyAssignment(input: {
   assigneeId: string | null;
   actorId: string;
   teamspaceId: string | null;
@@ -123,6 +123,7 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   const db = await admin();
   const { data: current } = await db.from("tasks").select("*").eq("id", data.id).maybeSingle();
   if (!current) throw new Error("Task not found");
+  if (current.external_source === "yougile") throw new Error("Эта задача управляется в YouGile");
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
   const patch: {
@@ -165,6 +166,7 @@ export async function deleteTaskForUser(userId: string, id: string) {
   const db = await admin();
   const { data: current } = await db.from("tasks").select("*").eq("id", id).maybeSingle();
   if (!current) throw new Error("Task not found");
+  if (current.external_source === "yougile") throw new Error("Эта задача управляется в YouGile");
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
   const { error } = await db.from("tasks").delete().eq("id", id);

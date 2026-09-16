@@ -1,0 +1,1 @@
+ALTER TABLE public.tasks ADD CONSTRAINT tasks_teamspace_external_source_external_id_key UNIQUE (teamspace_id, external_source, external_id);

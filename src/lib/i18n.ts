@@ -243,6 +243,7 @@ const resources = {
           },
         },
         integrations: {
+          yougile: { desc: "Task source for notifications and reports", connected: "Connected", apiKey: "YouGile API key", connect: "Connect", project: "YouGile project", chooseProject: "Choose one project", columns: "Columns and statuses", users: "Team mapping", unmatched: "Not matched", save: "Save and sync", disconnect: "Disconnect", lastSync: "Last sync", todo: "To do", progress: "In progress", review: "Review", done: "Done", sync: "Sync" },
           title: "Integrations",
           subtitle: "Connect your data sources so the assistant answers across your whole company — Drive, Sheets, Notion, Slack and more.",
           available: "Available",
@@ -586,6 +587,7 @@ const resources = {
           },
         },
         integrations: {
+          yougile: { desc: "Источник задач для уведомлений и отчётов", connected: "Подключено", apiKey: "API-ключ YouGile", connect: "Подключить", project: "Проект YouGile", chooseProject: "Выберите один проект", columns: "Колонки и статусы", users: "Сотрудники", unmatched: "Не сопоставлен", save: "Сохранить и синхронизировать", disconnect: "Отключить", lastSync: "Последняя синхронизация", todo: "К выполнению", progress: "В работе", review: "На проверке", done: "Готово", sync: "Синхронизировать" },
           title: "Интеграции",
           subtitle: "Подключите источники данных, чтобы ассистент отвечал по всей компании — Drive, Таблицы, Notion, Slack и другим.",
           available: "Доступно",
@@ -906,6 +908,7 @@ const resources = {
           },
         },
         integrations: {
+          yougile: { desc: "Хабарламалар мен есептерге арналған тапсырмалар көзі", connected: "Қосылды", apiKey: "YouGile API кілті", connect: "Қосу", project: "YouGile жобасы", chooseProject: "Бір жобаны таңдаңыз", columns: "Бағандар мен мәртебелер", users: "Қызметкерлер", unmatched: "Сәйкестендірілмеген", save: "Сақтау және синхрондау", disconnect: "Ажырату", lastSync: "Соңғы синхрондау", todo: "Орындалуға", progress: "Жұмыста", review: "Тексеруде", done: "Дайын", sync: "Синхрондау" },
           title: "Интеграциялар",
           subtitle: "Дерек көздерін қосыңыз — ассистент бүкіл компания бойынша жауап береді: Drive, Sheets, Notion, Slack және басқалары.",
           available: "Қолжетімді",
@@ -1218,6 +1221,7 @@ const resources = {
           },
         },
         integrations: {
+          yougile: { desc: "Билдирүүлөр жана отчёттор үчүн тапшырмалар булагы", connected: "Туташты", apiKey: "YouGile API ачкычы", connect: "Туташтыруу", project: "YouGile долбоору", chooseProject: "Бир долбоорду тандаңыз", columns: "Колонкалар жана статустар", users: "Кызматкерлер", unmatched: "Дал келтирилген эмес", save: "Сактоо жана шайкештештирүү", disconnect: "Ажыратуу", lastSync: "Акыркы шайкештештирүү", todo: "Аткарууга", progress: "Иште", review: "Текшерүүдө", done: "Даяр", sync: "Шайкештештирүү" },
           title: "Интеграциялар",
           subtitle: "Маалымат булактарын кошуңуз — жардамчы бүт компания боюнча жооп берет: Drive, Sheets, Notion, Slack ж.б.",
           available: "Жеткиликтүү",
@@ -1530,6 +1534,7 @@ const resources = {
           },
         },
         integrations: {
+          yougile: { desc: "Bildirishnomalar va hisobotlar uchun vazifalar manbai", connected: "Ulangan", apiKey: "YouGile API kaliti", connect: "Ulash", project: "YouGile loyihasi", chooseProject: "Bitta loyihani tanlang", columns: "Ustunlar va holatlar", users: "Xodimlar", unmatched: "Moslashtirilmagan", save: "Saqlash va sinxronlash", disconnect: "Uzish", lastSync: "Oxirgi sinxronlash", todo: "Bajarish kerak", progress: "Jarayonda", review: "Tekshiruvda", done: "Tayyor", sync: "Sinxronlash" },
           title: "Integratsiyalar",
           subtitle: "Ma'lumot manbalarini ulang — yordamchi butun kompaniya bo'yicha javob beradi: Drive, Sheets, Notion, Slack va boshqalar.",
           available: "Mavjud",
@@ -1842,6 +1847,7 @@ const resources = {
           },
         },
         integrations: {
+          yougile: { desc: "Манбаи вазифаҳо барои огоҳиҳо ва ҳисоботҳо", connected: "Пайваст", apiKey: "Калиди API-и YouGile", connect: "Пайваст кардан", project: "Лоиҳаи YouGile", chooseProject: "Як лоиҳаро интихоб кунед", columns: "Сутунҳо ва ҳолатҳо", users: "Кормандон", unmatched: "Мутобиқ нашудааст", save: "Захира ва ҳамоҳанг кардан", disconnect: "Ҷудо кардан", lastSync: "Ҳамоҳангсозии охирин", todo: "Барои иҷро", progress: "Дар кор", review: "Дар санҷиш", done: "Тайёр", sync: "Ҳамоҳанг кардан" },
           title: "Интегратсияҳо",
           subtitle: "Манбаъҳои маълумотро пайваст кунед — ёвар аз рӯи тамоми ширкат ҷавоб медиҳад: Drive, Sheets, Notion, Slack ва ғайра.",
           available: "Дастрас",

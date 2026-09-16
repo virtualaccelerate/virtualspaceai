@@ -601,7 +601,7 @@ async function handleFlowCallback(
 ) {
   const { data: task } = await supabaseAdmin
     .from("tasks")
-    .select("id, title, status, assignee_id, user_id, teamspace_id")
+    .select("id, title, status, assignee_id, user_id, teamspace_id, external_source")
     .eq("id", taskId)
     .maybeSingle();
   if (!task) {
@@ -613,7 +613,16 @@ async function handleFlowCallback(
 
   if (action === "begin") {
     if (task.assignee_id !== link.user_id) return ack("Это не ваша задача");
-    await supabaseAdmin.from("tasks").update({ status: "in_progress" }).eq("id", task.id);
+    if (task.external_source === "yougile") {
+      const { updateYouGileTaskStatus } = await import("./yougile.server");
+      try {
+        await updateYouGileTaskStatus(task.id, "in_progress", link.user_id);
+      } catch (error) {
+        return ack(error instanceof Error ? error.message.slice(0, 180) : "YouGile недоступен");
+      }
+    } else {
+      await supabaseAdmin.from("tasks").update({ status: "in_progress" }).eq("id", task.id);
+    }
     await ack("Взято в работу");
     await sendMessage(chatId, `🟪 В работе: ${task.title}`, {
       reply_markup: flow.assigneeKeyboard(task.id, "in_progress"),
@@ -670,7 +679,7 @@ async function handleCallback(cb: any) {
 
   const { data: task } = await supabaseAdmin
     .from("tasks")
-    .select("id, title, status")
+    .select("id, title, status, external_source")
     .eq("id", taskId)
     .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .maybeSingle();
@@ -683,7 +692,17 @@ async function handleCallback(cb: any) {
     | "in_progress"
     | "review"
     | "done";
-  await supabaseAdmin.from("tasks").update({ status: next }).eq("id", (task as any).id);
+  if ((task as any).external_source === "yougile") {
+    const { updateYouGileTaskStatus } = await import("./yougile.server");
+    try {
+      await updateYouGileTaskStatus((task as any).id, next, link.user_id);
+    } catch (error) {
+      await tg("answerCallbackQuery", { callback_query_id: cb.id, text: error instanceof Error ? error.message.slice(0, 180) : "YouGile недоступен" });
+      return;
+    }
+  } else {
+    await supabaseAdmin.from("tasks").update({ status: next }).eq("id", (task as any).id);
+  }
   await tg("answerCallbackQuery", {
     callback_query_id: cb.id,
     text: t(lang).statusSet((task as any).title, STATUS_LABEL[next]?.[lang] ?? next),

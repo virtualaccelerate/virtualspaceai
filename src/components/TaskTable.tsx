@@ -21,6 +21,8 @@ export type TableTask = {
   assignee_name: string | null;
   due_date: string | null;
   created_at?: string | null;
+  external_source?: string | null;
+  external_url?: string | null;
 };
 
 type Column = { id: TableTaskStatus; label: string };
@@ -160,11 +162,11 @@ function TaskTableBase({
           {rows.map((task) => (
             <tr
               key={task.id}
-              onClick={() => onOpen(task)}
+              onClick={() => task.external_source && task.external_url ? window.open(task.external_url, "_blank", "noreferrer") : onOpen(task)}
               className="cursor-pointer border-b border-border/60 last:border-0 hover:bg-accent/30 transition-colors"
             >
               <td className="px-3 py-2.5">
-                <p className="font-medium text-foreground leading-snug">{task.title}</p>
+                <p className="font-medium text-foreground leading-snug">{task.title}{task.external_source === "yougile" && <span className="ml-2 text-[10px] text-emerald-600">YouGile</span>}</p>
                 {task.description && (
                   <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{task.description}</p>
                 )}
@@ -194,7 +196,7 @@ function TaskTableBase({
               <td className="px-3 py-2.5 text-foreground/80">{fmt(task.due_date, locale)}</td>
               <td className="px-3 py-2.5 text-muted-foreground">{fmt(task.created_at, locale)}</td>
               <td className="px-2 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu>
+                {!task.external_source && <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="rounded-md px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-accent/50">
                       •••
@@ -215,7 +217,7 @@ function TaskTableBase({
                       <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu>}
               </td>
             </tr>
           ))}

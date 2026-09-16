@@ -77,6 +77,10 @@ type Task = {
   proof_url?: string | null;
   proof_note?: string | null;
   submitted_at?: string | null;
+  external_source?: string | null;
+  external_url?: string | null;
+  external_project?: string | null;
+  external_archived?: boolean;
 };
 
 const COLUMNS: {
@@ -186,6 +190,7 @@ function TasksPage() {
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [view, setView] = useState<"board" | "table">("board");
+  const [yougileManaged, setYougileManaged] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("tasks:view");
@@ -228,7 +233,7 @@ function TasksPage() {
   async function reloadTasks() {
     const { data: session } = await supabase.auth.getUser();
     if (!session.user) return;
-    let query = supabase.from("tasks").select("*");
+    let query = supabase.from("tasks").select("*").eq("external_archived", false);
     query = teamspaceId ? query.eq("teamspace_id", teamspaceId) : query.eq("user_id", session.user.id);
     const { data } = await query.order("status").order("position");
     setTasks((data ?? []) as Task[]);
@@ -243,11 +248,16 @@ function TasksPage() {
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
       // Tasks and members load in parallel — the board no longer waits for the member list.
-      let query = supabase.from("tasks").select("*");
+      let query = supabase.from("tasks").select("*").eq("external_archived", false);
       query = ts ? query.eq("teamspace_id", ts) : query.eq("user_id", session.user.id);
       const membersPromise = ts
         ? listMembersFn({ data: { teamspace_id: ts } }).catch(() => [])
         : Promise.resolve([]);
+      if (ts) {
+        void supabase.from("task_sync_sources").select("id").eq("teamspace_id", ts).eq("provider", "yougile").eq("enabled", true).maybeSingle().then(({ data }) => {
+          if (!cancelled) setYougileManaged(!!data);
+        });
+      }
       const { data, error } = await query.order("status").order("position");
       membersPromise.then((rows) => {
         if (!cancelled) setMembers(rows);
@@ -282,6 +292,11 @@ function TasksPage() {
   }
 
   function openEdit(task: Task) {
+    if (task.external_source === "yougile") {
+      if (task.external_url) window.open(task.external_url, "_blank", "noreferrer");
+      else toast.info("Эта задача управляется в YouGile");
+      return;
+    }
     setEditing(task);
     setDraft({
       title: task.title,
@@ -351,6 +366,7 @@ function TasksPage() {
   async function moveTask(id: string, status: TaskStatus) {
     const task = tasks.find((t) => t.id === id);
     if (!task || task.status === status) return;
+    if (task.external_source === "yougile") return toast.info("Измените статус в YouGile или Telegram");
     const position = (grouped[status]?.length ?? 0) * 1000;
     const prev = tasks;
     setTasks((p) => p.map((t) => (t.id === id ? { ...t, status, position } : t)));
@@ -368,7 +384,7 @@ function TasksPage() {
         <div>
           <h1 className="font-display text-2xl sm:text-3xl text-foreground">Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами.
+            {yougileManaged ? "Задачи управляются в YouGile. Здесь доступны уведомления и отчёты." : "Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -399,12 +415,12 @@ function TasksPage() {
           >
             <User className="h-4 w-4" /> {t("app.tasks.myTasks", "Мои задачи")}
           </Button>
-          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+          {!yougileManaged && <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
             <Upload className="h-4 w-4" /> {t("app.tasks.import", "Импорт из таблицы")}
-          </Button>
-          <Button onClick={() => openCreate()} className="gap-2">
+          </Button>}
+          {!yougileManaged && <Button onClick={() => openCreate()} className="gap-2">
             <Plus className="h-4 w-4" /> New task
-          </Button>
+          </Button>}
         </div>
       </div>
 
@@ -415,9 +431,15 @@ function TasksPage() {
           tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
           columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
           priorityLabel={(p: TaskPriority) => PRIORITY_META[p]?.label ?? p}
-          onOpen={(task: { id: string }) => openEdit(tasks.find((x) => x.id === task.id)!)}
+          onOpen={(task: { id: string }) => {
+            const found = tasks.find((x) => x.id === task.id);
+            if (found) openEdit(found);
+          }}
           onMove={(id: string, status: TaskStatus) => moveTask(id, status)}
-          onDelete={(task: { id: string }) => setDeleteTarget(tasks.find((x) => x.id === task.id)!)}
+          onDelete={(task: { id: string }) => {
+            const found = tasks.find((x) => x.id === task.id);
+            if (found) setDeleteTarget(found);
+          }}
           labels={{
             title: t("app.tasks.fTitle", "Задача"),
             status: t("app.tasks.fStatus", "Статус"),
@@ -487,7 +509,7 @@ function TasksPage() {
                       return (
                         <article
                           key={task.id}
-                          draggable
+                          draggable={!task.external_source}
                           onDragStart={() => setDragId(task.id)}
                           onDragEnd={() => {
                             setDragId(null);
@@ -505,7 +527,8 @@ function TasksPage() {
                             <h3 className="text-[13px] font-medium text-foreground leading-snug">
                               {task.title}
                             </h3>
-                            <DropdownMenu>
+                            {task.external_source === "yougile" && <Badge variant="outline" className="text-[9px]">YouGile</Badge>}
+                            {!task.external_source && <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <button
                                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition -mr-1"
@@ -532,7 +555,7 @@ function TasksPage() {
                                   <Trash2 className="h-4 w-4 mr-2" /> Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
-                            </DropdownMenu>
+                            </DropdownMenu>}
                           </div>
 
                           {task.description && (
@@ -560,12 +583,12 @@ function TasksPage() {
                                 </a>
                               )}
                               <div className="mt-2 flex gap-1.5">
-                                <button
+                    {!yougileManaged && <button
                                   onClick={() => decide(task, "approve")}
                                   className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
                                 >
                                   Принять
-                                </button>
+                    </button>}
                                 <button
                                   onClick={() => decide(task, "rework")}
                                   className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
@@ -651,12 +674,12 @@ function TasksPage() {
               );
             })}
 
-            <button
+            {!yougileManaged && <button
               onClick={() => openCreate()}
               className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
             >
               <Plus className="h-4 w-4" /> Add group
-            </button>
+            </button>}
           </div>
         </div>
       )}

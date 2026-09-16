@@ -50,6 +50,20 @@
       "when": 1789528855957,
       "tag": "0006_allow_workspace_admin_logo_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789529823524,
+      "tag": "0007_add_yougile_task_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789530016462,
+      "tag": "0008_add_yougile_task_upsert_constraint",
+      "breakpoints": true
     }
   ]
 }
