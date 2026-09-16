@@ -378,6 +378,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     const msg = messages[msgIdx];
     const tk = msg?.proposed?.[taskIdx];
     if (!tk) return;
+    if (!tk.due_date) {
+      setError(t("app.chat.deadlineRequired", "Укажите дедлайн перед созданием задачи"));
+      return;
+    }
     setAcceptingIdx(`${msgIdx}-${taskIdx}`);
     try {
       const row = await mkTask({ data: tk });
@@ -870,9 +874,20 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                                 {tk.priority && <span>{tk.priority}</span>}
                                 {tk.due_date && <span>{tk.due_date}</span>}
                               </div>
+                              {!tk.due_date && (
+                                <input
+                                  type="date"
+                                  aria-label={t("app.tasks.fDue", "Дедлайн")}
+                                  className="mt-1 h-7 rounded-md border border-border bg-background px-2 text-[11px] text-foreground"
+                                  onChange={(event) => setMessages((prev) => prev.map((item, index) => index !== i ? item : {
+                                    ...item,
+                                    proposed: (item.proposed ?? []).map((task, taskIndex) => taskIndex === j ? { ...task, due_date: event.target.value || undefined } : task),
+                                  }))}
+                                />
+                              )}
                             </div>
                             <button
-                              disabled={acceptingIdx === `${i}-${j}`}
+                              disabled={acceptingIdx === `${i}-${j}` || !tk.due_date}
                               onClick={() => void acceptTask(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >

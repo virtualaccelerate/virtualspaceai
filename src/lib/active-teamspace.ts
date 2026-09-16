@@ -1,6 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type TeamspaceSummary = { id: string; name: string; invite_code: string; role?: string };
+export type TeamspaceSummary = {
+  id: string;
+  name: string;
+  invite_code: string;
+  role?: string;
+  logo_path: string | null;
+  logo_url?: string | null;
+};
 
 /** All teamspaces the signed-in user belongs to. */
 export async function listMyTeamspaces(): Promise<TeamspaceSummary[]> {
@@ -8,11 +15,41 @@ export async function listMyTeamspaces(): Promise<TeamspaceSummary[]> {
   if (!auth.user) return [];
   const { data } = await supabase
     .from("teamspace_members")
-    .select("role, teamspaces:teamspace_id (id, name, invite_code)")
+    .select("role, teamspaces:teamspace_id (id, name, invite_code, logo_path)")
     .eq("user_id", auth.user.id);
-  return ((data as any[]) ?? [])
+  const rows = ((data as any[]) ?? [])
     .map((row) => (row.teamspaces ? { ...row.teamspaces, role: row.role } : null))
     .filter(Boolean) as TeamspaceSummary[];
+  return Promise.all(rows.map(async (row) => {
+    if (!row.logo_path) return { ...row, logo_url: null };
+    const { data: signed } = await supabase.storage.from("workspace-logos").createSignedUrl(row.logo_path, 3600);
+    return { ...row, logo_url: signed?.signedUrl ?? null };
+  }));
+}
+
+export async function uploadTeamspaceLogo(teamspace: TeamspaceSummary, file: File): Promise<void> {
+  if (!file.type.startsWith("image/")) throw new Error("Можно загружать только изображения");
+  if (file.size > 2 * 1024 * 1024) throw new Error("Размер логотипа не должен превышать 2 МБ");
+  if (teamspace.role !== "owner" && teamspace.role !== "admin") throw new Error("Изменять логотип может владелец или администратор");
+  const ext = (file.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `${teamspace.id}/logo-${crypto.randomUUID()}.${ext}`;
+  const { error: uploadError } = await supabase.storage
+    .from("workspace-logos")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadError) throw new Error(uploadError.message);
+  const { error: updateError } = await supabase.from("teamspaces").update({ logo_path: path }).eq("id", teamspace.id);
+  if (updateError) {
+    await supabase.storage.from("workspace-logos").remove([path]);
+    throw new Error(updateError.message);
+  }
+  if (teamspace.logo_path) await supabase.storage.from("workspace-logos").remove([teamspace.logo_path]);
+}
+
+export async function removeTeamspaceLogo(teamspace: TeamspaceSummary): Promise<void> {
+  if (teamspace.role !== "owner" && teamspace.role !== "admin") throw new Error("Изменять логотип может владелец или администратор");
+  const { error } = await supabase.from("teamspaces").update({ logo_path: null }).eq("id", teamspace.id);
+  if (error) throw new Error(error.message);
+  if (teamspace.logo_path) await supabase.storage.from("workspace-logos").remove([teamspace.logo_path]);
 }
 
 /**

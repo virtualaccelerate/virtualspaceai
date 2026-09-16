@@ -16,7 +16,7 @@ export const ImportRowSchema = z.object({
   status: TaskStatusSchema.optional(),
   priority: TaskPrioritySchema.optional(),
   assignee_id: z.string().uuid().optional().nullable(),
-  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Укажите дедлайн"),
 });
 
 export const CreateTasksBulkSchema = z.object({
