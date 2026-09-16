@@ -299,6 +299,10 @@ function TasksPage() {
       toast.error(t("app.tasks.errTitle", "Title is required"));
       return;
     }
+    if (!draft.due_date) {
+      toast.error(t("app.tasks.errDue", "Укажите дедлайн"));
+      return;
+    }
     if (!userId) return;
 
     const payload = {
@@ -307,7 +311,7 @@ function TasksPage() {
       status: draft.status,
       priority: draft.priority,
       assignee_id: draft.assignee_id || null,
-      due_date: draft.due_date || null,
+      due_date: draft.due_date,
     };
 
     setSaving(true);
@@ -725,12 +729,13 @@ function TasksPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="task-due">{t("app.tasks.fDue", "Due date")}</Label>
+                <Label htmlFor="task-due">{t("app.tasks.fDue", "Due date")} *</Label>
                 <Input
                   id="task-due"
                   type="date"
                   value={draft.due_date}
                   onChange={(e) => setDraft((d) => ({ ...d, due_date: e.target.value }))}
+                  required
                 />
               </div>
             </div>

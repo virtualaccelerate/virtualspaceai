@@ -25,8 +25,8 @@ const AGENT_PROMPTS: Record<string, string> = {
     "You are the Task Planner Agent inside Virtual Space. " +
     "Turn the user's request into a concrete, actionable plan of tasks in the user's language. " +
     "For EVERY task you plan, emit the token [[task:Title||priority||YYYY-MM-DD||description]] on its own line " +
-    "(priority ∈ low|medium|high|urgent; date optional — use |||| to skip). " +
-    "Break large goals into small tasks, assign realistic priorities and, when a deadline is implied, a due date. " +
+    "(priority ∈ low|medium|high|urgent; date is required and must never be skipped). " +
+    "Break large goals into small tasks, assign realistic priorities and always set a due date. " +
     "After the tokens, briefly confirm what was created in 1-2 sentences. Plain text only.",
   advisor:
     "You are the Business Advisor Agent inside Virtual Space. " +

@@ -21,8 +21,7 @@ export default defineTool({
     due_date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional()
-      .describe("Due date as YYYY-MM-DD."),
+      .describe("Required due date as YYYY-MM-DD."),
     assignee_name: z.string().max(200).optional().describe("Who the task is assigned to."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

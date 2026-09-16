@@ -46,7 +46,7 @@ type NavItem = {
   disabled?: boolean;
 };
 
-type Teamspace = { id: string; name: string; invite_code: string };
+type Teamspace = { id: string; name: string; invite_code: string; role?: string; logo_path: string | null; logo_url?: string | null };
 
 const TelegramIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -242,8 +242,8 @@ function AuthenticatedLayout() {
               }`}
               title={teamspace?.name ?? ""}
             >
-              <div className="h-9 w-9 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-sm font-bold shrink-0">
-                {teamspace ? tsInitial : <Sparkles className="h-4 w-4" />}
+              <div className="h-9 w-9 overflow-hidden rounded-lg bg-primary/20 text-primary flex items-center justify-center text-sm font-bold shrink-0">
+                {teamspace?.logo_url ? <img src={teamspace.logo_url} alt="" className="h-full w-full object-cover" /> : teamspace ? tsInitial : <Sparkles className="h-4 w-4" />}
               </div>
               {showLabels && (
                 <>
@@ -298,8 +298,8 @@ function AuthenticatedLayout() {
                       onClick={() => void switchTeamspace(ts.id)}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/5 transition text-left"
                     >
-                      <span className="h-6 w-6 rounded-md bg-primary/20 text-primary flex items-center justify-center text-[11px] font-bold shrink-0">
-                        {(ts.name?.[0] ?? "T").toUpperCase()}
+                      <span className="h-6 w-6 overflow-hidden rounded-md bg-primary/20 text-primary flex items-center justify-center text-[11px] font-bold shrink-0">
+                        {ts.logo_url ? <img src={ts.logo_url} alt="" className="h-full w-full object-cover" /> : (ts.name?.[0] ?? "T").toUpperCase()}
                       </span>
                       <span className="truncate flex-1">{ts.name}</span>
                       {ts.id === teamspace?.id && <Check className="h-4 w-4 text-primary shrink-0" />}

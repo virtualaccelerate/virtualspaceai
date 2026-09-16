@@ -2,7 +2,8 @@ import { z } from "zod";
 
 export const TaskStatusSchema = z.enum(["backlog", "in_progress", "review", "done"]);
 export const TaskPrioritySchema = z.enum(["low", "medium", "high", "urgent"]);
-const DueDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable();
+const RequiredDueDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Укажите дедлайн");
+const OptionalDueDateSchema = RequiredDueDateSchema.optional().nullable();
 
 export const CreateTaskSchema = z.object({
   teamspace_id: z.string().uuid().optional(),
@@ -11,7 +12,7 @@ export const CreateTaskSchema = z.object({
   status: TaskStatusSchema.optional(),
   priority: TaskPrioritySchema.optional(),
   assignee_id: z.string().uuid().optional().nullable(),
-  due_date: DueDateSchema,
+  due_date: RequiredDueDateSchema,
 });
 
 export const UpdateTaskSchema = z.object({
@@ -21,7 +22,7 @@ export const UpdateTaskSchema = z.object({
   status: TaskStatusSchema.optional(),
   priority: TaskPrioritySchema.optional(),
   assignee_id: z.string().uuid().optional().nullable(),
-  due_date: DueDateSchema,
+  due_date: OptionalDueDateSchema,
   position: z.number().int().min(0).optional(),
 });
 
