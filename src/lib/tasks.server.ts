@@ -83,6 +83,7 @@ export async function notifyAssignment(input: {
     status: input.status,
     priority: input.priority,
     dueDate: input.dueDate,
+    teamspaceId: input.teamspaceId,
   }).catch(() => {});
 }
 
@@ -94,7 +95,10 @@ async function track(userId: string, teamspaceId: string | null, feature: string
 
 
 
-export async function createTaskForUser(userId: string, data: CreateTaskInput) {
+export async function createTaskForUser(
+  userId: string,
+  data: Omit<CreateTaskInput, "due_date"> & { due_date?: string | null },
+) {
   const db = await admin();
   const teamspaceId = await activeTeamspace(userId, data.teamspace_id);
   const status = data.status ?? "backlog";

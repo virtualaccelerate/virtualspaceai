@@ -45,6 +45,22 @@ export async function sendMessage(
   return tg("sendMessage", { chat_id: chatId, text, disable_web_page_preview: true, ...extra });
 }
 
+/** Workspace names for the given ids — the bot always says where a task comes from. */
+export async function spaceNames(ids: (string | null | undefined)[]): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(ids.filter((x): x is string => !!x)));
+  const map = new Map<string, string>();
+  if (!unique.length) return map;
+  const { data } = await supabaseAdmin.from("teamspaces").select("id, name").in("id", unique);
+  for (const row of data ?? []) map.set(row.id, row.name);
+  return map;
+}
+
+export async function spaceNameOf(id: string | null | undefined): Promise<string | null> {
+  if (!id) return null;
+  const map = await spaceNames([id]);
+  return map.get(id) ?? null;
+}
+
 type TaskNoticeKind = "assigned" | "updated" | "deleted";
 
 export async function notifyTaskAssignee(input: {
@@ -57,6 +73,7 @@ export async function notifyTaskAssignee(input: {
   priority?: string | null;
   dueDate?: string | null;
   taskId?: string | null;
+  teamspaceId?: string | null;
 }) {
   if (!input.assigneeId || input.assigneeId === input.actorId) return false;
   const [{ data: link }, { data: profile }] = await Promise.all([
@@ -73,7 +90,9 @@ export async function notifyTaskAssignee(input: {
     timeZone: "Asia/Bishkek",
     day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
+  const space = await spaceNameOf(input.teamspaceId).catch(() => null);
   const details = [
+    space ? `${lang === "en" ? "Workspace" : "Пространство"}: ${space}` : null,
     input.title,
     input.actorName ? `${lang === "en" ? "By" : "Кто"}: ${input.actorName}` : null,
     `${lang === "en" ? "When" : "Когда"}: ${when}`,
@@ -257,30 +276,43 @@ function tasksKeyboard(tasks: any[], lang: Lang) {
 async function handleTasks(link: Link, chatId: number, lang: Lang) {
   const { data } = await supabaseAdmin
     .from("tasks")
-    .select("id, title, status, priority, due_date")
-    .eq("user_id", link.user_id)
+    .select("id, title, status, priority, due_date, teamspace_id")
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .neq("status", "done")
+    .eq("external_archived", false)
     .order("position", { ascending: true })
-    .limit(20);
+    .limit(30);
   const tasks = (data as any[]) ?? [];
   if (!tasks.length) {
     await sendMessage(chatId, t(lang).noTasks);
     return;
   }
+  const names = await spaceNames(tasks.map((x) => x.teamspace_id));
+  const noSpace = lang === "en" ? "Personal" : "Личные";
+  const groups = new Map<string, any[]>();
+  for (const task of tasks) {
+    const label = names.get(task.teamspace_id ?? "") ?? noSpace;
+    groups.set(label, [...(groups.get(label) ?? []), task]);
+  }
   const order = ["in_progress", "review", "backlog"];
-  const body = order
-    .filter((s) => tasks.some((task) => task.status === s))
-    .map((s) => {
-      const rows = tasks
-        .filter((task) => task.status === s)
-        .map(
-          (task) =>
-            `${STATUS_ICON[s] ?? "⬜️"} ${PRIORITY_ICON[task.priority] ?? ""} ${task.title}${
-              task.due_date ? ` (до ${task.due_date})` : ""
-            }`,
-        )
-        .join("\n");
-      return `${statusTag(s, lang)}\n${rows}`;
+  const body = Array.from(groups.entries())
+    .map(([space, list]) => {
+      const inner = order
+        .filter((s) => list.some((task) => task.status === s))
+        .map((s) => {
+          const rows = list
+            .filter((task) => task.status === s)
+            .map(
+              (task) =>
+                `${STATUS_ICON[s] ?? "⬜️"} ${PRIORITY_ICON[task.priority] ?? ""} ${task.title}${
+                  task.due_date ? ` (${lang === "en" ? "due" : "до"} ${task.due_date})` : ""
+                }`,
+            )
+            .join("\n");
+          return `${statusTag(s, lang)}\n${rows}`;
+        })
+        .join("\n\n");
+      return `🏢 ${space}\n${inner}`;
     })
     .join("\n\n");
   await sendMessage(chatId, `${t(lang).tasksHeader}\n\n${body}`, {
@@ -293,35 +325,43 @@ async function handleNew(link: Link, chatId: number, title: string, lang: Lang) 
     await sendMessage(chatId, t(lang).needTitle);
     return;
   }
-  const { count } = await supabaseAdmin
+  let counter = supabaseAdmin
     .from("tasks")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", link.user_id)
     .eq("status", "backlog");
+  counter = link.teamspace_id
+    ? counter.eq("teamspace_id", link.teamspace_id)
+    : counter.eq("user_id", link.user_id);
+  const { count } = await counter;
   const { data, error } = await supabaseAdmin
     .from("tasks")
     .insert({
       user_id: link.user_id,
+      teamspace_id: link.teamspace_id,
       title: title.trim().slice(0, 300),
       status: "backlog",
       priority: "medium",
       position: (count ?? 0) * 1000,
     })
-    .select("title")
+    .select("title, teamspace_id")
     .single();
   if (error) {
     await sendMessage(chatId, t(lang).error);
     return;
   }
-  await sendMessage(chatId, t(lang).created((data as any).title));
+  const space = await spaceNameOf((data as any).teamspace_id).catch(() => null);
+  await sendMessage(
+    chatId,
+    `${t(lang).created((data as any).title)}${space ? `\n🏢 ${space}` : ""}`,
+  );
 }
 
 async function handleDone(link: Link, chatId: number, query: string, lang: Lang) {
   if (!query.trim()) return handleTasks(link, chatId, lang);
   const { data } = await supabaseAdmin
     .from("tasks")
-    .select("id, title")
-    .eq("user_id", link.user_id)
+    .select("id, title, teamspace_id")
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .neq("status", "done")
     .ilike("title", `%${query.trim()}%`)
     .limit(1);
@@ -331,7 +371,8 @@ async function handleDone(link: Link, chatId: number, query: string, lang: Lang)
     return;
   }
   await supabaseAdmin.from("tasks").update({ status: "done" }).eq("id", task.id);
-  await sendMessage(chatId, t(lang).doneOk(task.title));
+  const space = await spaceNameOf(task.teamspace_id).catch(() => null);
+  await sendMessage(chatId, `${t(lang).doneOk(task.title)}${space ? `\n🏢 ${space}` : ""}`);
 }
 
 async function handleToday(link: Link, chatId: number, lang: Lang) {
@@ -339,13 +380,19 @@ async function handleToday(link: Link, chatId: number, lang: Lang) {
   const soonDate = bishkekDate(new Date(Date.now() + 3 * 86400000));
   const { data } = await supabaseAdmin
     .from("tasks")
-    .select("title, status, priority, due_date")
-    .eq("user_id", link.user_id)
+    .select("title, status, priority, due_date, teamspace_id")
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .neq("status", "done")
+    .eq("external_archived", false)
     .order("due_date", { ascending: true });
   const rows = ((data as any[]) ?? []) as any[];
-  const fmtRow = (x: any) =>
-    `${STATUS_ICON[x.status] ?? "⬜️"} ${PRIORITY_ICON[x.priority] ?? ""} ${x.title}${x.due_date ? ` — ${x.due_date}` : ""}`;
+  const names = await spaceNames(rows.map((x) => x.teamspace_id));
+  const fmtRow = (x: any) => {
+    const space = names.get(x.teamspace_id ?? "");
+    return `${STATUS_ICON[x.status] ?? "⬜️"} ${PRIORITY_ICON[x.priority] ?? ""} ${x.title}${
+      x.due_date ? ` — ${x.due_date}` : ""
+    }${space ? ` · 🏢 ${space}` : ""}`;
+  };
   const overdue = rows.filter((x) => x.due_date && x.due_date < today);
   const dueToday = rows.filter((x) => x.due_date === today);
   const soon = rows.filter((x) => x.due_date && x.due_date > today && x.due_date <= soonDate);

@@ -92,14 +92,23 @@ async function notifyInApp(input: {
   }).catch(() => {});
 }
 
-export function taskCard(task: TaskRow): string {
+export function taskCard(task: TaskRow, spaceName?: string | null): string {
   return [
     `${PRIORITY_ICON[task.priority] ?? ""} ${task.title}`,
+    spaceName ? `Пространство: ${spaceName}` : null,
     `Статус: ${STATUS_RU[task.status] ?? task.status}`,
     task.due_date ? `Дедлайн: ${task.due_date} до ${DEADLINE_HOUR_LOCAL}:00` : null,
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+/** Workspace name for a task, so every bot message says where it belongs. */
+async function spaceName(teamspaceId: string | null): Promise<string | null> {
+  if (!teamspaceId) return null;
+  const db = await admin();
+  const { data } = await db.from("teamspaces").select("name").eq("id", teamspaceId).maybeSingle();
+  return data?.name ?? null;
 }
 
 export function assigneeKeyboard(taskId: string, status: string) {
@@ -157,7 +166,7 @@ export async function runDeadlineReminders(): Promise<{ sent: number }> {
 
     const chatId = await chatIdFor(task.assignee_id);
     if (chatId) {
-      await sendMessage(chatId, `${heading}\n\n${taskCard(task)}`, {
+      await sendMessage(chatId, `${heading}\n\n${taskCard(task, await spaceName(task.teamspace_id))}`, {
         reply_markup: assigneeKeyboard(task.id, task.status),
       });
     }
@@ -286,7 +295,7 @@ export async function submitTaskProof(input: {
   const body = [
     `${who} сдал(а) задачу на проверку.`,
     "",
-    taskCard(row),
+    taskCard(row, await spaceName(row.teamspace_id)),
     row.proof_note ? `Комментарий: ${row.proof_note}` : null,
     row.proof_url ? `Пруф: ${row.proof_url}` : null,
   ]
@@ -346,7 +355,7 @@ export async function decideTask(input: {
   const reviewer = await displayName(input.reviewerId).catch(() => "Руководитель");
   const heading = input.decision === "approve" ? "✅ Задача принята" : "↩️ Задача возвращена на доработку";
   const body = [
-    taskCard(row),
+    taskCard(row, await spaceName(row.teamspace_id)),
     `Проверил: ${reviewer}`,
     input.comment ? `Комментарий: ${input.comment}` : null,
   ]
