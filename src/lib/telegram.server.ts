@@ -163,12 +163,7 @@ const T = {
 const t = (lang: Lang) => T[lang];
 const pickLang = (l?: string | null): Lang => (l === "en" ? "en" : "ru");
 const bishkekDate = (date = new Date()) =>
-  new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Bishkek",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
+  new Date(date.getTime() + 6 * 3600_000).toISOString().slice(0, 10);
 
 const STATUS_LABEL: Record<string, Record<Lang, string>> = {
   backlog: { ru: "Бэклог", en: "Backlog" },
@@ -528,7 +523,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     (lang === "en"
       ? "You are Virtual Space, the user's AI business assistant, answering inside Telegram. Answer in the user's language, plain text only (no markdown symbols), short and practical."
       : "Ты Virtual Space — AI-ассистент бизнеса пользователя, отвечаешь в Telegram. Отвечай на языке пользователя, обычным текстом без markdown, кратко и по делу.") +
-    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description]] (priority low|medium|high|urgent, use |||| to skip date)." +
+    `\nCURRENT DATE: ${bishkekDate()} in Asia/Bishkek (UTC+6). This is authoritative. Never infer today's date from message history or model knowledge.` +
+    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE)." +
     (tasks ? `\n\nOPEN TASKS:\n${tasks}` : "") +
     (docs ? `\n\nKNOWLEDGE BASE:\n${docs.slice(0, 12000)}` : "");
 

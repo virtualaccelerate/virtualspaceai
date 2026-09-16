@@ -78,12 +78,7 @@ export const askZukha = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const currentDate = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Bishkek",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date());
+    const currentDate = new Date(Date.now() + 6 * 3600_000).toISOString().slice(0, 10);
 
     // Load knowledge base context for this teamspace (relevance-ranked)
     let knowledgeBlock = "";
