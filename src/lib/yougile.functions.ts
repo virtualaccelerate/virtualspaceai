@@ -7,7 +7,7 @@ export const getYouGileStatus = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => TeamspaceSchema.parse(raw))
   .handler(async ({ data, context }) => {
     const { getYouGileStatusForUser } = await import("./yougile.server");
-    return getYouGileStatusForUser(context.userId, data.teamspace_id);
+    return (await getYouGileStatusForUser(context.userId, data.teamspace_id)) as any;
   });
 
 export const connectYouGile = createServerFn({ method: "POST" })
@@ -15,7 +15,7 @@ export const connectYouGile = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => ConnectYouGileSchema.parse(raw))
   .handler(async ({ data, context }) => {
     const { connectYouGileForUser } = await import("./yougile.server");
-    return connectYouGileForUser(context.userId, data);
+    return (await connectYouGileForUser(context.userId, data)) as any;
   });
 
 export const configureYouGile = createServerFn({ method: "POST" })
