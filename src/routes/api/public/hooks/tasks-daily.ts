@@ -60,7 +60,7 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         }
 
         const { sendMessage } = await import("@/lib/telegram.server");
-        const { runDeadlineReminders, runEveningReport } = await import("@/lib/task-flow.server");
+        const { localDateString, runDeadlineReminders, runEveningReport } = await import("@/lib/task-flow.server");
         const { syncAllYouGileSources } = await import("@/lib/yougile.server");
 
         const hourNow = new Date().getUTCHours();
@@ -76,8 +76,8 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
           .not("chat_id", "is", null)
           .eq("daily_digest", true);
 
-        const today = new Date().toISOString().slice(0, 10);
-        const soonDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+        const today = localDateString();
+        const soonDate = localDateString(new Date(Date.now() + 3 * 86400000));
         let sent = 0;
 
         for (const link of (links as any[]) ?? []) {

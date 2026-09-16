@@ -162,6 +162,8 @@ const T = {
 
 const t = (lang: Lang) => T[lang];
 const pickLang = (l?: string | null): Lang => (l === "en" ? "en" : "ru");
+const bishkekDate = (date = new Date()) =>
+  new Date(date.getTime() + 6 * 3600_000).toISOString().slice(0, 10);
 
 const STATUS_LABEL: Record<string, Record<Lang, string>> = {
   backlog: { ru: "Бэклог", en: "Backlog" },
@@ -333,8 +335,8 @@ async function handleDone(link: Link, chatId: number, query: string, lang: Lang)
 }
 
 async function handleToday(link: Link, chatId: number, lang: Lang) {
-  const today = new Date().toISOString().slice(0, 10);
-  const soonDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+  const today = bishkekDate();
+  const soonDate = bishkekDate(new Date(Date.now() + 3 * 86400000));
   const { data } = await supabaseAdmin
     .from("tasks")
     .select("title, status, priority, due_date")
@@ -459,8 +461,8 @@ async function aiSummary(lang: Lang, facts: string): Promise<string | null> {
             role: "system",
             content:
               lang === "en"
-                ? "You are a concise business assistant. Summarize the period in 2-3 sentences and give 1-2 recommendations. Plain text, no markdown."
-                : "Ты краткий бизнес-ассистент. Подведи итог периода в 2-3 предложениях и дай 1-2 рекомендации. Обычный текст, без markdown.",
+                ? `You are a concise business assistant. Today is ${bishkekDate()} in Asia/Bishkek. This date is authoritative. Summarize the period in 2-3 sentences and give 1-2 recommendations. Plain text, no markdown.`
+                : `Ты краткий бизнес-ассистент. Сегодня ${bishkekDate()} по часовому поясу Бишкека. Эта дата точная. Подведи итог периода в 2-3 предложениях и дай 1-2 рекомендации. Обычный текст, без markdown.`,
           },
           { role: "user", content: facts },
         ],
@@ -521,7 +523,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     (lang === "en"
       ? "You are Virtual Space, the user's AI business assistant, answering inside Telegram. Answer in the user's language, plain text only (no markdown symbols), short and practical."
       : "Ты Virtual Space — AI-ассистент бизнеса пользователя, отвечаешь в Telegram. Отвечай на языке пользователя, обычным текстом без markdown, кратко и по делу.") +
-    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description]] (priority low|medium|high|urgent, use |||| to skip date)." +
+    `\nCURRENT DATE: ${bishkekDate()} in Asia/Bishkek (UTC+6). This is authoritative. Never infer today's date from message history or model knowledge.` +
+    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE)." +
     (tasks ? `\n\nOPEN TASKS:\n${tasks}` : "") +
     (docs ? `\n\nKNOWLEDGE BASE:\n${docs.slice(0, 12000)}` : "");
 
