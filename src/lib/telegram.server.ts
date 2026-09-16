@@ -325,35 +325,43 @@ async function handleNew(link: Link, chatId: number, title: string, lang: Lang) 
     await sendMessage(chatId, t(lang).needTitle);
     return;
   }
-  const { count } = await supabaseAdmin
+  let counter = supabaseAdmin
     .from("tasks")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", link.user_id)
     .eq("status", "backlog");
+  counter = link.teamspace_id
+    ? counter.eq("teamspace_id", link.teamspace_id)
+    : counter.eq("user_id", link.user_id);
+  const { count } = await counter;
   const { data, error } = await supabaseAdmin
     .from("tasks")
     .insert({
       user_id: link.user_id,
+      teamspace_id: link.teamspace_id,
       title: title.trim().slice(0, 300),
       status: "backlog",
       priority: "medium",
       position: (count ?? 0) * 1000,
     })
-    .select("title")
+    .select("title, teamspace_id")
     .single();
   if (error) {
     await sendMessage(chatId, t(lang).error);
     return;
   }
-  await sendMessage(chatId, t(lang).created((data as any).title));
+  const space = await spaceNameOf((data as any).teamspace_id).catch(() => null);
+  await sendMessage(
+    chatId,
+    `${t(lang).created((data as any).title)}${space ? `\n🏢 ${space}` : ""}`,
+  );
 }
 
 async function handleDone(link: Link, chatId: number, query: string, lang: Lang) {
   if (!query.trim()) return handleTasks(link, chatId, lang);
   const { data } = await supabaseAdmin
     .from("tasks")
-    .select("id, title")
-    .eq("user_id", link.user_id)
+    .select("id, title, teamspace_id")
+    .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .neq("status", "done")
     .ilike("title", `%${query.trim()}%`)
     .limit(1);
@@ -363,7 +371,8 @@ async function handleDone(link: Link, chatId: number, query: string, lang: Lang)
     return;
   }
   await supabaseAdmin.from("tasks").update({ status: "done" }).eq("id", task.id);
-  await sendMessage(chatId, t(lang).doneOk(task.title));
+  const space = await spaceNameOf(task.teamspace_id).catch(() => null);
+  await sendMessage(chatId, `${t(lang).doneOk(task.title)}${space ? `\n🏢 ${space}` : ""}`);
 }
 
 async function handleToday(link: Link, chatId: number, lang: Lang) {
