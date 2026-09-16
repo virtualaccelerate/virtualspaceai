@@ -73,6 +73,7 @@ export async function notifyTaskAssignee(input: {
   priority?: string | null;
   dueDate?: string | null;
   taskId?: string | null;
+  teamspaceId?: string | null;
 }) {
   if (!input.assigneeId || input.assigneeId === input.actorId) return false;
   const [{ data: link }, { data: profile }] = await Promise.all([
@@ -89,7 +90,9 @@ export async function notifyTaskAssignee(input: {
     timeZone: "Asia/Bishkek",
     day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
+  const space = await spaceNameOf(input.teamspaceId).catch(() => null);
   const details = [
+    space ? `${lang === "en" ? "Workspace" : "Пространство"}: ${space}` : null,
     input.title,
     input.actorName ? `${lang === "en" ? "By" : "Кто"}: ${input.actorName}` : null,
     `${lang === "en" ? "When" : "Когда"}: ${when}`,
