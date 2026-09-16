@@ -122,7 +122,8 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    applyClientLanguage();
+    const timer = window.setTimeout(applyClientLanguage, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (

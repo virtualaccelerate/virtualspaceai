@@ -6,15 +6,13 @@ import { useEffect, useState } from "react";
 import {
   Zap, Clock, Wallet, Workflow, Rocket, Building2,
   HeartHandshake, BellRing, BookOpen,
-  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, ChevronDown, Loader2, X,
+  ArrowRight, CheckCircle2, Globe, Check, Sun, Moon, Menu, Brain, Loader2, X,
 } from "lucide-react";
 import "@/lib/i18n";
 import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { Brandbook } from "@/components/Brandbook";
 import { StartupsSection } from "@/components/StartupsCatalog";
-import { MentorsSection } from "@/components/MentorsCatalog";
-import { CoursesSection } from "@/components/CoursesCatalog";
 import { AnimatedTaskTable } from "@/components/AnimatedTaskTable";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
@@ -126,8 +124,6 @@ function ThemeToggle() {
 function Header() {
   const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [learnOpen, setLearnOpen] = useState(false);
-  const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
 
   const otherLinks = [
     { href: "#benefits", label: t("nav.product") },
@@ -165,30 +161,6 @@ function Header() {
 
 
         <nav className="hidden md:flex items-center gap-4 lg:gap-5 text-sm mx-4 flex-1 justify-center">
-          <div className="relative">
-            <button
-              onClick={() => setLearnOpen((o) => !o)}
-              className="text-white/70 hover:text-white transition whitespace-nowrap flex items-center gap-1"
-            >
-              {t("nav.learn")} <ChevronDown className={`h-3 w-3 transition-transform ${learnOpen ? "rotate-180" : ""}`} />
-            </button>
-            {learnOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="glass-strong absolute left-0 mt-3 w-40 rounded-2xl p-2 z-50"
-              >
-                <a href="#mentors" className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition">
-                  {t("nav.mentors")}
-                </a>
-
-                <Link to="/courses" className="block rounded-xl px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition">
-                  {t("nav.courses")}
-                </Link>
-              </motion.div>
-            )}
-          </div>
           {otherLinks.map((link) => (
             <a
               key={link.href}
@@ -222,24 +194,6 @@ function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="glass-strong w-[300px] border-white/10">
                 <nav className="flex flex-col gap-4 mt-8">
-                  <div>
-                    <button
-                      onClick={() => setMobileLearnOpen((o) => !o)}
-                      className="text-lg text-white/80 hover:text-white transition flex items-center gap-1"
-                    >
-                      {t("nav.learn")} <ChevronDown className={`h-4 w-4 transition-transform ${mobileLearnOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {mobileLearnOpen && (
-                      <div className="flex flex-col gap-2 mt-2 ml-4">
-                        <a href="#mentors" onClick={() => setMobileOpen(false)} className="text-base text-white/80 hover:text-white transition">
-                          {t("nav.mentors")}
-                        </a>
-                        <Link to="/courses" onClick={() => setMobileOpen(false)} className="text-base text-white/80 hover:text-white transition">
-                          {t("nav.courses")}
-                        </Link>
-                      </div>
-                    )}
-                  </div>
                   {otherLinks.map((link) => (
                     <a
                       key={link.href}
@@ -579,10 +533,6 @@ function Landing() {
       {/* STARTUPS CATALOG */}
       <StartupsSection />
 
-      <MentorsSection />
-
-      <CoursesSection />
-
       {/* NEW ERA */}
       <section id="new-era" className="relative">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
@@ -789,7 +739,7 @@ function Landing() {
 
       <footer className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2">
                 <VirtualSpaceLogo className="text-primary" size={22} />
@@ -804,14 +754,6 @@ function Landing() {
                 <li><span className="hover:text-white transition cursor-default">{t("footer.productItems.aiAgents")}</span></li>
                 <li><span className="hover:text-white transition cursor-default">{t("footer.productItems.automation")}</span></li>
                 <li><span className="hover:text-white transition cursor-default">{t("footer.productItems.analytics")}</span></li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.learnLabel")}</p>
-              <ul className="space-y-2 text-sm text-white/60">
-                <li><a href="/#mentors" className="hover:text-white transition">{t("nav.mentors")}</a></li>
-                <li><Link to="/courses" className="hover:text-white transition">{t("nav.courses")}</Link></li>
-                <li><span className="hover:text-white transition cursor-default">{t("footer.resources")}</span></li>
               </ul>
             </div>
             <div>
