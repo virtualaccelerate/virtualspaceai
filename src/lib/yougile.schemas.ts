@@ -19,3 +19,4 @@ export const YouGileStatusSchema = z.object({
 });
 
 export const TeamspaceSchema = z.object({ teamspace_id: z.string().uuid() });
+export const YouGileProjectSchema = TeamspaceSchema.extend({ project_id: z.string().min(1).max(200) });

@@ -95,6 +95,7 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
             .from("tasks")
             .select("title, status, priority, due_date")
             .eq("assignee_id", link.user_id)
+            .eq("external_archived", false)
             .neq("status", "done")
             .order("due_date", { ascending: true });
 

@@ -153,6 +153,13 @@ export async function connectYouGileForUser(userId: string, input: { teamspace_i
   return { connected: true, projects };
 }
 
+export async function inspectYouGileProjectForUser(userId: string, teamspaceId: string, projectId: string) {
+  await requireManager(userId, teamspaceId);
+  const source = await sourceFor(teamspaceId);
+  if (!source) throw new Error("YouGile не подключён");
+  return loadStructure(decryptConnectionKey(source.api_key_ciphertext), projectId);
+}
+
 export async function configureYouGileForUser(userId: string, input: { teamspace_id: string; project_id: string; project_name: string; column_map: Record<string, Status>; user_map: Record<string, string> }) {
   await requireManager(userId, input.teamspace_id);
   const source = await sourceFor(input.teamspace_id);

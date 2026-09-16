@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
-import { configureYouGile, connectYouGile, disconnectYouGile, getYouGileStatus, syncYouGile } from "@/lib/yougile.functions";
+import { configureYouGile, connectYouGile, disconnectYouGile, getYouGileStatus, inspectYouGileProject, syncYouGile } from "@/lib/yougile.functions";
 
 type Item = { id: string; title?: string; name?: string; email?: string; boardId?: string };
 type Member = { id: string; full_name: string | null; email: string | null };
@@ -15,6 +15,7 @@ type Status = "backlog" | "in_progress" | "review" | "done";
 export function YouGileCard() {
   const statusFn = useServerFn(getYouGileStatus);
   const connectFn = useServerFn(connectYouGile);
+  const inspectFn = useServerFn(inspectYouGileProject);
   const configureFn = useServerFn(configureYouGile);
   const syncFn = useServerFn(syncYouGile);
   const disconnectFn = useServerFn(disconnectYouGile);
@@ -74,7 +75,13 @@ export function YouGileCard() {
         <div className="space-y-4 border-t border-border pt-4">
           <div className="space-y-2">
             <Label>Проект YouGile</Label>
-            <Select value={projectId} onValueChange={setProjectId}><SelectTrigger><SelectValue placeholder="Выберите один проект" /></SelectTrigger><SelectContent>{((state.projects ?? []) as Item[]).map((item) => <SelectItem key={item.id} value={item.id}>{item.title ?? item.name ?? item.id}</SelectItem>)}</SelectContent></Select>
+            <Select value={projectId} onValueChange={(value) => {
+              setProjectId(value);
+              if (teamspaceId) void run(async () => {
+                const structure = await inspectFn({ data: { teamspace_id: teamspaceId, project_id: value } });
+                setState((old: any) => ({ ...old, ...structure }));
+              });
+            }}><SelectTrigger><SelectValue placeholder="Выберите один проект" /></SelectTrigger><SelectContent>{((state.projects ?? []) as Item[]).map((item) => <SelectItem key={item.id} value={item.id}>{item.title ?? item.name ?? item.id}</SelectItem>)}</SelectContent></Select>
           </div>
           {projectId && columns.length > 0 && <div className="space-y-2"><Label>Колонки и статусы</Label>{columns.map((column) => <div key={column.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{column.title ?? column.name ?? column.id}</span><Select value={columnMap[column.id] ?? "backlog"} onValueChange={(value) => setColumnMap((old) => ({ ...old, [column.id]: value as Status }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="backlog">К выполнению</SelectItem><SelectItem value="in_progress">В работе</SelectItem><SelectItem value="review">На проверке</SelectItem><SelectItem value="done">Готово</SelectItem></SelectContent></Select></div>)}</div>}
           {projectId && users.length > 0 && <div className="space-y-2"><Label>Сотрудники</Label>{users.map((user) => <div key={user.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{user.name ?? user.email ?? user.id}</span><Select value={userMap[user.id] ?? "skip"} onValueChange={(value) => setUserMap((old) => ({ ...old, [user.id]: value === "skip" ? "" : value }))}><SelectTrigger><SelectValue placeholder="Не сопоставлен" /></SelectTrigger><SelectContent><SelectItem value="skip">Не сопоставлен</SelectItem>{members.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>)}</SelectContent></Select></div>)}</div>}
