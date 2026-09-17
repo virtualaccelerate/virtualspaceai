@@ -1085,11 +1085,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       )}
 
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        {([
-          { id: "contracts" as const, icon: FileText, label: t("app.chat.agentDocs", "Docs") },
-          { id: "tasks" as const, icon: CheckSquare, label: t("app.chat.agentTasks", "Tasks") },
-          { id: "advisor" as const, icon: Lightbulb, label: t("app.chat.agentAdvisor", "Advisor") },
-        ]).map(({ id, icon: Icon, label }) => {
+        {AGENTS.map((a) => {
+          const Icon = AGENT_ICONS[a.icon];
+          const id = a.id;
+          const label = a.title[agentLang];
           const active = selectedAgent === id;
           return (
             <button
