@@ -533,18 +533,36 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   }
   await tg("sendChatAction", { chat_id: chatId, action: "typing" });
 
+  // All workspaces of the user — the agent picks the right one from the message
+  const { data: memRows } = await supabaseAdmin
+    .from("teamspace_members")
+    .select("teamspace_id")
+    .eq("user_id", link.user_id);
+  const spaceIds = Array.from(new Set(((memRows as any[]) ?? []).map((m) => m.teamspace_id)));
+  if (link.teamspace_id && !spaceIds.includes(link.teamspace_id)) spaceIds.push(link.teamspace_id);
+  const spaceMap = await spaceNames(spaceIds).catch(() => new Map<string, string>());
+  const defaultSpaceId = link.teamspace_id ?? spaceIds[0] ?? null;
+
   const [tasksRes, docsRes, histRes] = await Promise.all([
-    supabaseAdmin
-      .from("tasks")
-      .select("id, title, status, priority, due_date, assignee_name, project, department")
-      .eq(link.teamspace_id ? "teamspace_id" : "user_id", link.teamspace_id ?? link.user_id)
-      .neq("status", "done")
-      .limit(80),
-    link.teamspace_id
+    spaceIds.length
+      ? supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .in("teamspace_id", spaceIds)
+          .neq("status", "done")
+          .limit(80)
+      : supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .eq("user_id", link.user_id)
+          .is("teamspace_id", null)
+          .neq("status", "done")
+          .limit(80),
+    spaceIds.length
       ? supabaseAdmin
           .from("documents")
           .select("name, extracted_text")
-          .eq("teamspace_id", link.teamspace_id)
+          .in("teamspace_id", spaceIds)
           .limit(8)
       : Promise.resolve({ data: [] as any[] }),
     supabaseAdmin
