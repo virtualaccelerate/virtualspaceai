@@ -71,6 +71,13 @@
       "when": 1789611131475,
       "tag": "0009_create_pending_members",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789614632251,
+      "tag": "0010_ai_notification_log",
+      "breakpoints": true
     }
   ]
 }
