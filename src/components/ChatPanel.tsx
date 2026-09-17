@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Plus, Mic, Loader2, FileText, CheckSquare, Trash2,
   MessageSquarePlus, History, Bot, X, Paperclip, Lightbulb,
+  Users, LayoutGrid, Brain, Search, ShieldAlert,
 } from "lucide-react";
+import { AGENTS, AGENT_TAG_RE, type AgentId as AgentIdType } from "@/lib/agents";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
