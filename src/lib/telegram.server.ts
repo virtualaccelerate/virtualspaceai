@@ -576,18 +576,18 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const tasks = ((tasksRes.data as any[]) ?? [])
     .map(
       (x) =>
-        `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"}${x.project ? `/проект ${x.project}` : ""}${x.department ? `/${x.department}` : ""}]`,
+        `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"}${x.project ? `/проект ${x.project}` : ""}${x.department ? `/${x.department}` : ""}/пространство "${spaceMap.get(x.teamspace_id) ?? "личное"}"]`,
     )
     .join("\n");
 
-  // Team members of the workspace, so the agent can assign by name
+  // Team members across all workspaces, so the agent can assign by name
   let teamBlock = "";
-  if (link.teamspace_id) {
+  if (spaceIds.length) {
     const { data: members } = await supabaseAdmin
       .from("teamspace_members")
-      .select("user_id, role")
-      .eq("teamspace_id", link.teamspace_id);
-    const ids = ((members as any[]) ?? []).map((m) => m.user_id);
+      .select("user_id, role, teamspace_id")
+      .in("teamspace_id", spaceIds);
+    const ids = Array.from(new Set(((members as any[]) ?? []).map((m) => m.user_id)));
     if (ids.length) {
       const { data: profs } = await supabaseAdmin
         .from("profiles")
@@ -596,11 +596,17 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       teamBlock = ((members as any[]) ?? [])
         .map((m) => {
           const p = ((profs as any[]) ?? []).find((x) => x.id === m.user_id);
-          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role}`;
+          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"`;
         })
         .join("\n");
     }
   }
+  const spacesBlock = spaceIds.length
+    ? "\n\nWORKSPACES (the user's workspaces):\n" +
+      spaceIds
+        .map((id) => `- id=${id} name="${spaceMap.get(id) ?? id}"${id === defaultSpaceId ? " (default)" : ""}`)
+        .join("\n")
+    : "";
   const docs = ((docsRes as any).data as any[] ?? [])
     .map((d) => `### ${d.name}\n${(d.extracted_text ?? "").slice(0, 3000)}`)
     .join("\n\n");
