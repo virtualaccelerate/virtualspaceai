@@ -99,6 +99,13 @@
       "when": 1789648733416,
       "tag": "0013_move_definer_helpers_to_private_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789652999606,
+      "tag": "0014_allow_trello_provider_in_task_sync_sources",
+      "breakpoints": true
     }
   ]
 }

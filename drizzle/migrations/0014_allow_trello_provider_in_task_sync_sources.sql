@@ -1,0 +1,2 @@
+ALTER TABLE public.task_sync_sources DROP CONSTRAINT task_sync_sources_provider_check;
+ALTER TABLE public.task_sync_sources ADD CONSTRAINT task_sync_sources_provider_check CHECK (provider IN ('yougile', 'trello'));
