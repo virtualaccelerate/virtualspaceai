@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/app/overview")({
 
 type Data = Awaited<ReturnType<typeof loadOverview>>;
 
-function ago(iso: string, t: (k: string, d?: string) => string) {
+function ago(iso: string, t: (k: string, d: string) => string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.round(diff / 60000);
   if (m < 1) return t("app.overview.now", "только что");
