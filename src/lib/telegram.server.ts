@@ -622,7 +622,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     `\nCURRENT DATE: ${bishkekDate()} in Asia/Bishkek (UTC+6). This is authoritative. Never infer today's date from message history or model knowledge.` +
     "\nYou are the task agent of the user's workspaces. From a plain sentence infer title, assignee, project, department, priority, deadline, a short description and the WORKSPACE the task belongs to." +
     "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department||workspaceIdOrName]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE; empty fields stay empty)." +
-    "\nWorkspace field (8th): the id or exact name from WORKSPACES. Infer it from the message (named project/space, context); if not mentioned use the default workspace. If the message could belong to several workspaces and it matters, ask one short question instead of guessing." +
+    "\nWorkspace field (8th): the id or exact name from WORKSPACES. Whenever the message names a workspace (\"для воркспейса X\", \"воркспейс: X\", \"в пространстве X\"), you MUST put that workspace's id there — never fall back to the default. If not mentioned use the default workspace." +
+    "\nTitle must contain ONLY the work itself: never include the workspace name or phrases like \"для воркспейса …\", \"воркспейс: …\", and never append the workspace with a dash." +
     "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS (each task is labelled with its workspace)." +
     "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nIf the title, assignee or deadline cannot be inferred confidently, do NOT emit a token — ask one short clarifying question instead." +
@@ -664,25 +665,51 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     if (!title?.trim()) continue;
     const assigneeRaw = (assignee ?? "").trim();
     const assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
-    // Resolve the workspace named in the 8th field; fall back to the default
+    // Resolve the workspace named in the 8th field; fall back to the message text, then the default
+    const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    const matchSpaceName = (raw: string): string | null => {
+      const n = norm(raw);
+      if (!n) return null;
+      const entries = [...spaceMap.entries()];
+      const exact = entries.find(([, name]) => norm(name) === n);
+      if (exact) return exact[0];
+      const partial = entries.find(([, name]) => n.includes(norm(name)) || norm(name).includes(n));
+      return partial ? partial[0] : null;
+    };
     const spaceRaw = (space ?? "").trim();
     let targetSpace = defaultSpaceId;
+    let resolved = false;
     if (spaceRaw) {
-      if (UUID.test(spaceRaw) && spaceMap.has(spaceRaw)) targetSpace = spaceRaw;
-      else {
-        const found = [...spaceMap.entries()].find(
-          ([, n]) => n.toLowerCase() === spaceRaw.toLowerCase(),
-        );
-        if (found) targetSpace = found[0];
+      if (UUID.test(spaceRaw) && spaceMap.has(spaceRaw)) {
+        targetSpace = spaceRaw;
+        resolved = true;
+      } else {
+        const found = matchSpaceName(spaceRaw);
+        if (found) {
+          targetSpace = found;
+          resolved = true;
+        }
       }
     }
+    if (!resolved) {
+      // The user may have named the workspace in the message itself
+      const fromText = matchSpaceName(text);
+      if (fromText) targetSpace = fromText;
+    }
     const targetSpaceName = targetSpace ? spaceMap.get(targetSpace) : null;
+    // The model sometimes glues the workspace phrase into the title — strip it
+    let cleanTitle = title
+      .trim()
+      .replace(/\s*(для|в)\s+(воркспейс[а-я]*|пространств[а-я]*|workspace)\s+["«]?[^,.;]*["»]?\s*$/iu, "")
+      .replace(/\s*[—-]\s*$/u, "")
+      .trim();
+    if (!cleanTitle) cleanTitle = title.trim();
     const { data } = await supabaseAdmin
       .from("tasks")
       .insert({
         user_id: link.user_id,
         teamspace_id: targetSpace,
-        title: title.trim().slice(0, 300),
+        title: cleanTitle.slice(0, 300),
         description: description?.trim() || null,
         status: "backlog",
         priority: (["low", "medium", "high", "urgent"] as const).includes(
