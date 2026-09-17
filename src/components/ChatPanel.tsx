@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Plus, Mic, Loader2, FileText, CheckSquare, Trash2,
   MessageSquarePlus, History, Bot, X, Paperclip, Lightbulb,
+  Users, LayoutGrid, Brain, Search, ShieldAlert,
 } from "lucide-react";
+import { AGENTS, AGENT_TAG_RE, type AgentId as AgentIdType } from "@/lib/agents";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
@@ -87,8 +89,18 @@ function parseFileToken(body: string): { id: string; name: string } {
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
 const TASK_UPDATE_TOKEN = /\[\[task-update:([^\]]+?)\]\]/gi;
 const UUID_ONLY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const AGENT_TAG = /@(contracts|tasks|advisor)\b/i;
-type AgentId = "contracts" | "tasks" | "advisor";
+const AGENT_TAG = AGENT_TAG_RE;
+type AgentId = AgentIdType;
+const AGENT_ICONS = {
+  check: CheckSquare,
+  users: Users,
+  kanban: LayoutGrid,
+  brain: Brain,
+  file: FileText,
+  search: Search,
+  shield: ShieldAlert,
+  lightbulb: Lightbulb,
+} as const;
 
 const stripMarkdown = (s: string) =>
   s
@@ -212,7 +224,8 @@ type Props = {
 };
 
 export function ChatPanel({ variant = "full", conversationId: forcedId }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const agentLang = i18n.language?.startsWith("en") ? "en" : "ru";
   const navigate = useNavigate();
   const ask = useServerFn(askZukha);
   const sign = useServerFn(getDocumentSignedUrl);
@@ -1082,11 +1095,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       )}
 
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        {([
-          { id: "contracts" as const, icon: FileText, label: t("app.chat.agentDocs", "Docs") },
-          { id: "tasks" as const, icon: CheckSquare, label: t("app.chat.agentTasks", "Tasks") },
-          { id: "advisor" as const, icon: Lightbulb, label: t("app.chat.agentAdvisor", "Advisor") },
-        ]).map(({ id, icon: Icon, label }) => {
+        {AGENTS.map((a) => {
+          const Icon = AGENT_ICONS[a.icon];
+          const id = a.id;
+          const label = a.title[agentLang];
           const active = selectedAgent === id;
           return (
             <button

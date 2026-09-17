@@ -2,11 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { Bot, ShieldAlert, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import {
+  Bot, ShieldAlert, Sparkles, ArrowRight, Loader2,
+  CheckSquare, Users, LayoutGrid, Brain, FileText, Search, Lightbulb,
+} from "lucide-react";
 import { createConversation } from "@/lib/chat-history.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { useNavigate } from "@tanstack/react-router";
+import { AGENTS, UPCOMING_AGENTS, type AgentDef } from "@/lib/agents";
 
 export const Route = createFileRoute("/_authenticated/app/agents")({
   component: AgentsPage,
@@ -18,28 +22,21 @@ export const Route = createFileRoute("/_authenticated/app/agents")({
   }),
 });
 
-type AgentDef = {
-  id: string;
-  icon: typeof Bot;
-  titleKey: string;
-  descKey: string;
-  tag: string;
-  available: boolean;
-};
+const ICONS = {
+  check: CheckSquare,
+  users: Users,
+  kanban: LayoutGrid,
+  brain: Brain,
+  file: FileText,
+  search: Search,
+  shield: ShieldAlert,
+  lightbulb: Lightbulb,
+} as const;
 
-const AGENTS: AgentDef[] = [
-  {
-    id: "contracts",
-    icon: ShieldAlert,
-    titleKey: "app.agents.contracts.title",
-    descKey: "app.agents.contracts.desc",
-    tag: "@contracts",
-    available: true,
-  },
-];
 
 function AgentsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language?.startsWith("en") ? "en" : "ru";
   const navigate = useNavigate();
   const createConv = useServerFn(createConversation);
   const [teamspaceId, setTeamspaceId] = useState<string | undefined>();
@@ -61,7 +58,7 @@ function AgentsPage() {
         data: {
           teamspace_id: teamspaceId,
           agent_id: agent.id,
-          title: t(agent.titleKey),
+          title: agent.title[lang],
         },
       });
       navigate({ to: "/app/c/$conversationId", params: { conversationId: conv.id } });
@@ -94,21 +91,23 @@ function AgentsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {AGENTS.map((a) => (
+        {AGENTS.map((a) => {
+          const Icon = ICONS[a.icon];
+          return (
           <div key={a.id} className="rounded-2xl border border-border bg-card p-5 flex flex-col">
             <div className="flex items-start gap-3">
               <div className="h-11 w-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
-                <a.icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-display text-lg text-foreground">{t(a.titleKey)}</h3>
+                <h3 className="font-display text-lg text-foreground">{a.title[lang]}</h3>
                 <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-mono font-semibold rounded bg-primary/15 text-primary px-1.5 py-0.5">
                   {a.tag}
                 </div>
               </div>
             </div>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
-              {t(a.descKey)}
+              {a.desc[lang]}
             </p>
             <div className="mt-4 flex items-center gap-2">
               <button
@@ -130,12 +129,23 @@ function AgentsPage() {
               </Link>
             </div>
           </div>
-        ))}
+          );
+        })}
 
-        <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-5 flex flex-col items-center justify-center text-center min-h-[180px]">
-          <Bot className="h-8 w-8 text-muted-foreground/60" />
-          <div className="mt-2 text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-5 md:col-span-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Bot className="h-4 w-4" />
             {t("app.agents.moreSoon", "More agents coming soon")}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {UPCOMING_AGENTS.map((u) => (
+              <span
+                key={u.id}
+                className="rounded-full border border-border/60 bg-card/60 px-2.5 py-1 text-[11px] text-muted-foreground"
+              >
+                {u.title[lang]}
+              </span>
+            ))}
           </div>
         </div>
       </div>

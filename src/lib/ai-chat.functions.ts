@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AGENT_PROMPTS } from "./agents";
 
 const MessageSchema = z.object({
   role: z.enum(["user", "assistant", "system"]),
@@ -13,28 +14,7 @@ const InputSchema = z.object({
   agent_id: z.string().max(60).optional(),
 });
 
-const AGENT_PROMPTS: Record<string, string> = {
-  contracts:
-    "You are the Contract Risk Agent inside Virtual Space. " +
-    "When the user provides a contract (as pasted text or as a knowledge-base file), do the following in the user's language:\n" +
-    "1) Summarize the contract in 3-6 short sentences (parties, subject, term, price).\n" +
-    "2) Extract KEY RISKS as a numbered list — each with: what the risk is, why it matters, and severity (low/medium/high).\n" +
-    "3) Suggest concrete IMPROVEMENTS / redlines — numbered, each an actionable rewrite or clause to add.\n" +
-    "Cite source files with the [[file:UUID|Name]] syntax when the analysis comes from the knowledge base. Plain text only, no markdown symbols.",
-  tasks:
-    "You are the Task Planner Agent inside Virtual Space. " +
-    "Turn the user's request into a concrete, actionable plan of tasks in the user's language. " +
-    "For EVERY task you plan, emit the token [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]] on its own line " +
-    "(priority ∈ low|medium|high|urgent; date is required and must never be skipped). " +
-    "Break large goals into small tasks, assign realistic priorities and always set a due date. " +
-    "After the tokens, briefly confirm what was created in 1-2 sentences. Plain text only.",
-  advisor:
-    "You are the Business Advisor Agent inside Virtual Space. " +
-    "The user describes a situation, dilemma, or 'what should I do' question. " +
-    "Answer in the user's language with: (1) a short read of the situation, (2) 3-5 concrete recommended actions ranked by impact, " +
-    "(3) risks/things to watch, (4) if useful, next steps as tasks using [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]] tokens. " +
-    "Ground advice in the KNOWLEDGE BASE and FINANCIAL SOURCES when they contain relevant info, and cite files as [[file:UUID|Name]]. Plain text only.",
-};
+
 
 // ---------- Google Sheets helpers (shared with financials) ----------
 function extractSheetInfo(url: string): { id: string; gid: string } | null {
