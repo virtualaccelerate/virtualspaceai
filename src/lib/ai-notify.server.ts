@@ -281,9 +281,15 @@ const TYPE_ICON: Record<string, string> = {
  * Runs one AI pass over every workspace that has open tasks.
  * `pulse` is hourly, `morning` at 09:00 and `evening` at 19:00 Bishkek time.
  */
-export async function runAiNotifications(pass: NotifyPass): Promise<{ sent: number; spaces: number }> {
+export async function runAiNotifications(
+  pass: NotifyPass,
+  onlyTeamspaceId?: string,
+): Promise<{ sent: number; spaces: number }> {
   const db = await admin();
-  const { data: spaces } = await db.from("teamspaces").select("id").limit(200);
+  const spacesQuery = db.from("teamspaces").select("id").limit(200);
+  const { data: spaces } = onlyTeamspaceId
+    ? await spacesQuery.eq("id", onlyTeamspaceId)
+    : await spacesQuery;
   const today = bishkekDate();
   let sent = 0;
   let scanned = 0;
