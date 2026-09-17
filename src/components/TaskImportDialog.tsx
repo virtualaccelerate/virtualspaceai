@@ -99,25 +99,32 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
     if (!teamspaceId || selected.length === 0) return;
     setCreating(true);
     try {
-      const res = await bulk({
-        data: {
-          teamspace_id: teamspaceId,
-          rows: selected.map((r) => ({
-            title: r.title,
-            description: r.description ?? null,
-            status: r.status,
-            priority: r.priority,
-            assignee_id: r.assignee_id ?? null,
-            assignee_raw: r.assignee_id ? null : r.assignee_raw ?? null,
-            due_date: r.due_date ?? null,
-          })),
-        },
-      });
+      const payload = selected.map((r) => ({
+        title: r.title,
+        description: r.description ?? null,
+        status: r.status,
+        priority: r.priority,
+        assignee_id: r.assignee_id ?? null,
+        assignee_raw: r.assignee_id ? null : r.assignee_raw ?? null,
+        due_date: r.due_date ?? null,
+      }));
+      // The server accepts up to 300 rows per call — send big tables in chunks.
+      const created: unknown[] = [];
+      const failed: unknown[] = [];
+      const pending = new Set<string>();
+      for (let i = 0; i < payload.length; i += 150) {
+        const res = await bulk({
+          data: { teamspace_id: teamspaceId, rows: payload.slice(i, i + 150) },
+        });
+        created.push(...res.created);
+        failed.push(...res.failed);
+        res.pending_members.forEach((m: string) => pending.add(m));
+      }
       toast.success(
-        `${t("app.import.done", "Created")}: ${res.created.length}` +
-          (res.failed.length ? ` · ${t("app.import.failed", "skipped")}: ${res.failed.length}` : "") +
-          (res.pending_members.length
-            ? ` · ${t("app.import.pendingAdded", "added to the team")}: ${res.pending_members.join(", ")}`
+        `${t("app.import.done", "Created")}: ${created.length}` +
+          (failed.length ? ` · ${t("app.import.failed", "skipped")}: ${failed.length}` : "") +
+          (pending.size
+            ? ` · ${t("app.import.pendingAdded", "added to the team")}: ${Array.from(pending).join(", ")}`
             : ""),
       );
       onImported();
