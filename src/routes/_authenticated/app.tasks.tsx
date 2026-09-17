@@ -458,13 +458,58 @@ function TasksPage() {
           {!yougileManaged && <Button onClick={() => openCreate()} className="gap-2">
             <Plus className="h-4 w-4" /> New task
           </Button>}
+          {!yougileManaged && tasks.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Ещё">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => changeView("table")}>
+                  {t("app.tasks.selectMode", "Выбрать задачи (таблица)")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-rose-600 dark:text-rose-300"
+                  onClick={() => setBulkMode("all")}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> {t("app.tasks.deleteAll", "Удалить все задачи")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-3">
+          <p className="text-sm text-foreground">
+            {t("app.tasks.selectedCount", "Выбрано задач")}: {selectedIds.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+              {t("app.tasks.clearSelection", "Снять выделение")}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              disabled={bulkBusy}
+              onClick={() => setBulkMode("selected")}
+            >
+              <Trash2 className="h-4 w-4" /> {t("app.tasks.deleteSelected", "Удалить выбранные")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : view === "table" ? (
         <TaskTable
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          onToggleSelectAll={toggleSelectAll}
           tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
           columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
           priorityLabel={(p: TaskPriority) => PRIORITY_META[p]?.label ?? p}
