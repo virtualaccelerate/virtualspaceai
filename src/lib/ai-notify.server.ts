@@ -306,6 +306,7 @@ export async function runAiNotifications(
     for (const item of items) {
       const member = snap.members.find((m) => m.user_id === item.user_id);
       if (!member || !item.title || !item.text) continue;
+      if (opts?.onlyUserId && member.user_id !== opts.onlyUserId) continue;
       const count = perUser.get(member.user_id) ?? 0;
       if (count >= 3) continue;
 
