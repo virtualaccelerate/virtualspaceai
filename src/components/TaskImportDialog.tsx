@@ -138,7 +138,7 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
         if (!v) reset();
       }}
     >
-      <DialogContent className="sm:max-w-3xl max-h-[88vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[88vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{t("app.import.title", "Import tasks from a table")}</DialogTitle>
         </DialogHeader>
