@@ -536,10 +536,10 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const [tasksRes, docsRes, histRes] = await Promise.all([
     supabaseAdmin
       .from("tasks")
-      .select("title, status, priority, due_date")
-      .eq("user_id", link.user_id)
+      .select("id, title, status, priority, due_date, assignee_name, project, department")
+      .eq(link.teamspace_id ? "teamspace_id" : "user_id", link.teamspace_id ?? link.user_id)
       .neq("status", "done")
-      .limit(30),
+      .limit(80),
     link.teamspace_id
       ? supabaseAdmin
           .from("documents")
@@ -556,8 +556,33 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   ]);
 
   const tasks = ((tasksRes.data as any[]) ?? [])
-    .map((x) => `- ${x.title} [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}]`)
+    .map(
+      (x) =>
+        `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"}${x.project ? `/проект ${x.project}` : ""}${x.department ? `/${x.department}` : ""}]`,
+    )
     .join("\n");
+
+  // Team members of the workspace, so the agent can assign by name
+  let teamBlock = "";
+  if (link.teamspace_id) {
+    const { data: members } = await supabaseAdmin
+      .from("teamspace_members")
+      .select("user_id, role")
+      .eq("teamspace_id", link.teamspace_id);
+    const ids = ((members as any[]) ?? []).map((m) => m.user_id);
+    if (ids.length) {
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", ids);
+      teamBlock = ((members as any[]) ?? [])
+        .map((m) => {
+          const p = ((profs as any[]) ?? []).find((x) => x.id === m.user_id);
+          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role}`;
+        })
+        .join("\n");
+    }
+  }
   const docs = ((docsRes as any).data as any[] ?? [])
     .map((d) => `### ${d.name}\n${(d.extracted_text ?? "").slice(0, 3000)}`)
     .join("\n\n");
@@ -571,7 +596,12 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       ? "You are Virtual Space, the user's AI business assistant, answering inside Telegram. Answer in the user's language, plain text only (no markdown symbols), short and practical."
       : "Ты Virtual Space — AI-ассистент бизнеса пользователя, отвечаешь в Telegram. Отвечай на языке пользователя, обычным текстом без markdown, кратко и по делу.") +
     `\nCURRENT DATE: ${bishkekDate()} in Asia/Bishkek (UTC+6). This is authoritative. Never infer today's date from message history or model knowledge.` +
-    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE)." +
+    "\nYou are the task agent of this workspace. From a plain sentence infer title, assignee, project, department, priority, deadline and a short description." +
+    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE; empty fields stay empty)." +
+    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS." +
+    "\nIf the title, assignee or deadline cannot be inferred confidently, do NOT emit a token — ask one short clarifying question instead." +
+    "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status and deadline." +
+    (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
     (tasks ? `\n\nOPEN TASKS:\n${tasks}` : "") +
     (docs ? `\n\nKNOWLEDGE BASE:\n${docs.slice(0, 12000)}` : "");
 
@@ -595,17 +625,23 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     return;
   }
 
-  // Execute [[task:...]] tokens
+  // Execute [[task:...]] and [[task-update:...]] tokens
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const taskRe = /\[\[task:([^\]]+)\]\]/g;
+  const updateRe = /\[\[task-update:([^\]]+)\]\]/g;
   const createdTitles: string[] = [];
+  const updatedTitles: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = taskRe.exec(reply))) {
-    const [title, priority, due, description] = match[1].split("||");
+    const [title, priority, due, description, assignee, project, department] = match[1].split("||");
     if (!title?.trim()) continue;
+    const assigneeRaw = (assignee ?? "").trim();
+    const assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
     const { data } = await supabaseAdmin
       .from("tasks")
       .insert({
         user_id: link.user_id,
+        teamspace_id: link.teamspace_id,
         title: title.trim().slice(0, 300),
         description: description?.trim() || null,
         status: "backlog",
@@ -615,14 +651,63 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
           ? (priority.trim() as "low" | "medium" | "high" | "urgent")
           : "medium",
         due_date: /^\d{4}-\d{2}-\d{2}$/.test(due?.trim() ?? "") ? due.trim() : null,
+        assignee_id: assigneeId,
+        assignee_name: assigneeId ? null : assigneeRaw || null,
+        project: project?.trim() || null,
+        department: department?.trim() || null,
         position: 0,
       })
+      .select("id, title, status, priority, due_date, assignee_id")
+      .single();
+    if (data) {
+      createdTitles.push((data as any).title);
+      if ((data as any).assignee_id) {
+        const { notifyAssignment } = await import("./tasks.server");
+        await notifyAssignment({
+          assigneeId: (data as any).assignee_id,
+          actorId: link.user_id,
+          teamspaceId: link.teamspace_id,
+          kind: "assigned",
+          taskId: (data as any).id,
+          title: (data as any).title,
+          status: (data as any).status,
+          priority: (data as any).priority,
+          dueDate: (data as any).due_date,
+        }).catch(() => {});
+      }
+    }
+  }
+  while ((match = updateRe.exec(reply))) {
+    const parts = match[1].split("||").map((p) => p.trim()).filter(Boolean);
+    const taskId = parts.shift() ?? "";
+    if (!UUID.test(taskId)) continue;
+    const patch: Record<string, unknown> = {};
+    for (const part of parts) {
+      const eq = part.indexOf("=");
+      if (eq < 1) continue;
+      const field = part.slice(0, eq).trim().toLowerCase();
+      const value = part.slice(eq + 1).trim();
+      if (!value) continue;
+      if (["title", "description", "project", "department"].includes(field)) patch[field] = value;
+      else if (field === "priority" && ["low", "medium", "high", "urgent"].includes(value)) patch.priority = value;
+      else if (field === "status" && ["backlog", "in_progress", "review", "done"].includes(value)) patch.status = value;
+      else if (field === "due_date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) patch.due_date = value;
+      else if (field === "assignee" && UUID.test(value)) patch.assignee_id = value;
+    }
+    if (!Object.keys(patch).length) continue;
+    const { data } = await supabaseAdmin
+      .from("tasks")
+      .update(patch)
+      .eq("id", taskId)
+      .neq("external_source", "yougile")
       .select("title")
       .single();
-    if (data) createdTitles.push((data as any).title);
+    if (data) updatedTitles.push((data as any).title);
   }
   let clean = reply.replace(taskRe, "").replace(/[*_`#]/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  clean = clean.replace(updateRe, "").trim();
   if (createdTitles.length) clean += `\n\n➕ ${createdTitles.join("\n➕ ")}`;
+  if (updatedTitles.length) clean += `\n\n✏️ ${updatedTitles.join("\n✏️ ")}`;
 
   await supabaseAdmin.from("chat_messages").insert([
     { user_id: link.user_id, teamspace_id: link.teamspace_id, role: "user", content: text },
