@@ -16,6 +16,8 @@ export const ImportRowSchema = z.object({
   status: TaskStatusSchema.optional(),
   priority: TaskPrioritySchema.optional(),
   assignee_id: z.string().uuid().optional().nullable(),
+  /** Name from the table when no member matched — the person is created as a pending member. */
+  assignee_raw: z.string().trim().max(120).optional().nullable(),
   due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
 });
 
@@ -27,7 +29,7 @@ export const CreateTasksBulkSchema = z.object({
 export type PreviewTasksInput = z.infer<typeof PreviewTasksSchema>;
 export type ImportRow = z.infer<typeof ImportRowSchema>;
 
-export type PreviewRow = Omit<ImportRow, "due_date"> & {
+export type PreviewRow = Omit<ImportRow, "due_date" | "assignee_raw"> & {
   due_date: string | null;
   sheet: string;
   row_number: number;
