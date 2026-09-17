@@ -172,6 +172,7 @@ function TasksPage() {
   const createTaskFn = useServerFn(createTask);
   const updateTaskFn = useServerFn(updateTask);
   const deleteTaskFn = useServerFn(deleteTask);
+  const deleteTasksBulkFn = useServerFn(deleteTasksBulk);
   const listMembersFn = useServerFn(listTaskMembers);
   const submitTaskFn = useServerFn(submitTaskForReview);
   const reviewTaskFn = useServerFn(reviewTask);
