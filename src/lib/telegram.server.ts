@@ -779,21 +779,22 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       continue;
     }
 
-    // YouGile tasks are managed in YouGile — push the status there instead
-    if ((existing as any).external_source === "yougile") {
+    // Tasks mirrored from YouGile / Trello are managed there — push the status back
+    const { isExternalTask, externalLabel, pushExternalStatus } = await import("./external-tasks.server");
+    if (isExternalTask((existing as any).external_source)) {
+      const tracker = externalLabel((existing as any).external_source);
       if (typeof patch.status === "string") {
         try {
-          const { updateYouGileTaskStatus } = await import("./yougile.server");
-          await updateYouGileTaskStatus(taskId, patch.status as any, link.user_id);
+          await pushExternalStatus((existing as any).external_source, taskId, patch.status as any, link.user_id);
           updatedTitles.push((existing as any).title);
         } catch (e) {
           updateErrors.push(
-            `${(existing as any).title}: ${e instanceof Error ? e.message.slice(0, 120) : "YouGile"}`,
+            `${(existing as any).title}: ${e instanceof Error ? e.message.slice(0, 120) : tracker}`,
           );
         }
       } else {
         updateErrors.push(
-          `${(existing as any).title}: ${lang === "en" ? "managed in YouGile" : "задача из YouGile — правится в YouGile"}`,
+          `${(existing as any).title}: ${lang === "en" ? `managed in ${tracker}` : `задача из ${tracker} — правится в ${tracker}`}`,
         );
       }
       continue;
@@ -868,12 +869,12 @@ async function handleFlowCallback(
 
   if (action === "begin") {
     if (task.assignee_id !== link.user_id) return ack("Это не ваша задача");
-    if (task.external_source === "yougile") {
-      const { updateYouGileTaskStatus } = await import("./yougile.server");
+    const { isExternalTask, externalLabel, pushExternalStatus } = await import("./external-tasks.server");
+    if (isExternalTask(task.external_source)) {
       try {
-        await updateYouGileTaskStatus(task.id, "in_progress", link.user_id);
+        await pushExternalStatus(task.external_source, task.id, "in_progress", link.user_id);
       } catch (error) {
-        return ack(error instanceof Error ? error.message.slice(0, 180) : "YouGile недоступен");
+        return ack(error instanceof Error ? error.message.slice(0, 180) : `${externalLabel(task.external_source)} недоступен`);
       }
     } else {
       await supabaseAdmin.from("tasks").update({ status: "in_progress" }).eq("id", task.id);
@@ -947,12 +948,12 @@ async function handleCallback(cb: any) {
     | "in_progress"
     | "review"
     | "done";
-  if ((task as any).external_source === "yougile") {
-    const { updateYouGileTaskStatus } = await import("./yougile.server");
+  const external = await import("./external-tasks.server");
+  if (external.isExternalTask((task as any).external_source)) {
     try {
-      await updateYouGileTaskStatus((task as any).id, next, link.user_id);
+      await external.pushExternalStatus((task as any).external_source, (task as any).id, next, link.user_id);
     } catch (error) {
-      await tg("answerCallbackQuery", { callback_query_id: cb.id, text: error instanceof Error ? error.message.slice(0, 180) : "YouGile недоступен" });
+      await tg("answerCallbackQuery", { callback_query_id: cb.id, text: error instanceof Error ? error.message.slice(0, 180) : `${external.externalLabel((task as any).external_source)} недоступен` });
       return;
     }
   } else {

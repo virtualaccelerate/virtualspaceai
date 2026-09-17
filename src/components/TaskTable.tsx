@@ -96,7 +96,7 @@ function TaskTableBase({
   const selectable = !!onToggleSelect;
   const selected = useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
   const selectableIds = useMemo(
-    () => tasks.filter((t) => t.external_source !== "yougile").map((t) => t.id),
+    () => tasks.filter((t) => t.external_source !== "yougile" && t.external_source !== "trello").map((t) => t.id),
     [tasks],
   );
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
@@ -200,14 +200,14 @@ function TaskTableBase({
                     type="checkbox"
                     aria-label="Select task"
                     className="h-4 w-4 accent-primary align-middle"
-                    disabled={task.external_source === "yougile"}
+                    disabled={task.external_source === "yougile" || task.external_source === "trello"}
                     checked={selected.has(task.id)}
                     onChange={() => onToggleSelect?.(task.id)}
                   />
                 </td>
               )}
               <td className="px-3 py-2.5">
-                <p className="font-medium text-foreground leading-snug">{task.title}{task.external_source === "yougile" && <span className="ml-2 text-[10px] text-emerald-600">YouGile</span>}</p>
+                <p className="font-medium text-foreground leading-snug">{task.title}{task.external_source === "yougile" && <span className="ml-2 text-[10px] text-emerald-600">YouGile</span>}{task.external_source === "trello" && <span className="ml-2 text-[10px] text-blue-600">Trello</span>}</p>
                 {task.description && (
                   <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{task.description}</p>
                 )}

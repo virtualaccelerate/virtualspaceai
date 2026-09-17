@@ -270,9 +270,9 @@ export async function submitTaskProof(input: {
 }): Promise<TaskRow | null> {
   const db = await admin();
   const { data: sourceTask } = await db.from("tasks").select("external_source").eq("id", input.taskId).maybeSingle();
-  if (sourceTask?.external_source === "yougile") {
-    const { updateYouGileTaskStatus } = await import("./yougile.server");
-    await updateYouGileTaskStatus(input.taskId, "review", input.assigneeId);
+  {
+    const { pushExternalStatus } = await import("./external-tasks.server");
+    await pushExternalStatus(sourceTask?.external_source, input.taskId, "review", input.assigneeId);
   }
   const { data: task } = await db
     .from("tasks")
@@ -334,9 +334,9 @@ export async function decideTask(input: {
 }): Promise<TaskRow | null> {
   const db = await admin();
   const { data: sourceTask } = await db.from("tasks").select("external_source").eq("id", input.taskId).maybeSingle();
-  if (sourceTask?.external_source === "yougile") {
-    const { updateYouGileTaskStatus } = await import("./yougile.server");
-    await updateYouGileTaskStatus(input.taskId, input.decision === "approve" ? "done" : "in_progress", input.reviewerId);
+  {
+    const { pushExternalStatus } = await import("./external-tasks.server");
+    await pushExternalStatus(sourceTask?.external_source, input.taskId, input.decision === "approve" ? "done" : "in_progress", input.reviewerId);
   }
   const { data: task } = await db
     .from("tasks")

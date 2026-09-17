@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { GoogleDriveCard } from "@/components/GoogleDriveCard";
 import { YouGileCard } from "@/components/YouGileCard";
+import { TrelloCard } from "@/components/TrelloCard";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/integrations")({
@@ -68,6 +69,7 @@ function IntegrationsPage() {
         <div className="flex flex-col gap-2.5">
           <GoogleDriveCard />
           <YouGileCard />
+          <TrelloCard />
           {available.map((s) => (
             <SourceRow key={s.id} source={s} />
           ))}

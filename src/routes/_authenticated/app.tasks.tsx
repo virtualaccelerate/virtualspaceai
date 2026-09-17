@@ -193,7 +193,9 @@ function TasksPage() {
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [view, setView] = useState<"board" | "table">("board");
-  const [yougileManaged, setYougileManaged] = useState(false);
+  const [managedBy, setManagedBy] = useState<"YouGile" | "Trello" | null>(null);
+  const [managedSyncAt, setManagedSyncAt] = useState<string | null>(null);
+  const yougileManaged = managedBy !== null;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkMode, setBulkMode] = useState<"selected" | "all" | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -220,7 +222,7 @@ function TasksPage() {
       await reloadTasks();
       toast.success(
         res.skipped
-          ? `Удалено задач: ${res.deleted}. Пропущено (YouGile): ${res.skipped}`
+          ? `Удалено задач: ${res.deleted}. Пропущено (внешний трекер): ${res.skipped}`
           : `Удалено задач: ${res.deleted}`,
       );
     } catch (error) {
@@ -293,8 +295,9 @@ function TasksPage() {
         ? listMembersFn({ data: { teamspace_id: ts } }).catch(() => [])
         : Promise.resolve([]);
       if (ts) {
-        void supabase.from("task_sync_sources").select("id").eq("teamspace_id", ts).eq("provider", "yougile").eq("enabled", true).maybeSingle().then(({ data }) => {
-          if (!cancelled) setYougileManaged(!!data);
+        void supabase.from("task_sync_sources").select("provider, last_sync_at").eq("teamspace_id", ts).in("provider", ["yougile", "trello"]).eq("enabled", true).limit(1).maybeSingle().then(({ data }) => {
+          if (!cancelled) setManagedSyncAt(data?.last_sync_at ?? null);
+          if (!cancelled) setManagedBy(data?.provider === "trello" ? "Trello" : data?.provider === "yougile" ? "YouGile" : null);
         });
       }
       const { data, error } = await query.order("status").order("position");
@@ -331,9 +334,10 @@ function TasksPage() {
   }
 
   function openEdit(task: Task) {
-    if (task.external_source === "yougile") {
+    if (task.external_source === "yougile" || task.external_source === "trello") {
+      const tracker = task.external_source === "trello" ? "Trello" : "YouGile";
       if (task.external_url) window.open(task.external_url, "_blank", "noreferrer");
-      else toast.info("Эта задача управляется в YouGile");
+      else toast.info(`Эта задача управляется в ${tracker}`);
       return;
     }
     setEditing(task);
@@ -405,7 +409,7 @@ function TasksPage() {
   async function moveTask(id: string, status: TaskStatus) {
     const task = tasks.find((t) => t.id === id);
     if (!task || task.status === status) return;
-    if (task.external_source === "yougile") return toast.info("Измените статус в YouGile или Telegram");
+    if (task.external_source === "yougile" || task.external_source === "trello") return toast.info(`Измените статус в ${task.external_source === "trello" ? "Trello" : "YouGile"} или Telegram`);
     const position = (grouped[status]?.length ?? 0) * 1000;
     const prev = tasks;
     setTasks((p) => p.map((t) => (t.id === id ? { ...t, status, position } : t)));
@@ -423,7 +427,7 @@ function TasksPage() {
         <div>
           <h1 className="font-display text-2xl sm:text-3xl text-foreground">Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {yougileManaged ? "Задачи управляются в YouGile. Здесь доступны уведомления и отчёты." : "Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами."}
+            {managedBy ? `Задачи управляются в ${managedBy}. Здесь доступны уведомления и отчёты.${managedSyncAt ? ` Последняя синхронизация: ${new Date(managedSyncAt).toLocaleString()}` : ""}` : "Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -612,6 +616,7 @@ function TasksPage() {
                               {task.title}
                             </h3>
                             {task.external_source === "yougile" && <Badge variant="outline" className="text-[9px]">YouGile</Badge>}
+                            {task.external_source === "trello" && <Badge variant="outline" className="text-[9px]">Trello</Badge>}
                             {!task.external_source && <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <button
