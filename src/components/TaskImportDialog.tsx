@@ -99,25 +99,32 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
     if (!teamspaceId || selected.length === 0) return;
     setCreating(true);
     try {
-      const res = await bulk({
-        data: {
-          teamspace_id: teamspaceId,
-          rows: selected.map((r) => ({
-            title: r.title,
-            description: r.description ?? null,
-            status: r.status,
-            priority: r.priority,
-            assignee_id: r.assignee_id ?? null,
-            assignee_raw: r.assignee_id ? null : r.assignee_raw ?? null,
-            due_date: r.due_date ?? null,
-          })),
-        },
-      });
+      const payload = selected.map((r) => ({
+        title: r.title,
+        description: r.description ?? null,
+        status: r.status,
+        priority: r.priority,
+        assignee_id: r.assignee_id ?? null,
+        assignee_raw: r.assignee_id ? null : r.assignee_raw ?? null,
+        due_date: r.due_date ?? null,
+      }));
+      // The server accepts up to 300 rows per call — send big tables in chunks.
+      const created: unknown[] = [];
+      const failed: unknown[] = [];
+      const pending = new Set<string>();
+      for (let i = 0; i < payload.length; i += 150) {
+        const res = await bulk({
+          data: { teamspace_id: teamspaceId, rows: payload.slice(i, i + 150) },
+        });
+        created.push(...res.created);
+        failed.push(...res.failed);
+        res.pending_members.forEach((m: string) => pending.add(m));
+      }
       toast.success(
-        `${t("app.import.done", "Created")}: ${res.created.length}` +
-          (res.failed.length ? ` · ${t("app.import.failed", "skipped")}: ${res.failed.length}` : "") +
-          (res.pending_members.length
-            ? ` · ${t("app.import.pendingAdded", "added to the team")}: ${res.pending_members.join(", ")}`
+        `${t("app.import.done", "Created")}: ${created.length}` +
+          (failed.length ? ` · ${t("app.import.failed", "skipped")}: ${failed.length}` : "") +
+          (pending.size
+            ? ` · ${t("app.import.pendingAdded", "added to the team")}: ${Array.from(pending).join(", ")}`
             : ""),
       );
       onImported();
@@ -138,7 +145,7 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
         if (!v) reset();
       }}
     >
-      <DialogContent className="sm:max-w-3xl max-h-[88vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[88vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{t("app.import.title", "Import tasks from a table")}</DialogTitle>
         </DialogHeader>
@@ -203,11 +210,26 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
             )}
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="text-sm text-muted-foreground">
-              {t("app.import.found", "Found rows")}: {rows.length}
-              {result.sheets.length > 0 && ` · ${result.sheets.join(", ")}`}
-              {result.skipped > 0 && ` · ${t("app.import.skippedRows", "skipped")}: ${result.skipped}`}
+          <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+              <span>
+                {t("app.import.found", "Found rows")}: {rows.length}
+                {result.sheets.length > 0 && ` · ${result.sheets.join(", ")}`}
+                {result.skipped > 0 && ` · ${t("app.import.skippedRows", "skipped")}: ${result.skipped}`}
+                {` · ${t("app.import.selectedCount", "selected")}: ${selected.length}`}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const next = selected.length !== rows.length;
+                  setRows((prev) => prev.map((r) => ({ ...r, include: next })));
+                }}
+              >
+                {selected.length === rows.length
+                  ? t("app.import.deselectAll", "Deselect all")
+                  : t("app.import.selectAll", "Select all")}
+              </Button>
             </div>
 
             <div className="rounded-xl border border-border divide-y divide-border">

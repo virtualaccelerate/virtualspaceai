@@ -288,9 +288,9 @@ export async function previewTasksFromTable(
         duplicate,
         include: !duplicate,
       });
-      if (out.length >= 300) break;
+      if (out.length >= 1000) break;
     }
-    if (out.length >= 300) break;
+    if (out.length >= 1000) break;
   }
 
   return {
