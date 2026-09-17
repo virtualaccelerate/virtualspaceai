@@ -350,7 +350,7 @@ export async function runAiNotifications(
           }
         }
         await sendMessage(
-          member.chat_id,
+          chatId,
           `${icon} ${item.title}\n\n${item.text}\n\n🏢 ${snap.ts.name}`,
           reply_markup ? ({ reply_markup } as never) : undefined,
         ).catch(() => {});
