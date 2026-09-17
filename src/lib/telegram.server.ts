@@ -766,14 +766,49 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       else if (field === "assignee" && UUID.test(value)) patch.assignee_id = value;
     }
     if (!Object.keys(patch).length) continue;
-    const { data } = await supabaseAdmin
+
+    const { data: existing } = await supabaseAdmin
+      .from("tasks")
+      .select("id, title, external_source")
+      .eq("id", taskId)
+      .maybeSingle();
+    if (!existing) {
+      updateErrors.push(lang === "en" ? "Task not found" : "Задача не найдена");
+      continue;
+    }
+
+    // YouGile tasks are managed in YouGile — push the status there instead
+    if ((existing as any).external_source === "yougile") {
+      if (typeof patch.status === "string") {
+        try {
+          const { updateYouGileTaskStatus } = await import("./yougile.server");
+          await updateYouGileTaskStatus(taskId, patch.status as any, link.user_id);
+          updatedTitles.push((existing as any).title);
+        } catch (e) {
+          updateErrors.push(
+            `${(existing as any).title}: ${e instanceof Error ? e.message.slice(0, 120) : "YouGile"}`,
+          );
+        }
+      } else {
+        updateErrors.push(
+          `${(existing as any).title}: ${lang === "en" ? "managed in YouGile" : "задача из YouGile — правится в YouGile"}`,
+        );
+      }
+      continue;
+    }
+
+    const { data, error } = await supabaseAdmin
       .from("tasks")
       .update(patch as never)
       .eq("id", taskId)
-      .neq("external_source", "yougile")
       .select("title")
       .single();
     if (data) updatedTitles.push((data as any).title);
+    else
+      updateErrors.push(
+        `${(existing as any).title}: ${error?.message?.slice(0, 120) ?? (lang === "en" ? "update failed" : "не удалось обновить")}`,
+      );
+
   }
   let clean = reply.replace(taskRe, "").replace(/[*_`#]/g, "").replace(/\n{3,}/g, "\n\n").trim();
   clean = clean.replace(updateRe, "").trim();
