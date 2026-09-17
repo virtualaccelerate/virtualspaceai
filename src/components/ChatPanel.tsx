@@ -32,12 +32,28 @@ type ParsedTask = {
   priority?: "low" | "medium" | "high" | "urgent";
   due_date?: string;
   description?: string;
+  assignee_id?: string;
+  assignee_name?: string;
+  project?: string;
+  department?: string;
+};
+type ParsedUpdate = {
+  id: string;
+  title?: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  status?: "backlog" | "in_progress" | "review" | "done";
+  due_date?: string;
+  description?: string;
+  assignee_id?: string;
+  project?: string;
+  department?: string;
 };
 export type ChatMsg = {
   role: "user" | "assistant";
   content: string;
   tasks?: CreatedTask[];
   proposed?: ParsedTask[];
+  updates?: ParsedUpdate[];
 };
 
 // Accepts [[file:UUID|Name]], [[file:driveId|Name]] and malformed variants
@@ -69,6 +85,8 @@ function parseFileToken(body: string): { id: string; name: string } {
   return { id: raw, name: "Файл" };
 }
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
+const TASK_UPDATE_TOKEN = /\[\[task-update:([^\]]+?)\]\]/gi;
+const UUID_ONLY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AGENT_TAG = /@(contracts|tasks|advisor)\b/i;
 type AgentId = "contracts" | "tasks" | "advisor";
 
@@ -82,11 +100,16 @@ const stripMarkdown = (s: string) =>
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/^\s*[-*+]\s+/gm, "• ");
 
-function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] } {
+function parseTaskTokens(text: string): {
+  cleaned: string;
+  tasks: ParsedTask[];
+  updates: ParsedUpdate[];
+} {
   const tasks: ParsedTask[] = [];
-  const cleaned = text.replace(TASK_TOKEN, (_m, body: string) => {
+  const updates: ParsedUpdate[] = [];
+  let cleaned = text.replace(TASK_TOKEN, (_m, body: string) => {
     const parts = body.split("||").map((p) => p.trim());
-    const [title, priority, due_date, description] = parts;
+    const [title, priority, due_date, description, assignee, project, department] = parts;
     if (!title) return "";
     const t: ParsedTask = { title };
     if (priority && ["low", "medium", "high", "urgent"].includes(priority)) {
@@ -94,10 +117,41 @@ function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] }
     }
     if (due_date && /^\d{4}-\d{2}-\d{2}$/.test(due_date)) t.due_date = due_date;
     if (description) t.description = description;
+    if (assignee && assignee.toLowerCase() !== "none") {
+      if (UUID_ONLY.test(assignee)) t.assignee_id = assignee;
+      else t.assignee_name = assignee;
+    }
+    if (project) t.project = project;
+    if (department) t.department = department;
     tasks.push(t);
     return "";
   });
-  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks };
+  cleaned = cleaned.replace(TASK_UPDATE_TOKEN, (_m, body: string) => {
+    const parts = body.split("||").map((p) => p.trim()).filter(Boolean);
+    const id = parts.shift() ?? "";
+    if (!UUID_ONLY.test(id)) return "";
+    const u: ParsedUpdate = { id };
+    for (const part of parts) {
+      const eq = part.indexOf("=");
+      if (eq < 1) continue;
+      const field = part.slice(0, eq).trim().toLowerCase();
+      const value = part.slice(eq + 1).trim();
+      if (!value) continue;
+      if (field === "title") u.title = value;
+      else if (field === "description") u.description = value;
+      else if (field === "project") u.project = value;
+      else if (field === "department") u.department = value;
+      else if (field === "priority" && ["low", "medium", "high", "urgent"].includes(value))
+        u.priority = value as ParsedUpdate["priority"];
+      else if (field === "status" && ["backlog", "in_progress", "review", "done"].includes(value))
+        u.status = value as ParsedUpdate["status"];
+      else if (field === "due_date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) u.due_date = value;
+      else if (field === "assignee" && UUID_ONLY.test(value)) u.assignee_id = value;
+    }
+    updates.push(u);
+    return "";
+  });
+  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks, updates };
 }
 
 function MessageContent({
