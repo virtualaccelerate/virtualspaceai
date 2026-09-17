@@ -18,10 +18,10 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
 import vaLogoDark from "@/assets/Untitled_design_21.png.asset.json";
 import vaLogoLight from "@/assets/Untitled_design_22.png.asset.json";
-import aiBusinessEra from "@/assets/ai-business-era.jpg.asset.json";
-import heroBg from "@/assets/hero-bg.jpg.asset.json";
-import startupsBg from "@/assets/startups-bg.jpg.asset.json";
-import ngosBg from "@/assets/ngos-bg.jpg.asset.json";
+import aiBusinessEra from "@/assets/ai-business-era.webp.asset.json";
+import heroBg from "@/assets/hero-bg.webp.asset.json";
+import startupsBg from "@/assets/startups-bg.webp.asset.json";
+import ngosBg from "@/assets/ngos-bg.webp.asset.json";
 
 
 const SITE_URL = "https://virtualspaceai.lovable.app";
