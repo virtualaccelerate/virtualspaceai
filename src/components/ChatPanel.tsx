@@ -91,6 +91,16 @@ const TASK_UPDATE_TOKEN = /\[\[task-update:([^\]]+?)\]\]/gi;
 const UUID_ONLY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AGENT_TAG = AGENT_TAG_RE;
 type AgentId = AgentIdType;
+const AGENT_ICONS = {
+  check: CheckSquare,
+  users: Users,
+  kanban: LayoutGrid,
+  brain: Brain,
+  file: FileText,
+  search: Search,
+  shield: ShieldAlert,
+  lightbulb: Lightbulb,
+} as const;
 
 const stripMarkdown = (s: string) =>
   s
