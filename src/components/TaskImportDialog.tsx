@@ -108,13 +108,17 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
             status: r.status,
             priority: r.priority,
             assignee_id: r.assignee_id ?? null,
+            assignee_raw: r.assignee_id ? null : r.assignee_raw ?? null,
             due_date: r.due_date ?? null,
           })),
         },
       });
       toast.success(
         `${t("app.import.done", "Created")}: ${res.created.length}` +
-          (res.failed.length ? ` · ${t("app.import.failed", "skipped")}: ${res.failed.length}` : ""),
+          (res.failed.length ? ` · ${t("app.import.failed", "skipped")}: ${res.failed.length}` : "") +
+          (res.pending_members.length
+            ? ` · ${t("app.import.pendingAdded", "added to the team")}: ${res.pending_members.join(", ")}`
+            : ""),
       );
       onImported();
       onOpenChange(false);
@@ -229,9 +233,11 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
                           {t("app.import.duplicate", "A task with this title already exists")}
                         </div>
                       )}
-                      {r.assignee_raw && !r.assignee_matched && (
+                      {r.assignee_raw && !r.assignee_matched && !r.assignee_id && (
                         <div className="text-[11px] text-amber-600 dark:text-amber-400">
-                          {t("app.import.noMember", "No workspace member matched")}: {r.assignee_raw}
+                          {t("app.import.willCreateMember", "Will be added to the team as")}: {r.assignee_raw}
+                          {" — "}
+                          {t("app.import.addEmailLater", "add the email on the Team page")}
                         </div>
                       )}
                     </div>
