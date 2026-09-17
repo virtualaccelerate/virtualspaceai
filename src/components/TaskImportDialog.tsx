@@ -203,11 +203,26 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
             )}
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="text-sm text-muted-foreground">
-              {t("app.import.found", "Found rows")}: {rows.length}
-              {result.sheets.length > 0 && ` · ${result.sheets.join(", ")}`}
-              {result.skipped > 0 && ` · ${t("app.import.skippedRows", "skipped")}: ${result.skipped}`}
+          <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+              <span>
+                {t("app.import.found", "Found rows")}: {rows.length}
+                {result.sheets.length > 0 && ` · ${result.sheets.join(", ")}`}
+                {result.skipped > 0 && ` · ${t("app.import.skippedRows", "skipped")}: ${result.skipped}`}
+                {` · ${t("app.import.selectedCount", "selected")}: ${selected.length}`}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const next = selected.length !== rows.length;
+                  setRows((prev) => prev.map((r) => ({ ...r, include: next })));
+                }}
+              >
+                {selected.length === rows.length
+                  ? t("app.import.deselectAll", "Deselect all")
+                  : t("app.import.selectAll", "Select all")}
+              </Button>
             </div>
 
             <div className="rounded-xl border border-border divide-y divide-border">
