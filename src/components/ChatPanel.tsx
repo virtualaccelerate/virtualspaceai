@@ -214,7 +214,8 @@ type Props = {
 };
 
 export function ChatPanel({ variant = "full", conversationId: forcedId }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const agentLang = i18n.language?.startsWith("en") ? "en" : "ru";
   const navigate = useNavigate();
   const ask = useServerFn(askZukha);
   const sign = useServerFn(getDocumentSignedUrl);
