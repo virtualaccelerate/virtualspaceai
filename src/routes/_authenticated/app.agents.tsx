@@ -129,12 +129,23 @@ function AgentsPage() {
               </Link>
             </div>
           </div>
-        ))}
+          );
+        })}
 
-        <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-5 flex flex-col items-center justify-center text-center min-h-[180px]">
-          <Bot className="h-8 w-8 text-muted-foreground/60" />
-          <div className="mt-2 text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-5 md:col-span-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Bot className="h-4 w-4" />
             {t("app.agents.moreSoon", "More agents coming soon")}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {UPCOMING_AGENTS.map((u) => (
+              <span
+                key={u.id}
+                className="rounded-full border border-border/60 bg-card/60 px-2.5 py-1 text-[11px] text-muted-foreground"
+              >
+                {u.title[lang]}
+              </span>
+            ))}
           </div>
         </div>
       </div>
