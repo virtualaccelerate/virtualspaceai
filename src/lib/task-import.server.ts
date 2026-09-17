@@ -70,7 +70,7 @@ function b64ToBytes(b64: string): Uint8Array {
 const HEADERS: Record<string, RegExp> = {
   title: /^(задач|название|заголовок|тема|что сделать|title|task|name|summary|subject)/i,
   description: /^(опис|детал|коммент|подроб|следующ|результат|критер|description|details|notes?|comment|next step)/i,
-  priority: /^(приоритет|важн|priority|prio)/i,
+  priority: /^(приоритет|важн|срочност|срочн|priority|prio|urgency)/i,
   status: /^(статус|состояние|этап|колонка|status|state|stage|column)/i,
   due_date: /^(срок|дедлайн|дата|до|due|deadline|date)/i,
   assignee:
@@ -96,13 +96,15 @@ function detectHeader(rows: string[][]) {
 function normPriority(v: string): Priority | undefined {
   const s = v.trim().toLowerCase();
   if (!s) return undefined;
-  if (/^(urgent|critical|срочн|критич|блок|p0|4)$/.test(s)) return "urgent";
-  if (/^(high|высок|важн|p1|3)$/.test(s)) return "high";
-  if (/^(medium|normal|средн|обычн|норм|p2|2)$/.test(s)) return "medium";
-  if (/^(low|низк|мелк|p3|1)$/.test(s)) return "low";
-  if (/срочн|urgent/.test(s)) return "urgent";
-  if (/высок|high/.test(s)) return "high";
-  if (/низк|low/.test(s)) return "low";
+  if (/^(urgent|critical|blocker|asap|срочн|критич|блок|экстрен|немедлен|горит|p0|4)$/.test(s)) return "urgent";
+  if (/^(high|major|высок|важн|высший|очень высок|p1|3)$/.test(s)) return "high";
+  if (/^(medium|normal|mid|средн|обычн|норм|стандарт|p2|2)$/.test(s)) return "medium";
+  if (/^(low|minor|trivial|низк|мелк|не срочн|можно позже|желател|p3|1)$/.test(s)) return "low";
+  if (/не ?срочн|не горит/.test(s)) return "low";
+  if (/срочн|urgent|critical|asap|критич|🔴|🔥|!!!|экстрен/.test(s)) return "urgent";
+  if (/высок|high|major|важн|🟠|!!/.test(s)) return "high";
+  if (/низк|low|minor|неспеш|🟢/.test(s)) return "low";
+  if (/средн|medium|normal|🟡/.test(s)) return "medium";
   return undefined;
 }
 
