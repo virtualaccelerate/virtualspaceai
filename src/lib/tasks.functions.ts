@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { CreateTaskSchema, DecideTaskSchema, DeleteTaskSchema, ListMembersSchema, SubmitProofSchema, UpdateTaskSchema } from "./tasks.schemas";
+import { CreateTaskSchema, DecideTaskSchema, DeleteTaskSchema, DeleteTasksBulkSchema, ListMembersSchema, SubmitProofSchema, UpdateTaskSchema } from "./tasks.schemas";
 
 export const createTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
