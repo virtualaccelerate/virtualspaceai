@@ -338,7 +338,8 @@ export async function runAiNotifications(
       }).catch(() => {});
 
       const isBrief = item.type.endsWith("_brief");
-      if (member.chat_id && (isBrief || importance !== "low")) {
+      const chatId = opts?.forceChatId ?? member.chat_id;
+      if (chatId && (isBrief || importance !== "low")) {
         const { sendMessage } = await import("./telegram.server");
         let reply_markup: unknown = undefined;
         if (taskId) {
