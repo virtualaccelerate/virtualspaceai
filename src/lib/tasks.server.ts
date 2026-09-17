@@ -135,7 +135,10 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   const db = await admin();
   const { data: current } = await db.from("tasks").select("*").eq("id", data.id).maybeSingle();
   if (!current) throw new Error("Task not found");
-  if (current.external_source === "yougile") throw new Error("Эта задача управляется в YouGile");
+  {
+    const { isExternalTask, externalLabel } = await import("./external-tasks.server");
+    if (isExternalTask(current.external_source)) throw new Error(`Эта задача управляется в ${externalLabel(current.external_source)}`);
+  }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
   const patch: {
@@ -182,7 +185,10 @@ export async function deleteTaskForUser(userId: string, id: string) {
   const db = await admin();
   const { data: current } = await db.from("tasks").select("*").eq("id", id).maybeSingle();
   if (!current) throw new Error("Task not found");
-  if (current.external_source === "yougile") throw new Error("Эта задача управляется в YouGile");
+  {
+    const { isExternalTask, externalLabel } = await import("./external-tasks.server");
+    if (isExternalTask(current.external_source)) throw new Error(`Эта задача управляется в ${externalLabel(current.external_source)}`);
+  }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
   const { error } = await db.from("tasks").delete().eq("id", id);
@@ -213,7 +219,8 @@ export async function deleteTasksBulkForUser(
   }
   const { data: rows, error } = await query;
   if (error) throw new Error(error.message);
-  const deletable = (rows ?? []).filter((r) => r.external_source !== "yougile").map((r) => r.id);
+  const { isExternalTask } = await import("./external-tasks.server");
+  const deletable = (rows ?? []).filter((r) => !isExternalTask(r.external_source)).map((r) => r.id);
   const skipped = (rows ?? []).length - deletable.length;
   if (!deletable.length) return { ok: true, deleted: 0, skipped };
   for (let i = 0; i < deletable.length; i += 200) {
