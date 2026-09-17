@@ -26,6 +26,14 @@ export const deleteTask = createServerFn({ method: "POST" })
     return deleteTaskForUser(context.userId, data.id);
   });
 
+export const deleteTasksBulk = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => DeleteTasksBulkSchema.parse(raw))
+  .handler(async ({ data, context }) => {
+    const { deleteTasksBulkForUser } = await import("./tasks.server");
+    return deleteTasksBulkForUser(context.userId, data);
+  });
+
 export const listTaskMembers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => ListMembersSchema.parse(raw))
