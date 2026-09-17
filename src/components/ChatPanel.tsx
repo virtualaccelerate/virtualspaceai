@@ -87,8 +87,8 @@ function parseFileToken(body: string): { id: string; name: string } {
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
 const TASK_UPDATE_TOKEN = /\[\[task-update:([^\]]+?)\]\]/gi;
 const UUID_ONLY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const AGENT_TAG = /@(contracts|tasks|advisor)\b/i;
-type AgentId = "contracts" | "tasks" | "advisor";
+const AGENT_TAG = AGENT_TAG_RE;
+type AgentId = AgentIdType;
 
 const stripMarkdown = (s: string) =>
   s
