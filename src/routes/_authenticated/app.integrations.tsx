@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { GoogleDriveCard } from "@/components/GoogleDriveCard";
 import { YouGileCard } from "@/components/YouGileCard";
+import { TrelloCard } from "@/components/TrelloCard";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/integrations")({

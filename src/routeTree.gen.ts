@@ -29,6 +29,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as OauthGoogleDriveReturnRouteImport } from './routes/oauth.google-drive.return'
 import { Route as ApiPublicYougileWebhookRouteImport } from './routes/api/public/yougile-webhook'
+import { Route as ApiPublicTrelloWebhookRouteImport } from './routes/api/public/trello-webhook'
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
 import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
@@ -154,6 +155,11 @@ const OauthGoogleDriveReturnRoute = OauthGoogleDriveReturnRouteImport.update({
 const ApiPublicYougileWebhookRoute = ApiPublicYougileWebhookRouteImport.update({
   id: '/api/public/yougile-webhook',
   path: '/api/public/yougile-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTrelloWebhookRoute = ApiPublicTrelloWebhookRouteImport.update({
+  id: '/api/public/trello-webhook',
+  path: '/api/public/trello-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
@@ -329,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
+  '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByTo {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
+  '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -422,6 +430,7 @@ export interface FileRoutesById {
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/_authenticated/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
+  '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -470,6 +479,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/telegram'
     | '/app/time'
+    | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-drive/return'
     | '/app/'
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/telegram'
     | '/app/time'
+    | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-drive/return'
     | '/app'
@@ -562,6 +573,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/team'
     | '/_authenticated/app/telegram'
     | '/_authenticated/app/time'
+    | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-drive/return'
     | '/_authenticated/app/'
@@ -593,6 +605,7 @@ export interface RootRouteChildren {
   MentorsIdRoute: typeof MentorsIdRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicTrelloWebhookRoute: typeof ApiPublicTrelloWebhookRoute
   ApiPublicYougileWebhookRoute: typeof ApiPublicYougileWebhookRoute
   OauthGoogleDriveReturnRoute: typeof OauthGoogleDriveReturnRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
@@ -743,6 +756,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/yougile-webhook'
       fullPath: '/api/public/yougile-webhook'
       preLoaderRoute: typeof ApiPublicYougileWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/trello-webhook': {
+      id: '/api/public/trello-webhook'
+      path: '/api/public/trello-webhook'
+      fullPath: '/api/public/trello-webhook'
+      preLoaderRoute: typeof ApiPublicTrelloWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/time': {
@@ -999,6 +1019,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentorsIdRoute: MentorsIdRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicTrelloWebhookRoute: ApiPublicTrelloWebhookRoute,
   ApiPublicYougileWebhookRoute: ApiPublicYougileWebhookRoute,
   OauthGoogleDriveReturnRoute: OauthGoogleDriveReturnRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
