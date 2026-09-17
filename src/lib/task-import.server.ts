@@ -304,15 +304,27 @@ export async function createTasksBulkForUser(
   rows: ImportRow[],
 ) {
   const { createTaskForUser } = await import("./tasks.server");
+  const { ensurePendingMember } = await import("./pending-members.server");
   const created: { id: string; title: string }[] = [];
   const failed: { title: string; error: string }[] = [];
+  const pending = new Set<string>();
   for (const row of rows) {
     try {
-      const task = await createTaskForUser(userId, { ...row, teamspace_id: teamspaceId });
+      const { assignee_raw, ...rest } = row;
+      let assigneeName: string | null = null;
+      if (!rest.assignee_id && assignee_raw?.trim()) {
+        assigneeName = await ensurePendingMember(userId, teamspaceId, assignee_raw);
+        if (assigneeName) pending.add(assigneeName);
+      }
+      const task = await createTaskForUser(userId, {
+        ...rest,
+        teamspace_id: teamspaceId,
+        assignee_name: assigneeName,
+      });
       created.push({ id: task.id, title: task.title });
     } catch (e) {
       failed.push({ title: row.title, error: e instanceof Error ? e.message : String(e) });
     }
   }
-  return { created, failed };
+  return { created, failed, pending_members: Array.from(pending) };
 }

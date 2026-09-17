@@ -64,6 +64,13 @@
       "when": 1789530016462,
       "tag": "0008_add_yougile_task_upsert_constraint",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789611131475,
+      "tag": "0009_create_pending_members",
+      "breakpoints": true
     }
   ]
 }
