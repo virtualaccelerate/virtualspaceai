@@ -313,13 +313,15 @@ export async function runAiNotifications(
       const importance: AiNotification["importance"] =
         item.importance === "high" || item.importance === "low" ? item.importance : "medium";
       const key = `${today}:${pass}:${item.dedupe_key || `${item.type}:${item.title}`}`.slice(0, 200);
-      const ok = await claim({
-        teamspaceId: space.id,
-        userId: member.user_id,
-        kind: item.type,
-        dedupeKey: key,
-        importance,
-      });
+      const ok = opts?.ignoreDedupe
+        ? true
+        : await claim({
+            teamspaceId: space.id,
+            userId: member.user_id,
+            kind: item.type,
+            dedupeKey: key,
+            importance,
+          });
       if (!ok) continue;
 
       const icon = TYPE_ICON[item.type] ?? "🔔";
