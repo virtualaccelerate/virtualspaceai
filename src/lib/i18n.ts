@@ -243,6 +243,7 @@ const resources = {
           },
         },
         integrations: {
+          trello: { desc: "Task source for notifications and reports", connected: "Connected", apiKey: "Trello API key", apiToken: "Trello token", hint: "Create a key and token at trello.com/power-ups/admin — we store them encrypted and never show them.", connect: "Connect", board: "Trello board", chooseBoard: "Choose one board", lists: "Lists and statuses", users: "Team mapping", unmatched: "Not matched", save: "Save and sync", disconnect: "Disconnect", lastSync: "Last sync", todo: "To do", progress: "In progress", review: "Review", done: "Done", sync: "Sync" },
           yougile: { desc: "Task source for notifications and reports", connected: "Connected", apiKey: "YouGile API key", connect: "Connect", project: "YouGile project", chooseProject: "Choose one project", columns: "Columns and statuses", users: "Team mapping", unmatched: "Not matched", save: "Save and sync", disconnect: "Disconnect", lastSync: "Last sync", todo: "To do", progress: "In progress", review: "Review", done: "Done", sync: "Sync" },
           title: "Integrations",
           subtitle: "Connect your data sources so the assistant answers across your whole company — Drive, Sheets, Notion, Slack and more.",
@@ -587,6 +588,7 @@ const resources = {
           },
         },
         integrations: {
+          trello: { desc: "Источник задач для уведомлений и отчётов", connected: "Подключено", apiKey: "API-ключ Trello", apiToken: "Токен Trello", hint: "Ключ и токен создаются на trello.com/power-ups/admin — мы храним их в зашифрованном виде и не показываем.", connect: "Подключить", board: "Доска Trello", chooseBoard: "Выберите одну доску", lists: "Списки и статусы", users: "Сотрудники", unmatched: "Не сопоставлен", save: "Сохранить и синхронизировать", disconnect: "Отключить", lastSync: "Последняя синхронизация", todo: "К выполнению", progress: "В работе", review: "На проверке", done: "Готово", sync: "Синхронизировать" },
           yougile: { desc: "Источник задач для уведомлений и отчётов", connected: "Подключено", apiKey: "API-ключ YouGile", connect: "Подключить", project: "Проект YouGile", chooseProject: "Выберите один проект", columns: "Колонки и статусы", users: "Сотрудники", unmatched: "Не сопоставлен", save: "Сохранить и синхронизировать", disconnect: "Отключить", lastSync: "Последняя синхронизация", todo: "К выполнению", progress: "В работе", review: "На проверке", done: "Готово", sync: "Синхронизировать" },
           title: "Интеграции",
           subtitle: "Подключите источники данных, чтобы ассистент отвечал по всей компании — Drive, Таблицы, Notion, Slack и другим.",
