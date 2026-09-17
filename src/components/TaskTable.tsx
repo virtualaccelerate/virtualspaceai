@@ -65,6 +65,9 @@ function TaskTableBase({
   onOpen,
   onMove,
   onDelete,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
   labels,
 }: {
   tasks: TableTask[];
@@ -74,6 +77,9 @@ function TaskTableBase({
   onOpen: (task: TableTask) => void;
   onMove: (id: string, status: TableTaskStatus) => void;
   onDelete: (task: TableTask) => void;
+  selectedIds?: string[];
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: (ids: string[]) => void;
   labels: {
     title: string;
     status: string;
@@ -85,6 +91,13 @@ function TaskTableBase({
   };
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "status", dir: 1 });
+  const selectable = !!onToggleSelect;
+  const selected = useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
+  const selectableIds = useMemo(
+    () => tasks.filter((t) => t.external_source !== "yougile").map((t) => t.id),
+    [tasks],
+  );
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
 
   const statusRank = useMemo(() => {
     const map: Record<string, number> = {};
@@ -149,6 +162,17 @@ function TaskTableBase({
       <table className="w-full min-w-[820px] border-collapse text-sm">
         <thead className="border-b border-border bg-muted/40">
           <tr>
+            {selectable && (
+              <th className="w-10 px-3 py-2">
+                <input
+                  type="checkbox"
+                  aria-label="Select all"
+                  className="h-4 w-4 accent-primary align-middle"
+                  checked={allSelected}
+                  onChange={() => onToggleSelectAll?.(selectableIds)}
+                />
+              </th>
+            )}
             <Head k="title" className="w-[38%]">{labels.title}</Head>
             <Head k="status">{labels.status}</Head>
             <Head k="priority">{labels.priority}</Head>
@@ -163,8 +187,23 @@ function TaskTableBase({
             <tr
               key={task.id}
               onClick={() => task.external_source && task.external_url ? window.open(task.external_url, "_blank", "noreferrer") : onOpen(task)}
-              className="cursor-pointer border-b border-border/60 last:border-0 hover:bg-accent/30 transition-colors"
+              className={cn(
+                "cursor-pointer border-b border-border/60 last:border-0 hover:bg-accent/30 transition-colors",
+                selected.has(task.id) && "bg-primary/[0.06]",
+              )}
             >
+              {selectable && (
+                <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    aria-label="Select task"
+                    className="h-4 w-4 accent-primary align-middle"
+                    disabled={task.external_source === "yougile"}
+                    checked={selected.has(task.id)}
+                    onChange={() => onToggleSelect?.(task.id)}
+                  />
+                </td>
+              )}
               <td className="px-3 py-2.5">
                 <p className="font-medium text-foreground leading-snug">{task.title}{task.external_source === "yougile" && <span className="ml-2 text-[10px] text-emerald-600">YouGile</span>}</p>
                 {task.description && (

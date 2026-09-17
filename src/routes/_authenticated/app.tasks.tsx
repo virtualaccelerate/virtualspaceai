@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
-import { createTask, deleteTask, listTaskMembers, reviewTask, submitTaskForReview, updateTask } from "@/lib/tasks.functions";
+import { createTask, deleteTask, deleteTasksBulk, listTaskMembers, reviewTask, submitTaskForReview, updateTask } from "@/lib/tasks.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -172,6 +172,7 @@ function TasksPage() {
   const createTaskFn = useServerFn(createTask);
   const updateTaskFn = useServerFn(updateTask);
   const deleteTaskFn = useServerFn(deleteTask);
+  const deleteTasksBulkFn = useServerFn(deleteTasksBulk);
   const listMembersFn = useServerFn(listTaskMembers);
   const submitTaskFn = useServerFn(submitTaskForReview);
   const reviewTaskFn = useServerFn(reviewTask);
@@ -191,6 +192,42 @@ function TasksPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [view, setView] = useState<"board" | "table">("board");
   const [yougileManaged, setYougileManaged] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkMode, setBulkMode] = useState<"selected" | "all" | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function toggleSelectAll(ids: string[]) {
+    setSelectedIds((prev) => (ids.every((id) => prev.includes(id)) ? [] : ids));
+  }
+
+  async function runBulkDelete(mode: "selected" | "all") {
+    if (mode === "selected" && !selectedIds.length) return;
+    setBulkBusy(true);
+    try {
+      const res = (await deleteTasksBulkFn({
+        data: {
+          ...(teamspaceId ? { teamspace_id: teamspaceId } : {}),
+          ...(mode === "all" ? { all: true } : { ids: selectedIds }),
+        },
+      })) as { deleted: number; skipped: number };
+      setSelectedIds([]);
+      await reloadTasks();
+      toast.success(
+        res.skipped
+          ? `Удалено задач: ${res.deleted}. Пропущено (YouGile): ${res.skipped}`
+          : `Удалено задач: ${res.deleted}`,
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setBulkBusy(false);
+      setBulkMode(null);
+    }
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem("tasks:view");
@@ -421,13 +458,58 @@ function TasksPage() {
           {!yougileManaged && <Button onClick={() => openCreate()} className="gap-2">
             <Plus className="h-4 w-4" /> New task
           </Button>}
+          {!yougileManaged && tasks.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Ещё">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => changeView("table")}>
+                  {t("app.tasks.selectMode", "Выбрать задачи (таблица)")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-rose-600 dark:text-rose-300"
+                  onClick={() => setBulkMode("all")}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> {t("app.tasks.deleteAll", "Удалить все задачи")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-3">
+          <p className="text-sm text-foreground">
+            {t("app.tasks.selectedCount", "Выбрано задач")}: {selectedIds.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+              {t("app.tasks.clearSelection", "Снять выделение")}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              disabled={bulkBusy}
+              onClick={() => setBulkMode("selected")}
+            >
+              <Trash2 className="h-4 w-4" /> {t("app.tasks.deleteSelected", "Удалить выбранные")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : view === "table" ? (
         <TaskTable
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          onToggleSelectAll={toggleSelectAll}
           tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
           columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
           priorityLabel={(p: TaskPriority) => PRIORITY_META[p]?.label ?? p}
@@ -795,6 +877,32 @@ function TasksPage() {
               setDialogOpen(false);
               if (target) void handleDelete(target.id);
             }}>{t("app.tasks.delete", "Delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!bulkMode} onOpenChange={(open) => { if (!open) setBulkMode(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkMode === "all"
+                ? t("app.tasks.confirmDeleteAllTitle", "Удалить все задачи?")
+                : t("app.tasks.confirmDeleteSelTitle", "Удалить выбранные задачи?")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkMode === "all"
+                ? t("app.tasks.confirmDeleteAllBody", "Будут удалены все задачи этого пространства. Действие необратимо.")
+                : `${t("app.tasks.confirmDeleteSelBody", "Будут удалены выбранные задачи. Действие необратимо.")} (${selectedIds.length})`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("app.tasks.cancel", "Cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground"
+              onClick={() => { const mode = bulkMode; if (mode) void runBulkDelete(mode); }}
+            >
+              {t("app.tasks.delete", "Delete")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

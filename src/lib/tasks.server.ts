@@ -184,6 +184,36 @@ export async function deleteTaskForUser(userId: string, id: string) {
   return { ok: true };
 }
 
+/** Deletes several tasks at once (selected ids, or every task in the workspace). */
+export async function deleteTasksBulkForUser(
+  userId: string,
+  input: { teamspace_id?: string; ids?: string[]; all?: boolean },
+) {
+  const teamspaceId = await activeTeamspace(userId, input.teamspace_id);
+  const db = await admin();
+  let query = db
+    .from("tasks")
+    .select("id, external_source")
+    .eq("teamspace_id", teamspaceId);
+  if (!input.all) {
+    const ids = input.ids ?? [];
+    if (!ids.length) return { ok: true, deleted: 0, skipped: 0 };
+    query = query.in("id", ids);
+  }
+  const { data: rows, error } = await query;
+  if (error) throw new Error(error.message);
+  const deletable = (rows ?? []).filter((r) => r.external_source !== "yougile").map((r) => r.id);
+  const skipped = (rows ?? []).length - deletable.length;
+  if (!deletable.length) return { ok: true, deleted: 0, skipped };
+  for (let i = 0; i < deletable.length; i += 200) {
+    const chunk = deletable.slice(i, i + 200);
+    const { error: delErr } = await db.from("tasks").delete().in("id", chunk);
+    if (delErr) throw new Error(delErr.message);
+  }
+  await track(userId, teamspaceId, "Задачи: массовое удаление", { count: deletable.length, all: !!input.all });
+  return { ok: true, deleted: deletable.length, skipped };
+}
+
 export async function listMembersForUser(userId: string, teamspaceId: string) {
   await activeTeamspace(userId, teamspaceId);
   const db = await admin();

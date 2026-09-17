@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { CreateTaskSchema, DecideTaskSchema, DeleteTaskSchema, ListMembersSchema, SubmitProofSchema, UpdateTaskSchema } from "./tasks.schemas";
+import { CreateTaskSchema, DecideTaskSchema, DeleteTaskSchema, DeleteTasksBulkSchema, ListMembersSchema, SubmitProofSchema, UpdateTaskSchema } from "./tasks.schemas";
 
 export const createTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -24,6 +24,14 @@ export const deleteTask = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { deleteTaskForUser } = await import("./tasks.server");
     return deleteTaskForUser(context.userId, data.id);
+  });
+
+export const deleteTasksBulk = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => DeleteTasksBulkSchema.parse(raw))
+  .handler(async ({ data, context }) => {
+    const { deleteTasksBulkForUser } = await import("./tasks.server");
+    return deleteTasksBulkForUser(context.userId, data);
   });
 
 export const listTaskMembers = createServerFn({ method: "POST" })

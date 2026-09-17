@@ -27,6 +27,11 @@ export const UpdateTaskSchema = z.object({
 });
 
 export const DeleteTaskSchema = z.object({ id: z.string().uuid() });
+export const DeleteTasksBulkSchema = z.object({
+  teamspace_id: z.string().uuid().optional(),
+  ids: z.array(z.string().uuid()).max(2000).optional(),
+  all: z.boolean().optional(),
+});
 export const ListMembersSchema = z.object({ teamspace_id: z.string().uuid() });
 
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
