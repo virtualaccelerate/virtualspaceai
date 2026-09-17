@@ -284,6 +284,7 @@ const TYPE_ICON: Record<string, string> = {
 export async function runAiNotifications(
   pass: NotifyPass,
   onlyTeamspaceId?: string,
+  opts?: { onlyUserId?: string; forceChatId?: number; ignoreDedupe?: boolean },
 ): Promise<{ sent: number; spaces: number }> {
   const db = await admin();
   const spacesQuery = db.from("teamspaces").select("id").limit(200);
@@ -305,19 +306,22 @@ export async function runAiNotifications(
     for (const item of items) {
       const member = snap.members.find((m) => m.user_id === item.user_id);
       if (!member || !item.title || !item.text) continue;
+      if (opts?.onlyUserId && member.user_id !== opts.onlyUserId) continue;
       const count = perUser.get(member.user_id) ?? 0;
       if (count >= 3) continue;
 
       const importance: AiNotification["importance"] =
         item.importance === "high" || item.importance === "low" ? item.importance : "medium";
       const key = `${today}:${pass}:${item.dedupe_key || `${item.type}:${item.title}`}`.slice(0, 200);
-      const ok = await claim({
-        teamspaceId: space.id,
-        userId: member.user_id,
-        kind: item.type,
-        dedupeKey: key,
-        importance,
-      });
+      const ok = opts?.ignoreDedupe
+        ? true
+        : await claim({
+            teamspaceId: space.id,
+            userId: member.user_id,
+            kind: item.type,
+            dedupeKey: key,
+            importance,
+          });
       if (!ok) continue;
 
       const icon = TYPE_ICON[item.type] ?? "🔔";
@@ -334,7 +338,8 @@ export async function runAiNotifications(
       }).catch(() => {});
 
       const isBrief = item.type.endsWith("_brief");
-      if (member.chat_id && (isBrief || importance !== "low")) {
+      const chatId = opts?.forceChatId ?? member.chat_id;
+      if (chatId && (isBrief || importance !== "low")) {
         const { sendMessage } = await import("./telegram.server");
         let reply_markup: unknown = undefined;
         if (taskId) {
@@ -345,7 +350,7 @@ export async function runAiNotifications(
           }
         }
         await sendMessage(
-          member.chat_id,
+          chatId,
           `${icon} ${item.title}\n\n${item.text}\n\n🏢 ${snap.ts.name}`,
           reply_markup ? ({ reply_markup } as never) : undefined,
         ).catch(() => {});
