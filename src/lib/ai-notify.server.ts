@@ -284,6 +284,7 @@ const TYPE_ICON: Record<string, string> = {
 export async function runAiNotifications(
   pass: NotifyPass,
   onlyTeamspaceId?: string,
+  opts?: { onlyUserId?: string; forceChatId?: number; ignoreDedupe?: boolean },
 ): Promise<{ sent: number; spaces: number }> {
   const db = await admin();
   const spacesQuery = db.from("teamspaces").select("id").limit(200);
