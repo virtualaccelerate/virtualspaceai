@@ -24,7 +24,7 @@ import startupsBg from "@/assets/startups-bg.webp.asset.json";
 import ngosBg from "@/assets/ngos-bg.webp.asset.json";
 
 
-const SITE_URL = "https://virtualspaceai.lovable.app";
+const SITE_URL = "https://ai-virtualspace.com";
 const OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce";
 
 export const Route = createFileRoute("/")({
@@ -780,7 +780,7 @@ function Landing() {
             <div>
               <p className="text-xs uppercase tracking-wider text-white/40 font-medium mb-4">{t("footer.companyLabel")}</p>
               <ul className="space-y-2 text-sm text-white/60">
-                <li><a href="#price" className="hover:text-white transition">{t("nav.pricing")}</a></li>
+                <li><a href="#pricing" className="hover:text-white transition">{t("nav.pricing")}</a></li>
                 <li><a href="/book-demo" className="hover:text-white transition">{t("nav.bookDemo")}</a></li>
                 <li><span className="hover:text-white transition cursor-default">{t("footer.contact")}</span></li>
                 <li><Link to="/terms" className="hover:text-white transition">Terms of Service</Link></li>

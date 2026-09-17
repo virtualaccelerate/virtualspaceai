@@ -7,16 +7,16 @@ export const Route = createFileRoute("/courses")({
   component: CoursesPage,
   head: () => ({
     meta: [
-      { title: "Курсы — Virtual Space" },
+      { title: "Courses — Virtual Space" },
       {
         name: "description",
         content:
-          "Практические курсы Virtual Space по ИИ, операционке и росту бизнеса: покупка онлайн и мгновенный доступ к видео.",
+          "Practical Virtual Space courses on AI, operations and business growth: buy online and get instant access to the videos.",
       },
-      { property: "og:title", content: "Курсы — Virtual Space" },
+      { property: "og:title", content: "Courses — Virtual Space" },
       {
         property: "og:description",
-        content: "Практические курсы по ИИ и управлению бизнесом от команды Virtual Space.",
+        content: "Practical courses on AI and business management from the Virtual Space team.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://ai-virtualspace.com/courses" },
