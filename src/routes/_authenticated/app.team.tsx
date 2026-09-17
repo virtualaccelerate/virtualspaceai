@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { loadTeamOverview } from "@/lib/team.functions";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import TeamPerformance from "@/components/TeamPerformance";
+import PendingMembers from "@/components/PendingMembers";
 
 type Overview = Awaited<ReturnType<typeof loadTeamOverview>>;
 
@@ -127,6 +128,8 @@ function TeamPage() {
           </div>
         ))}
       </div>
+
+      <PendingMembers teamspaceId={tsId} />
 
       <TeamPerformance teamspaceId={tsId} />
     </div>
