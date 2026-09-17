@@ -73,7 +73,8 @@ const HEADERS: Record<string, RegExp> = {
   priority: /^(приоритет|важн|priority|prio)/i,
   status: /^(статус|состояние|этап|колонка|status|state|stage|column)/i,
   due_date: /^(срок|дедлайн|дата|до|due|deadline|date)/i,
-  assignee: /^(исполнит|ответствен|назнач|кому|сотрудник|assignee|owner|responsible|assigned)/i,
+  assignee:
+    /^(исполнит|ответствен|отвеч|назнач|кому|кто|сотрудник|участник|команда|лид|куратор|менеджер|assignee|owner|responsible|assigned|who|lead|person|member|team)/i,
 };
 
 function detectHeader(rows: string[][]) {
