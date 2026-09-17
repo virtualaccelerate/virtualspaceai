@@ -55,6 +55,36 @@ export type Database = {
           },
         ]
       }
+      ai_notification_log: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          id: string
+          importance: string
+          kind: string
+          teamspace_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          importance?: string
+          kind: string
+          teamspace_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          importance?: string
+          kind?: string
+          teamspace_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string
