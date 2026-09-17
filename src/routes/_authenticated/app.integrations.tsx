@@ -69,6 +69,7 @@ function IntegrationsPage() {
         <div className="flex flex-col gap-2.5">
           <GoogleDriveCard />
           <YouGileCard />
+          <TrelloCard />
           {available.map((s) => (
             <SourceRow key={s.id} source={s} />
           ))}
