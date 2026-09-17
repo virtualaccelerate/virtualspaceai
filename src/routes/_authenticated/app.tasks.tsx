@@ -881,6 +881,32 @@ function TasksPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={!!bulkMode} onOpenChange={(open) => { if (!open) setBulkMode(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkMode === "all"
+                ? t("app.tasks.confirmDeleteAllTitle", "Удалить все задачи?")
+                : t("app.tasks.confirmDeleteSelTitle", "Удалить выбранные задачи?")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkMode === "all"
+                ? t("app.tasks.confirmDeleteAllBody", "Будут удалены все задачи этого пространства. Действие необратимо.")
+                : `${t("app.tasks.confirmDeleteSelBody", "Будут удалены выбранные задачи. Действие необратимо.")} (${selectedIds.length})`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("app.tasks.cancel", "Cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground"
+              onClick={() => { const mode = bulkMode; if (mode) void runBulkDelete(mode); }}
+            >
+              {t("app.tasks.delete", "Delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <TaskImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
