@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
-import { createTask, deleteTask, listTaskMembers, reviewTask, submitTaskForReview, updateTask } from "@/lib/tasks.functions";
+import { createTask, deleteTask, deleteTasksBulk, listTaskMembers, reviewTask, submitTaskForReview, updateTask } from "@/lib/tasks.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
