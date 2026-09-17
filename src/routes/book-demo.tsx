@@ -9,7 +9,7 @@ import { LANGUAGES } from "@/lib/i18n";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
 
-const SITE_URL = "https://virtualspaceai.lovable.app";
+const SITE_URL = "https://ai-virtualspace.com";
 
 export const Route = createFileRoute("/book-demo")({
   component: BookDemoPage,
