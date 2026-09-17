@@ -35,7 +35,8 @@ const ICONS = {
 
 
 function AgentsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language?.startsWith("en") ? "en" : "ru";
   const navigate = useNavigate();
   const createConv = useServerFn(createConversation);
   const [teamspaceId, setTeamspaceId] = useState<string | undefined>();
