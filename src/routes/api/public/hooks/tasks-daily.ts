@@ -41,7 +41,7 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         const pass = hourNow === 3 ? "morning" : hourNow === 13 ? "evening" : "pulse";
         const result = await runAiNotifications(pass).catch(() => ({ sent: 0, spaces: 0 }));
 
-        return Response.json({ ok: true, pass, ...result, yougile });
+        return Response.json({ ok: true, pass, ...result, yougile, trello });
       },
     },
   },
