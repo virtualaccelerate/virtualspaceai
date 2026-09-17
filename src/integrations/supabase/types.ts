@@ -851,6 +851,7 @@ export type Database = {
           assignee_id: string | null
           assignee_name: string | null
           created_at: string
+          department: string | null
           description: string | null
           due_date: string | null
           external_archived: boolean
@@ -864,6 +865,7 @@ export type Database = {
           id: string
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
+          project: string | null
           proof_note: string | null
           proof_url: string | null
           reviewed_at: string | null
@@ -879,6 +881,7 @@ export type Database = {
           assignee_id?: string | null
           assignee_name?: string | null
           created_at?: string
+          department?: string | null
           description?: string | null
           due_date?: string | null
           external_archived?: boolean
@@ -892,6 +895,7 @@ export type Database = {
           id?: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          project?: string | null
           proof_note?: string | null
           proof_url?: string | null
           reviewed_at?: string | null
@@ -907,6 +911,7 @@ export type Database = {
           assignee_id?: string | null
           assignee_name?: string | null
           created_at?: string
+          department?: string | null
           description?: string | null
           due_date?: string | null
           external_archived?: boolean
@@ -920,6 +925,7 @@ export type Database = {
           id?: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          project?: string | null
           proof_note?: string | null
           proof_url?: string | null
           reviewed_at?: string | null

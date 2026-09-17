@@ -24,7 +24,7 @@ const AGENT_PROMPTS: Record<string, string> = {
   tasks:
     "You are the Task Planner Agent inside Virtual Space. " +
     "Turn the user's request into a concrete, actionable plan of tasks in the user's language. " +
-    "For EVERY task you plan, emit the token [[task:Title||priority||YYYY-MM-DD||description]] on its own line " +
+    "For EVERY task you plan, emit the token [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]] on its own line " +
     "(priority ∈ low|medium|high|urgent; date is required and must never be skipped). " +
     "Break large goals into small tasks, assign realistic priorities and always set a due date. " +
     "After the tokens, briefly confirm what was created in 1-2 sentences. Plain text only.",
@@ -32,7 +32,7 @@ const AGENT_PROMPTS: Record<string, string> = {
     "You are the Business Advisor Agent inside Virtual Space. " +
     "The user describes a situation, dilemma, or 'what should I do' question. " +
     "Answer in the user's language with: (1) a short read of the situation, (2) 3-5 concrete recommended actions ranked by impact, " +
-    "(3) risks/things to watch, (4) if useful, next steps as tasks using [[task:Title||priority||YYYY-MM-DD||description]] tokens. " +
+    "(3) risks/things to watch, (4) if useful, next steps as tasks using [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]] tokens. " +
     "Ground advice in the KNOWLEDGE BASE and FINANCIAL SOURCES when they contain relevant info, and cite files as [[file:UUID|Name]]. Plain text only.",
 };
 
@@ -210,24 +210,57 @@ export const askZukha = createServerFn({ method: "POST" })
       }
     }
 
-    // Tasks context (deadlines, statuses)
+    // Team + tasks context (for assignment, editing and per-person questions)
+    let teamBlock = "";
+    if (data.teamspace_id) {
+      const { data: members } = await context.supabase
+        .from("teamspace_members")
+        .select("user_id, role")
+        .eq("teamspace_id", data.teamspace_id);
+      const ids = (members ?? []).map((m: any) => m.user_id);
+      let profiles: any[] = [];
+      if (ids.length) {
+        const { data: profs } = await context.supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", ids);
+        profiles = profs ?? [];
+      }
+      const { data: pending } = await context.supabase
+        .from("pending_members")
+        .select("name")
+        .eq("teamspace_id", data.teamspace_id)
+        .is("linked_user_id", null);
+      const lines = (members ?? []).map((m: any) => {
+        const p = profiles.find((x) => x.id === m.user_id);
+        return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role}`;
+      });
+      for (const pm of pending ?? []) lines.push(`- id=none name="${pm.name}" (нет аккаунта, задача будет помечена именем)`);
+      if (lines.length) {
+        teamBlock =
+          "\n\nTEAM MEMBERS of the active workspace (match the person the user names — including nicknames, cases and translit — to one of these; use their exact id):\n" +
+          lines.join("\n");
+      }
+    }
+
+    // Tasks context (deadlines, statuses, ids for editing)
     let tasksBlock = "";
     {
       let tq = context.supabase
         .from("tasks")
-        .select("title, status, priority, due_date, assignee_name")
+        .select("id, title, status, priority, due_date, assignee_name, assignee_id, project, department")
         .neq("status", "done");
       if (data.teamspace_id) tq = tq.eq("teamspace_id", data.teamspace_id);
       const { data: myTasks } = await tq
         .order("due_date", { ascending: true })
-        .limit(60);
+        .limit(150);
       if (myTasks && myTasks.length) {
         tasksBlock =
-          `\n\nCURRENT TASKS (today is ${currentDate}; use for questions about workload and deadlines):\n` +
+          `\n\nCURRENT TASKS (today is ${currentDate}; use for workload, deadlines, per-person questions and for editing existing tasks — the id is what you put in a task-update token):\n` +
           myTasks
             .map(
               (x: any) =>
-                `- ${x.title} [${x.status}/${x.priority}${x.due_date ? `, due ${x.due_date}` : ", no due date"}${x.assignee_name ? `, ${x.assignee_name}` : ""}]`,
+                `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `, due ${x.due_date}` : ", no due date"}${x.assignee_name ? `, assignee ${x.assignee_name}` : ", no assignee"}${x.project ? `, project ${x.project}` : ""}${x.department ? `, dept ${x.department}` : ""}]`,
             )
             .join("\n");
       }
@@ -314,9 +347,26 @@ export const askZukha = createServerFn({ method: "POST" })
        "A file name or a GOOGLE DRIVE FILES list is metadata, not file content. Never infer or invent what is inside a file from its name. Only describe rows, tasks, figures, or facts that appear in an included FILE or DRIVE FILE content block. If the requested file has no content block or could not be read, say clearly that you could not read it and ask the user to reconnect or re-index it. For spreadsheets, inspect every included SHEET section before answering and preserve the exact task names from the cells. " +
       "If the user asks for a report, summary, or something derived from a file, produce the answer as text and cite the relevant [[file:...]] links so they can open the source.\n\n" +
 
-      "TASK CREATION: When the user asks you to create, add, or plan a task (задача, таск, todo, task), emit ONE token per task on its own line using EXACTLY this syntax:\n" +
-      "[[task:Title||priority||YYYY-MM-DD||description]]\n" +
-       "Rules: priority ∈ low|medium|high|urgent (default medium). Date is required and cannot be earlier than CURRENT DATE. Description optional. Example: [[task:Prepare Q3 report||high||2026-09-20||Draft slides and share with team]]. Confirm briefly in the user's language after the token(s). Never wrap the token in quotes or code." +
+      "TASK AGENT: You also act as the task agent of this workspace. From a plain sentence like " +
+      "\"Создай задачу для Айзы: проверить билеты для спикеров, высокий приоритет\" you must infer: title, assignee, project, " +
+      "department/direction, priority, due date and a short description/context. Use TEAM MEMBERS to resolve the person the user " +
+      "names (nicknames, declensions, translit all count) and put their exact id in the token. Infer relative dates (сегодня, завтра, " +
+      "до пятницы, на следующей неделе) from CURRENT DATE. Infer project and department from the request, the existing tasks and the " +
+      "company context; leave them empty when there is no reasonable signal.\n" +
+      "To create a task emit ONE token per task, each on its own line, with EXACTLY 7 fields:\n" +
+      "[[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]]\n" +
+      "priority ∈ low|medium|high|urgent (default medium). The date is required and cannot be earlier than CURRENT DATE. " +
+      "Leave a field empty (just ||) when it does not apply. Example: " +
+      "[[task:Проверить билеты для спикеров||high||2026-09-19||Сверить брони и время прилёта||3ae11a41-84f0-4184-b328-6fc4e4d74915||Hackathon Osh||Logistics]]\n" +
+      "To CHANGE an existing task (the user says перенеси, поменяй, переназначь, подними приоритет, закрой, переименуй) emit:\n" +
+      "[[task-update:TASK_ID||field=value||field=value]] — allowed fields: title, priority, due_date, status (backlog|in_progress|review|done), " +
+      "assignee (member id or name), project, department, description. Take TASK_ID from CURRENT TASKS. If several tasks could match, ask which one.\n" +
+      "Assignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; use a bare name only for people listed as (нет аккаунта). Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, потом/не срочно = low.\n" +
+      "MISSING CRITICAL FIELD: if the title, the assignee or the deadline cannot be inferred with confidence, do NOT emit a token — ask ONE short " +
+      "clarifying question naming only what is missing, and emit the token in the next turn once the user answers.\n" +
+      "Questions about a person's tasks (\"что у Тимура\", \"задачи Айзы\") are answered from CURRENT TASKS: list their open tasks with status and deadline, " +
+      "flag overdue ones, and say plainly when the person has no tasks. Confirm briefly in the user's language after the tokens. Never wrap tokens in quotes or code.\n" +
+      teamBlock +
       companyBlock +
       knowledgeBlock +
       financeBlock +

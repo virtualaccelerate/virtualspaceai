@@ -10,7 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
 import { getDocumentSignedUrl, createDocument, extractDocumentText } from "@/lib/documents.functions";
-import { createTask } from "@/lib/tasks.functions";
+import { createTask, updateTask } from "@/lib/tasks.functions";
 import { transcribeAudio } from "@/lib/transcribe.functions";
 import {
   loadChatHistory,
@@ -32,12 +32,28 @@ type ParsedTask = {
   priority?: "low" | "medium" | "high" | "urgent";
   due_date?: string;
   description?: string;
+  assignee_id?: string;
+  assignee_name?: string;
+  project?: string;
+  department?: string;
+};
+type ParsedUpdate = {
+  id: string;
+  title?: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  status?: "backlog" | "in_progress" | "review" | "done";
+  due_date?: string;
+  description?: string;
+  assignee_id?: string;
+  project?: string;
+  department?: string;
 };
 export type ChatMsg = {
   role: "user" | "assistant";
   content: string;
   tasks?: CreatedTask[];
   proposed?: ParsedTask[];
+  updates?: ParsedUpdate[];
 };
 
 // Accepts [[file:UUID|Name]], [[file:driveId|Name]] and malformed variants
@@ -69,6 +85,8 @@ function parseFileToken(body: string): { id: string; name: string } {
   return { id: raw, name: "Файл" };
 }
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
+const TASK_UPDATE_TOKEN = /\[\[task-update:([^\]]+?)\]\]/gi;
+const UUID_ONLY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AGENT_TAG = /@(contracts|tasks|advisor)\b/i;
 type AgentId = "contracts" | "tasks" | "advisor";
 
@@ -82,11 +100,16 @@ const stripMarkdown = (s: string) =>
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/^\s*[-*+]\s+/gm, "• ");
 
-function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] } {
+function parseTaskTokens(text: string): {
+  cleaned: string;
+  tasks: ParsedTask[];
+  updates: ParsedUpdate[];
+} {
   const tasks: ParsedTask[] = [];
-  const cleaned = text.replace(TASK_TOKEN, (_m, body: string) => {
+  const updates: ParsedUpdate[] = [];
+  let cleaned = text.replace(TASK_TOKEN, (_m, body: string) => {
     const parts = body.split("||").map((p) => p.trim());
-    const [title, priority, due_date, description] = parts;
+    const [title, priority, due_date, description, assignee, project, department] = parts;
     if (!title) return "";
     const t: ParsedTask = { title };
     if (priority && ["low", "medium", "high", "urgent"].includes(priority)) {
@@ -94,10 +117,41 @@ function parseTaskTokens(text: string): { cleaned: string; tasks: ParsedTask[] }
     }
     if (due_date && /^\d{4}-\d{2}-\d{2}$/.test(due_date)) t.due_date = due_date;
     if (description) t.description = description;
+    if (assignee && assignee.toLowerCase() !== "none") {
+      if (UUID_ONLY.test(assignee)) t.assignee_id = assignee;
+      else t.assignee_name = assignee;
+    }
+    if (project) t.project = project;
+    if (department) t.department = department;
     tasks.push(t);
     return "";
   });
-  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks };
+  cleaned = cleaned.replace(TASK_UPDATE_TOKEN, (_m, body: string) => {
+    const parts = body.split("||").map((p) => p.trim()).filter(Boolean);
+    const id = parts.shift() ?? "";
+    if (!UUID_ONLY.test(id)) return "";
+    const u: ParsedUpdate = { id };
+    for (const part of parts) {
+      const eq = part.indexOf("=");
+      if (eq < 1) continue;
+      const field = part.slice(0, eq).trim().toLowerCase();
+      const value = part.slice(eq + 1).trim();
+      if (!value) continue;
+      if (field === "title") u.title = value;
+      else if (field === "description") u.description = value;
+      else if (field === "project") u.project = value;
+      else if (field === "department") u.department = value;
+      else if (field === "priority" && ["low", "medium", "high", "urgent"].includes(value))
+        u.priority = value as ParsedUpdate["priority"];
+      else if (field === "status" && ["backlog", "in_progress", "review", "done"].includes(value))
+        u.status = value as ParsedUpdate["status"];
+      else if (field === "due_date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) u.due_date = value;
+      else if (field === "assignee" && UUID_ONLY.test(value)) u.assignee_id = value;
+    }
+    updates.push(u);
+    return "";
+  });
+  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks, updates };
 }
 
 function MessageContent({
@@ -163,6 +217,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const ask = useServerFn(askZukha);
   const sign = useServerFn(getDocumentSignedUrl);
   const mkTask = useServerFn(createTask);
+  const editTask = useServerFn(updateTask);
   const mkDoc = useServerFn(createDocument);
   const extract = useServerFn(extractDocumentText);
   const loadHistory = useServerFn(loadChatHistory);
@@ -365,6 +420,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                 content: parsed.cleaned,
                 tasks: m.tasks ?? undefined,
                 proposed: parsed.tasks.length ? parsed.tasks : undefined,
+                updates: parsed.updates.length ? parsed.updates : undefined,
               };
             }),
         );
@@ -407,6 +463,38 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     setMessages((prev) =>
       prev.map((m, i) =>
         i !== msgIdx ? m : { ...m, proposed: (m.proposed ?? []).filter((_, j) => j !== taskIdx) },
+      ),
+    );
+  };
+
+  const applyUpdate = async (msgIdx: number, updIdx: number) => {
+    const upd = messages[msgIdx]?.updates?.[updIdx];
+    if (!upd) return;
+    setAcceptingIdx(`u${msgIdx}-${updIdx}`);
+    try {
+      const row = await editTask({ data: upd });
+      setMessages((prev) =>
+        prev.map((m, i) =>
+          i !== msgIdx
+            ? m
+            : {
+                ...m,
+                updates: (m.updates ?? []).filter((_, j) => j !== updIdx),
+                tasks: [...(m.tasks ?? []), { id: row.id, title: row.title }],
+              },
+        ),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update task");
+    } finally {
+      setAcceptingIdx(null);
+    }
+  };
+
+  const rejectUpdate = (msgIdx: number, updIdx: number) => {
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i !== msgIdx ? m : { ...m, updates: (m.updates ?? []).filter((_, j) => j !== updIdx) },
       ),
     );
   };
@@ -551,11 +639,12 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     try {
       const res = await ask({ data: { messages: next, teamspace_id: teamspaceId, agent_id: agent } });
       const cleanedRaw = stripMarkdown(res.reply || "…");
-      const { cleaned, tasks } = parseTaskTokens(cleanedRaw);
+      const { cleaned, tasks, updates } = parseTaskTokens(cleanedRaw);
       const assistantMsg: ChatMsg = {
         role: "assistant",
-        content: cleaned || (tasks.length ? "" : "…"),
+        content: cleaned || (tasks.length || updates.length ? "" : "…"),
         proposed: tasks.length ? tasks : undefined,
+        updates: updates.length ? updates : undefined,
       };
       setMessages([...next, assistantMsg]);
       // Persist the raw reply (with task tokens) so proposals survive a reload.
@@ -873,6 +962,11 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                               <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2 mt-0.5">
                                 {tk.priority && <span>{tk.priority}</span>}
                                 {tk.due_date && <span>{tk.due_date}</span>}
+                                {(tk.assignee_name || tk.assignee_id) && (
+                                  <span>{tk.assignee_name ?? t("app.chat.assigned", "назначен участник")}</span>
+                                )}
+                                {tk.project && <span>#{tk.project}</span>}
+                                {tk.department && <span>{tk.department}</span>}
                               </div>
                               {!tk.due_date && (
                                 <input
@@ -909,6 +1003,40 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                             {t("app.chat.acceptAllTasks", "Принять все")}
                           </button>
                         )}
+                      </div>
+                    )}
+                    {m.role === "assistant" && m.updates && m.updates.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {m.updates.map((u, j) => (
+                          <div key={`${u.id}-${j}`} className="rounded-xl border border-border bg-card/60 px-3 py-2 flex items-start gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-medium text-foreground">
+                                {u.title ?? t("app.chat.updateTask", "Изменение задачи")}
+                              </div>
+                              <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2 mt-0.5">
+                                {u.status && <span>{u.status}</span>}
+                                {u.priority && <span>{u.priority}</span>}
+                                {u.due_date && <span>{u.due_date}</span>}
+                                {u.assignee_id && <span>{t("app.chat.assigned", "назначен участник")}</span>}
+                                {u.project && <span>#{u.project}</span>}
+                                {u.department && <span>{u.department}</span>}
+                              </div>
+                            </div>
+                            <button
+                              disabled={acceptingIdx === `u${i}-${j}`}
+                              onClick={() => void applyUpdate(i, j)}
+                              className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
+                            >
+                              {acceptingIdx === `u${i}-${j}` ? "…" : t("app.chat.applyChange", "Применить")}
+                            </button>
+                            <button
+                              onClick={() => rejectUpdate(i, j)}
+                              className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
+                            >
+                              {t("app.chat.rejectTask", "Отклонить")}
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     {m.role === "assistant" && m.tasks && m.tasks.length > 0 && (

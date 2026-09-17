@@ -12,6 +12,9 @@ export const CreateTaskSchema = z.object({
   status: TaskStatusSchema.optional(),
   priority: TaskPrioritySchema.optional(),
   assignee_id: z.string().uuid().optional().nullable(),
+  assignee_name: z.string().trim().max(160).optional().nullable(),
+  project: z.string().trim().max(160).optional().nullable(),
+  department: z.string().trim().max(160).optional().nullable(),
   due_date: RequiredDueDateSchema,
 });
 
@@ -22,6 +25,8 @@ export const UpdateTaskSchema = z.object({
   status: TaskStatusSchema.optional(),
   priority: TaskPrioritySchema.optional(),
   assignee_id: z.string().uuid().optional().nullable(),
+  project: z.string().trim().max(160).optional().nullable(),
+  department: z.string().trim().max(160).optional().nullable(),
   due_date: OptionalDueDateSchema,
   position: z.number().int().min(0).optional(),
 });
