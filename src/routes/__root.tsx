@@ -122,8 +122,16 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    const timer = window.setTimeout(applyClientLanguage, 0);
-    return () => window.clearTimeout(timer);
+    // Apply the detected language only after hydration has fully settled,
+    // otherwise streamed subtrees hydrate against different text.
+    let timer = 0;
+    const raf = window.requestAnimationFrame(() => {
+      timer = window.setTimeout(applyClientLanguage, 0);
+    });
+    return () => {
+      window.cancelAnimationFrame(raf);
+      if (timer) window.clearTimeout(timer);
+    };
   }, []);
 
   return (
