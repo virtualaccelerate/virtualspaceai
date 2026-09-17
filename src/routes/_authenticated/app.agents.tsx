@@ -91,21 +91,23 @@ function AgentsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {AGENTS.map((a) => (
+        {AGENTS.map((a) => {
+          const Icon = ICONS[a.icon];
+          return (
           <div key={a.id} className="rounded-2xl border border-border bg-card p-5 flex flex-col">
             <div className="flex items-start gap-3">
               <div className="h-11 w-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
-                <a.icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-display text-lg text-foreground">{t(a.titleKey)}</h3>
+                <h3 className="font-display text-lg text-foreground">{a.title[lang]}</h3>
                 <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-mono font-semibold rounded bg-primary/15 text-primary px-1.5 py-0.5">
                   {a.tag}
                 </div>
               </div>
             </div>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
-              {t(a.descKey)}
+              {a.desc[lang]}
             </p>
             <div className="mt-4 flex items-center gap-2">
               <button
