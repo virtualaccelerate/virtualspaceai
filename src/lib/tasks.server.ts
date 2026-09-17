@@ -97,12 +97,13 @@ async function track(userId: string, teamspaceId: string | null, feature: string
 
 export async function createTaskForUser(
   userId: string,
-  data: Omit<CreateTaskInput, "due_date"> & { due_date?: string | null },
+  data: Omit<CreateTaskInput, "due_date"> & { due_date?: string | null; assignee_name?: string | null },
 ) {
   const db = await admin();
   const teamspaceId = await activeTeamspace(userId, data.teamspace_id);
   const status = data.status ?? "backlog";
-  const name = await assigneeName(teamspaceId, data.assignee_id);
+  // A name without an account (pending member from an import) is kept as a label.
+  const name = (await assigneeName(teamspaceId, data.assignee_id)) ?? data.assignee_name ?? null;
   const { count } = await db.from("tasks").select("id", { count: "exact", head: true }).eq("teamspace_id", teamspaceId).eq("status", status);
   const { data: row, error } = await db.from("tasks").insert({
     user_id: userId,
