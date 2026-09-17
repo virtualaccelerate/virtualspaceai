@@ -81,6 +81,8 @@ type Task = {
   external_url?: string | null;
   external_project?: string | null;
   external_archived?: boolean;
+  project?: string | null;
+  department?: string | null;
 };
 
 const COLUMNS: {
@@ -691,6 +693,21 @@ function TasksPage() {
                             >
                               Сдать на проверку
                             </button>
+                          )}
+
+                          {(task.project || task.department) && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {task.project && (
+                                <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                  {task.project}
+                                </span>
+                              )}
+                              {task.department && (
+                                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                  {task.department}
+                                </span>
+                              )}
+                            </div>
                           )}
 
                           <div className="mt-3 flex items-center gap-1.5">

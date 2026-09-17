@@ -23,6 +23,8 @@ export type TableTask = {
   created_at?: string | null;
   external_source?: string | null;
   external_url?: string | null;
+  project?: string | null;
+  department?: string | null;
 };
 
 type Column = { id: TableTaskStatus; label: string };
@@ -208,6 +210,16 @@ function TaskTableBase({
                 <p className="font-medium text-foreground leading-snug">{task.title}{task.external_source === "yougile" && <span className="ml-2 text-[10px] text-emerald-600">YouGile</span>}</p>
                 {task.description && (
                   <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{task.description}</p>
+                )}
+                {(task.project || task.department) && (
+                  <span className="mt-1 flex flex-wrap gap-1">
+                    {task.project && (
+                      <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{task.project}</span>
+                    )}
+                    {task.department && (
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{task.department}</span>
+                    )}
+                  </span>
                 )}
               </td>
               <td className="px-3 py-2.5">
