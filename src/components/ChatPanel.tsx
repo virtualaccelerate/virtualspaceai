@@ -10,7 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
 import { getDocumentSignedUrl, createDocument, extractDocumentText } from "@/lib/documents.functions";
-import { createTask } from "@/lib/tasks.functions";
+import { createTask, updateTask } from "@/lib/tasks.functions";
 import { transcribeAudio } from "@/lib/transcribe.functions";
 import {
   loadChatHistory,
@@ -217,6 +217,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const ask = useServerFn(askZukha);
   const sign = useServerFn(getDocumentSignedUrl);
   const mkTask = useServerFn(createTask);
+  const editTask = useServerFn(updateTask);
   const mkDoc = useServerFn(createDocument);
   const extract = useServerFn(extractDocumentText);
   const loadHistory = useServerFn(loadChatHistory);
@@ -419,6 +420,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                 content: parsed.cleaned,
                 tasks: m.tasks ?? undefined,
                 proposed: parsed.tasks.length ? parsed.tasks : undefined,
+                updates: parsed.updates.length ? parsed.updates : undefined,
               };
             }),
         );
@@ -461,6 +463,38 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     setMessages((prev) =>
       prev.map((m, i) =>
         i !== msgIdx ? m : { ...m, proposed: (m.proposed ?? []).filter((_, j) => j !== taskIdx) },
+      ),
+    );
+  };
+
+  const applyUpdate = async (msgIdx: number, updIdx: number) => {
+    const upd = messages[msgIdx]?.updates?.[updIdx];
+    if (!upd) return;
+    setAcceptingIdx(`u${msgIdx}-${updIdx}`);
+    try {
+      const row = await editTask({ data: upd });
+      setMessages((prev) =>
+        prev.map((m, i) =>
+          i !== msgIdx
+            ? m
+            : {
+                ...m,
+                updates: (m.updates ?? []).filter((_, j) => j !== updIdx),
+                tasks: [...(m.tasks ?? []), { id: row.id, title: row.title }],
+              },
+        ),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update task");
+    } finally {
+      setAcceptingIdx(null);
+    }
+  };
+
+  const rejectUpdate = (msgIdx: number, updIdx: number) => {
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i !== msgIdx ? m : { ...m, updates: (m.updates ?? []).filter((_, j) => j !== updIdx) },
       ),
     );
   };
@@ -605,11 +639,12 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     try {
       const res = await ask({ data: { messages: next, teamspace_id: teamspaceId, agent_id: agent } });
       const cleanedRaw = stripMarkdown(res.reply || "…");
-      const { cleaned, tasks } = parseTaskTokens(cleanedRaw);
+      const { cleaned, tasks, updates } = parseTaskTokens(cleanedRaw);
       const assistantMsg: ChatMsg = {
         role: "assistant",
-        content: cleaned || (tasks.length ? "" : "…"),
+        content: cleaned || (tasks.length || updates.length ? "" : "…"),
         proposed: tasks.length ? tasks : undefined,
+        updates: updates.length ? updates : undefined,
       };
       setMessages([...next, assistantMsg]);
       // Persist the raw reply (with task tokens) so proposals survive a reload.
@@ -927,6 +962,11 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                               <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2 mt-0.5">
                                 {tk.priority && <span>{tk.priority}</span>}
                                 {tk.due_date && <span>{tk.due_date}</span>}
+                                {(tk.assignee_name || tk.assignee_id) && (
+                                  <span>{tk.assignee_name ?? t("app.chat.assigned", "назначен участник")}</span>
+                                )}
+                                {tk.project && <span>#{tk.project}</span>}
+                                {tk.department && <span>{tk.department}</span>}
                               </div>
                               {!tk.due_date && (
                                 <input
@@ -963,6 +1003,40 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                             {t("app.chat.acceptAllTasks", "Принять все")}
                           </button>
                         )}
+                      </div>
+                    )}
+                    {m.role === "assistant" && m.updates && m.updates.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {m.updates.map((u, j) => (
+                          <div key={`${u.id}-${j}`} className="rounded-xl border border-border bg-card/60 px-3 py-2 flex items-start gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-medium text-foreground">
+                                {u.title ?? t("app.chat.updateTask", "Изменение задачи")}
+                              </div>
+                              <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2 mt-0.5">
+                                {u.status && <span>{u.status}</span>}
+                                {u.priority && <span>{u.priority}</span>}
+                                {u.due_date && <span>{u.due_date}</span>}
+                                {u.assignee_id && <span>{t("app.chat.assigned", "назначен участник")}</span>}
+                                {u.project && <span>#{u.project}</span>}
+                                {u.department && <span>{u.department}</span>}
+                              </div>
+                            </div>
+                            <button
+                              disabled={acceptingIdx === `u${i}-${j}`}
+                              onClick={() => void applyUpdate(i, j)}
+                              className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
+                            >
+                              {acceptingIdx === `u${i}-${j}` ? "…" : t("app.chat.applyChange", "Применить")}
+                            </button>
+                            <button
+                              onClick={() => rejectUpdate(i, j)}
+                              className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
+                            >
+                              {t("app.chat.rejectTask", "Отклонить")}
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     {m.role === "assistant" && m.tasks && m.tasks.length > 0 && (
