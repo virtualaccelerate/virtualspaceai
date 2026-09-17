@@ -22,7 +22,6 @@ const FEATURE_BY_SEGMENT: Record<string, string> = {
   telegram: "Telegram",
   time: "Время",
   analytics: "Аналитика",
-  solutions: "Решения",
 };
 
 function ActivityTracker() {
