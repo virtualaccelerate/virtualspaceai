@@ -196,16 +196,22 @@ async function loadSheets(userId: string, input: PreviewTasksInput): Promise<She
   if (input.sheet_url) {
     const m = input.sheet_url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
     if (!m) throw new Error("Это не ссылка на Google Таблицу");
-    const gid = input.sheet_url.match(/gid=(\d+)/)?.[1] ?? "0";
-    const res = await fetch(
-      `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`,
-      { redirect: "follow" },
-    );
-    const csv = await res.text();
-    if (!res.ok || /<html/i.test(csv.slice(0, 200))) {
-      throw new Error("Таблица недоступна — откройте доступ «Любой, у кого есть ссылка».");
+    const gid = input.sheet_url.match(/[#&?]gid=(\d+)/)?.[1] ?? null;
+    // Try the exact sheet tab first, then the default export, then the gviz endpoint.
+    const urls = [
+      gid ? `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}` : null,
+      `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`,
+      `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv${gid ? `&gid=${gid}` : ""}`,
+    ].filter(Boolean) as string[];
+
+    for (const url of urls) {
+      const res = await fetch(url, { redirect: "follow" });
+      const csv = await res.text();
+      if (res.ok && !/<html/i.test(csv.slice(0, 200)) && csv.trim()) {
+        return sheetsFromText(csv);
+      }
     }
-    return sheetsFromText(csv);
+    throw new Error("Таблица недоступна — откройте доступ «Любой, у кого есть ссылка».");
   }
   if (input.document_id) {
     const db = await admin();
