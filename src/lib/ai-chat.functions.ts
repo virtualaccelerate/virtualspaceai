@@ -361,6 +361,7 @@ export const askZukha = createServerFn({ method: "POST" })
       "To CHANGE an existing task (the user says перенеси, поменяй, переназначь, подними приоритет, закрой, переименуй) emit:\n" +
       "[[task-update:TASK_ID||field=value||field=value]] — allowed fields: title, priority, due_date, status (backlog|in_progress|review|done), " +
       "assignee (member id or name), project, department, description. Take TASK_ID from CURRENT TASKS. If several tasks could match, ask which one.\n" +
+      "Assignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; use a bare name only for people listed as (нет аккаунта). Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, потом/не срочно = low.\n" +
       "MISSING CRITICAL FIELD: if the title, the assignee or the deadline cannot be inferred with confidence, do NOT emit a token — ask ONE short " +
       "clarifying question naming only what is missing, and emit the token in the next turn once the user answers.\n" +
       "Questions about a person's tasks (\"что у Тимура\", \"задачи Айзы\") are answered from CURRENT TASKS: list their open tasks with status and deadline, " +

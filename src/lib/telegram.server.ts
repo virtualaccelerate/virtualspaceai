@@ -599,6 +599,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     "\nYou are the task agent of this workspace. From a plain sentence infer title, assignee, project, department, priority, deadline and a short description." +
     "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE; empty fields stay empty)." +
     "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS." +
+    "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nIf the title, assignee or deadline cannot be inferred confidently, do NOT emit a token — ask one short clarifying question instead." +
     "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status and deadline." +
     (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
