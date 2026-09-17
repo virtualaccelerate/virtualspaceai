@@ -92,6 +92,13 @@
       "when": 1789645689122,
       "tag": "0012_harden_definer_functions_and_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789648733416,
+      "tag": "0013_move_definer_helpers_to_private_schema",
+      "breakpoints": true
     }
   ]
 }

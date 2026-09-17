@@ -97,8 +97,8 @@ function OnboardingPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error: err } = await supabase.rpc("join_teamspace_by_code", { _code: code.trim() });
-      if (err) throw err;
+      const { joinTeamspaceByCodeFn } = await import("@/lib/teamspace-join.functions");
+      await joinTeamspaceByCodeFn({ data: { code: code.trim() } });
       await queryClient.invalidateQueries();
       navigate({ to: "/app", replace: true });
     } catch (err) {

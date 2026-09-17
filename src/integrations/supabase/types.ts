@@ -1118,21 +1118,6 @@ export type Database = {
           text_len: number
         }[]
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_teamspace_member: {
-        Args: { _ts: string; _uid: string }
-        Returns: boolean
-      }
-      is_teamspace_owner: {
-        Args: { _ts: string; _uid: string }
-        Returns: boolean
-      }
       join_teamspace_by_code: { Args: { _code: string }; Returns: string }
       send_daily_task_digest: { Args: never; Returns: undefined }
     }

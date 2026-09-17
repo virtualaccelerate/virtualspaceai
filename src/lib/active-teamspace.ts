@@ -108,9 +108,8 @@ export async function createTeamspace(input: {
 
 /** Join a teamspace by invite code and make it active. Returns the teamspace id. */
 export async function joinTeamspaceByCode(code: string): Promise<string> {
-  const { data, error } = await supabase.rpc("join_teamspace_by_code", { _code: code.trim() });
-  if (error) throw error;
-  const id = data as unknown as string;
+  const { joinTeamspaceByCodeFn } = await import("@/lib/teamspace-join.functions");
+  const id = await joinTeamspaceByCodeFn({ data: { code: code.trim() } });
   if (id) await setActiveTeamspace(id);
   return id;
 }
