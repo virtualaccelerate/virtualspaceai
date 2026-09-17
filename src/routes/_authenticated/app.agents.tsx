@@ -58,7 +58,7 @@ function AgentsPage() {
         data: {
           teamspace_id: teamspaceId,
           agent_id: agent.id,
-          title: t(agent.titleKey),
+          title: agent.title[lang],
         },
       });
       navigate({ to: "/app/c/$conversationId", params: { conversationId: conv.id } });
