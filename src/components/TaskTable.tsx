@@ -91,6 +91,13 @@ function TaskTableBase({
   };
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "status", dir: 1 });
+  const selectable = !!onToggleSelect;
+  const selected = useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
+  const selectableIds = useMemo(
+    () => tasks.filter((t) => t.external_source !== "yougile").map((t) => t.id),
+    [tasks],
+  );
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
 
   const statusRank = useMemo(() => {
     const map: Record<string, number> = {};
