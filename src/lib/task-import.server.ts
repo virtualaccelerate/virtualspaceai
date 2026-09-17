@@ -100,6 +100,7 @@ function normPriority(v: string): Priority | undefined {
   if (/^(high|major|высок|важн|высший|очень высок|p1|3)$/.test(s)) return "high";
   if (/^(medium|normal|mid|средн|обычн|норм|стандарт|p2|2)$/.test(s)) return "medium";
   if (/^(low|minor|trivial|низк|мелк|не срочн|можно позже|желател|p3|1)$/.test(s)) return "low";
+  if (/не ?срочн|не горит/.test(s)) return "low";
   if (/срочн|urgent|critical|asap|критич|🔴|🔥|!!!|экстрен/.test(s)) return "urgent";
   if (/высок|high|major|важн|🟠|!!/.test(s)) return "high";
   if (/низк|low|minor|неспеш|🟢/.test(s)) return "low";
