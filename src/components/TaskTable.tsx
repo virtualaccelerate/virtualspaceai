@@ -187,8 +187,23 @@ function TaskTableBase({
             <tr
               key={task.id}
               onClick={() => task.external_source && task.external_url ? window.open(task.external_url, "_blank", "noreferrer") : onOpen(task)}
-              className="cursor-pointer border-b border-border/60 last:border-0 hover:bg-accent/30 transition-colors"
+              className={cn(
+                "cursor-pointer border-b border-border/60 last:border-0 hover:bg-accent/30 transition-colors",
+                selected.has(task.id) && "bg-primary/[0.06]",
+              )}
             >
+              {selectable && (
+                <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    aria-label="Select task"
+                    className="h-4 w-4 accent-primary align-middle"
+                    disabled={task.external_source === "yougile"}
+                    checked={selected.has(task.id)}
+                    onChange={() => onToggleSelect?.(task.id)}
+                  />
+                </td>
+              )}
               <td className="px-3 py-2.5">
                 <p className="font-medium text-foreground leading-snug">{task.title}{task.external_source === "yougile" && <span className="ml-2 text-[10px] text-emerald-600">YouGile</span>}</p>
                 {task.description && (
