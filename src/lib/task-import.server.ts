@@ -217,10 +217,12 @@ async function loadSheets(userId: string, input: PreviewTasksInput): Promise<She
     const db = await admin();
     const { data } = await db
       .from("documents")
-      .select("name, extracted_text")
+      .select("name, extracted_text, teamspace_id")
       .eq("id", input.document_id)
+      .eq("teamspace_id", input.teamspace_id)
       .maybeSingle();
-    if (!data?.extracted_text) throw new Error("У файла ещё нет прочитанного текста — переиндексируйте его.");
+    if (!data) throw new Error("Файл не найден в этом пространстве.");
+    if (!data.extracted_text) throw new Error("У файла ещё нет прочитанного текста — переиндексируйте его.");
     return sheetsFromText(data.extracted_text);
   }
   if (input.drive_file_id) {

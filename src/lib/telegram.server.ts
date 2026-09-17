@@ -771,10 +771,16 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
 
     const { data: existing } = await supabaseAdmin
       .from("tasks")
-      .select("id, title, external_source")
+      .select("id, title, external_source, teamspace_id")
       .eq("id", taskId)
       .maybeSingle();
     if (!existing) {
+      updateErrors.push(lang === "en" ? "Task not found" : "Задача не найдена");
+      continue;
+    }
+    // Only allow edits to tasks inside workspaces the sender belongs to
+    const taskSpace = (existing as any).teamspace_id as string | null;
+    if (!taskSpace || !spaceIds.includes(taskSpace)) {
       updateErrors.push(lang === "en" ? "Task not found" : "Задача не найдена");
       continue;
     }
