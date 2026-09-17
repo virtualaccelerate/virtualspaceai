@@ -716,15 +716,15 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   ]);
 
   const openTracker = createdTitles.length || updatedTitles.length
-    ? {
+    ? { reply_markup: {
         inline_keyboard: [[
           {
             text: lang === "ru" ? "📋 Открыть трекер задач" : "📋 Open the task tracker",
             web_app: { url: `${miniAppUrl()}?to=/app/tasks` },
           },
         ]],
-      }
-    : undefined;
+      } }
+    : {};
 
   await sendMessage(chatId, clean.slice(0, 3800), openTracker);
 }
