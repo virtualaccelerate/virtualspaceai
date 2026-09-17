@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-const BASE_URL = "https://virtualspaceai.lovable.app";
+const BASE_URL = "https://ai-virtualspace.com";
 
 interface SitemapEntry {
   path: string;
