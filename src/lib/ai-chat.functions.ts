@@ -14,7 +14,6 @@ const InputSchema = z.object({
   agent_id: z.string().max(60).optional(),
 });
 
-import { AGENT_PROMPTS } from "./agents";
 
 
 // ---------- Google Sheets helpers (shared with financials) ----------
