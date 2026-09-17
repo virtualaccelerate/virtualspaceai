@@ -661,6 +661,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const updateRe = /\[\[task-update:([^\]]+)\]\]/g;
   const createdTitles: string[] = [];
   const updatedTitles: string[] = [];
+  const updateErrors: string[] = [];
+
   let match: RegExpExecArray | null;
   while ((match = taskRe.exec(reply))) {
     const [title, priority, due, description, assignee, project, department, space] = match[1].split("||");
