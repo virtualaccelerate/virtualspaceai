@@ -816,6 +816,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   clean = clean.replace(updateRe, "").trim();
   if (createdTitles.length) clean += `\n\n➕ ${createdTitles.join("\n➕ ")}`;
   if (updatedTitles.length) clean += `\n\n✏️ ${updatedTitles.join("\n✏️ ")}`;
+  if (updateErrors.length) clean += `\n\n⚠️ ${updateErrors.join("\n⚠️ ")}`;
 
   await supabaseAdmin.from("chat_messages").insert([
     { user_id: link.user_id, teamspace_id: link.teamspace_id, role: "user", content: text },
