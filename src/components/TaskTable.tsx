@@ -162,6 +162,17 @@ function TaskTableBase({
       <table className="w-full min-w-[820px] border-collapse text-sm">
         <thead className="border-b border-border bg-muted/40">
           <tr>
+            {selectable && (
+              <th className="w-10 px-3 py-2">
+                <input
+                  type="checkbox"
+                  aria-label="Select all"
+                  className="h-4 w-4 accent-primary align-middle"
+                  checked={allSelected}
+                  onChange={() => onToggleSelectAll?.(selectableIds)}
+                />
+              </th>
+            )}
             <Head k="title" className="w-[38%]">{labels.title}</Head>
             <Head k="status">{labels.status}</Head>
             <Head k="priority">{labels.priority}</Head>
