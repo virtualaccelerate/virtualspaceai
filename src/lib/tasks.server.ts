@@ -97,7 +97,12 @@ async function track(userId: string, teamspaceId: string | null, feature: string
 
 export async function createTaskForUser(
   userId: string,
-  data: Omit<CreateTaskInput, "due_date"> & { due_date?: string | null; assignee_name?: string | null },
+  data: Omit<CreateTaskInput, "due_date"> & {
+    due_date?: string | null;
+    assignee_name?: string | null;
+    project?: string | null;
+    department?: string | null;
+  },
 ) {
   const db = await admin();
   const teamspaceId = await activeTeamspace(userId, data.teamspace_id);
@@ -114,6 +119,8 @@ export async function createTaskForUser(
     priority: data.priority ?? "medium",
     assignee_id: data.assignee_id ?? null,
     assignee_name: name,
+    project: data.project ?? null,
+    department: data.department ?? null,
     due_date: data.due_date ?? null,
     position: (count ?? 0) * 1000,
   }).select("*").single();
@@ -140,9 +147,13 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
     assignee_name?: string | null;
     due_date?: string | null;
     position?: number;
+    project?: string | null;
+    department?: string | null;
   } = {
     title: data.title,
     description: data.description,
+    project: (data as { project?: string | null }).project,
+    department: (data as { department?: string | null }).department,
     status: data.status,
     priority: data.priority,
     assignee_id: data.assignee_id,
