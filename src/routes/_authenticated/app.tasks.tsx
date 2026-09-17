@@ -191,6 +191,42 @@ function TasksPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [view, setView] = useState<"board" | "table">("board");
   const [yougileManaged, setYougileManaged] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkMode, setBulkMode] = useState<"selected" | "all" | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function toggleSelectAll(ids: string[]) {
+    setSelectedIds((prev) => (ids.every((id) => prev.includes(id)) ? [] : ids));
+  }
+
+  async function runBulkDelete(mode: "selected" | "all") {
+    if (mode === "selected" && !selectedIds.length) return;
+    setBulkBusy(true);
+    try {
+      const res = (await deleteTasksBulkFn({
+        data: {
+          ...(teamspaceId ? { teamspace_id: teamspaceId } : {}),
+          ...(mode === "all" ? { all: true } : { ids: selectedIds }),
+        },
+      })) as { deleted: number; skipped: number };
+      setSelectedIds([]);
+      await reloadTasks();
+      toast.success(
+        res.skipped
+          ? `Удалено задач: ${res.deleted}. Пропущено (YouGile): ${res.skipped}`
+          : `Удалено задач: ${res.deleted}`,
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setBulkBusy(false);
+      setBulkMode(null);
+    }
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem("tasks:view");
