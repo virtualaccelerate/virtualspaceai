@@ -625,9 +625,11 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     "\nWorkspace field (8th): the id or exact name from WORKSPACES. Whenever the message names a workspace (\"для воркспейса X\", \"воркспейс: X\", \"в пространстве X\"), you MUST put that workspace's id there — never fall back to the default. If not mentioned use the default workspace." +
     "\nTitle must contain ONLY the work itself: never include the workspace name or phrases like \"для воркспейса …\", \"воркспейс: …\", and never append the workspace with a dash." +
     "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS (each task is labelled with its workspace)." +
+    "\nSTATUS CHANGES ARE MANDATORY TOKENS: whenever the user says a task is started, in progress, finished, done, closed, ready, sent for review, or should go back to backlog — immediately emit [[task-update:TASK_ID||status=...]] for the matching task from OPEN TASKS. Wording: сделал/готово/выполнил/закрыл/завершил = done; начал/в работе/делаю = in_progress; на проверку/на ревью = review; вернуть/в бэклог = backlog. Never answer that you changed the status without emitting the token. Match the task by title even if worded loosely; only if several open tasks match equally, ask one short question naming them." +
     "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
-    "\nIf the title, assignee or deadline cannot be inferred confidently, do NOT emit a token — ask one short clarifying question instead." +
+    "\nWhen CREATING a task, if the title, assignee or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
     "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status, deadline and workspace." +
+
     (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
     spacesBlock +
     (tasks ? `\n\nOPEN TASKS:\n${tasks}` : "") +
@@ -659,6 +661,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const updateRe = /\[\[task-update:([^\]]+)\]\]/g;
   const createdTitles: string[] = [];
   const updatedTitles: string[] = [];
+  const updateErrors: string[] = [];
+
   let match: RegExpExecArray | null;
   while ((match = taskRe.exec(reply))) {
     const [title, priority, due, description, assignee, project, department, space] = match[1].split("||");
@@ -764,19 +768,55 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       else if (field === "assignee" && UUID.test(value)) patch.assignee_id = value;
     }
     if (!Object.keys(patch).length) continue;
-    const { data } = await supabaseAdmin
+
+    const { data: existing } = await supabaseAdmin
+      .from("tasks")
+      .select("id, title, external_source")
+      .eq("id", taskId)
+      .maybeSingle();
+    if (!existing) {
+      updateErrors.push(lang === "en" ? "Task not found" : "Задача не найдена");
+      continue;
+    }
+
+    // YouGile tasks are managed in YouGile — push the status there instead
+    if ((existing as any).external_source === "yougile") {
+      if (typeof patch.status === "string") {
+        try {
+          const { updateYouGileTaskStatus } = await import("./yougile.server");
+          await updateYouGileTaskStatus(taskId, patch.status as any, link.user_id);
+          updatedTitles.push((existing as any).title);
+        } catch (e) {
+          updateErrors.push(
+            `${(existing as any).title}: ${e instanceof Error ? e.message.slice(0, 120) : "YouGile"}`,
+          );
+        }
+      } else {
+        updateErrors.push(
+          `${(existing as any).title}: ${lang === "en" ? "managed in YouGile" : "задача из YouGile — правится в YouGile"}`,
+        );
+      }
+      continue;
+    }
+
+    const { data, error } = await supabaseAdmin
       .from("tasks")
       .update(patch as never)
       .eq("id", taskId)
-      .neq("external_source", "yougile")
       .select("title")
       .single();
     if (data) updatedTitles.push((data as any).title);
+    else
+      updateErrors.push(
+        `${(existing as any).title}: ${error?.message?.slice(0, 120) ?? (lang === "en" ? "update failed" : "не удалось обновить")}`,
+      );
+
   }
   let clean = reply.replace(taskRe, "").replace(/[*_`#]/g, "").replace(/\n{3,}/g, "\n\n").trim();
   clean = clean.replace(updateRe, "").trim();
   if (createdTitles.length) clean += `\n\n➕ ${createdTitles.join("\n➕ ")}`;
   if (updatedTitles.length) clean += `\n\n✏️ ${updatedTitles.join("\n✏️ ")}`;
+  if (updateErrors.length) clean += `\n\n⚠️ ${updateErrors.join("\n⚠️ ")}`;
 
   await supabaseAdmin.from("chat_messages").insert([
     { user_id: link.user_id, teamspace_id: link.teamspace_id, role: "user", content: text },
