@@ -664,19 +664,45 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     if (!title?.trim()) continue;
     const assigneeRaw = (assignee ?? "").trim();
     const assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
-    // Resolve the workspace named in the 8th field; fall back to the default
+    // Resolve the workspace named in the 8th field; fall back to the message text, then the default
+    const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    const matchSpaceName = (raw: string): string | null => {
+      const n = norm(raw);
+      if (!n) return null;
+      const entries = [...spaceMap.entries()];
+      const exact = entries.find(([, name]) => norm(name) === n);
+      if (exact) return exact[0];
+      const partial = entries.find(([, name]) => n.includes(norm(name)) || norm(name).includes(n));
+      return partial ? partial[0] : null;
+    };
     const spaceRaw = (space ?? "").trim();
     let targetSpace = defaultSpaceId;
+    let resolved = false;
     if (spaceRaw) {
-      if (UUID.test(spaceRaw) && spaceMap.has(spaceRaw)) targetSpace = spaceRaw;
-      else {
-        const found = [...spaceMap.entries()].find(
-          ([, n]) => n.toLowerCase() === spaceRaw.toLowerCase(),
-        );
-        if (found) targetSpace = found[0];
+      if (UUID.test(spaceRaw) && spaceMap.has(spaceRaw)) {
+        targetSpace = spaceRaw;
+        resolved = true;
+      } else {
+        const found = matchSpaceName(spaceRaw);
+        if (found) {
+          targetSpace = found;
+          resolved = true;
+        }
       }
     }
+    if (!resolved) {
+      // The user may have named the workspace in the message itself
+      const fromText = matchSpaceName(text);
+      if (fromText) targetSpace = fromText;
+    }
     const targetSpaceName = targetSpace ? spaceMap.get(targetSpace) : null;
+    // The model sometimes glues the workspace phrase into the title — strip it
+    let cleanTitle = title
+      .trim()
+      .replace(/\s*(для|в)\s+(воркспейс[а-я]*|пространств[а-я]*|workspace)\s+["«]?[^,.;]*["»]?\s*$/iu, "")
+      .replace(/\s*[—-]\s*$/u, "")
+      .trim();
+    if (!cleanTitle) cleanTitle = title.trim();
     const { data } = await supabaseAdmin
       .from("tasks")
       .insert({
