@@ -18,10 +18,10 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
 import vaLogoDark from "@/assets/Untitled_design_21.png.asset.json";
 import vaLogoLight from "@/assets/Untitled_design_22.png.asset.json";
-import aiBusinessEra from "@/assets/ai-business-era.jpg.asset.json";
-import heroBg from "@/assets/hero-bg.jpg.asset.json";
-import startupsBg from "@/assets/startups-bg.jpg.asset.json";
-import ngosBg from "@/assets/ngos-bg.jpg.asset.json";
+import aiBusinessEra from "@/assets/ai-business-era.webp.asset.json";
+import heroBg from "@/assets/hero-bg.webp.asset.json";
+import startupsBg from "@/assets/startups-bg.webp.asset.json";
+import ngosBg from "@/assets/ngos-bg.webp.asset.json";
 
 
 const SITE_URL = "https://virtualspaceai.lovable.app";
@@ -40,7 +40,10 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: OG_IMAGE },
       { name: "twitter:image", content: OG_IMAGE },
     ],
-    links: [{ rel: "canonical", href: SITE_URL + "/" }],
+    links: [
+      { rel: "canonical", href: SITE_URL + "/" },
+      { rel: "preload", as: "image", href: heroBg.url },
+    ],
     scripts: [{
       type: "application/ld+json",
       children: JSON.stringify({
@@ -149,11 +152,15 @@ function Header() {
             <img
               src={vaLogoDark.url}
               alt="Virtual Accelerate"
+              loading="lazy"
+              decoding="async"
               className="va-logo-dark h-3.5 sm:h-5 w-auto mt-0.5 rounded"
             />
             <img
               src={vaLogoLight.url}
               alt="Virtual Accelerate"
+              loading="lazy"
+              decoding="async"
               className="va-logo-light h-3.5 sm:h-5 w-auto mt-0.5"
             />
           </a>
@@ -434,6 +441,10 @@ function Landing() {
             <img
               src={heroBg.url}
               alt={t("hero.title")}
+              fetchPriority="high"
+              decoding="async"
+              width={1536}
+              height={1024}
               className="w-full h-[70vh] min-h-[420px] max-h-[720px] object-cover"
             />
             {/* Overlay scrim for readability */}
@@ -582,6 +593,10 @@ function Landing() {
                   <img
                     src={aiBusinessEra.url}
                     alt={t("newEra.imageAlt")}
+                    loading="lazy"
+                    decoding="async"
+                    width={960}
+                    height={721}
                     className="relative w-full rounded-3xl shadow-2xl shadow-black/20 object-cover"
                   />
                 </div>
@@ -623,6 +638,8 @@ function Landing() {
                     <img
                       src={audienceBg[a.key]}
                       alt={t(`audience.${a.key}.title`)}
+                      loading="lazy"
+                      decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" aria-hidden />
@@ -726,11 +743,15 @@ function Landing() {
             <img
               src={vaLogoDark.url}
               alt="Virtual Accelerate"
+              loading="lazy"
+              decoding="async"
               className="va-logo-dark h-7 sm:h-8 w-auto rounded"
             />
             <img
               src={vaLogoLight.url}
               alt="Virtual Accelerate"
+              loading="lazy"
+              decoding="async"
               className="va-logo-light h-7 sm:h-8 w-auto"
             />
           </a>
