@@ -2,11 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { Bot, ShieldAlert, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import {
+  Bot, ShieldAlert, Sparkles, ArrowRight, Loader2,
+  CheckSquare, Users, LayoutGrid, Brain, FileText, Search, Lightbulb,
+} from "lucide-react";
 import { createConversation } from "@/lib/chat-history.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { useNavigate } from "@tanstack/react-router";
+import { AGENTS, UPCOMING_AGENTS, type AgentDef } from "@/lib/agents";
 
 export const Route = createFileRoute("/_authenticated/app/agents")({
   component: AgentsPage,
@@ -18,25 +22,17 @@ export const Route = createFileRoute("/_authenticated/app/agents")({
   }),
 });
 
-type AgentDef = {
-  id: string;
-  icon: typeof Bot;
-  titleKey: string;
-  descKey: string;
-  tag: string;
-  available: boolean;
-};
+const ICONS = {
+  check: CheckSquare,
+  users: Users,
+  kanban: LayoutGrid,
+  brain: Brain,
+  file: FileText,
+  search: Search,
+  shield: ShieldAlert,
+  lightbulb: Lightbulb,
+} as const;
 
-const AGENTS: AgentDef[] = [
-  {
-    id: "contracts",
-    icon: ShieldAlert,
-    titleKey: "app.agents.contracts.title",
-    descKey: "app.agents.contracts.desc",
-    tag: "@contracts",
-    available: true,
-  },
-];
 
 function AgentsPage() {
   const { t } = useTranslation();
