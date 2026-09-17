@@ -39,6 +39,10 @@ function TelegramMiniApp() {
   const [state, setState] = useState<"loading" | "not_linked" | "error">("loading");
 
   useEffect(() => {
+    // Optional deep link: /tg?to=/app/tasks — only in-app paths are allowed.
+    const raw = new URLSearchParams(window.location.search).get("to") ?? "";
+    const target = /^\/app(\/[\w\-/]*)?$/.test(raw) ? raw : "/app";
+
     (async () => {
       const webApp = await loadTelegramSdk();
       try {
@@ -55,7 +59,7 @@ function TelegramMiniApp() {
       // Already signed in inside the mini app? go straight in.
       const { data: existing } = await supabase.auth.getSession();
       if (existing.session) {
-        navigate({ to: "/app", replace: true });
+        navigate({ to: target, replace: true });
         return;
       }
 
@@ -84,7 +88,7 @@ function TelegramMiniApp() {
           setState("error");
           return;
         }
-        navigate({ to: "/app", replace: true });
+        navigate({ to: target, replace: true });
       } catch {
         setState("error");
       }

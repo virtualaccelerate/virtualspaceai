@@ -715,7 +715,18 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     { user_id: link.user_id, teamspace_id: link.teamspace_id, role: "assistant", content: clean },
   ]);
 
-  await sendMessage(chatId, clean.slice(0, 3800));
+  const openTracker = createdTitles.length || updatedTitles.length
+    ? {
+        inline_keyboard: [[
+          {
+            text: lang === "ru" ? "📋 Открыть трекер задач" : "📋 Open the task tracker",
+            web_app: { url: `${miniAppUrl()}?to=/app/tasks` },
+          },
+        ]],
+      }
+    : undefined;
+
+  await sendMessage(chatId, clean.slice(0, 3800), openTracker);
 }
 
 // ---------------- callbacks ----------------
