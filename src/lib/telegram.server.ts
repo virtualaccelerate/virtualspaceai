@@ -708,7 +708,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       .insert({
         user_id: link.user_id,
         teamspace_id: targetSpace,
-        title: title.trim().slice(0, 300),
+        title: cleanTitle.slice(0, 300),
         description: description?.trim() || null,
         status: "backlog",
         priority: (["low", "medium", "high", "urgent"] as const).includes(
