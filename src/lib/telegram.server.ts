@@ -660,15 +660,28 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const updatedTitles: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = taskRe.exec(reply))) {
-    const [title, priority, due, description, assignee, project, department] = match[1].split("||");
+    const [title, priority, due, description, assignee, project, department, space] = match[1].split("||");
     if (!title?.trim()) continue;
     const assigneeRaw = (assignee ?? "").trim();
     const assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
+    // Resolve the workspace named in the 8th field; fall back to the default
+    const spaceRaw = (space ?? "").trim();
+    let targetSpace = defaultSpaceId;
+    if (spaceRaw) {
+      if (UUID.test(spaceRaw) && spaceMap.has(spaceRaw)) targetSpace = spaceRaw;
+      else {
+        const found = [...spaceMap.entries()].find(
+          ([, n]) => n.toLowerCase() === spaceRaw.toLowerCase(),
+        );
+        if (found) targetSpace = found[0];
+      }
+    }
+    const targetSpaceName = targetSpace ? spaceMap.get(targetSpace) : null;
     const { data } = await supabaseAdmin
       .from("tasks")
       .insert({
         user_id: link.user_id,
-        teamspace_id: link.teamspace_id,
+        teamspace_id: targetSpace,
         title: title.trim().slice(0, 300),
         description: description?.trim() || null,
         status: "backlog",
@@ -687,13 +700,15 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       .select("id, title, status, priority, due_date, assignee_id")
       .single();
     if (data) {
-      createdTitles.push((data as any).title);
+      createdTitles.push(
+        targetSpaceName ? `${(data as any).title} — ${targetSpaceName}` : (data as any).title,
+      );
       if ((data as any).assignee_id) {
         const { notifyAssignment } = await import("./tasks.server");
         await notifyAssignment({
           assigneeId: (data as any).assignee_id,
           actorId: link.user_id,
-          teamspaceId: link.teamspace_id,
+          teamspaceId: targetSpace,
           kind: "assigned",
           taskId: (data as any).id,
           title: (data as any).title,
