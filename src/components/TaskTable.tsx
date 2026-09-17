@@ -65,6 +65,9 @@ function TaskTableBase({
   onOpen,
   onMove,
   onDelete,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
   labels,
 }: {
   tasks: TableTask[];
@@ -74,6 +77,9 @@ function TaskTableBase({
   onOpen: (task: TableTask) => void;
   onMove: (id: string, status: TableTaskStatus) => void;
   onDelete: (task: TableTask) => void;
+  selectedIds?: string[];
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: (ids: string[]) => void;
   labels: {
     title: string;
     status: string;
