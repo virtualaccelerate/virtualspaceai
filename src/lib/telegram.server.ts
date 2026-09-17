@@ -533,18 +533,36 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   }
   await tg("sendChatAction", { chat_id: chatId, action: "typing" });
 
+  // All workspaces of the user — the agent picks the right one from the message
+  const { data: memRows } = await supabaseAdmin
+    .from("teamspace_members")
+    .select("teamspace_id")
+    .eq("user_id", link.user_id);
+  const spaceIds = Array.from(new Set(((memRows as any[]) ?? []).map((m) => m.teamspace_id)));
+  if (link.teamspace_id && !spaceIds.includes(link.teamspace_id)) spaceIds.push(link.teamspace_id);
+  const spaceMap = await spaceNames(spaceIds).catch(() => new Map<string, string>());
+  const defaultSpaceId = link.teamspace_id ?? spaceIds[0] ?? null;
+
   const [tasksRes, docsRes, histRes] = await Promise.all([
-    supabaseAdmin
-      .from("tasks")
-      .select("id, title, status, priority, due_date, assignee_name, project, department")
-      .eq(link.teamspace_id ? "teamspace_id" : "user_id", link.teamspace_id ?? link.user_id)
-      .neq("status", "done")
-      .limit(80),
-    link.teamspace_id
+    spaceIds.length
+      ? supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .in("teamspace_id", spaceIds)
+          .neq("status", "done")
+          .limit(80)
+      : supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .eq("user_id", link.user_id)
+          .is("teamspace_id", null)
+          .neq("status", "done")
+          .limit(80),
+    spaceIds.length
       ? supabaseAdmin
           .from("documents")
           .select("name, extracted_text")
-          .eq("teamspace_id", link.teamspace_id)
+          .in("teamspace_id", spaceIds)
           .limit(8)
       : Promise.resolve({ data: [] as any[] }),
     supabaseAdmin
@@ -558,18 +576,18 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const tasks = ((tasksRes.data as any[]) ?? [])
     .map(
       (x) =>
-        `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"}${x.project ? `/проект ${x.project}` : ""}${x.department ? `/${x.department}` : ""}]`,
+        `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"}${x.project ? `/проект ${x.project}` : ""}${x.department ? `/${x.department}` : ""}/пространство "${spaceMap.get(x.teamspace_id) ?? "личное"}"]`,
     )
     .join("\n");
 
-  // Team members of the workspace, so the agent can assign by name
+  // Team members across all workspaces, so the agent can assign by name
   let teamBlock = "";
-  if (link.teamspace_id) {
+  if (spaceIds.length) {
     const { data: members } = await supabaseAdmin
       .from("teamspace_members")
-      .select("user_id, role")
-      .eq("teamspace_id", link.teamspace_id);
-    const ids = ((members as any[]) ?? []).map((m) => m.user_id);
+      .select("user_id, role, teamspace_id")
+      .in("teamspace_id", spaceIds);
+    const ids = Array.from(new Set(((members as any[]) ?? []).map((m) => m.user_id)));
     if (ids.length) {
       const { data: profs } = await supabaseAdmin
         .from("profiles")
@@ -578,11 +596,17 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       teamBlock = ((members as any[]) ?? [])
         .map((m) => {
           const p = ((profs as any[]) ?? []).find((x) => x.id === m.user_id);
-          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role}`;
+          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"`;
         })
         .join("\n");
     }
   }
+  const spacesBlock = spaceIds.length
+    ? "\n\nWORKSPACES (the user's workspaces):\n" +
+      spaceIds
+        .map((id) => `- id=${id} name="${spaceMap.get(id) ?? id}"${id === defaultSpaceId ? " (default)" : ""}`)
+        .join("\n")
+    : "";
   const docs = ((docsRes as any).data as any[] ?? [])
     .map((d) => `### ${d.name}\n${(d.extracted_text ?? "").slice(0, 3000)}`)
     .join("\n\n");
@@ -596,13 +620,15 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       ? "You are Virtual Space, the user's AI business assistant, answering inside Telegram. Answer in the user's language, plain text only (no markdown symbols), short and practical."
       : "Ты Virtual Space — AI-ассистент бизнеса пользователя, отвечаешь в Telegram. Отвечай на языке пользователя, обычным текстом без markdown, кратко и по делу.") +
     `\nCURRENT DATE: ${bishkekDate()} in Asia/Bishkek (UTC+6). This is authoritative. Never infer today's date from message history or model knowledge.` +
-    "\nYou are the task agent of this workspace. From a plain sentence infer title, assignee, project, department, priority, deadline and a short description." +
-    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE; empty fields stay empty)." +
-    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS." +
-    "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
+    "\nYou are the task agent of the user's workspaces. From a plain sentence infer title, assignee, project, department, priority, deadline, a short description and the WORKSPACE the task belongs to." +
+    "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department||workspaceIdOrName]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE; empty fields stay empty)." +
+    "\nWorkspace field (8th): the id or exact name from WORKSPACES. Infer it from the message (named project/space, context); if not mentioned use the default workspace. If the message could belong to several workspaces and it matters, ask one short question instead of guessing." +
+    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS (each task is labelled with its workspace)." +
+    "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nIf the title, assignee or deadline cannot be inferred confidently, do NOT emit a token — ask one short clarifying question instead." +
-    "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status and deadline." +
+    "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status, deadline and workspace." +
     (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
+    spacesBlock +
     (tasks ? `\n\nOPEN TASKS:\n${tasks}` : "") +
     (docs ? `\n\nKNOWLEDGE BASE:\n${docs.slice(0, 12000)}` : "");
 
@@ -634,15 +660,28 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const updatedTitles: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = taskRe.exec(reply))) {
-    const [title, priority, due, description, assignee, project, department] = match[1].split("||");
+    const [title, priority, due, description, assignee, project, department, space] = match[1].split("||");
     if (!title?.trim()) continue;
     const assigneeRaw = (assignee ?? "").trim();
     const assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
+    // Resolve the workspace named in the 8th field; fall back to the default
+    const spaceRaw = (space ?? "").trim();
+    let targetSpace = defaultSpaceId;
+    if (spaceRaw) {
+      if (UUID.test(spaceRaw) && spaceMap.has(spaceRaw)) targetSpace = spaceRaw;
+      else {
+        const found = [...spaceMap.entries()].find(
+          ([, n]) => n.toLowerCase() === spaceRaw.toLowerCase(),
+        );
+        if (found) targetSpace = found[0];
+      }
+    }
+    const targetSpaceName = targetSpace ? spaceMap.get(targetSpace) : null;
     const { data } = await supabaseAdmin
       .from("tasks")
       .insert({
         user_id: link.user_id,
-        teamspace_id: link.teamspace_id,
+        teamspace_id: targetSpace,
         title: title.trim().slice(0, 300),
         description: description?.trim() || null,
         status: "backlog",
@@ -661,13 +700,15 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       .select("id, title, status, priority, due_date, assignee_id")
       .single();
     if (data) {
-      createdTitles.push((data as any).title);
+      createdTitles.push(
+        targetSpaceName ? `${(data as any).title} — ${targetSpaceName}` : (data as any).title,
+      );
       if ((data as any).assignee_id) {
         const { notifyAssignment } = await import("./tasks.server");
         await notifyAssignment({
           assigneeId: (data as any).assignee_id,
           actorId: link.user_id,
-          teamspaceId: link.teamspace_id,
+          teamspaceId: targetSpace,
           kind: "assigned",
           taskId: (data as any).id,
           title: (data as any).title,
