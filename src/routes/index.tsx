@@ -42,7 +42,7 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: SITE_URL + "/" },
-      { rel: "preload", as: "image", href: heroBg.url, fetchpriority: "high" },
+      { rel: "preload", as: "image", href: heroBg.url },
     ],
     scripts: [{
       type: "application/ld+json",
