@@ -697,7 +697,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     if (!Object.keys(patch).length) continue;
     const { data } = await supabaseAdmin
       .from("tasks")
-      .update(patch)
+      .update(patch as never)
       .eq("id", taskId)
       .neq("external_source", "yougile")
       .select("title")
