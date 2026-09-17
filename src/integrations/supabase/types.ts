@@ -586,6 +586,50 @@ export type Database = {
           },
         ]
       }
+      pending_members: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string | null
+          id: string
+          linked_user_id: string | null
+          name: string
+          source: string
+          teamspace_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email?: string | null
+          id?: string
+          linked_user_id?: string | null
+          name: string
+          source?: string
+          teamspace_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          id?: string
+          linked_user_id?: string | null
+          name?: string
+          source?: string
+          teamspace_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_members_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
