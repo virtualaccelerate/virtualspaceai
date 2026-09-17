@@ -70,7 +70,7 @@ function b64ToBytes(b64: string): Uint8Array {
 const HEADERS: Record<string, RegExp> = {
   title: /^(задач|название|заголовок|тема|что сделать|title|task|name|summary|subject)/i,
   description: /^(опис|детал|коммент|подроб|следующ|результат|критер|description|details|notes?|comment|next step)/i,
-  priority: /^(приоритет|важн|priority|prio)/i,
+  priority: /^(приоритет|важн|срочност|срочн|priority|prio|urgency)/i,
   status: /^(статус|состояние|этап|колонка|status|state|stage|column)/i,
   due_date: /^(срок|дедлайн|дата|до|due|deadline|date)/i,
   assignee:
