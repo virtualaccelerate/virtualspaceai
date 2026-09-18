@@ -38,19 +38,50 @@ async function requireMember(userId: string, teamspaceId: string) {
   if (!data) throw new Error("Нет доступа к рабочему пространству");
 }
 
-async function api<T>(key: string, path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...init?.headers },
+/**
+ * YouGile throttles per API key: parallel bursts (one request per column) come
+ * back as HTML 503 pages. Every call goes through a single serial queue with a
+ * minimum gap, and 429/5xx answers are retried with backoff.
+ */
+const MIN_GAP_MS = 150;
+let queue: Promise<unknown> = Promise.resolve();
+let lastCall = 0;
+
+function slot(): Promise<void> {
+  const next = queue.then(async () => {
+    const wait = lastCall + MIN_GAP_MS - Date.now();
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    lastCall = Date.now();
   });
-  if (!response.ok) {
+  queue = next.catch(() => {});
+  return next;
+}
+
+async function api<T>(key: string, path: string, init?: RequestInit): Promise<T> {
+  let lastStatus = 0;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await slot();
+    const response = await fetch(`${BASE}${path}`, {
+      ...init,
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...init?.headers },
+    });
+    if (response.ok) {
+      const text = await response.text();
+      return (text ? JSON.parse(text) : null) as T;
+    }
+    lastStatus = response.status;
     const detail = await response.text().catch(() => "");
-    console.error(`[yougile] ${path} failed [${response.status}]: ${detail}`);
+    console.error(`[yougile] ${path} failed [${response.status}]: ${detail.slice(0, 200)}`);
     if (response.status === 401 || response.status === 403) throw new Error("YouGile отклонил API-ключ");
-    if (response.status === 429) throw new Error("YouGile временно ограничил запросы. Повторите позже");
+    if (response.status === 404) throw new Error("Объект YouGile не найден");
+    if (response.status === 429 || response.status >= 500) {
+      await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)));
+      continue;
+    }
     throw new Error(`YouGile недоступен (${response.status})`);
   }
-  return response.json() as Promise<T>;
+  if (lastStatus === 429) throw new Error("YouGile временно ограничил запросы. Повторите позже");
+  throw new Error(`YouGile перегружен (${lastStatus}). Повторите синхронизацию через минуту`);
 }
 
 function content(value: unknown): YouGileItem[] {

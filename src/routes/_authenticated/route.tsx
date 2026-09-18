@@ -5,7 +5,7 @@ import {
   Bot, Users, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  Plus, FileText, KanbanSquare, TrendingUp, Plug,
+  Plus, FileText, KanbanSquare, FolderKanban, TrendingUp, Plug,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,6 +147,7 @@ function AuthenticatedLayout() {
   const workspaceNav: NavItem[] = [
     { to: "/app/docs", label: t("app.nav.knowledgeBase", "Knowledge Base"), icon: FileText },
     { to: "/app/tasks", label: t("app.nav.taskBoard", "Task Board"), subtitle: t("app.nav.taskBoardSubtitle", "Team tasks & deadlines"), icon: KanbanSquare },
+    { to: "/app/projects", label: t("app.nav.projects", "Projects"), subtitle: t("app.nav.projectsSubtitle", "Sources, progress & sync"), icon: FolderKanban },
     { to: "/app/agents", label: t("app.nav.aiAgents"), subtitle: t("app.nav.aiAgentsSubtitle", "Automated assistants"), icon: Bot },
     { to: "/app/financials", label: t("app.nav.financials"), subtitle: t("app.nav.financialsSubtitle", "Key metrics & reports"), icon: TrendingUp },
     
