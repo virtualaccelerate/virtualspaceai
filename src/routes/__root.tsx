@@ -123,13 +123,17 @@ function RootComponent() {
 
   useEffect(() => {
     // Apply the detected language only after hydration has fully settled,
-    // otherwise streamed subtrees hydrate against different text.
+    // otherwise streamed subtrees hydrate against different text. Waiting for
+    // window "load" plus a settle delay lets streamed Suspense boundaries
+    // (e.g. catalog sections) finish hydrating before any text changes.
     let timer = 0;
-    const raf = window.requestAnimationFrame(() => {
-      timer = window.setTimeout(applyClientLanguage, 0);
-    });
+    const schedule = () => {
+      timer = window.setTimeout(applyClientLanguage, 800);
+    };
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
     return () => {
-      window.cancelAnimationFrame(raf);
+      window.removeEventListener("load", schedule);
       if (timer) window.clearTimeout(timer);
     };
   }, []);
