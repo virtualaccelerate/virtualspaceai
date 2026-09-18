@@ -57,6 +57,15 @@ export function YouGileCard() {
     try { await action(); await load(teamspaceId); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
   }
 
+  // Inspect-only: does NOT refetch persisted status afterwards, so the
+  // just-selected project's columns/users aren't clobbered by a stale load().
+  async function runInspect(action: () => Promise<unknown>) {
+    if (!teamspaceId) return;
+    setBusy(true);
+    setError(null);
+    try { await action(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  }
+
   return (
     <div className="rounded-lg border border-border bg-card p-4 space-y-4">
       <div className="flex items-start gap-3">
@@ -79,7 +88,7 @@ export function YouGileCard() {
             <Label>{t("app.integrations.yougile.project")}</Label>
             <Select value={projectId} onValueChange={(value) => {
               setProjectId(value);
-              if (teamspaceId) void run(async () => {
+              if (teamspaceId) void runInspect(async () => {
                 const structure = await inspectFn({ data: { teamspace_id: teamspaceId, project_id: value } });
                 setState((old: any) => ({ ...old, ...structure }));
               });
