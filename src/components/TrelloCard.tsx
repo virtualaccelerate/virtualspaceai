@@ -59,6 +59,15 @@ export function TrelloCard() {
     try { await action(); await load(teamspaceId); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
   }
 
+  // Inspect-only: does NOT refetch persisted status afterwards, so the
+  // just-selected board's lists/members aren't clobbered by a stale load().
+  async function runInspect(action: () => Promise<unknown>) {
+    if (!teamspaceId) return;
+    setBusy(true);
+    setError(null);
+    try { await action(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  }
+
   return (
     <div className="rounded-lg border border-border bg-card p-4 space-y-4">
       <div className="flex items-start gap-3">
@@ -98,7 +107,7 @@ export function TrelloCard() {
             <Label>{t("app.integrations.trello.board", "Доска Trello")}</Label>
             <Select value={boardId} onValueChange={(value) => {
               setBoardId(value);
-              if (teamspaceId) void run(async () => {
+              if (teamspaceId) void runInspect(async () => {
                 const structure = await inspectFn({ data: { teamspace_id: teamspaceId, board_id: value } });
                 setState((old: any) => ({ ...old, ...structure }));
               });
