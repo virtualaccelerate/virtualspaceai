@@ -430,17 +430,27 @@ export function mainMenuKeyboard(lang: Lang) {
   return {
     keyboard: [
       [
-        { text: lang === "ru" ? "📊 Отчёт" : "📊 Report" },
+        { text: lang === "ru" ? "📋 Задачи" : "📋 Tasks" },
         { text: lang === "ru" ? "🗓 Сегодня" : "🗓 Today" },
       ],
       [
-        { text: lang === "ru" ? "📋 Задачи" : "📋 Tasks" },
+        { text: lang === "ru" ? "➕ Новая задача" : "➕ New task" },
+        { text: lang === "ru" ? "✅ Завершить" : "✅ Complete" },
+      ],
+      [
+        { text: lang === "ru" ? "📊 Отчёт" : "📊 Report" },
         { text: lang === "ru" ? "🚀 Приложение" : "🚀 App" },
       ],
+      [{ text: lang === "ru" ? "❓ Помощь" : "❓ Help" }],
     ],
     resize_keyboard: true,
     is_persistent: true,
   };
+}
+
+/** Every reply keeps the button menu visible unless it carries its own inline keyboard. */
+export function withMenu(lang: Lang, extra: Record<string, unknown> = {}) {
+  return extra.reply_markup ? extra : { ...extra, reply_markup: mainMenuKeyboard(lang) };
 }
 
 async function handleReport(link: Link, chatId: number, periodArg: string, lang: Lang) {
