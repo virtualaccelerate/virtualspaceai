@@ -709,6 +709,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
     spacesBlock +
     (tasks ? `\n\nOPEN TASKS:\n${tasks}` : "") +
+    (notifyBlock ? `\n\nRECENT NOTIFICATIONS sent to this user (newest first):\n${notifyBlock}` : "") +
+    (notifiedTasksBlock ? `\n\nNOTIFIED TASKS (tasks those notifications are about, may include finished ones):\n${notifiedTasksBlock}` : "") +
     (docs ? `\n\nKNOWLEDGE BASE:\n${docs.slice(0, 12000)}` : "");
 
   let reply = "";
