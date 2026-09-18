@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ImagePlus, Loader2, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2, User, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   adminGetDemoRequests,
   adminLogin,
@@ -42,17 +43,18 @@ export const Route = createFileRoute("/admin")({
 });
 
 const TABS = [
-  { id: "analytics", label: "Аналитика" },
-  { id: "leads", label: "Заявки на демо" },
+  { id: "analytics", key: "adminUi.tabs.analytics", fallback: "Analytics" },
+  { id: "leads", key: "adminUi.tabs.leads", fallback: "Demo requests" },
 
-  { id: "courses", label: "Курсы" },
-  { id: "startups", label: "Стартапы" },
-  { id: "mentors", label: "Менторы" },
+  { id: "courses", key: "adminUi.tabs.courses", fallback: "Courses" },
+  { id: "startups", key: "adminUi.tabs.startups", fallback: "Startups" },
+  { id: "mentors", key: "adminUi.tabs.mentors", fallback: "Mentors" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
 
 function AdminPage() {
+  const { t } = useTranslation();
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [username, setUsername] = useState("");
@@ -96,10 +98,10 @@ function AdminPage() {
         setAuthed(true);
         setPassword("");
       } else {
-        setError("Неверный логин или пароль");
+        setError(t("adminUi.login.errorInvalid", "Invalid username or password"));
       }
     } catch {
-      setError("Не удалось войти. Попробуйте ещё раз.");
+      setError(t("adminUi.login.errorGeneric", "Could not log in. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -123,14 +125,14 @@ function AdminPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
         <form onSubmit={handleLogin} className="glass-strong w-full max-w-sm rounded-3xl p-8 space-y-3">
-          <h1 className="font-display text-2xl text-center">Админ-панель</h1>
-          <p className="text-sm text-muted-foreground text-center pb-2">Вход только для администраторов</p>
+          <h1 className="font-display text-2xl text-center">{t("adminUi.login.title", "Admin panel")}</h1>
+          <p className="text-sm text-muted-foreground text-center pb-2">{t("adminUi.login.subtitle", "Access is for administrators only")}</p>
           <div className="relative">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Логин"
+              placeholder={t("adminUi.login.username", "Username")}
               autoComplete="username"
               required
               className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -142,7 +144,7 @@ function AdminPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Пароль"
+              placeholder={t("adminUi.login.password", "Password")}
               autoComplete="current-password"
               required
               className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -154,7 +156,7 @@ function AdminPage() {
             disabled={busy}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60"
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Войти"}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("adminUi.login.submit", "Log in")}
           </button>
         </form>
       </div>
@@ -164,35 +166,35 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50 px-6 py-4 flex items-center justify-between">
-        <h1 className="font-display text-xl">Админ-панель</h1>
+        <h1 className="font-display text-xl">{t("adminUi.header.title", "Admin panel")}</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={loadRows}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loadingRows ? "animate-spin" : ""}`} /> Обновить
+            <RefreshCw className={`h-3.5 w-3.5 ${loadingRows ? "animate-spin" : ""}`} /> {t("adminUi.header.refresh", "Refresh")}
           </button>
           <button
             onClick={handleLogout}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition"
           >
-            <LogOut className="h-3.5 w-3.5" /> Выйти
+            <LogOut className="h-3.5 w-3.5" /> {t("adminUi.header.logout", "Log out")}
           </button>
         </div>
       </header>
 
       <nav className="px-6 pt-4 flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            onClick={() => setTab(tabItem.id)}
             className={`rounded-full px-4 py-2 text-xs font-medium transition ${
-              tab === t.id
+              tab === tabItem.id
                 ? "bg-primary text-primary-foreground"
                 : "border border-border hover:bg-muted/40"
             }`}
           >
-            {t.label}
+            {t(tabItem.key, tabItem.fallback)}
           </button>
         ))}
       </nav>
@@ -203,7 +205,7 @@ function AdminPage() {
         ) : tab === "leads" ? (
           <section className="glass rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Заявки на демо</h2>
+              <h2 className="text-sm font-semibold">{t("adminUi.leads.title", "Demo requests")}</h2>
               <span className="text-xs text-muted-foreground">{rows?.length ?? 0}</span>
             </div>
             {loadingRows && !rows ? (
@@ -215,11 +217,11 @@ function AdminPage() {
                 <table className="w-full text-sm">
                   <thead className="text-xs text-muted-foreground">
                     <tr className="border-b border-border/50">
-                      <th className="text-left font-medium px-5 py-3">Имя</th>
-                      <th className="text-left font-medium px-5 py-3">Контакт</th>
-                      <th className="text-left font-medium px-5 py-3">Компания</th>
-                      <th className="text-left font-medium px-5 py-3">Язык</th>
-                      <th className="text-left font-medium px-5 py-3">Дата</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colName", "Name")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colContact", "Contact")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colCompany", "Company")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colLanguage", "Language")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colDate", "Date")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -227,8 +229,8 @@ function AdminPage() {
                       <tr key={r.id} className="border-b border-border/30 last:border-0">
                         <td className="px-5 py-3">{r.name}</td>
                         <td className="px-5 py-3">{r.contact}</td>
-                        <td className="px-5 py-3 text-muted-foreground">{r.company ?? "—"}</td>
-                        <td className="px-5 py-3 text-muted-foreground uppercase">{r.language ?? "—"}</td>
+                        <td className="px-5 py-3 text-muted-foreground">{r.company ?? t("adminUi.leads.dash", "—")}</td>
+                        <td className="px-5 py-3 text-muted-foreground uppercase">{r.language ?? t("adminUi.leads.dash", "—")}</td>
                         <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
                           {new Date(r.created_at).toLocaleString("ru-RU")}
                         </td>
@@ -238,7 +240,7 @@ function AdminPage() {
                 </table>
               </div>
             ) : (
-              <p className="p-8 text-center text-sm text-muted-foreground">Заявок пока нет</p>
+              <p className="p-8 text-center text-sm text-muted-foreground">{t("adminUi.leads.empty", "No requests yet")}</p>
             )}
           </section>
         ) : tab === "startups" ? (
@@ -249,9 +251,14 @@ function AdminPage() {
           <CoursesAdmin />
         ) : (
           <section className="glass rounded-2xl p-10 text-center">
-            <h2 className="font-display text-lg mb-2">{TABS.find((t) => t.id === tab)?.label}</h2>
+            <h2 className="font-display text-lg mb-2">
+              {(() => {
+                const found = TABS.find((tabItem) => tabItem.id === tab);
+                return found ? t(found.key, found.fallback) : null;
+              })()}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Раздел в разработке — добавим управление контентом на следующем шаге.
+              {t("adminUi.comingSoon.body", "Section under development — content management will be added in the next step.")}
             </p>
           </section>
         )}
@@ -288,6 +295,7 @@ const emptyStartup: StartupForm = {
 };
 
 function StartupsAdmin() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<StartupRow[] | null>(null);
   const [form, setForm] = useState<StartupForm | null>(null);
   const [saving, setSaving] = useState(false);
@@ -309,7 +317,7 @@ function StartupsAdmin() {
       });
       setForm((f) => (f ? { ...f, image_url: res.url } : f));
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Не удалось загрузить файл");
+      setErr(e instanceof Error ? e.message : t("adminUi.startups.uploadError", "Could not upload file"));
     } finally {
       setUploading(false);
     }
@@ -366,14 +374,14 @@ function StartupsAdmin() {
       setForm(null);
       await load();
     } catch (e2) {
-      setErr(e2 instanceof Error ? e2.message : "Не удалось сохранить");
+      setErr(e2 instanceof Error ? e2.message : t("adminUi.startups.saveError", "Could not save"));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Удалить стартап?")) return;
+    if (!confirm(t("adminUi.startups.confirmDelete", "Delete this startup?"))) return;
     await adminDeleteStartup({ data: { id } });
     await load();
   };
@@ -383,27 +391,27 @@ function StartupsAdmin() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Стартапы каталога ({items?.length ?? 0})</h2>
+        <h2 className="text-sm font-semibold">{t("adminUi.startups.heading", "Catalog startups ({{count}})", { count: items?.length ?? 0 })}</h2>
         <button
           onClick={() => setForm({ ...emptyStartup, position: (items?.length ?? 0) + 1 })}
           className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition"
         >
-          <Plus className="h-3.5 w-3.5" /> Добавить
+          <Plus className="h-3.5 w-3.5" /> {t("adminUi.startups.add", "Add")}
         </button>
       </div>
 
       {form && (
         <form onSubmit={save} className="glass rounded-2xl p-5 grid gap-3 sm:grid-cols-2">
-          <input className={field} placeholder="Название" required value={form.name}
+          <input className={field} placeholder={t("adminUi.startups.namePlaceholder", "Name")} required value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <input className={field} placeholder="Ссылка на сайт (https://...)" value={form.website_url}
+          <input className={field} placeholder={t("adminUi.startups.websitePlaceholder", "Website link (https://...)")} value={form.website_url}
             onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Описание" value={form.description_ru}
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder={t("adminUi.startups.descriptionPlaceholder", "Description")} value={form.description_ru}
             onChange={(e) => setForm({ ...form, description_ru: e.target.value, description: e.target.value })} />
           <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
             {form.image_url ? (
               <div className="relative">
-                <img src={form.image_url} alt="Логотип" className="h-16 w-16 rounded-xl object-cover border border-border/60" />
+                <img src={form.image_url} alt={t("adminUi.startups.logoAlt", "Logo")} className="h-16 w-16 rounded-xl object-cover border border-border/60" />
                 <button type="button" onClick={() => setForm({ ...form, image_url: "" })}
                   className="absolute -right-2 -top-2 rounded-full bg-background border border-border p-1">
                   <X className="h-3 w-3" />
@@ -412,7 +420,7 @@ function StartupsAdmin() {
             ) : null}
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition">
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
-              {uploading ? "Загрузка…" : form.image_url ? "Заменить логотип" : "Загрузить логотип"}
+              {uploading ? t("adminUi.common.uploading", "Uploading…") : form.image_url ? t("adminUi.startups.replaceLogoBtn", "Replace logo") : t("adminUi.startups.uploadLogoBtn", "Upload logo")}
               <input type="file" accept="image/*" className="hidden" disabled={uploading}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -420,28 +428,28 @@ function StartupsAdmin() {
                   if (f) void uploadLogo(f);
                 }} />
             </label>
-            <span className="text-[11px] text-muted-foreground">PNG/JPG/SVG до 5 МБ</span>
+            <span className="text-[11px] text-muted-foreground">{t("adminUi.startups.logoHint", "PNG/JPG/SVG up to 5 MB")}</span>
           </div>
-          <input className={field} placeholder="Текст кнопки (по умолчанию «Перейти на сайт»)" value={form.cta_label}
+          <input className={field} placeholder={t("adminUi.startups.ctaPlaceholder", "Button text (default \"Go to website\")")} value={form.cta_label}
             onChange={(e) => setForm({ ...form, cta_label: e.target.value })} />
-          <input className={field} placeholder="Теги через запятую" value={form.tags}
+          <input className={field} placeholder={t("adminUi.startups.tagsPlaceholder", "Tags, comma separated")} value={form.tags}
             onChange={(e) => setForm({ ...form, tags: e.target.value })} />
-          <input className={field} type="number" placeholder="Порядок" value={form.position}
+          <input className={field} type="number" placeholder={t("adminUi.startups.positionPlaceholder", "Order")} value={form.position}
             onChange={(e) => setForm({ ...form, position: Number(e.target.value) })} />
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <input type="checkbox" checked={form.published}
               onChange={(e) => setForm({ ...form, published: e.target.checked })} />
-            Опубликован
+            {t("adminUi.startups.published", "Published")}
           </label>
           {err && <p className="text-xs text-destructive sm:col-span-2">{err}</p>}
           <div className="sm:col-span-2 flex gap-2">
             <button type="submit" disabled={saving}
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-xs font-semibold disabled:opacity-60">
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Сохранить
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {t("adminUi.common.save", "Save")}
             </button>
             <button type="button" onClick={() => setForm(null)}
               className="rounded-full border border-border px-5 py-2.5 text-xs hover:bg-muted/40 transition">
-              Отмена
+              {t("adminUi.common.cancel", "Cancel")}
             </button>
           </div>
         </form>
@@ -452,10 +460,10 @@ function StartupsAdmin() {
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr className="border-b border-border/50">
-                <th className="text-left font-medium px-5 py-3">#</th>
-                <th className="text-left font-medium px-5 py-3">Название</th>
-                <th className="text-left font-medium px-5 py-3">Сайт</th>
-                <th className="text-left font-medium px-5 py-3">Статус</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colHash", "#")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colName", "Name")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colWebsite", "Website")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colStatus", "Status")}</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -464,13 +472,13 @@ function StartupsAdmin() {
                 <tr key={r.id} className="border-b border-border/30 last:border-0">
                   <td className="px-5 py-3 text-muted-foreground">{r.position}</td>
                   <td className="px-5 py-3">{r.name}</td>
-                  <td className="px-5 py-3 text-muted-foreground truncate max-w-[220px]">{r.website_url ?? "—"}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{r.published ? "Опубликован" : "Скрыт"}</td>
+                  <td className="px-5 py-3 text-muted-foreground truncate max-w-[220px]">{r.website_url ?? t("adminUi.common.dash", "—")}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{r.published ? t("adminUi.common.published", "Published") : t("adminUi.common.hidden", "Hidden")}</td>
                   <td className="px-5 py-3 text-right whitespace-nowrap">
-                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title="Редактировать">
+                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title={t("adminUi.startups.edit", "Edit")}>
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title="Удалить">
+                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title={t("adminUi.startups.delete", "Delete")}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </td>
@@ -479,7 +487,7 @@ function StartupsAdmin() {
             </tbody>
           </table>
         ) : (
-          <p className="p-8 text-center text-sm text-muted-foreground">Пока пусто</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">{t("adminUi.startups.empty", "Nothing here yet")}</p>
         )}
       </div>
     </section>

@@ -314,7 +314,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             setError(t("app.chat.micEmpty", "Didn't catch anything — try again."));
           }
         } catch (e) {
-          setError(e instanceof Error ? e.message : "Transcription failed");
+          setError(e instanceof Error ? e.message : t("shellUi.chat.transcriptionFailed", "Transcription failed"));
         } finally {
           setTranscribing(false);
         }
@@ -466,7 +466,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         ),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create task");
+      setError(e instanceof Error ? e.message : t("shellUi.chat.failedCreateTask", "Failed to create task"));
     } finally {
       setAcceptingIdx(null);
     }
@@ -498,7 +498,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         ),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to update task");
+      setError(e instanceof Error ? e.message : t("shellUi.chat.failedUpdateTask", "Failed to update task"));
     } finally {
       setAcceptingIdx(null);
     }
@@ -533,7 +533,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       }
     } catch (e) {
       if (win && !win.closed) win.close();
-      setError(e instanceof Error ? e.message : "Could not open file");
+      setError(e instanceof Error ? e.message : t("shellUi.chat.couldNotOpenFile", "Could not open file"));
     }
   };
 
@@ -563,7 +563,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     try {
       for (const file of Array.from(files)) {
         if (file.size > 25 * 1024 * 1024) {
-          setError(`${file.name}: max 25 MB`);
+          setError(t("shellUi.chat.maxFileSize", "{{name}}: max 25 MB", { name: file.name }));
           continue;
         }
         const safeName = file.name.replace(/[^\w.\- ]/g, "_");
@@ -601,7 +601,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         }
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(e instanceof Error ? e.message : t("shellUi.chat.uploadFailed", "Upload failed"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -632,7 +632,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       convId = await ensureConversation(agent);
     } catch (e) {
       setLoading(false);
-      setError(e instanceof Error ? e.message : "Failed to start conversation");
+      setError(e instanceof Error ? e.message : t("shellUi.chat.failedStartConversation", "Failed to start conversation"));
       return;
     }
 
@@ -670,7 +670,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         },
       }).catch(() => {});
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : t("shellUi.chat.somethingWrong", "Something went wrong."));
     } finally {
       setLoading(false);
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -702,7 +702,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         navigate({ to: "/app/c/$conversationId", params: { conversationId: conv.id } });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create chat");
+      setError(e instanceof Error ? e.message : t("shellUi.chat.failedCreateChat", "Could not create chat"));
     }
   };
 
@@ -743,7 +743,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      setError(err instanceof Error ? err.message : t("shellUi.chat.deleteFailed", "Delete failed"));
     }
   };
 
@@ -773,7 +773,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         </button>
         {threadsOpen && (
           <>
-            <button aria-label="close" className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
+            <button aria-label={t("shellUi.chat.ariaClose", "Close")} className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
             <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
               {conversations.length === 0 ? (
                 <div className="p-3 text-xs text-muted-foreground text-center">
@@ -792,7 +792,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                   <button
                     onClick={(e) => onDeleteThread(c.id, e)}
                     className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
-                    aria-label="delete"
+                    aria-label={t("shellUi.chat.ariaDelete", "Delete")}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -842,7 +842,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             </button>
             {threadsOpen && (
               <>
-                <button aria-label="close" className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
+                <button aria-label={t("shellUi.chat.ariaClose", "Close")} className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
                 <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
                   {conversations.length === 0 ? (
                     <div className="p-3 text-xs text-muted-foreground text-center">
@@ -861,7 +861,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                       <button
                         onClick={(e) => onDeleteThread(c.id, e)}
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
-                        aria-label="delete"
+                        aria-label={t("shellUi.chat.ariaDelete", "Delete")}
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -1087,7 +1087,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
               <button
                 onClick={() => setAttached((prev) => prev.filter((x) => x.id !== a.id))}
                 className="text-primary/70 hover:text-primary"
-                aria-label="remove"
+                aria-label={t("shellUi.chat.ariaRemove", "Remove")}
               ><X className="h-3 w-3" /></button>
             </span>
           ))}
@@ -1144,7 +1144,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             disabled={uploading || !teamspaceId}
             title={t("app.chat.attach", "Attach file — synced to Knowledge Base")}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/40 transition shrink-0 disabled:opacity-50"
-            aria-label="Attach"
+            aria-label={t("shellUi.chat.ariaAttach", "Attach")}
           >
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           </button>
@@ -1162,7 +1162,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             onClick={toggleMic}
             disabled={transcribing}
             title={recording ? t("app.chat.micStop", "Stop recording") : t("app.chat.micStart", "Voice input")}
-            aria-label={recording ? "Stop recording" : "Voice input"}
+            aria-label={recording ? t("shellUi.chat.ariaStopRecording", "Stop recording") : t("shellUi.chat.ariaVoiceInput", "Voice input")}
             className={`p-1.5 rounded-lg transition shrink-0 disabled:opacity-50 ${
               recording
                 ? "text-red-500 bg-red-500/10 animate-pulse"
@@ -1176,7 +1176,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             onClick={() => send()}
             disabled={loading || !input.trim()}
             className={`${isCompact ? "h-9 w-9" : "h-10 w-10"} rounded-full bg-primary text-black flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.45)]`}
-            aria-label="Send"
+            aria-label={t("shellUi.chat.ariaSend", "Send")}
           >
             {loading ? <Loader2 className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} animate-spin`} /> : <Send className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} fill-current`} />}
           </button>

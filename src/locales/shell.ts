@@ -58,6 +58,8 @@ const bundle: GroupResources = {
         ariaRemove: "Remove",
         ariaClose: "Close",
         ariaDelete: "Delete",
+        ariaStopRecording: "Stop recording",
+        ariaVoiceInput: "Voice input",
         somethingWrong: "Something went wrong.",
       },
       nav: {
@@ -125,6 +127,8 @@ const bundle: GroupResources = {
         ariaRemove: "Удалить",
         ariaClose: "Закрыть",
         ariaDelete: "Удалить",
+        ariaStopRecording: "Остановить запись",
+        ariaVoiceInput: "Голосовой ввод",
         somethingWrong: "Что-то пошло не так.",
       },
       nav: {
@@ -192,6 +196,8 @@ const bundle: GroupResources = {
         ariaRemove: "Өшіру",
         ariaClose: "Жабу",
         ariaDelete: "Жою",
+        ariaStopRecording: "Жазуды тоқтату",
+        ariaVoiceInput: "Дауыстық енгізу",
         somethingWrong: "Бірдеңе дұрыс болмады.",
       },
       nav: {
@@ -259,6 +265,8 @@ const bundle: GroupResources = {
         ariaRemove: "Өчүрүү",
         ariaClose: "Жабуу",
         ariaDelete: "Өчүрүү",
+        ariaStopRecording: "Жазууну токтотуу",
+        ariaVoiceInput: "Үн аркылуу киргизүү",
         somethingWrong: "Бир нерсе туура эмес болду.",
       },
       nav: {
@@ -326,6 +334,8 @@ const bundle: GroupResources = {
         ariaRemove: "O'chirish",
         ariaClose: "Yopish",
         ariaDelete: "O'chirish",
+        ariaStopRecording: "Yozishni to'xtatish",
+        ariaVoiceInput: "Ovozli kiritish",
         somethingWrong: "Nimadir xato ketdi.",
       },
       nav: {
@@ -393,6 +403,8 @@ const bundle: GroupResources = {
         ariaRemove: "Хориҷ кардан",
         ariaClose: "Пӯшидан",
         ariaDelete: "Ҳазф кардан",
+        ariaStopRecording: "Қатъ кардани сабт",
+        ariaVoiceInput: "Воридоти овозӣ",
         somethingWrong: "Чизе нодуруст рафт.",
       },
       nav: {
