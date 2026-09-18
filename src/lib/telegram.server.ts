@@ -592,6 +592,69 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     )
     .join("\n");
 
+  // Notifications the bot itself sent recently — follow-up messages ("назначь Бермет", "задача решена")
+  // refer to those tasks, so the agent must see them and the tasks they point at.
+  let notifyBlock = "";
+  let notifiedTasksBlock = "";
+  try {
+    const since = new Date(Date.now() - 3 * 86400000).toISOString();
+    const { data: notes } = await supabaseAdmin
+      .from("notifications")
+      .select("title, body, task_id, teamspace_id, created_at")
+      .eq("user_id", link.user_id)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    const rows = ((notes as any[]) ?? []);
+    if (rows.length) {
+      notifyBlock = rows
+        .map(
+          (n, i) =>
+            `${i === 0 ? "- (MOST RECENT) " : "- "}${n.created_at?.slice(0, 16).replace("T", " ")} "${n.title}"${
+              n.body ? `: ${String(n.body).slice(0, 400)}` : ""
+            }${n.task_id ? ` [task_id=${n.task_id}]` : ""}${
+              n.teamspace_id ? ` [пространство "${spaceMap.get(n.teamspace_id) ?? ""}"]` : ""
+            }`,
+        )
+        .join("\n");
+
+      // Tasks referenced by those notifications — by id and by title mentioned in the text.
+      const ids = Array.from(new Set(rows.map((n) => n.task_id).filter(Boolean)));
+      const haystack = rows.map((n) => `${n.title} ${n.body ?? ""}`).join(" ").toLowerCase();
+      const pool = new Map<string, any>();
+      if (ids.length) {
+        const { data } = await supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, teamspace_id")
+          .in("id", ids as string[]);
+        for (const task of ((data as any[]) ?? [])) pool.set(task.id, task);
+      }
+      if (spaceIds.length) {
+        const { data } = await supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, teamspace_id")
+          .in("teamspace_id", spaceIds)
+          .order("updated_at", { ascending: false })
+          .limit(200);
+        for (const task of ((data as any[]) ?? [])) {
+          const title = String(task.title ?? "").toLowerCase().trim();
+          if (title.length > 3 && haystack.includes(title)) pool.set(task.id, task);
+        }
+      }
+      notifiedTasksBlock = Array.from(pool.values())
+        .map(
+          (x) =>
+            `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${
+              x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"
+            }/пространство "${spaceMap.get(x.teamspace_id) ?? "личное"}"]`,
+        )
+        .join("\n");
+    }
+  } catch {
+    notifyBlock = "";
+  }
+
+
   // Team members across all workspaces, so the agent can assign by name
   let teamBlock = "";
   if (spaceIds.length) {
