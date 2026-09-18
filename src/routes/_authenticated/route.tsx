@@ -5,7 +5,7 @@ import {
   Bot, Users, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  Plus, FileText, KanbanSquare, TrendingUp, Plug,
+  Plus, FileText, KanbanSquare, FolderKanban, TrendingUp, Plug,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
