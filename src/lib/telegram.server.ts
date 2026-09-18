@@ -286,7 +286,7 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
     .limit(30);
   const tasks = (data as any[]) ?? [];
   if (!tasks.length) {
-    await sendMessage(chatId, t(lang).noTasks);
+    await sendMessage(chatId, t(lang).noTasks, withMenu(lang));
     return;
   }
   const names = await spaceNames(tasks.map((x) => x.teamspace_id));
@@ -324,7 +324,7 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
 
 async function handleNew(link: Link, chatId: number, title: string, lang: Lang) {
   if (!title.trim()) {
-    await sendMessage(chatId, t(lang).needTitle);
+    await sendMessage(chatId, t(lang).needTitle, withMenu(lang));
     return;
   }
   let counter = supabaseAdmin
@@ -355,6 +355,7 @@ async function handleNew(link: Link, chatId: number, title: string, lang: Lang) 
   await sendMessage(
     chatId,
     `${t(lang).created((data as any).title)}${space ? `\n🏢 ${space}` : ""}`,
+    withMenu(lang),
   );
 }
 
@@ -374,7 +375,7 @@ async function handleDone(link: Link, chatId: number, query: string, lang: Lang)
   }
   await supabaseAdmin.from("tasks").update({ status: "done" }).eq("id", task.id);
   const space = await spaceNameOf(task.teamspace_id).catch(() => null);
-  await sendMessage(chatId, `${t(lang).doneOk(task.title)}${space ? `\n🏢 ${space}` : ""}`);
+  await sendMessage(chatId, `${t(lang).doneOk(task.title)}${space ? `\n🏢 ${space}` : ""}`, withMenu(lang));
 }
 
 async function handleToday(link: Link, chatId: number, lang: Lang) {
@@ -410,7 +411,7 @@ async function handleToday(link: Link, chatId: number, lang: Lang) {
     lang === "en"
       ? `No deadlines today. Open tasks: ${rows.length}`
       : `На сегодня дедлайнов нет. Активных задач: ${rows.length}`;
-  await sendMessage(chatId, `${header}\n\n${blocks.length ? blocks.join("\n\n") : empty}`);
+  await sendMessage(chatId, `${header}\n\n${blocks.length ? blocks.join("\n\n") : empty}`, withMenu(lang));
 }
 
 // Period switcher shown under every report message
@@ -430,17 +431,27 @@ export function mainMenuKeyboard(lang: Lang) {
   return {
     keyboard: [
       [
-        { text: lang === "ru" ? "📊 Отчёт" : "📊 Report" },
+        { text: lang === "ru" ? "📋 Задачи" : "📋 Tasks" },
         { text: lang === "ru" ? "🗓 Сегодня" : "🗓 Today" },
       ],
       [
-        { text: lang === "ru" ? "📋 Задачи" : "📋 Tasks" },
+        { text: lang === "ru" ? "➕ Новая задача" : "➕ New task" },
+        { text: lang === "ru" ? "✅ Завершить" : "✅ Complete" },
+      ],
+      [
+        { text: lang === "ru" ? "📊 Отчёт" : "📊 Report" },
         { text: lang === "ru" ? "🚀 Приложение" : "🚀 App" },
       ],
+      [{ text: lang === "ru" ? "❓ Помощь" : "❓ Help" }],
     ],
     resize_keyboard: true,
     is_persistent: true,
   };
+}
+
+/** Every reply keeps the button menu visible unless it carries its own inline keyboard. */
+export function withMenu(lang: Lang, extra: Record<string, unknown> = {}) {
+  return extra.reply_markup ? extra : { ...extra, reply_markup: mainMenuKeyboard(lang) };
 }
 
 async function handleReport(link: Link, chatId: number, periodArg: string, lang: Lang) {
@@ -582,6 +593,69 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     )
     .join("\n");
 
+  // Notifications the bot itself sent recently — follow-up messages ("назначь Бермет", "задача решена")
+  // refer to those tasks, so the agent must see them and the tasks they point at.
+  let notifyBlock = "";
+  let notifiedTasksBlock = "";
+  try {
+    const since = new Date(Date.now() - 3 * 86400000).toISOString();
+    const { data: notes } = await supabaseAdmin
+      .from("notifications")
+      .select("title, body, task_id, teamspace_id, created_at")
+      .eq("user_id", link.user_id)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    const rows = ((notes as any[]) ?? []);
+    if (rows.length) {
+      notifyBlock = rows
+        .map(
+          (n, i) =>
+            `${i === 0 ? "- (MOST RECENT) " : "- "}${n.created_at?.slice(0, 16).replace("T", " ")} "${n.title}"${
+              n.body ? `: ${String(n.body).slice(0, 400)}` : ""
+            }${n.task_id ? ` [task_id=${n.task_id}]` : ""}${
+              n.teamspace_id ? ` [пространство "${spaceMap.get(n.teamspace_id) ?? ""}"]` : ""
+            }`,
+        )
+        .join("\n");
+
+      // Tasks referenced by those notifications — by id and by title mentioned in the text.
+      const ids = Array.from(new Set(rows.map((n) => n.task_id).filter(Boolean)));
+      const haystack = rows.map((n) => `${n.title} ${n.body ?? ""}`).join(" ").toLowerCase();
+      const pool = new Map<string, any>();
+      if (ids.length) {
+        const { data } = await supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, teamspace_id")
+          .in("id", ids as string[]);
+        for (const task of ((data as any[]) ?? [])) pool.set(task.id, task);
+      }
+      if (spaceIds.length) {
+        const { data } = await supabaseAdmin
+          .from("tasks")
+          .select("id, title, status, priority, due_date, assignee_name, teamspace_id")
+          .in("teamspace_id", spaceIds)
+          .order("updated_at", { ascending: false })
+          .limit(200);
+        for (const task of ((data as any[]) ?? [])) {
+          const title = String(task.title ?? "").toLowerCase().trim();
+          if (title.length > 3 && haystack.includes(title)) pool.set(task.id, task);
+        }
+      }
+      notifiedTasksBlock = Array.from(pool.values())
+        .map(
+          (x) =>
+            `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${
+              x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"
+            }/пространство "${spaceMap.get(x.teamspace_id) ?? "личное"}"]`,
+        )
+        .join("\n");
+    }
+  } catch {
+    notifyBlock = "";
+  }
+
+
   // Team members across all workspaces, so the agent can assign by name
   let teamBlock = "";
   if (spaceIds.length) {
@@ -622,12 +696,13 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       ? "You are Virtual Space, the user's AI business assistant, answering inside Telegram. Answer in the user's language, plain text only (no markdown symbols), short and practical."
       : "Ты Virtual Space — AI-ассистент бизнеса пользователя, отвечаешь в Telegram. Отвечай на языке пользователя, обычным текстом без markdown, кратко и по делу.") +
     `\nCURRENT DATE: ${bishkekDate()} in Asia/Bishkek (UTC+6). This is authoritative. Never infer today's date from message history or model knowledge.` +
+    "\nCONTEXT RULE: the bot also sends the user AI notifications and briefs (see RECENT NOTIFICATIONS and NOTIFIED TASKS). When a message has no explicit task name (\"назначь ответственной Бермет\", \"задача решена\", \"сделано\", \"перенеси на завтра\"), it refers to the tasks from the MOST RECENT notification — use those task ids and emit [[task-update:...]]. Never say a task does not exist while it is listed in OPEN TASKS or NOTIFIED TASKS. Only if the latest notification covers several tasks equally, ask one short question naming them." +
     "\nYou are the task agent of the user's workspaces. From a plain sentence infer title, assignee, project, department, priority, deadline, a short description and the WORKSPACE the task belongs to." +
     "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department||workspaceIdOrName]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE; empty fields stay empty)." +
     "\nWorkspace field (8th): the id or exact name from WORKSPACES. Whenever the message names a workspace (\"для воркспейса X\", \"воркспейс: X\", \"в пространстве X\"), you MUST put that workspace's id there — never fall back to the default. If not mentioned use the default workspace." +
     "\nTitle must contain ONLY the work itself: never include the workspace name or phrases like \"для воркспейса …\", \"воркспейс: …\", and never append the workspace with a dash." +
-    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS (each task is labelled with its workspace)." +
-    "\nSTATUS CHANGES ARE MANDATORY TOKENS: whenever the user says a task is started, in progress, finished, done, closed, ready, sent for review, or should go back to backlog — immediately emit [[task-update:TASK_ID||status=...]] for the matching task from OPEN TASKS. Wording: сделал/готово/выполнил/закрыл/завершил = done; начал/в работе/делаю = in_progress; на проверку/на ревью = review; вернуть/в бэклог = backlog. Never answer that you changed the status without emitting the token. Match the task by title even if worded loosely; only if several open tasks match equally, ask one short question naming them." +
+    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS or NOTIFIED TASKS (each task is labelled with its workspace)." +
+    "\nSTATUS CHANGES ARE MANDATORY TOKENS: whenever the user says a task is started, in progress, finished, done, closed, ready, sent for review, or should go back to backlog — immediately emit [[task-update:TASK_ID||status=...]] for the matching task from OPEN TASKS or NOTIFIED TASKS. Wording: сделал/готово/выполнил/закрыл/завершил = done; начал/в работе/делаю = in_progress; на проверку/на ревью = review; вернуть/в бэклог = backlog. Never answer that you changed the status without emitting the token. Match the task by title even if worded loosely; only if several open tasks match equally, ask one short question naming them." +
     "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nWhen CREATING a task, if the title, assignee or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
     "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status, deadline and workspace." +
@@ -635,6 +710,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
     spacesBlock +
     (tasks ? `\n\nOPEN TASKS:\n${tasks}` : "") +
+    (notifyBlock ? `\n\nRECENT NOTIFICATIONS sent to this user (newest first):\n${notifyBlock}` : "") +
+    (notifiedTasksBlock ? `\n\nNOTIFIED TASKS (tasks those notifications are about, may include finished ones):\n${notifiedTasksBlock}` : "") +
     (docs ? `\n\nKNOWLEDGE BASE:\n${docs.slice(0, 12000)}` : "");
 
   let reply = "";
@@ -844,7 +921,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     : {};
 
   if (!clean.trim()) clean = lang === "en" ? "✅ Done." : "✅ Готово.";
-  await sendMessage(chatId, clean.slice(0, 3800), openTracker);
+  await sendMessage(chatId, clean.slice(0, 3800), withMenu(lang, openTracker));
 }
 
 // ---------------- callbacks ----------------
@@ -1146,6 +1223,12 @@ export async function handleUpdate(update: any) {
     "📋 tasks": "/tasks",
     "🚀 приложение": "/app",
     "🚀 app": "/app",
+    "➕ новая задача": "/new",
+    "➕ new task": "/new",
+    "✅ завершить": "/done",
+    "✅ complete": "/done",
+    "❓ помощь": "/help",
+    "❓ help": "/help",
   };
   const mapped = MENU_MAP[text.trim().toLowerCase()];
   if (mapped) text = mapped;
