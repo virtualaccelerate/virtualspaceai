@@ -27,11 +27,11 @@ type Data = Awaited<ReturnType<typeof loadOverview>>;
 function ago(iso: string, t: (k: string, d: string) => string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.round(diff / 60000);
-  if (m < 1) return t("app.overview.now", "только что");
-  if (m < 60) return `${m} ${t("app.overview.min", "мин")}`;
+  if (m < 1) return t("workspaceUi.overview.now", "только что");
+  if (m < 60) return `${m} ${t("workspaceUi.overview.min", "мин")}`;
   const h = Math.round(m / 60);
-  if (h < 24) return `${h} ${t("app.overview.hour", "ч")}`;
-  return `${Math.round(h / 24)} ${t("app.overview.day", "дн")}`;
+  if (h < 24) return `${h} ${t("workspaceUi.overview.hour", "ч")}`;
+  return `${Math.round(h / 24)} ${t("workspaceUi.overview.day", "дн")}`;
 }
 
 function AppDashboard() {
@@ -63,7 +63,7 @@ function AppDashboard() {
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-[color:var(--muted-foreground)]">
-        <Loader2 className="h-4 w-4 animate-spin" /> {t("app.common.loading", "Загрузка…")}
+        <Loader2 className="h-4 w-4 animate-spin" /> {t("workspaceUi.common.loading", "Загрузка…")}
       </div>
     );
   }
@@ -73,7 +73,7 @@ function AppDashboard() {
       <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-10 text-center">
         <Users className="h-8 w-8 mx-auto mb-3 text-[color:var(--muted-foreground)]" />
         <p className="text-sm text-[color:var(--muted-foreground)]">
-          {t("app.team.noWorkspace", "Выберите рабочее пространство, чтобы увидеть сводку.")}
+          {t("workspaceUi.team.noWorkspace", "Выберите рабочее пространство, чтобы увидеть сводку.")}
         </p>
       </div>
     );
@@ -81,18 +81,18 @@ function AppDashboard() {
 
   const s = data.stats;
   const stats = [
-    { label: t("app.overview.openTasks", "Активные задачи"), value: s.open_tasks, sub: `${t("app.overview.unassigned", "без исполнителя")}: ${s.unassigned}`, icon: CheckSquare },
-    { label: t("app.overview.overdue", "Просрочено"), value: s.overdue, sub: `${t("app.overview.dueSoon", "срок близко")}: ${s.due_soon}`, icon: Clock },
-    { label: t("app.overview.doneWeek", "Закрыто за неделю"), value: s.done_last_7, sub: `${t("app.overview.completion", "выполнение")}: ${s.completion_rate}%`, icon: TrendingUp },
-    { label: t("app.overview.team", "Команда"), value: s.members, sub: `${t("app.overview.documents", "документов")}: ${s.documents}`, icon: Users },
+    { label: t("workspaceUi.overview.openTasks", "Активные задачи"), value: s.open_tasks, sub: `${t("workspaceUi.overview.unassigned", "без исполнителя")}: ${s.unassigned}`, icon: CheckSquare },
+    { label: t("workspaceUi.overview.overdue", "Просрочено"), value: s.overdue, sub: `${t("workspaceUi.overview.dueSoon", "срок близко")}: ${s.due_soon}`, icon: Clock },
+    { label: t("workspaceUi.overview.doneWeek", "Закрыто за неделю"), value: s.done_last_7, sub: `${t("workspaceUi.overview.completion", "выполнение")}: ${s.completion_rate}%`, icon: TrendingUp },
+    { label: t("workspaceUi.overview.team", "Команда"), value: s.members, sub: `${t("workspaceUi.overview.documents", "документов")}: ${s.documents}`, icon: Users },
   ];
 
   const total = Math.max(1, data.by_status.backlog + data.by_status.in_progress + data.by_status.review + data.by_status.done);
   const bars = [
-    { key: "backlog", label: t("app.tasks.status.backlog", "Бэклог"), value: data.by_status.backlog, cls: "bg-muted-foreground/50" },
-    { key: "in_progress", label: t("app.tasks.status.in_progress", "В работе"), value: data.by_status.in_progress, cls: "bg-primary" },
-    { key: "review", label: t("app.tasks.status.review", "На проверке"), value: data.by_status.review, cls: "bg-amber-500" },
-    { key: "done", label: t("app.tasks.status.done", "Готово"), value: data.by_status.done, cls: "bg-emerald-500" },
+    { key: "backlog", label: t("workspaceUi.tasks.status.backlog", "Бэклог"), value: data.by_status.backlog, cls: "bg-muted-foreground/50" },
+    { key: "in_progress", label: t("workspaceUi.tasks.status.in_progress", "В работе"), value: data.by_status.in_progress, cls: "bg-primary" },
+    { key: "review", label: t("workspaceUi.tasks.status.review", "На проверке"), value: data.by_status.review, cls: "bg-amber-500" },
+    { key: "done", label: t("workspaceUi.tasks.status.done", "Готово"), value: data.by_status.done, cls: "bg-emerald-500" },
   ];
 
   return (
@@ -106,17 +106,17 @@ function AppDashboard() {
         <div>
           <p className="text-[11px] uppercase tracking-[0.25em] text-primary/80">{data.teamspace?.name}</p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">
-            {t("app.overview.greeting", "Привет")}{displayName ? `, ${displayName}` : ""} 👋
+            {t("workspaceUi.overview.greeting", "Привет")}{displayName ? `, ${displayName}` : ""} 👋
           </h1>
           <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">
-            {t("app.overview.subtitle", "Сводка по вашему рабочему пространству")}
+            {t("workspaceUi.overview.subtitle", "Сводка по вашему рабочему пространству")}
           </p>
         </div>
         <Link
           to="/app/tasks"
           className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition"
         >
-          {t("app.overview.quickAction", "К задачам")}
+          {t("workspaceUi.overview.quickAction", "К задачам")}
         </Link>
       </motion.div>
 
@@ -143,13 +143,13 @@ function AppDashboard() {
         <section className="lg:col-span-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--border)]">
             <div>
-              <h2 className="font-display text-base">{t("app.overview.nextTasks", "Ближайшие задачи")}</h2>
+              <h2 className="font-display text-base">{t("workspaceUi.overview.nextTasks", "Ближайшие задачи")}</h2>
               <p className="text-xs text-[color:var(--muted-foreground)]">
-                {t("app.overview.byDeadline", "По сроку выполнения")}
+                {t("workspaceUi.overview.byDeadline", "По сроку выполнения")}
               </p>
             </div>
             <Link to="/app/tasks" className="text-xs text-[color:var(--muted-foreground)] hover:text-foreground transition inline-flex items-center gap-1">
-              {t("app.overview.viewAll", "Все задачи")} <ArrowUpRight className="h-3 w-3" />
+              {t("workspaceUi.overview.viewAll", "Все задачи")} <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
 
@@ -171,7 +171,7 @@ function AppDashboard() {
           <div className="divide-y divide-[color:var(--border)]">
             {data.tasks.length === 0 && (
               <div className="px-5 py-8 text-center text-sm text-[color:var(--muted-foreground)]">
-                {t("app.overview.noTasks", "Открытых задач нет")}
+                {t("workspaceUi.overview.noTasks", "Открытых задач нет")}
               </div>
             )}
             {data.tasks.map((task) => (
@@ -185,7 +185,7 @@ function AppDashboard() {
                 )}
                 <span className="text-sm truncate flex-1">{task.title}</span>
                 <span className="hidden sm:inline text-xs text-[color:var(--muted-foreground)] truncate max-w-[130px]">
-                  {task.assignee_name ?? t("app.import.unassigned", "Без исполнителя")}
+                  {task.assignee_name ?? t("workspaceUi.import.unassigned", "Без исполнителя")}
                 </span>
                 <span className={`text-xs ${task.overdue ? "text-red-500" : "text-[color:var(--muted-foreground)]"}`}>
                   {task.due_date ?? "—"}
@@ -207,7 +207,7 @@ function AppDashboard() {
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Sparkles className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="font-display text-base">{t("app.overview.insights", "Что важно сейчас")}</h2>
+            <h2 className="font-display text-base">{t("workspaceUi.overview.insights", "Что важно сейчас")}</h2>
           </div>
           <div className="mt-4 space-y-3">
             {data.insights.map((ins, i) => (
@@ -229,9 +229,9 @@ function AppDashboard() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-5">
-          <h2 className="font-display text-base mb-4">{t("app.overview.workload", "Загрузка команды")}</h2>
+          <h2 className="font-display text-base mb-4">{t("workspaceUi.overview.workload", "Загрузка команды")}</h2>
           {data.top_members.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted-foreground)]">{t("app.overview.noAssignees", "Задачи ещё не распределены")}</p>
+            <p className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.overview.noAssignees", "Задачи ещё не распределены")}</p>
           ) : (
             <ul className="space-y-3">
               {data.top_members.map((m) => (
@@ -242,8 +242,8 @@ function AppDashboard() {
                   <div className="min-w-0 flex-1">
                     <div className="text-sm truncate">{m.name}</div>
                     <div className="text-[11px] text-[color:var(--muted-foreground)]">
-                      {t("app.team.open", "Активных")}: {m.open} · {t("app.team.done", "Готово")}: {m.done}
-                      {m.overdue > 0 && <span className="text-red-500"> · {t("app.overview.overdue", "просрочено")}: {m.overdue}</span>}
+                      {t("workspaceUi.team.open", "Активных")}: {m.open} · {t("workspaceUi.team.done", "Готово")}: {m.done}
+                      {m.overdue > 0 && <span className="text-red-500"> · {t("workspaceUi.overview.overdue", "просрочено")}: {m.overdue}</span>}
                     </div>
                   </div>
                 </li>
@@ -253,9 +253,9 @@ function AppDashboard() {
         </section>
 
         <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-5">
-          <h2 className="font-display text-base mb-4">{t("app.overview.activity", "Активность")}</h2>
+          <h2 className="font-display text-base mb-4">{t("workspaceUi.overview.activity", "Активность")}</h2>
           {data.activity.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted-foreground)]">{t("app.overview.noActivity", "Пока нет событий")}</p>
+            <p className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.overview.noActivity", "Пока нет событий")}</p>
           ) : (
             <ul className="space-y-3">
               {data.activity.map((a) => (
@@ -276,11 +276,11 @@ function AppDashboard() {
 
         <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-base">{t("app.overview.notifications", "Уведомления")}</h2>
+            <h2 className="font-display text-base">{t("workspaceUi.overview.notifications", "Уведомления")}</h2>
             <Bell className="h-4 w-4 text-[color:var(--muted-foreground)]" />
           </div>
           {data.notifications.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted-foreground)]">{t("app.overview.noNotifications", "Новых уведомлений нет")}</p>
+            <p className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.overview.noNotifications", "Новых уведомлений нет")}</p>
           ) : (
             <ul className="space-y-3">
               {data.notifications.map((n) => (

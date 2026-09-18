@@ -44,7 +44,7 @@ function TeamPage() {
   };
 
   if (loading) {
-    return <div className="text-sm text-[color:var(--muted-foreground)]">{t("app.common.loading", "Загрузка…")}</div>;
+    return <div className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.common.loading", "Загрузка…")}</div>;
   }
 
   if (!data) {
@@ -52,7 +52,7 @@ function TeamPage() {
       <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-10 text-center">
         <Users className="h-8 w-8 mx-auto mb-3 text-[color:var(--muted-foreground)]" />
         <p className="text-sm text-[color:var(--muted-foreground)]">
-          {t("app.team.noWorkspace", "Выберите рабочее пространство, чтобы увидеть участников.")}
+          {t("workspaceUi.team.noWorkspace", "Выберите рабочее пространство, чтобы увидеть участников.")}
         </p>
       </div>
     );
@@ -65,9 +65,9 @@ function TeamPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">{t("app.team.title", "Команда")}</h1>
+          <h1 className="text-2xl font-semibold">{t("workspaceUi.team.title", "Команда")}</h1>
           <p className="text-sm text-[color:var(--muted-foreground)]">
-            {data.teamspace?.name} · {t("app.team.count", "участников")}: {data.members.length}
+            {data.teamspace?.name} · {t("workspaceUi.team.count", "участников")}: {data.members.length}
           </p>
         </div>
         {data.teamspace?.invite_code && (
@@ -76,17 +76,17 @@ function TeamPage() {
             className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm hover:bg-[color:var(--muted)] transition"
           >
             {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-            {t("app.team.inviteCode", "Код приглашения")}: <span className="font-mono">{data.teamspace.invite_code}</span>
+            {t("workspaceUi.team.inviteCode", "Код приглашения")}: <span className="font-mono">{data.teamspace.invite_code}</span>
           </button>
         )}
       </header>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: t("app.team.members", "Участники"), value: data.members.length },
-          { label: t("app.team.tasksTotal", "Всего задач"), value: data.total_tasks },
-          { label: t("app.team.tasksUnassigned", "Без исполнителя"), value: data.unassigned_tasks },
-          { label: t("app.team.telegramLinked", "С Telegram"), value: data.members.filter((m) => m.telegram_linked).length },
+          { label: t("workspaceUi.team.members", "Участники"), value: data.members.length },
+          { label: t("workspaceUi.team.tasksTotal", "Всего задач"), value: data.total_tasks },
+          { label: t("workspaceUi.team.tasksUnassigned", "Без исполнителя"), value: data.unassigned_tasks },
+          { label: t("workspaceUi.team.telegramLinked", "С Telegram"), value: data.members.filter((m) => m.telegram_linked).length },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
             <div className="text-2xl font-semibold">{s.value}</div>
@@ -107,9 +107,9 @@ function TeamPage() {
             )}
             <div className="min-w-0 flex-1">
               <div className="text-sm font-medium truncate">
-                {m.full_name || m.email || t("app.team.member", "Участник")}
+                {m.full_name || m.email || t("workspaceUi.team.member", "Участник")}
                 {m.id === data.current_user_id && (
-                  <span className="ml-2 text-xs text-[color:var(--muted-foreground)]">({t("app.team.you", "вы")})</span>
+                  <span className="ml-2 text-xs text-[color:var(--muted-foreground)]">({t("workspaceUi.team.you", "вы")})</span>
                 )}
               </div>
               <div className="text-xs text-[color:var(--muted-foreground)] truncate">{m.email}</div>
@@ -123,7 +123,7 @@ function TeamPage() {
               </span>
             )}
             <span className="text-xs text-[color:var(--muted-foreground)]">
-              {t("app.team.open", "Активных")}: {m.open_tasks} · {t("app.team.done", "Готово")}: {m.done_tasks}
+              {t("workspaceUi.team.open", "Активных")}: {m.open_tasks} · {t("workspaceUi.team.done", "Готово")}: {m.done_tasks}
             </span>
           </div>
         ))}

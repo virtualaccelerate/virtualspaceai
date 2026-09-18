@@ -43,7 +43,7 @@ function MemberCard({ m }: { m: Member }) {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium truncate">{m.full_name || m.email || t("app.team.member", "Участник")}</div>
+          <div className="text-sm font-medium truncate">{m.full_name || m.email || t("workspaceUi.team.member", "Участник")}</div>
           <div className="text-xs text-[color:var(--muted-foreground)] capitalize truncate">{m.role}</div>
         </div>
         {m.overdue > 0 && (
@@ -55,7 +55,7 @@ function MemberCard({ m }: { m: Member }) {
 
       <div>
         <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-[color:var(--muted-foreground)]">{t("app.perf.completion", "Выполнено")}</span>
+          <span className="text-[color:var(--muted-foreground)]">{t("workspaceUi.perf.completion", "Выполнено")}</span>
           <span className="font-medium">
             {m.done}/{m.total} · {m.completion_rate}%
           </span>
@@ -66,33 +66,33 @@ function MemberCard({ m }: { m: Member }) {
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg bg-[color:var(--muted)] px-3 py-2">
           <div className="flex items-center gap-1 text-[color:var(--muted-foreground)]">
-            <TrendingUp className="h-3 w-3" /> {t("app.perf.onTime", "В срок")}
+            <TrendingUp className="h-3 w-3" /> {t("workspaceUi.perf.onTime", "В срок")}
           </div>
           <div className="text-sm font-semibold">{m.on_time_rate === null ? "—" : `${m.on_time_rate}%`}</div>
         </div>
         <div className="rounded-lg bg-[color:var(--muted)] px-3 py-2">
           <div className="flex items-center gap-1 text-[color:var(--muted-foreground)]">
-            <Timer className="h-3 w-3" /> {t("app.perf.avgDays", "Среднее время")}
+            <Timer className="h-3 w-3" /> {t("workspaceUi.perf.avgDays", "Среднее время")}
           </div>
           <div className="text-sm font-semibold">
-            {m.avg_days_to_close === null ? "—" : `${m.avg_days_to_close} ${t("app.perf.days", "дн.")}`}
+            {m.avg_days_to_close === null ? "—" : `${m.avg_days_to_close} ${t("workspaceUi.perf.days", "дн.")}`}
           </div>
         </div>
         <div className="rounded-lg bg-[color:var(--muted)] px-3 py-2">
           <div className="flex items-center gap-1 text-[color:var(--muted-foreground)]">
-            <CheckCircle2 className="h-3 w-3" /> {t("app.perf.week", "За неделю")}
+            <CheckCircle2 className="h-3 w-3" /> {t("workspaceUi.perf.week", "За неделю")}
           </div>
           <div className="text-sm font-semibold">{m.done_last_7}</div>
         </div>
         <div className="rounded-lg bg-[color:var(--muted)] px-3 py-2">
           <div className="flex items-center gap-1 text-[color:var(--muted-foreground)]">
-            <Clock className="h-3 w-3" /> {t("app.perf.inWork", "В работе")}
+            <Clock className="h-3 w-3" /> {t("workspaceUi.perf.inWork", "В работе")}
           </div>
           <div className="text-sm font-semibold">
             {m.in_progress + m.review}
             {m.due_soon > 0 && (
               <span className="ml-1 text-xs font-normal text-[color:var(--muted-foreground)]">
-                · {t("app.perf.dueSoon", "скоро дедлайн")}: {m.due_soon}
+                · {t("workspaceUi.perf.dueSoon", "скоро дедлайн")}: {m.due_soon}
               </span>
             )}
           </div>
@@ -102,15 +102,15 @@ function MemberCard({ m }: { m: Member }) {
       {m.projects.length > 0 && (
         <div className="space-y-1.5">
           <div className="text-xs font-medium text-[color:var(--muted-foreground)]">
-            {t("app.perf.projects", "По проектам")}
+            {t("workspaceUi.perf.projects", "По проектам")}
           </div>
           {m.projects.map((p) => (
             <div key={p.teamspace_id} className="flex items-center gap-2 text-xs">
               <Folder className="h-3 w-3 shrink-0 text-[color:var(--muted-foreground)]" />
               <span className="truncate flex-1">{p.project}</span>
               <span className="text-[color:var(--muted-foreground)] shrink-0">
-                {t("app.perf.done", "готово")} {p.done} · {t("app.perf.open", "активно")} {p.open}
-                {p.overdue > 0 && <span className="text-amber-500"> · {t("app.perf.late", "просрочено")} {p.overdue}</span>}
+                {t("workspaceUi.perf.done", "готово")} {p.done} · {t("workspaceUi.perf.open", "активно")} {p.open}
+                {p.overdue > 0 && <span className="text-amber-500"> · {t("workspaceUi.perf.late", "просрочено")} {p.overdue}</span>}
               </span>
             </div>
           ))}
@@ -120,7 +120,7 @@ function MemberCard({ m }: { m: Member }) {
       {m.recent_done.length > 0 && (
         <div className="space-y-1.5">
           <div className="text-xs font-medium text-[color:var(--muted-foreground)]">
-            {t("app.perf.recent", "Последние выполненные")}
+            {t("workspaceUi.perf.recent", "Последние выполненные")}
           </div>
           {m.recent_done.map((task) => (
             <div key={task.id} className="flex items-start gap-2 text-xs">
@@ -135,7 +135,7 @@ function MemberCard({ m }: { m: Member }) {
       )}
 
       {m.total === 0 && (
-        <p className="text-xs text-[color:var(--muted-foreground)]">{t("app.perf.noTasks", "Пока нет назначенных задач.")}</p>
+        <p className="text-xs text-[color:var(--muted-foreground)]">{t("workspaceUi.perf.noTasks", "Пока нет назначенных задач.")}</p>
       )}
     </div>
   );
@@ -164,13 +164,13 @@ export default function TeamPerformance({ teamspaceId }: { teamspaceId?: string 
   }, [teamspaceId]);
 
   if (loading) {
-    return <div className="text-sm text-[color:var(--muted-foreground)]">{t("app.common.loading", "Загрузка…")}</div>;
+    return <div className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.common.loading", "Загрузка…")}</div>;
   }
   if (!data || data.members.length === 0) return null;
 
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold">{t("app.perf.title", "Успеваемость сотрудников")}</h2>
+      <h2 className="text-lg font-semibold">{t("workspaceUi.perf.title", "Успеваемость сотрудников")}</h2>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {data.members.map((m) => (
           <MemberCard key={m.user_id} m={m} />

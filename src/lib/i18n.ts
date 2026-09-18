@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { applyGroupResources } from "@/locales";
 
 const isBrowser = typeof window !== "undefined";
 
@@ -1956,6 +1957,8 @@ const resources = {
   },
 
 };
+
+applyGroupResources(resources as unknown as Record<string, { translation: Record<string, unknown> }>);
 
 if (!i18n.isInitialized) {
   i18n.use(initReactI18next).init({
