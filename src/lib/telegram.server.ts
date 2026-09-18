@@ -42,7 +42,9 @@ export async function sendMessage(
   text: string,
   extra: Record<string, unknown> = {},
 ) {
-  return tg("sendMessage", { chat_id: chatId, text, disable_web_page_preview: true, ...extra });
+  // Never send an empty message — Telegram rejects it with a 400 and the user sees silence.
+  const safe = text?.trim() ? text : "✅ Готово";
+  return tg("sendMessage", { chat_id: chatId, text: safe, disable_web_page_preview: true, ...extra });
 }
 
 /** Workspace names for the given ids — the bot always says where a task comes from. */
@@ -841,6 +843,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       } }
     : {};
 
+  if (!clean.trim()) clean = lang === "en" ? "✅ Done." : "✅ Готово.";
   await sendMessage(chatId, clean.slice(0, 3800), openTracker);
 }
 
