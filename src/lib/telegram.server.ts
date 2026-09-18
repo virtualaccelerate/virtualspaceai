@@ -286,7 +286,7 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
     .limit(30);
   const tasks = (data as any[]) ?? [];
   if (!tasks.length) {
-    await sendMessage(chatId, t(lang).noTasks);
+    await sendMessage(chatId, t(lang).noTasks, withMenu(lang));
     return;
   }
   const names = await spaceNames(tasks.map((x) => x.teamspace_id));
@@ -324,7 +324,7 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
 
 async function handleNew(link: Link, chatId: number, title: string, lang: Lang) {
   if (!title.trim()) {
-    await sendMessage(chatId, t(lang).needTitle);
+    await sendMessage(chatId, t(lang).needTitle, withMenu(lang));
     return;
   }
   let counter = supabaseAdmin
@@ -355,6 +355,7 @@ async function handleNew(link: Link, chatId: number, title: string, lang: Lang) 
   await sendMessage(
     chatId,
     `${t(lang).created((data as any).title)}${space ? `\n🏢 ${space}` : ""}`,
+    withMenu(lang),
   );
 }
 
@@ -374,7 +375,7 @@ async function handleDone(link: Link, chatId: number, query: string, lang: Lang)
   }
   await supabaseAdmin.from("tasks").update({ status: "done" }).eq("id", task.id);
   const space = await spaceNameOf(task.teamspace_id).catch(() => null);
-  await sendMessage(chatId, `${t(lang).doneOk(task.title)}${space ? `\n🏢 ${space}` : ""}`);
+  await sendMessage(chatId, `${t(lang).doneOk(task.title)}${space ? `\n🏢 ${space}` : ""}`, withMenu(lang));
 }
 
 async function handleToday(link: Link, chatId: number, lang: Lang) {
@@ -410,7 +411,7 @@ async function handleToday(link: Link, chatId: number, lang: Lang) {
     lang === "en"
       ? `No deadlines today. Open tasks: ${rows.length}`
       : `На сегодня дедлайнов нет. Активных задач: ${rows.length}`;
-  await sendMessage(chatId, `${header}\n\n${blocks.length ? blocks.join("\n\n") : empty}`);
+  await sendMessage(chatId, `${header}\n\n${blocks.length ? blocks.join("\n\n") : empty}`, withMenu(lang));
 }
 
 // Period switcher shown under every report message
