@@ -35,8 +35,8 @@ function TelegramPage() {
   const setupMut = useMutation({
     mutationFn: () => setup(),
     onSuccess: (res: any) => {
-      if (res?.ok) toast.success(t("app.telegram.activated", "Bot activated"));
-      else toast.error(res?.error ?? t("app.telegram.activateError", "Could not activate the bot"));
+      if (res?.ok) toast.success(t("integrationsUi.telegram.activated", "Bot activated"));
+      else toast.error(res?.error ?? t("integrationsUi.telegram.activateError", "Could not activate the bot"));
       qc.invalidateQueries({ queryKey: ["telegram-status"] });
     },
   });
@@ -44,7 +44,7 @@ function TelegramPage() {
   const unlinkMut = useMutation({
     mutationFn: () => unlink(),
     onSuccess: () => {
-      toast.success(t("app.telegram.unlinked", "Telegram disconnected"));
+      toast.success(t("integrationsUi.telegram.unlinked", "Telegram disconnected"));
       qc.invalidateQueries({ queryKey: ["telegram-status"] });
     },
   });
@@ -60,11 +60,11 @@ function TelegramPage() {
   };
 
   const abilities = [
-    t("app.telegram.can.tasks", "See open tasks and change their status with one tap"),
-    t("app.telegram.can.new", "Create tasks: /new Call the client"),
-    t("app.telegram.can.done", "Complete tasks: /done Call the client"),
-    t("app.telegram.can.report", "Get reports: /report day | week | month"),
-    t("app.telegram.can.ai", "Ask the AI assistant anything — it sees your knowledge base, finances and tasks"),
+    t("integrationsUi.telegram.can.tasks", "See open tasks and change their status with one tap"),
+    t("integrationsUi.telegram.can.new", "Create tasks: /new Call the client"),
+    t("integrationsUi.telegram.can.done", "Complete tasks: /done Call the client"),
+    t("integrationsUi.telegram.can.report", "Get reports: /report day | week | month"),
+    t("integrationsUi.telegram.can.ai", "Ask the AI assistant anything — it sees your knowledge base, finances and tasks"),
   ];
 
   return (
@@ -75,11 +75,11 @@ function TelegramPage() {
         </div>
         <div>
           <h1 className="font-display text-2xl sm:text-3xl text-white">
-            {t("app.telegram.title", "Telegram bot")}
+            {t("integrationsUi.telegram.title", "Telegram bot")}
           </h1>
           <p className="mt-1.5 text-sm text-white/60 max-w-2xl">
             {t(
-              "app.telegram.subtitle",
+              "integrationsUi.telegram.subtitle",
               "Manage Virtual Space right from Telegram: tasks, statuses, reports and the AI assistant.",
             )}
           </p>
@@ -90,13 +90,13 @@ function TelegramPage() {
         {isLoading ? (
           <div className="flex items-center gap-2 text-white/60 text-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
-            {t("app.telegram.loading", "Loading…")}
+            {t("integrationsUi.telegram.loading", "Loading…")}
           </div>
         ) : data?.connected ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
               <Check className="h-4 w-4" />
-              {t("app.telegram.connected", "Connected")}
+              {t("integrationsUi.telegram.connected", "Connected")}
               {data.telegramUsername ? (
                 <span className="text-white/50 font-normal">@{data.telegramUsername}</span>
               ) : null}
@@ -107,13 +107,13 @@ function TelegramPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
             >
               <Unplug className="h-4 w-4" />
-              {t("app.telegram.disconnect", "Disconnect")}
+              {t("integrationsUi.telegram.disconnect", "Disconnect")}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-white/70">
-              {t("app.telegram.howto", "Open the bot in Telegram and send this command:")}
+              {t("integrationsUi.telegram.howto", "Open the bot in Telegram and send this command:")}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <code className="rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-sm text-primary">
@@ -124,7 +124,7 @@ function TelegramPage() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs text-white/80 hover:bg-white/5"
               >
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {t("app.telegram.copy", "Copy")}
+                {t("integrationsUi.telegram.copy", "Copy")}
               </button>
               {deepLink ? (
                 <a
@@ -134,13 +134,13 @@ function TelegramPage() {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
                 >
                   <Send className="h-3.5 w-3.5" />
-                  {t("app.telegram.open", "Open the bot")}
+                  {t("integrationsUi.telegram.open", "Open the bot")}
                 </a>
               ) : null}
             </div>
             <p className="text-xs text-white/40">
               {t(
-                "app.telegram.hint",
+                "integrationsUi.telegram.hint",
                 "The code is personal — everything the bot does happens inside your account.",
               )}
             </p>
@@ -150,11 +150,11 @@ function TelegramPage() {
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
-          {t("app.telegram.miniApp", "Mini App")}
+          {t("integrationsUi.telegram.miniApp", "Mini App")}
         </h2>
         <p className="text-sm text-white/70">
           {t(
-            "app.telegram.miniAppHint",
+            "integrationsUi.telegram.miniAppHint",
             "The full Virtual Space workspace inside Telegram — same account, same data. Open the bot and tap the menu button, or use /app.",
           )}
         </p>
@@ -170,7 +170,7 @@ function TelegramPage() {
               className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
             >
               <Send className="h-3.5 w-3.5" />
-              {t("app.telegram.openMiniApp", "Open mini app")}
+              {t("integrationsUi.telegram.openMiniApp", "Open mini app")}
             </a>
           ) : null}
         </div>
@@ -181,7 +181,7 @@ function TelegramPage() {
       <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
 
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
-          {t("app.telegram.abilities", "What the bot can do")}
+          {t("integrationsUi.telegram.abilities", "What the bot can do")}
         </h2>
         <ul className="space-y-2">
           {abilities.map((a) => (
@@ -195,11 +195,11 @@ function TelegramPage() {
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6">
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
-          {t("app.telegram.admin", "Bot setup")}
+          {t("integrationsUi.telegram.admin", "Bot setup")}
         </h2>
         <p className="text-sm text-white/60 mb-3">
           {t(
-            "app.telegram.adminHint",
+            "integrationsUi.telegram.adminHint",
             "Run this once (or after a new deploy) to register the bot webhook and its command menu.",
           )}
         </p>
@@ -213,7 +213,7 @@ function TelegramPage() {
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-          {t("app.telegram.activate", "Activate bot")}
+          {t("integrationsUi.telegram.activate", "Activate bot")}
         </button>
       </section>
     </div>
@@ -235,9 +235,9 @@ function DigestSettings() {
     mutationFn: (input: { enabled: boolean; hour: number }) => save({ data: input }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tg-digest"] });
-      toast.success(t("app.telegram.digestSaved", "Настройки сохранены"));
+      toast.success(t("integrationsUi.telegram.digestSaved", "Settings saved"));
     },
-    onError: (e: any) => toast.error(e?.message ?? "Error"),
+    onError: (e: any) => toast.error(e?.message ?? t("integrationsUi.telegram.error", "Error")),
   });
 
   const enabled = data?.enabled ?? true;
@@ -246,12 +246,12 @@ function DigestSettings() {
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
       <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
-        {t("app.telegram.digest", "Задачи и календарь")}
+        {t("integrationsUi.telegram.digest", "Tasks and calendar")}
       </h2>
       <p className="text-sm text-white/70">
         {t(
-          "app.telegram.digestHint",
-          "Каждый день бот пришлёт список задач на сегодня, просроченные и приближающиеся дедлайны.",
+          "integrationsUi.telegram.digestHint",
+          "Every day the bot sends a list of today's tasks, overdue items, and upcoming deadlines.",
         )}
       </p>
 
@@ -263,13 +263,13 @@ function DigestSettings() {
           }`}
         >
           {enabled
-            ? t("app.telegram.digestOn", "Ежедневные напоминания включены")
-            : t("app.telegram.digestOff", "Напоминания выключены")}
+            ? t("integrationsUi.telegram.digestOn", "Daily reminders are on")
+            : t("integrationsUi.telegram.digestOff", "Reminders are off")}
         </button>
 
         <label className="flex items-center gap-2 text-xs text-white/60">
           <CalendarClock className="h-4 w-4" />
-          {t("app.telegram.digestTime", "Время (UTC)")}
+          {t("integrationsUi.telegram.digestTime", "Time (UTC)")}
           <select
             value={hour}
             onChange={(e) => mutation.mutate({ enabled, hour: Number(e.target.value) })}
@@ -287,8 +287,8 @@ function DigestSettings() {
       <div className="mt-5">
         <div className="text-xs text-white/50 mb-2">
           {t(
-            "app.telegram.calendarHint",
-            "Ссылка-подписка на задачи с дедлайнами — добавьте её в Google Calendar (Другие календари → Подписка по URL) или Apple Calendar.",
+            "integrationsUi.telegram.calendarHint",
+            "A subscription link for tasks with deadlines — add it to Google Calendar (Other calendars → Subscribe by URL) or Apple Calendar.",
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -305,7 +305,7 @@ function DigestSettings() {
             className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs text-white/80 hover:bg-white/5"
           >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            {t("app.telegram.copy", "Копировать")}
+            {t("integrationsUi.telegram.copy", "Copy")}
           </button>
         </div>
       </div>

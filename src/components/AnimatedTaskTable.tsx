@@ -2,74 +2,6 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-type Lang = "en" | "ru" | "kk" | "ky" | "uz" | "tg";
-
-const COPY: Record<Lang, {
-  title: string;
-  subtitle: string;
-  headerLeft: string;
-  headerRight: string;
-  deptLabel: string;
-  workloadsLabel: string;
-  departments: string[];
-}> = {
-  en: {
-    title: "Dynamic Agent Tasks",
-    subtitle: "Watch how Virtual Space intelligently routes tasks across your departments.",
-    headerLeft: "AGENT CONTROL CENTER",
-    headerRight: "STATUS: SYSTEM OPTIMIZED",
-    deptLabel: "DEPARTMENT",
-    workloadsLabel: "ACTIVE AI WORKLOADS",
-    departments: ["Data", "Sales", "Analytics", "Operations"],
-  },
-  ru: {
-    title: "Динамические задачи агентов",
-    subtitle: "Смотрите, как Virtual Space маршрутизирует задачи между отделами.",
-    headerLeft: "ЦЕНТР УПРАВЛЕНИЯ АГЕНТАМИ",
-    headerRight: "СТАТУС: СИСТЕМА ОПТИМИЗИРОВАНА",
-    deptLabel: "ОТДЕЛ",
-    workloadsLabel: "АКТИВНЫЕ AI-НАГРУЗКИ",
-    departments: ["Данные", "Продажи", "Аналитика", "Операции"],
-  },
-  kk: {
-    title: "Агенттердің динамикалық тапсырмалары",
-    subtitle: "Virtual Space тапсырмаларды бөлімдер арасында қалай бағыттайтынын көріңіз.",
-    headerLeft: "АГЕНТТЕРДІ БАСҚАРУ ОРТАЛЫҒЫ",
-    headerRight: "МӘРТЕБЕ: ЖҮЙЕ ОҢТАЙЛАНДЫРЫЛҒАН",
-    deptLabel: "БӨЛІМ",
-    workloadsLabel: "БЕЛСЕНДІ AI-ЖҮКТЕМЕЛЕР",
-    departments: ["Деректер", "Сатылым", "Аналитика", "Операциялар"],
-  },
-  ky: {
-    title: "Агенттердин динамикалык тапшырмалары",
-    subtitle: "Virtual Space тапшырмаларды бөлүмдөр арасында кантип багыттарын көрүңүз.",
-    headerLeft: "АГЕНТТЕРДИ БАШКАРУУ БОРБОРУ",
-    headerRight: "АБАЛ: СИСТЕМА ОҢТОЙЛОШТУРУЛГАН",
-    deptLabel: "БӨЛҮМ",
-    workloadsLabel: "АКТИВДҮҮ AI-ЖҮКТӨӨЛӨР",
-    departments: ["Маалыматтар", "Сатуу", "Аналитика", "Операциялар"],
-  },
-  uz: {
-    title: "Agentlarning dinamik vazifalari",
-    subtitle: "Virtual Space vazifalarni boʻlimlar oʻrtasida qanday yoʻnaltirishini kuzating.",
-    headerLeft: "AGENTLARNI BOSHQARISH MARKAZI",
-    headerRight: "HOLAT: TIZIM OPTIMALLASHTIRILDI",
-    deptLabel: "BOʻLIM",
-    workloadsLabel: "FAOL AI-YUKLAMALAR",
-    departments: ["Maʼlumot", "Sotuv", "Analitika", "Operatsiyalar"],
-  },
-  tg: {
-    title: "Вазифаҳои динамикии агентҳо",
-    subtitle: "Бинед, ки Virtual Space вазифаҳоро дар байни шӯъбаҳо чӣ гуна тақсим мекунад.",
-    headerLeft: "МАРКАЗИ ИДОРАКУНИИ АГЕНТҲО",
-    headerRight: "ҲОЛАТ: СИСТЕМА БЕҲИНА",
-    deptLabel: "ШӮЪБА",
-    workloadsLabel: "БОРҲОИ ФАЪОЛИ AI",
-    departments: ["Маълумот", "Фурӯш", "Аналитика", "Амалиёт"],
-  },
-};
-
-
 const FALLBACK_TASKS: string[][] = [
   ["Cleaning Logs", "ETL Flow", "Validation", "Encryption", "Backup"],
   ["Lead Scoring", "Outreach", "Follow-up", "Meeting Set", "Closing Docs"],
@@ -77,15 +9,27 @@ const FALLBACK_TASKS: string[][] = [
   ["Inventory", "Logistics", "Procurement", "Compliance", "Dispatch"],
 ];
 
+const FALLBACK_DEPARTMENTS = ["Data", "Sales", "Analytics", "Operations"];
+
 export function AnimatedTaskTable() {
-  const { t, i18n } = useTranslation();
-  const langCode = (i18n.language?.split("-")[0] ?? "en") as Lang;
-  const copy = COPY[langCode] ?? COPY.en;
+  const { t } = useTranslation();
+
+  const title = t("tasksUi.animated.title", "Dynamic Agent Tasks");
+  const subtitle = t("tasksUi.animated.subtitle", "Watch how Virtual Space intelligently routes tasks across your departments.");
+  const headerLeft = t("tasksUi.animated.headerLeft", "AGENT CONTROL CENTER");
+  const headerRight = t("tasksUi.animated.headerRight", "STATUS: SYSTEM OPTIMIZED");
+  const deptLabel = t("tasksUi.animated.deptLabel", "DEPARTMENT");
+  const workloadsLabel = t("tasksUi.animated.workloadsLabel", "ACTIVE AI WORKLOADS");
+
+  const departments = useMemo<string[]>(() => {
+    const raw = t("tasksUi.animated.departments", { returnObjects: true });
+    return Array.isArray(raw) ? (raw as string[]) : FALLBACK_DEPARTMENTS;
+  }, [t]);
 
   const tasks = useMemo<string[][]>(() => {
-    const raw = t("taskTable.tasks", { returnObjects: true });
+    const raw = t("tasksUi.animated.tasks", { returnObjects: true });
     return Array.isArray(raw) ? (raw as string[][]) : FALLBACK_TASKS;
-  }, [t, i18n.language]);
+  }, [t]);
 
   // Random active tasks that cycle
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
@@ -121,10 +65,10 @@ export function AnimatedTaskTable() {
           className="text-center mb-10 sm:mb-12"
         >
           <h2 className="font-display text-3xl sm:text-5xl text-[color:var(--foreground)] leading-tight">
-            {copy.title}
+            {title}
           </h2>
           <p className="mt-3 text-[color:var(--muted-foreground)] text-sm sm:text-base max-w-xl mx-auto px-2">
-            {copy.subtitle}
+            {subtitle}
           </p>
         </motion.div>
 
@@ -143,13 +87,13 @@ export function AnimatedTaskTable() {
               <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#FFBD2E] shrink-0" />
               <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#28C840] shrink-0" />
               <span className="hidden sm:inline-block ml-4 text-[10px] uppercase tracking-[0.2em] text-[color:var(--muted-foreground)] font-mono truncate">
-                {copy.headerLeft}
+                {headerLeft}
               </span>
             </div>
             <span className="flex items-center gap-1.5 text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-[#73D94F] font-mono font-semibold shrink-0">
               <span className="h-1.5 w-1.5 rounded-full bg-[#73D94F] animate-pulse" />
-              <span className="hidden xs:inline sm:inline">{copy.headerRight}</span>
-              <span className="xs:hidden sm:hidden">LIVE</span>
+              <span className="hidden xs:inline sm:inline">{headerRight}</span>
+              <span className="xs:hidden sm:hidden">{t("tasksUi.animated.live", "LIVE")}</span>
             </span>
           </div>
 
@@ -158,16 +102,16 @@ export function AnimatedTaskTable() {
             {/* Column labels — desktop only */}
             <div className="hidden sm:grid grid-cols-[140px_1fr] gap-4 pb-3 border-b border-[color:var(--border)]">
               <span className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--muted-foreground)] font-mono">
-                {copy.deptLabel}
+                {deptLabel}
               </span>
               <span className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--muted-foreground)] font-mono">
-                {copy.workloadsLabel}
+                {workloadsLabel}
               </span>
             </div>
 
             {/* Rows */}
             <div className="mt-2 space-y-3 sm:space-y-2">
-              {copy.departments.map((dept, deptIdx) => (
+              {departments.map((dept, deptIdx) => (
                 <motion.div
                   key={dept}
                   initial={{ opacity: 0, x: -12 }}

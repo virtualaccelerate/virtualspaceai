@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/oauth/google-drive/return")({
   component: OAuthReturn,
 });
 
 function OAuthReturn() {
-  const [message, setMessage] = useState("Завершаем подключение Google Drive…");
+  const { t } = useTranslation();
+  const [message, setMessage] = useState(t("integrationsUi.oauthReturn.completing", "Completing Google Drive connection…"));
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -22,7 +24,7 @@ function OAuthReturn() {
     };
 
     if (params.get("success") !== "true") {
-      setMessage(params.get("error") ?? "Подключение не завершено.");
+      setMessage(params.get("error") ?? t("integrationsUi.oauthReturn.notCompleted", "Connection was not completed."));
       notify("appUserConnectorOAuthFailed");
       return;
     }
@@ -32,11 +34,12 @@ function OAuthReturn() {
         notify("appUserConnectorOAuthComplete");
         return;
       }
-      setMessage("Google не вернул код подтверждения.");
+      setMessage(t("integrationsUi.oauthReturn.noCode", "Google did not return a confirmation code."));
       notify("appUserConnectorOAuthFailed");
       return;
     }
     notify("appUserConnectorOAuthComplete", code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

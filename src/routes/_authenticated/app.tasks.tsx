@@ -170,6 +170,8 @@ const emptyDraft = (status: TaskStatus = "backlog"): TaskDraft => ({
 
 function TasksPage() {
   const { t } = useTranslation();
+  const colLabel = (id: TaskStatus) => t(`tasksUi.col.${id}`, COLUMNS.find((c) => c.id === id)?.label ?? id);
+  const priorityLabel = (p: TaskPriority) => t(`tasksUi.priority.${p}`, PRIORITY_META[p]?.label ?? p);
   const logEvent = useServerFn(logChatEvent);
   const createTaskFn = useServerFn(createTask);
   const updateTaskFn = useServerFn(updateTask);
@@ -222,8 +224,8 @@ function TasksPage() {
       await reloadTasks();
       toast.success(
         res.skipped
-          ? `Удалено задач: ${res.deleted}. Пропущено (внешний трекер): ${res.skipped}`
-          : `Удалено задач: ${res.deleted}`,
+          ? t("tasksUi.bulkDeletedSkipped", "Tasks deleted: {{deleted}}. Skipped (external tracker): {{skipped}}", { deleted: res.deleted, skipped: res.skipped })
+          : t("tasksUi.bulkDeleted", "Tasks deleted: {{deleted}}", { deleted: res.deleted }),
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
@@ -244,7 +246,7 @@ function TasksPage() {
   }
 
   async function submitForReview(task: Task) {
-    const note = window.prompt("Ссылка или комментарий к сдаче (необязательно)") ?? "";
+    const note = window.prompt(t("tasksUi.promptProof", "Link or comment for submission (optional)")) ?? "";
     const isLink = /^https?:\/\//i.test(note.trim());
     try {
       await submitTaskFn({
@@ -254,20 +256,20 @@ function TasksPage() {
           proof_note: isLink ? null : note.trim() || null,
         },
       });
-      toast.success("Отправлено на проверку");
+      toast.success(t("tasksUi.sentForReview", "Sent for review"));
       await reloadTasks();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Не удалось отправить");
+      toast.error(e instanceof Error ? e.message : t("tasksUi.errSend", "Failed to send"));
     }
   }
 
   async function decide(task: Task, decision: "approve" | "rework") {
     try {
       await reviewTaskFn({ data: { id: task.id, decision } });
-      toast.success(decision === "approve" ? "Задача принята" : "Возвращена на доработку");
+      toast.success(decision === "approve" ? t("tasksUi.taskApproved", "Task approved") : t("tasksUi.taskReturned", "Returned for rework"));
       await reloadTasks();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Не удалось сохранить решение");
+      toast.error(e instanceof Error ? e.message : t("tasksUi.errDecision", "Failed to save decision"));
     }
   }
 
@@ -337,7 +339,7 @@ function TasksPage() {
     if (task.external_source === "yougile" || task.external_source === "trello") {
       const tracker = task.external_source === "trello" ? "Trello" : "YouGile";
       if (task.external_url) window.open(task.external_url, "_blank", "noreferrer");
-      else toast.info(`Эта задача управляется в ${tracker}`);
+      else toast.info(t("tasksUi.managedInTracker", "This task is managed in {{tracker}}", { tracker }));
       return;
     }
     setEditing(task);
@@ -354,11 +356,11 @@ function TasksPage() {
 
   async function handleSave() {
     if (!draft.title.trim()) {
-      toast.error(t("app.tasks.errTitle", "Title is required"));
+      toast.error(t("tasksUi.errTitle", "Title is required"));
       return;
     }
     if (!draft.due_date) {
-      toast.error(t("app.tasks.errDue", "Укажите дедлайн"));
+      toast.error(t("tasksUi.errDue", "Please set a deadline"));
       return;
     }
     if (!userId) return;
@@ -377,14 +379,14 @@ function TasksPage() {
       if (editing) {
         const data = await updateTaskFn({ data: { id: editing.id, ...payload } });
         setTasks((prev) => prev.map((task) => (task.id === editing.id ? (data as Task) : task)));
-        toast.success(t("app.tasks.okUpdate", "Task updated"));
+        toast.success(t("tasksUi.okUpdate", "Task updated"));
       } else {
         const ts = teamspaceId ?? (await getActiveTeamspaceId());
-        if (!ts) return toast.error(t("app.tasks.noWorkspace", "No active workspace"));
+        if (!ts) return toast.error(t("tasksUi.noWorkspace", "No active workspace"));
         const created = (await createTaskFn({ data: { ...payload, teamspace_id: ts } })) as Task;
         setTasks((prev) => [...prev, created]);
-        toast.success(t("app.tasks.okCreate", "Task created"));
-        logEvent({ data: { content: `${t("app.tasks.chatLog", "Task created manually")}: ${created.title}`, tasks: [{ id: created.id, title: created.title }] } }).catch(() => {});
+        toast.success(t("tasksUi.okCreate", "Task created"));
+        logEvent({ data: { content: `${t("tasksUi.chatLog", "Task created manually")}: ${created.title}`, tasks: [{ id: created.id, title: created.title }] } }).catch(() => {});
       }
       setDialogOpen(false);
     } catch (error) {
@@ -399,7 +401,7 @@ function TasksPage() {
     setTasks((p) => p.filter((t) => t.id !== id));
     try {
       await deleteTaskFn({ data: { id } });
-      toast.success(t("app.tasks.okDelete", "Task deleted"));
+      toast.success(t("tasksUi.okDelete", "Task deleted"));
     } catch (error) {
       setTasks(prev);
       toast.error(error instanceof Error ? error.message : String(error));
@@ -409,7 +411,7 @@ function TasksPage() {
   async function moveTask(id: string, status: TaskStatus) {
     const task = tasks.find((t) => t.id === id);
     if (!task || task.status === status) return;
-    if (task.external_source === "yougile" || task.external_source === "trello") return toast.info(`Измените статус в ${task.external_source === "trello" ? "Trello" : "YouGile"} или Telegram`);
+    if (task.external_source === "yougile" || task.external_source === "trello") return toast.info(t("tasksUi.changeStatusElsewhere", "Change the status in {{tracker}} or Telegram", { tracker: task.external_source === "trello" ? "Trello" : "YouGile" }));
     const position = (grouped[status]?.length ?? 0) * 1000;
     const prev = tasks;
     setTasks((p) => p.map((t) => (t.id === id ? { ...t, status, position } : t)));
@@ -425,9 +427,16 @@ function TasksPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Tasks</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">{t("tasksUi.title", "Tasks")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {managedBy ? `Задачи управляются в ${managedBy}. Здесь доступны уведомления и отчёты.${managedSyncAt ? ` Последняя синхронизация: ${new Date(managedSyncAt).toLocaleString()}` : ""}` : "Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами."}
+            {managedBy
+              ? t("tasksUi.managedSubtitle", "Tasks are managed in {{managedBy}}. Notifications and reports are available here.{{syncInfo}}", {
+                  managedBy,
+                  syncInfo: managedSyncAt
+                    ? t("tasksUi.lastSync", " Last sync: {{date}}", { date: new Date(managedSyncAt).toLocaleString() })
+                    : "",
+                })
+              : t("tasksUi.subtitle", "Kanban board: create tasks, assign owners, and move them between statuses.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -439,7 +448,7 @@ function TasksPage() {
                 view === "board" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {t("app.tasks.viewBoard", "Доска")}
+              {t("tasksUi.viewBoard", "Board")}
             </button>
             <button
               onClick={() => changeView("table")}
@@ -448,7 +457,7 @@ function TasksPage() {
                 view === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {t("app.tasks.viewTable", "Таблица")}
+              {t("tasksUi.viewTable", "Table")}
             </button>
           </div>
           <Button
@@ -456,31 +465,31 @@ function TasksPage() {
             onClick={() => setOnlyMine((v) => !v)}
             className="gap-2"
           >
-            <User className="h-4 w-4" /> {t("app.tasks.myTasks", "Мои задачи")}
+            <User className="h-4 w-4" /> {t("tasksUi.myTasks", "My tasks")}
           </Button>
           {!yougileManaged && <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
-            <Upload className="h-4 w-4" /> {t("app.tasks.import", "Импорт из таблицы")}
+            <Upload className="h-4 w-4" /> {t("tasksUi.import", "Import from table")}
           </Button>}
           {!yougileManaged && <Button onClick={() => openCreate()} className="gap-2">
-            <Plus className="h-4 w-4" /> New task
+            <Plus className="h-4 w-4" /> {t("tasksUi.newTask", "New task")}
           </Button>}
           {!yougileManaged && tasks.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Ещё">
+                <Button variant="outline" size="icon" aria-label={t("tasksUi.more", "More")}>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => changeView("table")}>
-                  {t("app.tasks.selectMode", "Выбрать задачи (таблица)")}
+                  {t("tasksUi.selectMode", "Select tasks (table)")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-rose-600 dark:text-rose-300"
                   onClick={() => setBulkMode("all")}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" /> {t("app.tasks.deleteAll", "Удалить все задачи")}
+                  <Trash2 className="h-4 w-4 mr-2" /> {t("tasksUi.deleteAll", "Delete all tasks")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -491,11 +500,11 @@ function TasksPage() {
       {selectedIds.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-3">
           <p className="text-sm text-foreground">
-            {t("app.tasks.selectedCount", "Выбрано задач")}: {selectedIds.length}
+            {t("tasksUi.selectedCount", "Selected tasks: {{count}}", { count: selectedIds.length })}
           </p>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
-              {t("app.tasks.clearSelection", "Снять выделение")}
+              {t("tasksUi.clearSelection", "Clear selection")}
             </Button>
             <Button
               size="sm"
@@ -503,22 +512,22 @@ function TasksPage() {
               disabled={bulkBusy}
               onClick={() => setBulkMode("selected")}
             >
-              <Trash2 className="h-4 w-4" /> {t("app.tasks.deleteSelected", "Удалить выбранные")}
+              <Trash2 className="h-4 w-4" /> {t("tasksUi.deleteSelected", "Delete selected")}
             </Button>
           </div>
         </div>
       )}
 
       {loading ? (
-        <div className="text-sm text-muted-foreground">Loading…</div>
+        <div className="text-sm text-muted-foreground">{t("tasksUi.loading", "Loading…")}</div>
       ) : view === "table" ? (
         <TaskTable
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
           onToggleSelectAll={toggleSelectAll}
           tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
-          columns={COLUMNS.map((c) => ({ id: c.id, label: c.label }))}
-          priorityLabel={(p: TaskPriority) => PRIORITY_META[p]?.label ?? p}
+          columns={COLUMNS.map((c) => ({ id: c.id, label: colLabel(c.id) }))}
+          priorityLabel={(p: TaskPriority) => priorityLabel(p)}
           onOpen={(task: { id: string }) => {
             const found = tasks.find((x) => x.id === task.id);
             if (found) openEdit(found);
@@ -529,13 +538,13 @@ function TasksPage() {
             if (found) setDeleteTarget(found);
           }}
           labels={{
-            title: t("app.tasks.fTitle", "Задача"),
-            status: t("app.tasks.fStatus", "Статус"),
-            priority: t("app.tasks.fPriority", "Приоритет"),
-            assignee: t("app.tasks.fAssignee", "Исполнитель"),
-            due: t("app.tasks.fDue", "Срок"),
-            created: t("app.tasks.createdAt", "Создано"),
-            empty: t("app.tasks.empty", "Задач пока нет"),
+            title: t("tasksUi.fTitle", "Task"),
+            status: t("tasksUi.fStatus", "Status"),
+            priority: t("tasksUi.fPriority", "Priority"),
+            assignee: t("tasksUi.fAssignee", "Assignee"),
+            due: t("tasksUi.fDue", "Due date"),
+            created: t("tasksUi.createdAt", "Created"),
+            empty: t("tasksUi.empty", "No tasks yet"),
           }}
         />
       ) : (
@@ -576,14 +585,14 @@ function TasksPage() {
                             col.dot,
                           )}
                         />
-                        {col.label}
+                        {colLabel(col.id)}
                       </span>
                       <span className="text-xs text-muted-foreground font-medium">{items.length}</span>
                     </div>
                     <button
                       onClick={() => openCreate(col.id)}
                       className="text-muted-foreground hover:text-foreground transition"
-                      aria-label={`Add task to ${col.label}`}
+                      aria-label={t("tasksUi.addTaskTo", "Add task to {{col}}", { col: colLabel(col.id) })}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
@@ -628,12 +637,12 @@ function TasksPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenuItem onClick={() => openEdit(task)}>
-                                  <Pencil className="h-4 w-4 mr-2" /> Edit
+                                  <Pencil className="h-4 w-4 mr-2" /> {t("tasksUi.edit", "Edit")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {COLUMNS.filter((c) => c.id !== task.status).map((c) => (
                                   <DropdownMenuItem key={c.id} onClick={() => moveTask(task.id, c.id)}>
-                                    Move to {c.label}
+                                    {t("tasksUi.moveTo", "Move to {{col}}", { col: colLabel(c.id) })}
                                   </DropdownMenuItem>
                                 ))}
                                 <DropdownMenuSeparator />
@@ -641,7 +650,7 @@ function TasksPage() {
                                    onClick={() => setDeleteTarget(task)}
                                   className="text-rose-600 dark:text-rose-300 focus:text-rose-700 dark:focus:text-rose-200"
                                 >
-                                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                  <Trash2 className="h-4 w-4 mr-2" /> {t("tasksUi.delete", "Delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>}
@@ -668,7 +677,7 @@ function TasksPage() {
                                   rel="noreferrer"
                                   className="mt-1 inline-block text-[11px] font-medium text-primary underline underline-offset-2"
                                 >
-                                  Открыть подтверждение
+                                  {t("tasksUi.openProof", "Open proof")}
                                 </a>
                               )}
                               <div className="mt-2 flex gap-1.5">
@@ -676,13 +685,13 @@ function TasksPage() {
                                   onClick={() => decide(task, "approve")}
                                   className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
                                 >
-                                  Принять
+                                  {t("tasksUi.approve", "Approve")}
                     </button>}
                                 <button
                                   onClick={() => decide(task, "rework")}
                                   className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
                                 >
-                                  На доработку
+                                  {t("tasksUi.rework", "Needs rework")}
                                 </button>
                               </div>
                             </div>
@@ -696,7 +705,7 @@ function TasksPage() {
                               }}
                               className="mt-2 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
                             >
-                              Сдать на проверку
+                              {t("tasksUi.submitForReview", "Submit for review")}
                             </button>
                           )}
 
@@ -745,7 +754,7 @@ function TasksPage() {
                                 "inline-flex items-center justify-center h-6 w-6 rounded-md border",
                                 meta.color,
                               )}
-                              title={`Priority: ${meta.label}`}
+                              title={t("tasksUi.priorityTitle", "Priority: {{priority}}", { priority: priorityLabel(task.priority) })}
                             >
                               <Flag className="h-3 w-3" />
                             </span>
@@ -760,7 +769,7 @@ function TasksPage() {
 
                           {task.created_at && (
                             <p className="mt-2 text-[10px] text-muted-foreground">
-                              {t("app.tasks.createdAt", "Создано")}: {formatCreatedAt(task.created_at)}
+                              {t("tasksUi.createdAt", "Created")}: {formatCreatedAt(task.created_at)}
                             </p>
                           )}
                         </article>
@@ -772,7 +781,7 @@ function TasksPage() {
                     onClick={() => openCreate(col.id)}
                     className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 hover:bg-accent/40 transition"
                   >
-                    <Plus className="h-3.5 w-3.5" /> Add Task
+                    <Plus className="h-3.5 w-3.5" /> {t("tasksUi.addTask", "Add Task")}
                   </button>
                 </div>
               );
@@ -782,7 +791,7 @@ function TasksPage() {
               onClick={() => openCreate()}
               className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
             >
-              <Plus className="h-4 w-4" /> Add group
+              <Plus className="h-4 w-4" /> {t("tasksUi.addGroup", "Add group")}
             </button>}
           </div>
         </div>
@@ -791,32 +800,32 @@ function TasksPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? t("app.tasks.dlgEdit", "Edit task") : t("app.tasks.dlgNew", "New task")}</DialogTitle>
+            <DialogTitle>{editing ? t("tasksUi.dlgEdit", "Edit task") : t("tasksUi.dlgNew", "New task")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="task-title">{t("app.tasks.fTitle", "Title")}</Label>
+              <Label htmlFor="task-title">{t("tasksUi.fTitle", "Title")}</Label>
               <Input
                 id="task-title"
                 value={draft.title}
                 onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                placeholder={t("app.tasks.phTitle", "Design new onboarding flow")}
+                placeholder={t("tasksUi.phTitle", "Design new onboarding flow")}
                 autoFocus
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="task-desc">{t("app.tasks.fDesc", "Description")}</Label>
+              <Label htmlFor="task-desc">{t("tasksUi.fDesc", "Description")}</Label>
               <Textarea
                 id="task-desc"
                 value={draft.description}
                 onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-                placeholder={t("app.tasks.phDesc", "Details, acceptance criteria, links…")}
+                placeholder={t("tasksUi.phDesc", "Details, acceptance criteria, links…")}
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>{t("app.tasks.fStatus", "Status")}</Label>
+                <Label>{t("tasksUi.fStatus", "Status")}</Label>
                 <Select
                   value={draft.status}
                   onValueChange={(v) => setDraft((d) => ({ ...d, status: v as TaskStatus }))}
@@ -824,13 +833,13 @@ function TasksPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {COLUMNS.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>{colLabel(c.id)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t("app.tasks.fPriority", "Priority")}</Label>
+                <Label>{t("tasksUi.fPriority", "Priority")}</Label>
                 <Select
                   value={draft.priority}
                   onValueChange={(v) => setDraft((d) => ({ ...d, priority: v as TaskPriority }))}
@@ -838,17 +847,17 @@ function TasksPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {(Object.keys(PRIORITY_META) as TaskPriority[]).map((p) => (
-                      <SelectItem key={p} value={p}>{PRIORITY_META[p].label}</SelectItem>
+                      <SelectItem key={p} value={p}>{priorityLabel(p)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="task-assignee">{t("app.tasks.fAssignee", "Assignee")}</Label>
+                <Label htmlFor="task-assignee">{t("tasksUi.fAssignee", "Assignee")}</Label>
                 <Select value={draft.assignee_id || "unassigned"} onValueChange={(value) => setDraft((d) => ({ ...d, assignee_id: value === "unassigned" ? "" : value }))}>
-                  <SelectTrigger id="task-assignee"><SelectValue placeholder={t("app.tasks.phAssignee", "Choose a member")} /></SelectTrigger>
+                  <SelectTrigger id="task-assignee"><SelectValue placeholder={t("tasksUi.phAssignee", "Choose a member")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="unassigned">{t("app.tasks.unassigned", "Unassigned")}</SelectItem>
+                    <SelectItem value="unassigned">{t("tasksUi.unassigned", "Unassigned")}</SelectItem>
                     {members.map((member) => (
                       <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>
                     ))}
@@ -856,7 +865,7 @@ function TasksPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="task-due">{t("app.tasks.fDue", "Due date")} *</Label>
+                <Label htmlFor="task-due">{t("tasksUi.fDue", "Due date")} *</Label>
                 <Input
                   id="task-due"
                   type="date"
@@ -876,11 +885,11 @@ function TasksPage() {
                   setDeleteTarget(editing);
                 }}
               >
-                <Trash2 className="h-4 w-4 mr-2" /> {t("app.tasks.delete", "Delete")}
+                <Trash2 className="h-4 w-4 mr-2" /> {t("tasksUi.delete", "Delete")}
               </Button>
             )}
-            <Button variant="ghost" onClick={() => setDialogOpen(false)}>{t("app.tasks.cancel", "Cancel")}</Button>
-            <Button disabled={saving} onClick={handleSave}>{editing ? t("app.tasks.save", "Save") : t("app.tasks.create", "Create task")}</Button>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)}>{t("tasksUi.cancel", "Cancel")}</Button>
+            <Button disabled={saving} onClick={handleSave}>{editing ? t("tasksUi.save", "Save") : t("tasksUi.create", "Create task")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -888,17 +897,17 @@ function TasksPage() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("app.tasks.confirmDeleteTitle", "Delete task?")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("app.tasks.confirmDeleteBody", "This action cannot be undone.")}</AlertDialogDescription>
+            <AlertDialogTitle>{t("tasksUi.confirmDeleteTitle", "Delete task?")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("tasksUi.confirmDeleteBody", "This action cannot be undone.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("app.tasks.cancel", "Cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{t("tasksUi.cancel", "Cancel")}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => {
               const target = deleteTarget;
               setDeleteTarget(null);
               setDialogOpen(false);
               if (target) void handleDelete(target.id);
-            }}>{t("app.tasks.delete", "Delete")}</AlertDialogAction>
+            }}>{t("tasksUi.delete", "Delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -908,22 +917,22 @@ function TasksPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {bulkMode === "all"
-                ? t("app.tasks.confirmDeleteAllTitle", "Удалить все задачи?")
-                : t("app.tasks.confirmDeleteSelTitle", "Удалить выбранные задачи?")}
+                ? t("tasksUi.confirmDeleteAllTitle", "Delete all tasks?")
+                : t("tasksUi.confirmDeleteSelTitle", "Delete selected tasks?")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {bulkMode === "all"
-                ? t("app.tasks.confirmDeleteAllBody", "Будут удалены все задачи этого пространства. Действие необратимо.")
-                : `${t("app.tasks.confirmDeleteSelBody", "Будут удалены выбранные задачи. Действие необратимо.")} (${selectedIds.length})`}
+                ? t("tasksUi.confirmDeleteAllBody", "All tasks in this workspace will be deleted. This action cannot be undone.")
+                : t("tasksUi.confirmDeleteSelBody", "The selected tasks will be deleted. This action cannot be undone. ({{count}})", { count: selectedIds.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("app.tasks.cancel", "Cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{t("tasksUi.cancel", "Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground"
               onClick={() => { const mode = bulkMode; if (mode) void runBulkDelete(mode); }}
             >
-              {t("app.tasks.delete", "Delete")}
+              {t("tasksUi.delete", "Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

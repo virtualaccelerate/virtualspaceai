@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Loader2, Mail, Lock, ArrowRight, Check, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -22,13 +24,13 @@ function friendlyAuthError(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err);
   const code = (err as { code?: string })?.code;
   if (code === "invalid_credentials" || /invalid login credentials/i.test(raw)) {
-    return "Неверный email или пароль. Проверьте раскладку клавиатуры (EN/RU) и Caps Lock, или сбросьте пароль ниже.";
+    return i18n.t("shellUi.auth.errorInvalidCredentials", "Incorrect email or password. Check your keyboard layout (EN/RU) and Caps Lock, or reset your password below.");
   }
   if (code === "user_already_exists" || /already registered/i.test(raw)) {
-    return "Этот email уже зарегистрирован. Войдите или сбросьте пароль.";
+    return i18n.t("shellUi.auth.errorAlreadyRegistered", "This email is already registered. Sign in or reset your password.");
   }
   if (code === "email_not_confirmed") {
-    return "Email не подтверждён. Проверьте почту.";
+    return i18n.t("shellUi.auth.errorEmailNotConfirmed", "Email is not confirmed. Please check your inbox.");
   }
   return raw;
 }
@@ -43,6 +45,7 @@ function getNextPath(): string | null {
 
 
 function AuthPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -110,7 +113,7 @@ function AuthPage() {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (err) throw err;
-        setInfo("Ссылка для сброса пароля отправлена на почту.");
+        setInfo(t("shellUi.auth.resetLinkSent", "A password reset link has been sent to your email."));
       }
     } catch (err) {
       console.error(err);
@@ -130,7 +133,7 @@ function AuthPage() {
       options: { emailRedirectTo: `${window.location.origin}/app` },
     });
     if (err) setError(friendlyAuthError(err));
-    else setInfo("Письмо отправлено повторно.");
+    else setInfo(t("shellUi.auth.resendSent", "Email resent."));
   };
 
   const handleDemo = async () => {
@@ -168,7 +171,7 @@ function AuthPage() {
       if (err) throw err;
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "Google sign-in failed");
+      setError(err instanceof Error ? err.message : t("shellUi.auth.googleSignInFailed", "Google sign-in failed"));
       setGoogleLoading(false);
     }
   };
@@ -195,9 +198,9 @@ function AuthPage() {
               <div className="mx-auto h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
                 <Check className="h-6 w-6 text-primary" />
               </div>
-              <h1 className="font-display text-2xl text-white">Check your inbox</h1>
+              <h1 className="font-display text-2xl text-white">{t("shellUi.auth.checkInboxTitle", "Check your inbox")}</h1>
               <p className="mt-2 text-sm text-white/60">
-                We sent a confirmation link to <span className="text-white/90">{email}</span>. Click it to activate your account.
+                {t("shellUi.auth.checkInboxBody", "We sent a confirmation link to {{email}}. Click it to activate your account.", { email })}
               </p>
               {info && <p className="mt-3 text-xs text-primary">{info}</p>}
               {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
@@ -206,27 +209,27 @@ function AuthPage() {
                   onClick={handleResendConfirm}
                   className="text-xs text-primary hover:underline"
                 >
-                  Resend email
+                  {t("shellUi.auth.resendEmail", "Resend email")}
                 </button>
                 <button
                   onClick={() => { setSent(false); setPassword(""); setMode("signin"); }}
                   className="text-xs text-white/60 hover:text-white"
                 >
-                  Back to sign in
+                  {t("shellUi.auth.backToSignInPlain", "Back to sign in")}
                 </button>
               </div>
             </div>
           ) : (
             <>
               <h1 className="font-display text-3xl text-white text-center">
-                {mode === "signup" ? "Create account" : mode === "signin" ? "Welcome back" : "Reset password"}
+                {mode === "signup" ? t("shellUi.auth.createAccount", "Create account") : mode === "signin" ? t("shellUi.auth.welcomeBack", "Welcome back") : t("shellUi.auth.resetPassword", "Reset password")}
               </h1>
               <p className="mt-2 text-sm text-white/60 text-center">
                 {mode === "signup"
-                  ? "Start your Virtual Space workspace."
+                  ? t("shellUi.auth.subtitleSignup", "Start your Virtual Space workspace.")
                   : mode === "signin"
-                  ? "Sign in to your Virtual Space workspace."
-                  : "We'll email you a secure link to set a new password."}
+                  ? t("shellUi.auth.subtitleSignin", "Sign in to your Virtual Space workspace.")
+                  : t("shellUi.auth.subtitleForgot", "We'll email you a secure link to set a new password.")}
               </p>
 
               {mode !== "forgot" && (
@@ -237,7 +240,7 @@ function AuthPage() {
                       mode === "signup" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
                     }`}
                   >
-                    Sign up
+                    {t("shellUi.auth.signUp", "Sign up")}
                   </button>
                   <button
                     onClick={() => { setMode("signin"); setError(null); setInfo(null); }}
@@ -245,7 +248,7 @@ function AuthPage() {
                       mode === "signin" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
                     }`}
                   >
-                    Sign in
+                    {t("shellUi.auth.signIn", "Sign in")}
                   </button>
                 </div>
               )}
@@ -262,14 +265,14 @@ function AuthPage() {
                     ) : (
                       <>
                         <GoogleIcon />
-                        Continue with Google
+                        {t("shellUi.auth.continueWithGoogle", "Continue with Google")}
                       </>
                     )}
                   </button>
 
                   <div className="my-6 flex items-center gap-3">
                     <div className="h-px flex-1 bg-white/10" />
-                    <span className="text-[10px] uppercase tracking-widest text-white/40">or email</span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/40">{t("shellUi.auth.orEmail", "or email")}</span>
                     <div className="h-px flex-1 bg-white/10" />
                   </div>
                 </>
@@ -284,7 +287,7 @@ function AuthPage() {
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
+                    placeholder={t("shellUi.auth.emailPlaceholder", "you@company.com")}
                     className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
@@ -298,13 +301,13 @@ function AuthPage() {
                       autoComplete={mode === "signup" ? "new-password" : "current-password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={mode === "signup" ? "Create a password (min 8)" : "Your password"}
+                      placeholder={mode === "signup" ? t("shellUi.auth.passwordPlaceholderSignup", "Create a password (min 8)") : t("shellUi.auth.passwordPlaceholderSignin", "Your password")}
                       className="glass w-full rounded-full pl-11 pr-12 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={showPassword ? t("shellUi.auth.hidePassword", "Hide password") : t("shellUi.auth.showPassword", "Show password")}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -322,7 +325,7 @@ function AuthPage() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      {mode === "signup" ? "Create account" : mode === "signin" ? "Sign in" : "Send reset link"}
+                      {mode === "signup" ? t("shellUi.auth.createAccount", "Create account") : mode === "signin" ? t("shellUi.auth.signIn", "Sign in") : t("shellUi.auth.sendResetLink", "Send reset link")}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
@@ -334,7 +337,7 @@ function AuthPage() {
                       onClick={() => { setMode("forgot"); setError(null); setInfo(null); }}
                       className="text-[11px] text-white/60 hover:text-white"
                     >
-                      Забыли пароль?
+                      {t("shellUi.auth.forgotPassword", "Forgot password?")}
                     </button>
                   ) : mode === "forgot" ? (
                     <button
@@ -342,20 +345,20 @@ function AuthPage() {
                       onClick={() => { setMode("signin"); setError(null); setInfo(null); }}
                       className="text-[11px] text-white/60 hover:text-white"
                     >
-                      ← Назад ко входу
+                      {t("shellUi.auth.backToSignIn", "← Back to sign in")}
                     </button>
                   ) : (
                     <span className="text-[11px] text-white/50">
-                      You'll receive an email to confirm your address.
+                      {t("shellUi.auth.confirmEmailNote", "You'll receive an email to confirm your address.")}
                     </span>
                   )}
                 </div>
               </form>
 
               <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
-                <p className="text-[11px] uppercase tracking-widest text-white/40">Demo</p>
+                <p className="text-[11px] uppercase tracking-widest text-white/40">{t("shellUi.auth.demoLabel", "Demo")}</p>
                 <p className="mt-1 text-xs text-white/60">
-                  Попробуйте платформу без регистрации — демо-доступ.
+                  {t("shellUi.auth.demoDesc", "Try the platform without registering — demo access.")}
                 </p>
                 <button
                   type="button"
@@ -363,7 +366,7 @@ function AuthPage() {
                   disabled={loading}
                   className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition disabled:opacity-60"
                 >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Войти как demo <ArrowRight className="h-4 w-4" /></>}
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t("shellUi.auth.demoButton", "Sign in as demo")} <ArrowRight className="h-4 w-4" /></>}
                 </button>
               </div>
 
@@ -371,7 +374,7 @@ function AuthPage() {
           )}
 
           <p className="mt-6 text-center text-[11px] text-white/40">
-            By continuing you agree to our terms and privacy policy.
+            {t("shellUi.auth.agreeTerms", "By continuing you agree to our terms and privacy policy.")}
           </p>
         </motion.div>
       </main>

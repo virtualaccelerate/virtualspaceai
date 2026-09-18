@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ImagePlus, Loader2, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2, User, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   adminGetDemoRequests,
   adminLogin,
@@ -42,17 +43,18 @@ export const Route = createFileRoute("/admin")({
 });
 
 const TABS = [
-  { id: "analytics", label: "Аналитика" },
-  { id: "leads", label: "Заявки на демо" },
+  { id: "analytics", key: "adminUi.tabs.analytics", fallback: "Analytics" },
+  { id: "leads", key: "adminUi.tabs.leads", fallback: "Demo requests" },
 
-  { id: "courses", label: "Курсы" },
-  { id: "startups", label: "Стартапы" },
-  { id: "mentors", label: "Менторы" },
+  { id: "courses", key: "adminUi.tabs.courses", fallback: "Courses" },
+  { id: "startups", key: "adminUi.tabs.startups", fallback: "Startups" },
+  { id: "mentors", key: "adminUi.tabs.mentors", fallback: "Mentors" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
 
 function AdminPage() {
+  const { t } = useTranslation();
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [username, setUsername] = useState("");
@@ -96,10 +98,10 @@ function AdminPage() {
         setAuthed(true);
         setPassword("");
       } else {
-        setError("Неверный логин или пароль");
+        setError(t("adminUi.login.errorInvalid", "Invalid username or password"));
       }
     } catch {
-      setError("Не удалось войти. Попробуйте ещё раз.");
+      setError(t("adminUi.login.errorGeneric", "Could not log in. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -123,14 +125,14 @@ function AdminPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
         <form onSubmit={handleLogin} className="glass-strong w-full max-w-sm rounded-3xl p-8 space-y-3">
-          <h1 className="font-display text-2xl text-center">Админ-панель</h1>
-          <p className="text-sm text-muted-foreground text-center pb-2">Вход только для администраторов</p>
+          <h1 className="font-display text-2xl text-center">{t("adminUi.login.title", "Admin panel")}</h1>
+          <p className="text-sm text-muted-foreground text-center pb-2">{t("adminUi.login.subtitle", "Access is for administrators only")}</p>
           <div className="relative">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Логин"
+              placeholder={t("adminUi.login.username", "Username")}
               autoComplete="username"
               required
               className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -142,7 +144,7 @@ function AdminPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Пароль"
+              placeholder={t("adminUi.login.password", "Password")}
               autoComplete="current-password"
               required
               className="glass w-full rounded-full pl-11 pr-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -154,7 +156,7 @@ function AdminPage() {
             disabled={busy}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60"
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Войти"}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("adminUi.login.submit", "Log in")}
           </button>
         </form>
       </div>
@@ -164,35 +166,35 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50 px-6 py-4 flex items-center justify-between">
-        <h1 className="font-display text-xl">Админ-панель</h1>
+        <h1 className="font-display text-xl">{t("adminUi.header.title", "Admin panel")}</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={loadRows}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loadingRows ? "animate-spin" : ""}`} /> Обновить
+            <RefreshCw className={`h-3.5 w-3.5 ${loadingRows ? "animate-spin" : ""}`} /> {t("adminUi.header.refresh", "Refresh")}
           </button>
           <button
             onClick={handleLogout}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition"
           >
-            <LogOut className="h-3.5 w-3.5" /> Выйти
+            <LogOut className="h-3.5 w-3.5" /> {t("adminUi.header.logout", "Log out")}
           </button>
         </div>
       </header>
 
       <nav className="px-6 pt-4 flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            onClick={() => setTab(tabItem.id)}
             className={`rounded-full px-4 py-2 text-xs font-medium transition ${
-              tab === t.id
+              tab === tabItem.id
                 ? "bg-primary text-primary-foreground"
                 : "border border-border hover:bg-muted/40"
             }`}
           >
-            {t.label}
+            {t(tabItem.key, tabItem.fallback)}
           </button>
         ))}
       </nav>
@@ -203,7 +205,7 @@ function AdminPage() {
         ) : tab === "leads" ? (
           <section className="glass rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Заявки на демо</h2>
+              <h2 className="text-sm font-semibold">{t("adminUi.leads.title", "Demo requests")}</h2>
               <span className="text-xs text-muted-foreground">{rows?.length ?? 0}</span>
             </div>
             {loadingRows && !rows ? (
@@ -215,11 +217,11 @@ function AdminPage() {
                 <table className="w-full text-sm">
                   <thead className="text-xs text-muted-foreground">
                     <tr className="border-b border-border/50">
-                      <th className="text-left font-medium px-5 py-3">Имя</th>
-                      <th className="text-left font-medium px-5 py-3">Контакт</th>
-                      <th className="text-left font-medium px-5 py-3">Компания</th>
-                      <th className="text-left font-medium px-5 py-3">Язык</th>
-                      <th className="text-left font-medium px-5 py-3">Дата</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colName", "Name")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colContact", "Contact")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colCompany", "Company")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colLanguage", "Language")}</th>
+                      <th className="text-left font-medium px-5 py-3">{t("adminUi.leads.colDate", "Date")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -227,8 +229,8 @@ function AdminPage() {
                       <tr key={r.id} className="border-b border-border/30 last:border-0">
                         <td className="px-5 py-3">{r.name}</td>
                         <td className="px-5 py-3">{r.contact}</td>
-                        <td className="px-5 py-3 text-muted-foreground">{r.company ?? "—"}</td>
-                        <td className="px-5 py-3 text-muted-foreground uppercase">{r.language ?? "—"}</td>
+                        <td className="px-5 py-3 text-muted-foreground">{r.company ?? t("adminUi.leads.dash", "—")}</td>
+                        <td className="px-5 py-3 text-muted-foreground uppercase">{r.language ?? t("adminUi.leads.dash", "—")}</td>
                         <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
                           {new Date(r.created_at).toLocaleString("ru-RU")}
                         </td>
@@ -238,7 +240,7 @@ function AdminPage() {
                 </table>
               </div>
             ) : (
-              <p className="p-8 text-center text-sm text-muted-foreground">Заявок пока нет</p>
+              <p className="p-8 text-center text-sm text-muted-foreground">{t("adminUi.leads.empty", "No requests yet")}</p>
             )}
           </section>
         ) : tab === "startups" ? (
@@ -249,9 +251,14 @@ function AdminPage() {
           <CoursesAdmin />
         ) : (
           <section className="glass rounded-2xl p-10 text-center">
-            <h2 className="font-display text-lg mb-2">{TABS.find((t) => t.id === tab)?.label}</h2>
+            <h2 className="font-display text-lg mb-2">
+              {(() => {
+                const found = TABS.find((tabItem) => tabItem.id === tab);
+                return found ? t(found.key, found.fallback) : null;
+              })()}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Раздел в разработке — добавим управление контентом на следующем шаге.
+              {t("adminUi.comingSoon.body", "Section under development — content management will be added in the next step.")}
             </p>
           </section>
         )}
@@ -288,6 +295,7 @@ const emptyStartup: StartupForm = {
 };
 
 function StartupsAdmin() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<StartupRow[] | null>(null);
   const [form, setForm] = useState<StartupForm | null>(null);
   const [saving, setSaving] = useState(false);
@@ -309,7 +317,7 @@ function StartupsAdmin() {
       });
       setForm((f) => (f ? { ...f, image_url: res.url } : f));
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Не удалось загрузить файл");
+      setErr(e instanceof Error ? e.message : t("adminUi.startups.uploadError", "Could not upload file"));
     } finally {
       setUploading(false);
     }
@@ -366,14 +374,14 @@ function StartupsAdmin() {
       setForm(null);
       await load();
     } catch (e2) {
-      setErr(e2 instanceof Error ? e2.message : "Не удалось сохранить");
+      setErr(e2 instanceof Error ? e2.message : t("adminUi.startups.saveError", "Could not save"));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Удалить стартап?")) return;
+    if (!confirm(t("adminUi.startups.confirmDelete", "Delete this startup?"))) return;
     await adminDeleteStartup({ data: { id } });
     await load();
   };
@@ -383,27 +391,27 @@ function StartupsAdmin() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Стартапы каталога ({items?.length ?? 0})</h2>
+        <h2 className="text-sm font-semibold">{t("adminUi.startups.heading", "Catalog startups ({{count}})", { count: items?.length ?? 0 })}</h2>
         <button
           onClick={() => setForm({ ...emptyStartup, position: (items?.length ?? 0) + 1 })}
           className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition"
         >
-          <Plus className="h-3.5 w-3.5" /> Добавить
+          <Plus className="h-3.5 w-3.5" /> {t("adminUi.startups.add", "Add")}
         </button>
       </div>
 
       {form && (
         <form onSubmit={save} className="glass rounded-2xl p-5 grid gap-3 sm:grid-cols-2">
-          <input className={field} placeholder="Название" required value={form.name}
+          <input className={field} placeholder={t("adminUi.startups.namePlaceholder", "Name")} required value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <input className={field} placeholder="Ссылка на сайт (https://...)" value={form.website_url}
+          <input className={field} placeholder={t("adminUi.startups.websitePlaceholder", "Website link (https://...)")} value={form.website_url}
             onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Описание" value={form.description_ru}
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder={t("adminUi.startups.descriptionPlaceholder", "Description")} value={form.description_ru}
             onChange={(e) => setForm({ ...form, description_ru: e.target.value, description: e.target.value })} />
           <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
             {form.image_url ? (
               <div className="relative">
-                <img src={form.image_url} alt="Логотип" className="h-16 w-16 rounded-xl object-cover border border-border/60" />
+                <img src={form.image_url} alt={t("adminUi.startups.logoAlt", "Logo")} className="h-16 w-16 rounded-xl object-cover border border-border/60" />
                 <button type="button" onClick={() => setForm({ ...form, image_url: "" })}
                   className="absolute -right-2 -top-2 rounded-full bg-background border border-border p-1">
                   <X className="h-3 w-3" />
@@ -412,7 +420,7 @@ function StartupsAdmin() {
             ) : null}
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition">
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
-              {uploading ? "Загрузка…" : form.image_url ? "Заменить логотип" : "Загрузить логотип"}
+              {uploading ? t("adminUi.common.uploading", "Uploading…") : form.image_url ? t("adminUi.startups.replaceLogoBtn", "Replace logo") : t("adminUi.startups.uploadLogoBtn", "Upload logo")}
               <input type="file" accept="image/*" className="hidden" disabled={uploading}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -420,28 +428,28 @@ function StartupsAdmin() {
                   if (f) void uploadLogo(f);
                 }} />
             </label>
-            <span className="text-[11px] text-muted-foreground">PNG/JPG/SVG до 5 МБ</span>
+            <span className="text-[11px] text-muted-foreground">{t("adminUi.startups.logoHint", "PNG/JPG/SVG up to 5 MB")}</span>
           </div>
-          <input className={field} placeholder="Текст кнопки (по умолчанию «Перейти на сайт»)" value={form.cta_label}
+          <input className={field} placeholder={t("adminUi.startups.ctaPlaceholder", "Button text (default \"Go to website\")")} value={form.cta_label}
             onChange={(e) => setForm({ ...form, cta_label: e.target.value })} />
-          <input className={field} placeholder="Теги через запятую" value={form.tags}
+          <input className={field} placeholder={t("adminUi.startups.tagsPlaceholder", "Tags, comma separated")} value={form.tags}
             onChange={(e) => setForm({ ...form, tags: e.target.value })} />
-          <input className={field} type="number" placeholder="Порядок" value={form.position}
+          <input className={field} type="number" placeholder={t("adminUi.startups.positionPlaceholder", "Order")} value={form.position}
             onChange={(e) => setForm({ ...form, position: Number(e.target.value) })} />
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <input type="checkbox" checked={form.published}
               onChange={(e) => setForm({ ...form, published: e.target.checked })} />
-            Опубликован
+            {t("adminUi.startups.published", "Published")}
           </label>
           {err && <p className="text-xs text-destructive sm:col-span-2">{err}</p>}
           <div className="sm:col-span-2 flex gap-2">
             <button type="submit" disabled={saving}
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-xs font-semibold disabled:opacity-60">
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Сохранить
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {t("adminUi.common.save", "Save")}
             </button>
             <button type="button" onClick={() => setForm(null)}
               className="rounded-full border border-border px-5 py-2.5 text-xs hover:bg-muted/40 transition">
-              Отмена
+              {t("adminUi.common.cancel", "Cancel")}
             </button>
           </div>
         </form>
@@ -452,10 +460,10 @@ function StartupsAdmin() {
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr className="border-b border-border/50">
-                <th className="text-left font-medium px-5 py-3">#</th>
-                <th className="text-left font-medium px-5 py-3">Название</th>
-                <th className="text-left font-medium px-5 py-3">Сайт</th>
-                <th className="text-left font-medium px-5 py-3">Статус</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colHash", "#")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colName", "Name")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colWebsite", "Website")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.startups.colStatus", "Status")}</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -464,13 +472,13 @@ function StartupsAdmin() {
                 <tr key={r.id} className="border-b border-border/30 last:border-0">
                   <td className="px-5 py-3 text-muted-foreground">{r.position}</td>
                   <td className="px-5 py-3">{r.name}</td>
-                  <td className="px-5 py-3 text-muted-foreground truncate max-w-[220px]">{r.website_url ?? "—"}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{r.published ? "Опубликован" : "Скрыт"}</td>
+                  <td className="px-5 py-3 text-muted-foreground truncate max-w-[220px]">{r.website_url ?? t("adminUi.common.dash", "—")}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{r.published ? t("adminUi.common.published", "Published") : t("adminUi.common.hidden", "Hidden")}</td>
                   <td className="px-5 py-3 text-right whitespace-nowrap">
-                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title="Редактировать">
+                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title={t("adminUi.startups.edit", "Edit")}>
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title="Удалить">
+                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title={t("adminUi.startups.delete", "Delete")}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </td>
@@ -479,7 +487,7 @@ function StartupsAdmin() {
             </tbody>
           </table>
         ) : (
-          <p className="p-8 text-center text-sm text-muted-foreground">Пока пусто</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">{t("adminUi.startups.empty", "Nothing here yet")}</p>
         )}
       </div>
     </section>
@@ -529,6 +537,7 @@ const emptyMentor: MentorForm = {
 };
 
 function MentorsAdmin() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<MentorRow[] | null>(null);
   const [form, setForm] = useState<MentorForm | null>(null);
   const [saving, setSaving] = useState(false);
@@ -562,7 +571,7 @@ function MentorsAdmin() {
       });
       setForm((f) => (f ? { ...f, photo_url: res.url } : f));
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Не удалось загрузить файл");
+      setErr(e instanceof Error ? e.message : t("adminUi.mentors.uploadError", "Could not upload file"));
     } finally {
       setUploading(false);
     }
@@ -625,14 +634,14 @@ function MentorsAdmin() {
       setForm(null);
       await load();
     } catch (e2) {
-      setErr(e2 instanceof Error ? e2.message : "Не удалось сохранить");
+      setErr(e2 instanceof Error ? e2.message : t("adminUi.mentors.saveError", "Could not save"));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Удалить ментора?")) return;
+    if (!confirm(t("adminUi.mentors.confirmDelete", "Delete this mentor?"))) return;
     await adminDeleteMentor({ data: { id } });
     await load();
   };
@@ -642,30 +651,30 @@ function MentorsAdmin() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Менторы ({items?.length ?? 0})</h2>
+        <h2 className="text-sm font-semibold">{t("adminUi.mentors.heading", "Mentors ({{count}})", { count: items?.length ?? 0 })}</h2>
         <button
           onClick={() => setForm({ ...emptyMentor, position: (items?.length ?? 0) + 1 })}
           className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold hover:bg-primary/90 transition"
         >
-          <Plus className="h-3.5 w-3.5" /> Добавить
+          <Plus className="h-3.5 w-3.5" /> {t("adminUi.mentors.add", "Add")}
         </button>
       </div>
 
       {form && (
         <form onSubmit={save} className="glass rounded-2xl p-5 grid gap-3 sm:grid-cols-2">
-          <input className={field} placeholder="Имя и фамилия" required value={form.full_name}
+          <input className={field} placeholder={t("adminUi.mentors.fullNamePlaceholder", "Full name")} required value={form.full_name}
             onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-          <input className={field} placeholder="Должность (например, CFO)" value={form.role_title}
+          <input className={field} placeholder={t("adminUi.mentors.roleTitlePlaceholder", "Role (e.g. CFO)")} value={form.role_title}
             onChange={(e) => setForm({ ...form, role_title: e.target.value })} />
-          <input className={field} placeholder="Компания" value={form.company}
+          <input className={field} placeholder={t("adminUi.mentors.companyPlaceholder", "Company")} value={form.company}
             onChange={(e) => setForm({ ...form, company: e.target.value })} />
-          <input className={field} placeholder="Ссылка на бронирование (необязательно)" value={form.booking_url}
+          <input className={field} placeholder={t("adminUi.mentors.bookingUrlPlaceholder", "Booking link (optional)")} value={form.booking_url}
             onChange={(e) => setForm({ ...form, booking_url: e.target.value })} />
 
           <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
             {form.photo_url ? (
               <div className="relative">
-                <img src={form.photo_url} alt="Фото" className="h-16 w-16 rounded-xl object-cover border border-border/60" />
+                <img src={form.photo_url} alt={t("adminUi.mentors.photoAlt", "Photo")} className="h-16 w-16 rounded-xl object-cover border border-border/60" />
                 <button type="button" onClick={() => setForm({ ...form, photo_url: "" })}
                   className="absolute -right-2 -top-2 rounded-full bg-background border border-border p-1">
                   <X className="h-3 w-3" />
@@ -674,7 +683,7 @@ function MentorsAdmin() {
             ) : null}
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-4 py-2 text-xs hover:bg-muted/40 transition">
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
-              {uploading ? "Загрузка…" : form.photo_url ? "Заменить фото" : "Загрузить фото"}
+              {uploading ? t("adminUi.common.uploading", "Uploading…") : form.photo_url ? t("adminUi.mentors.replacePhotoBtn", "Replace photo") : t("adminUi.mentors.uploadPhotoBtn", "Upload photo")}
               <input type="file" accept="image/*" className="hidden" disabled={uploading}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -682,49 +691,49 @@ function MentorsAdmin() {
                   if (f) void uploadPhoto(f);
                 }} />
             </label>
-            <span className="text-[11px] text-muted-foreground">JPG/PNG до 5 МБ</span>
+            <span className="text-[11px] text-muted-foreground">{t("adminUi.mentors.photoHint", "JPG/PNG up to 5 MB")}</span>
           </div>
 
-          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder="Краткий бэкграунд (для карточки)"
+          <textarea className={`${field} sm:col-span-2`} rows={2} placeholder={t("adminUi.mentors.shortBioPlaceholder", "Short background (for the card)")}
             value={form.short_bio} onChange={(e) => setForm({ ...form, short_bio: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={4} placeholder="Полное профессиональное досье"
+          <textarea className={`${field} sm:col-span-2`} rows={4} placeholder={t("adminUi.mentors.fullBioPlaceholder", "Full professional profile")}
             value={form.full_bio} onChange={(e) => setForm({ ...form, full_bio: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Опыт работы"
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder={t("adminUi.mentors.experiencePlaceholder", "Work experience")}
             value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Ключевые достижения"
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder={t("adminUi.mentors.achievementsPlaceholder", "Key achievements")}
             value={form.achievements} onChange={(e) => setForm({ ...form, achievements: e.target.value })} />
-          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Темы консультаций"
+          <textarea className={`${field} sm:col-span-2`} rows={3} placeholder={t("adminUi.mentors.topicsPlaceholder", "Consultation topics")}
             value={form.topics} onChange={(e) => setForm({ ...form, topics: e.target.value })} />
 
-          <input className={field} placeholder="Экспертиза через запятую" value={form.expertise}
+          <input className={field} placeholder={t("adminUi.mentors.expertisePlaceholder", "Expertise, comma separated")} value={form.expertise}
             onChange={(e) => setForm({ ...form, expertise: e.target.value })} />
-          <input className={field} placeholder="Отрасли через запятую" value={form.industries}
+          <input className={field} placeholder={t("adminUi.mentors.industriesPlaceholder", "Industries, comma separated")} value={form.industries}
             onChange={(e) => setForm({ ...form, industries: e.target.value })} />
-          <input className={field} placeholder="Языки консультаций (Русский, English…)" value={form.languages}
+          <input className={field} placeholder={t("adminUi.mentors.languagesPlaceholder", "Consultation languages (Russian, English…)")} value={form.languages}
             onChange={(e) => setForm({ ...form, languages: e.target.value })} />
           <div className="grid grid-cols-[1fr_100px] gap-3">
-            <input className={field} type="number" step="0.01" placeholder="Стоимость часа" value={form.hourly_rate}
+            <input className={field} type="number" step="0.01" placeholder={t("adminUi.mentors.hourlyRatePlaceholder", "Hourly rate")} value={form.hourly_rate}
               onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} />
-            <input className={field} placeholder="USD" value={form.currency}
+            <input className={field} placeholder={t("adminUi.mentors.currencyPlaceholder", "USD")} value={form.currency}
               onChange={(e) => setForm({ ...form, currency: e.target.value })} />
           </div>
-          <input className={field} type="number" placeholder="Порядок" value={form.position}
+          <input className={field} type="number" placeholder={t("adminUi.mentors.positionPlaceholder", "Order")} value={form.position}
             onChange={(e) => setForm({ ...form, position: Number(e.target.value) })} />
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <input type="checkbox" checked={form.published}
               onChange={(e) => setForm({ ...form, published: e.target.checked })} />
-            Опубликован
+            {t("adminUi.mentors.published", "Published")}
           </label>
 
           {err && <p className="text-xs text-destructive sm:col-span-2">{err}</p>}
           <div className="sm:col-span-2 flex gap-2">
             <button type="submit" disabled={saving}
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-xs font-semibold disabled:opacity-60">
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Сохранить
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {t("adminUi.common.save", "Save")}
             </button>
             <button type="button" onClick={() => setForm(null)}
               className="rounded-full border border-border px-5 py-2.5 text-xs hover:bg-muted/40 transition">
-              Отмена
+              {t("adminUi.common.cancel", "Cancel")}
             </button>
           </div>
         </form>
@@ -735,11 +744,11 @@ function MentorsAdmin() {
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr className="border-b border-border/50">
-                <th className="text-left font-medium px-5 py-3">#</th>
-                <th className="text-left font-medium px-5 py-3">Имя</th>
-                <th className="text-left font-medium px-5 py-3">Должность</th>
-                <th className="text-left font-medium px-5 py-3">Час</th>
-                <th className="text-left font-medium px-5 py-3">Статус</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.mentors.colHash", "#")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.mentors.colName", "Name")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.mentors.colRole", "Role")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.mentors.colHour", "Hour")}</th>
+                <th className="text-left font-medium px-5 py-3">{t("adminUi.mentors.colStatus", "Status")}</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -749,17 +758,17 @@ function MentorsAdmin() {
                   <td className="px-5 py-3 text-muted-foreground">{r.position}</td>
                   <td className="px-5 py-3">{r.full_name}</td>
                   <td className="px-5 py-3 text-muted-foreground truncate max-w-[220px]">
-                    {[r.role_title, r.company].filter(Boolean).join(" · ") || "—"}
+                    {[r.role_title, r.company].filter(Boolean).join(" · ") || t("adminUi.common.dash", "—")}
                   </td>
                   <td className="px-5 py-3 text-muted-foreground">
-                    {r.hourly_rate == null ? "—" : `${r.hourly_rate} ${r.currency}`}
+                    {r.hourly_rate == null ? t("adminUi.common.dash", "—") : `${r.hourly_rate} ${r.currency}`}
                   </td>
-                  <td className="px-5 py-3 text-muted-foreground">{r.published ? "Опубликован" : "Скрыт"}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{r.published ? t("adminUi.common.published", "Published") : t("adminUi.common.hidden", "Hidden")}</td>
                   <td className="px-5 py-3 text-right whitespace-nowrap">
-                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title="Редактировать">
+                    <button onClick={() => edit(r)} className="p-2 hover:text-primary transition" title={t("adminUi.mentors.edit", "Edit")}>
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title="Удалить">
+                    <button onClick={() => remove(r.id)} className="p-2 hover:text-destructive transition" title={t("adminUi.mentors.delete", "Delete")}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </td>
@@ -768,7 +777,7 @@ function MentorsAdmin() {
             </tbody>
           </table>
         ) : (
-          <p className="p-8 text-center text-sm text-muted-foreground">Менторов пока нет</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">{t("adminUi.mentors.empty", "No mentors yet")}</p>
         )}
       </div>
     </section>
@@ -809,6 +818,7 @@ const emptyCourse: CourseForm = {
 };
 
 function CoursesAdmin() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<AdminCourseRow[] | null>(null);
   const [purchases, setPurchases] = useState<AdminPurchaseRow[] | null>(null);
   const [form, setForm] = useState<CourseForm | null>(null);
@@ -848,7 +858,7 @@ function CoursesAdmin() {
       });
       setForm((f) => (f ? { ...f, cover_url: res.url } : f));
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Не удалось загрузить файл");
+      setErr(e instanceof Error ? e.message : t("adminUi.courses.uploadError", "Could not upload file"));
     } finally {
       setUploading(false);
     }
@@ -900,14 +910,14 @@ function CoursesAdmin() {
       setForm(null);
       await load();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Не удалось сохранить");
+      setErr(e instanceof Error ? e.message : t("adminUi.courses.saveError", "Could not save"));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Удалить курс?")) return;
+    if (!confirm(t("adminUi.courses.confirmDelete", "Delete this course?"))) return;
     await adminDeleteCourse({ data: { id } });
     await load();
   };
@@ -923,16 +933,16 @@ function CoursesAdmin() {
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg">Курсы</h2>
+        <h2 className="font-display text-lg">{t("adminUi.courses.heading", "Courses")}</h2>
         <div className="flex gap-2">
           <button onClick={() => void load()} className="glass rounded-xl px-3 py-2 text-sm inline-flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" /> Обновить
+            <RefreshCw className="h-4 w-4" /> {t("adminUi.courses.refresh", "Refresh")}
           </button>
           <button
             onClick={() => setForm({ ...emptyCourse })}
             className="rounded-xl bg-primary text-primary-foreground px-3 py-2 text-sm font-semibold inline-flex items-center gap-2"
           >
-            <Plus className="h-4 w-4" /> Новый курс
+            <Plus className="h-4 w-4" /> {t("adminUi.courses.newCourse", "New course")}
           </button>
         </div>
       </div>
@@ -942,7 +952,7 @@ function CoursesAdmin() {
       {form && (
         <div className="glass rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm">{form.id ? "Редактирование курса" : "Новый курс"}</h3>
+            <h3 className="font-semibold text-sm">{form.id ? t("adminUi.courses.editTitle", "Edit course") : t("adminUi.courses.newTitle", "New course")}</h3>
             <button onClick={() => setForm(null)} className="text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
             </button>
@@ -950,35 +960,35 @@ function CoursesAdmin() {
 
           <input
             className={inputCls}
-            placeholder="Название курса"
+            placeholder={t("adminUi.courses.titlePlaceholder", "Course title")}
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
           <textarea
             className={`${inputCls} min-h-[100px]`}
-            placeholder="Описание"
+            placeholder={t("adminUi.courses.descriptionPlaceholder", "Description")}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <input className={inputCls} placeholder="Цена" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-            <input className={inputCls} placeholder="Валюта" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
-            <input className={inputCls} placeholder="Уровень" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} />
-            <input className={inputCls} placeholder="Длительность (напр. 6 недель)" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
-            <input className={inputCls} placeholder="Кол-во уроков" value={form.lessons_count} onChange={(e) => setForm({ ...form, lessons_count: e.target.value })} />
-            <input className={inputCls} placeholder="Позиция" value={form.position} onChange={(e) => setForm({ ...form, position: Number(e.target.value) || 0 })} />
+            <input className={inputCls} placeholder={t("adminUi.courses.pricePlaceholder", "Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            <input className={inputCls} placeholder={t("adminUi.courses.currencyPlaceholder", "Currency")} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+            <input className={inputCls} placeholder={t("adminUi.courses.levelPlaceholder", "Level")} value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} />
+            <input className={inputCls} placeholder={t("adminUi.courses.durationPlaceholder", "Duration (e.g. 6 weeks)")} value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
+            <input className={inputCls} placeholder={t("adminUi.courses.lessonsCountPlaceholder", "Number of lessons")} value={form.lessons_count} onChange={(e) => setForm({ ...form, lessons_count: e.target.value })} />
+            <input className={inputCls} placeholder={t("adminUi.courses.positionPlaceholder", "Position")} value={form.position} onChange={(e) => setForm({ ...form, position: Number(e.target.value) || 0 })} />
           </div>
 
           <input
             className={inputCls}
-            placeholder="Ссылка оплаты Finik"
+            placeholder={t("adminUi.courses.finikUrlPlaceholder", "Finik payment link")}
             value={form.finik_payment_url}
             onChange={(e) => setForm({ ...form, finik_payment_url: e.target.value })}
           />
           <input
             className={inputCls}
-            placeholder="Закрытая ссылка на YouTube (видео можно добавить позже)"
+            placeholder={t("adminUi.courses.videoUrlPlaceholder", "Private YouTube link (video can be added later)")}
             value={form.video_url}
             onChange={(e) => setForm({ ...form, video_url: e.target.value })}
           />
@@ -987,7 +997,7 @@ function CoursesAdmin() {
             {form.cover_url && <img src={form.cover_url} alt="" className="h-12 w-20 rounded-lg object-cover" />}
             <label className="glass rounded-xl px-3 py-2 text-sm inline-flex items-center gap-2 cursor-pointer">
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-              Обложка
+              {t("adminUi.courses.coverBtn", "Cover")}
               <input
                 type="file"
                 accept="image/*"
@@ -1000,7 +1010,7 @@ function CoursesAdmin() {
             </label>
             <label className="text-sm inline-flex items-center gap-2">
               <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} />
-              Опубликован
+              {t("adminUi.courses.published", "Published")}
             </label>
           </div>
 
@@ -1009,7 +1019,7 @@ function CoursesAdmin() {
             disabled={saving || !form.title.trim()}
             className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold disabled:opacity-60"
           >
-            {saving ? "Сохранение…" : "Сохранить"}
+            {saving ? t("adminUi.courses.saving", "Saving…") : t("adminUi.courses.save", "Save")}
           </button>
         </div>
       )}
@@ -1021,7 +1031,7 @@ function CoursesAdmin() {
               <div>
                 <p className="font-semibold text-sm">{c.title_ru || c.title}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {c.price} {c.currency} {c.published ? "" : "• черновик"}
+                  {c.price} {c.currency} {c.published ? "" : `• ${t("adminUi.courses.draftLabel", "draft")}`}
                 </p>
               </div>
               <div className="flex gap-1">
@@ -1035,27 +1045,27 @@ function CoursesAdmin() {
             </div>
           </div>
         ))}
-        {items && items.length === 0 && <p className="text-sm text-muted-foreground">Курсов пока нет</p>}
+        {items && items.length === 0 && <p className="text-sm text-muted-foreground">{t("adminUi.courses.empty", "No courses yet")}</p>}
       </div>
 
       <div className="glass rounded-2xl p-5">
-        <h3 className="font-semibold text-sm mb-3">Покупки</h3>
+        <h3 className="font-semibold text-sm mb-3">{t("adminUi.courses.purchasesTitle", "Purchases")}</h3>
         {purchases && purchases.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground">
                 <tr>
-                  <th className="text-left py-2">Email</th>
-                  <th className="text-left py-2">Курс</th>
-                  <th className="text-left py-2">Сумма</th>
-                  <th className="text-left py-2">Статус</th>
-                  <th className="text-left py-2">Действия</th>
+                  <th className="text-left py-2">{t("adminUi.courses.colEmail", "Email")}</th>
+                  <th className="text-left py-2">{t("adminUi.courses.colCourse", "Course")}</th>
+                  <th className="text-left py-2">{t("adminUi.courses.colAmount", "Amount")}</th>
+                  <th className="text-left py-2">{t("adminUi.courses.colStatus", "Status")}</th>
+                  <th className="text-left py-2">{t("adminUi.courses.colActions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody>
                 {purchases.map((p) => (
                   <tr key={p.id} className="border-t border-border/50">
-                    <td className="py-2">{p.email ?? "—"}</td>
+                    <td className="py-2">{p.email ?? t("adminUi.common.dash", "—")}</td>
                     <td className="py-2">{(items ?? []).find((c) => c.id === p.course_id)?.title ?? p.course_id.slice(0, 8)}</td>
                     <td className="py-2">
                       {p.amount} {p.currency}
@@ -1063,10 +1073,10 @@ function CoursesAdmin() {
                     <td className="py-2">{p.status}</td>
                     <td className="py-2 flex gap-2">
                       <button onClick={() => void setStatus(p.id, "paid")} className="text-xs underline">
-                        Оплачено
+                        {t("adminUi.courses.markPaid", "Paid")}
                       </button>
                       <button onClick={() => void setStatus(p.id, "failed")} className="text-xs underline">
-                        Отменить
+                        {t("adminUi.courses.markFailed", "Cancel")}
                       </button>
                     </td>
                   </tr>
@@ -1075,7 +1085,7 @@ function CoursesAdmin() {
             </table>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Покупок пока нет</p>
+          <p className="text-sm text-muted-foreground">{t("adminUi.courses.noPurchases", "No purchases yet")}</p>
         )}
       </div>
     </section>

@@ -72,7 +72,7 @@ function KnowledgeBase() {
         const rows = await list({ data: { teamspace_id: tsId } });
         setDocs(rows as Doc[]);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load");
+        setError(e instanceof Error ? e.message : t("integrationsUi.docs.failedToLoad", "Failed to load"));
       } finally {
         setLoading(false);
       }
@@ -86,7 +86,7 @@ function KnowledgeBase() {
     try {
       for (const file of Array.from(files)) {
         if (file.size > 25 * 1024 * 1024) {
-          setError(`${file.name}: max 25 MB`);
+          setError(t("integrationsUi.docs.maxSize", "{{name}}: max 25 MB", { name: file.name }));
           continue;
         }
         const safeName = file.name.replace(/[^\w.\- ]/g, "_");
@@ -132,7 +132,7 @@ function KnowledgeBase() {
 
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.uploadFailed", "Upload failed"));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -160,7 +160,7 @@ function KnowledgeBase() {
     try {
       await extract({ data: { id, force: true } });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось прочитать файл");
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.readFailed", "Could not read the file"));
     } finally {
       setIndexing((p) => {
         const n = { ...p };
@@ -181,18 +181,18 @@ function KnowledgeBase() {
       const { url } = await sign({ data: { id } });
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not open file");
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.openFailed", "Could not open file"));
     }
   };
 
 
   const removeDoc = async (id: string) => {
-    if (!confirm(t("app.docs.confirmDelete", "Delete this file?"))) return;
+    if (!confirm(t("integrationsUi.docs.confirmDelete", "Delete this file?"))) return;
     try {
       await remove({ data: { id } });
       setDocs((prev) => prev.filter((d) => d.id !== id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Delete failed");
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.deleteFailed", "Delete failed"));
     }
   };
 
@@ -204,10 +204,10 @@ function KnowledgeBase() {
         </div>
         <div>
           <h1 className="font-display text-2xl text-white">
-            {t("app.docs.title", "Knowledge Base")}
+            {t("integrationsUi.docs.title", "Knowledge Base")}
           </h1>
           <p className="text-sm text-white/60">
-            {t("app.docs.subtitle", "Upload files — Virtual Space AI will read them and answer using their content.")}
+            {t("integrationsUi.docs.subtitle", "Upload files — Virtual Space AI will read them and answer using their content.")}
           </p>
         </div>
       </div>
@@ -238,11 +238,11 @@ function KnowledgeBase() {
           )}
           <div className="text-sm text-white/90 font-medium">
             {uploading
-              ? t("app.docs.uploading", "Uploading…")
-              : t("app.docs.dropHere", "Drag & drop files here, or click to choose")}
+              ? t("integrationsUi.docs.uploading", "Uploading…")
+              : t("integrationsUi.docs.dropHere", "Drag & drop files here, or click to choose")}
           </div>
           <div className="text-xs text-white/50">
-            {t("app.docs.hint", "PDF, DOCX, TXT, CSV, MD, JSON — up to 25 MB each")}
+            {t("integrationsUi.docs.hint", "PDF, DOCX, TXT, CSV, MD, JSON — up to 25 MB each")}
           </div>
         </div>
       </div>
@@ -256,11 +256,11 @@ function KnowledgeBase() {
       <div className="rounded-2xl border border-white/10 bg-[color:var(--card)] overflow-hidden">
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3">
           <div className="text-sm font-semibold text-white">
-            {t("app.docs.files", "Files")} <span className="text-white/40 font-normal">({docs.length})</span>
+            {t("integrationsUi.docs.files", "Files")} <span className="text-white/40 font-normal">({docs.length})</span>
             {docs.length > 0 && (
               <span className="text-white/40 font-normal">
                 {" · "}
-                {t("app.docs.indexed", "прочитано ИИ")}: {docs.filter((d) => (d.text_len ?? 0) > 0).length}/{docs.length}
+                {t("integrationsUi.docs.indexed", "read by AI")}: {docs.filter((d) => (d.text_len ?? 0) > 0).length}/{docs.length}
               </span>
             )}
           </div>
@@ -270,18 +270,18 @@ function KnowledgeBase() {
               className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/15 hover:bg-primary/25 rounded-lg px-2.5 py-1.5 transition"
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              {t("app.docs.reindexAll", "Переиндексировать непрочитанные")}
+              {t("integrationsUi.docs.reindexAll", "Reindex unread files")}
             </button>
           )}
         </div>
         {loading ? (
           <div className="p-8 flex items-center justify-center text-white/50 text-sm">
-            <Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("app.docs.loading", "Loading…")}
+            <Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("integrationsUi.docs.loading", "Loading…")}
           </div>
         ) : docs.length === 0 ? (
           <div className="p-10 text-center text-sm text-white/50">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            {t("app.docs.empty", "No files yet. Upload your first document above.")}
+            {t("integrationsUi.docs.empty", "No files yet. Upload your first document above.")}
           </div>
         ) : (
           <ul className="divide-y divide-white/5">
@@ -297,39 +297,39 @@ function KnowledgeBase() {
                   <div className="text-sm text-white truncate group-hover:underline">{d.name}</div>
                   <div className="text-xs text-white/40 truncate">
                     {formatBytes(d.size_bytes)} · {new Date(d.created_at).toLocaleDateString()}
-                    {(d.text_len ?? 0) > 0 && ` · ${(d.text_len ?? 0).toLocaleString()} ${t("app.docs.chars", "символов текста")}`}
+                    {(d.text_len ?? 0) > 0 && ` · ${(d.text_len ?? 0).toLocaleString()} ${t("integrationsUi.docs.chars", "characters of text")}`}
                     {d.extract_error && ` · ${d.extract_error}`}
                   </div>
                 </button>
                 {indexing[d.id] ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/15 rounded-full px-2 py-1">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    {t("app.docs.indexing", "Indexing…")}
+                    {t("integrationsUi.docs.indexing", "Indexing…")}
                   </span>
                 ) : (d.text_len ?? 0) > 0 ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 bg-emerald-400/10 rounded-full px-2 py-1">
                     <CheckCircle2 className="h-3 w-3" />
-                    {t("app.docs.ready", "ИИ читает")}
+                    {t("integrationsUi.docs.ready", "AI reads it")}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-400/10 rounded-full px-2 py-1">
                     <AlertTriangle className="h-3 w-3" />
-                    {t("app.docs.notIndexed", "нет текста")}
+                    {t("integrationsUi.docs.notIndexed", "no text")}
                   </span>
                 )}
                 <button
                   onClick={() => reindexDoc(d.id)}
                   disabled={!!indexing[d.id]}
                   className="p-2 text-white/50 hover:text-primary hover:bg-white/5 rounded-lg transition disabled:opacity-40"
-                  aria-label={t("app.docs.reindex", "Переиндексировать")}
-                  title={t("app.docs.reindex", "Переиндексировать")}
+                  aria-label={t("integrationsUi.docs.reindex", "Reindex")}
+                  title={t("integrationsUi.docs.reindex", "Reindex")}
                 >
                   <RefreshCw className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => openDoc(d.id)}
                   className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition"
-                  aria-label="Open"
+                  aria-label={t("integrationsUi.docs.open", "Open")}
                 >
                   <Download className="h-4 w-4" />
                 </button>
@@ -337,7 +337,7 @@ function KnowledgeBase() {
                 <button
                   onClick={() => removeDoc(d.id)}
                   className="p-2 text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
-                  aria-label="Delete"
+                  aria-label={t("integrationsUi.docs.delete", "Delete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

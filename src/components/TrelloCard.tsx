@@ -77,14 +77,14 @@ export function TrelloCard() {
             Trello
             {state?.connected && (
               <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-                <Check className="h-3 w-3" /> {t("app.integrations.trello.connected", "Подключено")}
+                <Check className="h-3 w-3" /> {t("integrationsUi.trello.connected", "Connected")}
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{t("app.integrations.trello.desc", "Источник задач для уведомлений и отчётов")}</p>
+          <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.desc", "Task source for notifications and reports")}</p>
         </div>
         {state?.connected && (
-          <Button variant="ghost" size="icon" disabled={busy} onClick={() => run(() => syncFn({ data: { teamspace_id: teamspaceId ?? "" } }))} title={t("app.integrations.trello.sync", "Синхронизировать")}>
+          <Button variant="ghost" size="icon" disabled={busy} onClick={() => run(() => syncFn({ data: { teamspace_id: teamspaceId ?? "" } }))} title={t("integrationsUi.trello.sync", "Sync")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         )}
@@ -93,18 +93,18 @@ export function TrelloCard() {
       {!state?.connected ? (
         <div className="space-y-2">
           <div className="grid gap-2 sm:grid-cols-2">
-            <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={t("app.integrations.trello.apiKey", "API-ключ Trello")} />
-            <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder={t("app.integrations.trello.apiToken", "Токен Trello")} />
+            <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={t("integrationsUi.trello.apiKey", "Trello API key")} />
+            <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder={t("integrationsUi.trello.apiToken", "Trello token")} />
           </div>
           <Button disabled={busy || !key.trim() || !token.trim() || !teamspaceId} onClick={() => run(() => connectFn({ data: { teamspace_id: teamspaceId ?? "", api_key: key.trim(), api_token: token.trim() } }))}>
-            {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("app.integrations.trello.connect", "Подключить")}
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.trello.connect", "Connect")}
           </Button>
-          <p className="text-xs text-muted-foreground">{t("app.integrations.trello.hint", "Ключ и токен создаются на trello.com/power-ups/admin — мы храним их в зашифрованном виде и не показываем.")}</p>
+          <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.hint", "The key and token are created at trello.com/power-ups/admin — we store them encrypted and never display them.")}</p>
         </div>
       ) : (
         <div className="space-y-4 border-t border-border pt-4">
           <div className="space-y-2">
-            <Label>{t("app.integrations.trello.board", "Доска Trello")}</Label>
+            <Label>{t("integrationsUi.trello.board", "Trello board")}</Label>
             <Select value={boardId} onValueChange={(value) => {
               setBoardId(value);
               if (teamspaceId) void runInspect(async () => {
@@ -112,24 +112,24 @@ export function TrelloCard() {
                 setState((old: any) => ({ ...old, ...structure }));
               });
             }}>
-              <SelectTrigger><SelectValue placeholder={t("app.integrations.trello.chooseBoard", "Выберите одну доску")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("integrationsUi.trello.chooseBoard", "Choose a board")} /></SelectTrigger>
               <SelectContent>{((state.boards ?? []) as Item[]).map((item) => <SelectItem key={item.id} value={item.id}>{item.name ?? item.id}</SelectItem>)}</SelectContent>
             </Select>
           </div>
 
           {boardId && lists.length > 0 && (
             <div className="space-y-2">
-              <Label>{t("app.integrations.trello.lists", "Списки и статусы")}</Label>
+              <Label>{t("integrationsUi.trello.lists", "Lists and statuses")}</Label>
               {lists.map((list) => (
                 <div key={list.id} className="grid grid-cols-[1fr_180px] items-center gap-2">
                   <span className="truncate text-sm text-foreground">{list.name ?? list.id}</span>
                   <Select value={columnMap[list.id] ?? "backlog"} onValueChange={(value) => setColumnMap((old) => ({ ...old, [list.id]: value as Status }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="backlog">{t("app.integrations.trello.todo", "К выполнению")}</SelectItem>
-                      <SelectItem value="in_progress">{t("app.integrations.trello.progress", "В работе")}</SelectItem>
-                      <SelectItem value="review">{t("app.integrations.trello.review", "На проверке")}</SelectItem>
-                      <SelectItem value="done">{t("app.integrations.trello.done", "Готово")}</SelectItem>
+                      <SelectItem value="backlog">{t("integrationsUi.trello.todo", "To do")}</SelectItem>
+                      <SelectItem value="in_progress">{t("integrationsUi.trello.progress", "In progress")}</SelectItem>
+                      <SelectItem value="review">{t("integrationsUi.trello.review", "In review")}</SelectItem>
+                      <SelectItem value="done">{t("integrationsUi.trello.done", "Done")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -139,14 +139,14 @@ export function TrelloCard() {
 
           {boardId && trelloMembers.length > 0 && (
             <div className="space-y-2">
-              <Label>{t("app.integrations.trello.users", "Сотрудники")}</Label>
+              <Label>{t("integrationsUi.trello.users", "Team members")}</Label>
               {trelloMembers.map((user) => (
                 <div key={user.id} className="grid grid-cols-[1fr_180px] items-center gap-2">
                   <span className="truncate text-sm text-foreground">{user.fullName || user.username || user.email || user.id}</span>
                   <Select value={userMap[user.id] || "skip"} onValueChange={(value) => setUserMap((old) => ({ ...old, [user.id]: value === "skip" ? "" : value }))}>
-                    <SelectTrigger><SelectValue placeholder={t("app.integrations.trello.unmatched", "Не сопоставлен")} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("integrationsUi.trello.unmatched", "Not matched")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="skip">{t("app.integrations.trello.unmatched", "Не сопоставлен")}</SelectItem>
+                      <SelectItem value="skip">{t("integrationsUi.trello.unmatched", "Not matched")}</SelectItem>
                       {team.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -157,13 +157,13 @@ export function TrelloCard() {
 
           <div className="flex flex-wrap gap-2">
             <Button disabled={busy || !boardId} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", board_id: boardId, board_name: board?.name ?? boardId, column_map: columnMap, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }))}>
-              {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("app.integrations.trello.save", "Сохранить и синхронизировать")}
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.trello.save", "Save and sync")}
             </Button>
             <Button variant="outline" disabled={busy} onClick={() => run(() => disconnectFn({ data: { teamspace_id: teamspaceId ?? "" } }))}>
-              <Unplug className="h-4 w-4" /> {t("app.integrations.trello.disconnect", "Отключить")}
+              <Unplug className="h-4 w-4" /> {t("integrationsUi.trello.disconnect", "Disconnect")}
             </Button>
           </div>
-          {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("app.integrations.trello.lastSync", "Последняя синхронизация")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
+          {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
         </div>
       )}
       {(error || state?.last_error) && <p className="text-sm text-destructive">{error || state.last_error}</p>}

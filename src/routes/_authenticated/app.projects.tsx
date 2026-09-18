@@ -23,13 +23,6 @@ export const Route = createFileRoute("/_authenticated/app/projects")({
   }),
 });
 
-const STATUS_LABEL: Record<string, string> = {
-  backlog: "К выполнению",
-  in_progress: "В работе",
-  review: "На проверке",
-  done: "Готово",
-};
-
 const STATUS_CLASS: Record<string, string> = {
   backlog: "bg-white/10 text-white/70",
   in_progress: "bg-sky-500/15 text-sky-300",
@@ -37,14 +30,19 @@ const STATUS_CLASS: Record<string, string> = {
   done: "bg-emerald-500/15 text-emerald-300",
 };
 
-const SOURCE_LABEL: Record<string, string> = {
-  virtual_space: "Virtual Space",
-  yougile: "YouGile",
-  trello: "Trello",
-};
-
 function ProjectsPage() {
   const { t } = useTranslation();
+  const STATUS_LABEL: Record<string, string> = {
+    backlog: t("workspaceUi.projects.statusBacklog", "К выполнению"),
+    in_progress: t("workspaceUi.projects.statusInProgress", "В работе"),
+    review: t("workspaceUi.projects.statusReview", "На проверке"),
+    done: t("workspaceUi.projects.statusDone", "Готово"),
+  };
+  const SOURCE_LABEL: Record<string, string> = {
+    virtual_space: "Virtual Space",
+    yougile: "YouGile",
+    trello: "Trello",
+  };
   const queryClient = useQueryClient();
   const load = useServerFn(listProjects);
   const syncYg = useServerFn(syncYouGile);
@@ -82,13 +80,13 @@ function ProjectsPage() {
           <FolderKanban className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl sm:text-3xl text-white">{t("app.projects.title", "Проекты")}</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-white">{t("workspaceUi.projects.title", "Проекты")}</h1>
           <p className="mt-1.5 text-sm text-white/60 max-w-2xl">
-            {t("app.projects.subtitle", "Все проекты пространства: собственные и импортированные из YouGile и Trello, со статусом, прогрессом и временем последней синхронизации.")}
+            {t("workspaceUi.projects.subtitle", "Все проекты пространства: собственные и импортированные из YouGile и Trello, со статусом, прогрессом и временем последней синхронизации.")}
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/app/integrations"><Plug className="h-4 w-4" /> {t("app.projects.integrations", "Интеграции")}</Link>
+          <Link to="/app/integrations"><Plug className="h-4 w-4" /> {t("workspaceUi.projects.integrations", "Интеграции")}</Link>
         </Button>
       </header>
 
@@ -97,7 +95,7 @@ function ProjectsPage() {
           {sync.map((row) => (
             <div key={row.provider} className="glass-strong rounded-xl border border-white/10 px-3 py-2 flex items-center gap-3 text-xs text-white/70">
               <span className="font-semibold text-white">{SOURCE_LABEL[row.provider] ?? row.provider}</span>
-              <span>{row.last_sync_at ? new Date(row.last_sync_at).toLocaleString() : t("app.projects.never", "ещё не синхронизировано")}</span>
+              <span>{row.last_sync_at ? new Date(row.last_sync_at).toLocaleString() : t("workspaceUi.projects.never", "ещё не синхронизировано")}</span>
               {row.last_error && <span className="text-destructive">{row.last_error}</span>}
               <Button size="sm" variant="ghost" disabled={busy === row.provider} onClick={() => runSync(row.provider)}>
                 {busy === row.provider ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
@@ -113,14 +111,14 @@ function ProjectsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wider text-white/45">
-              <th className="px-4 py-3 font-medium">{t("app.projects.name", "Проект")}</th>
-              <th className="px-4 py-3 font-medium">{t("app.projects.source", "Источник")}</th>
-              <th className="px-4 py-3 font-medium">{t("app.projects.board", "Доска")}</th>
-              <th className="px-4 py-3 font-medium">{t("app.projects.status", "Статус")}</th>
-              <th className="px-4 py-3 font-medium">{t("app.projects.progress", "Прогресс")}</th>
-              <th className="px-4 py-3 font-medium">{t("app.projects.owner", "Ответственный")}</th>
-              <th className="px-4 py-3 font-medium">{t("app.projects.tasks", "Задачи")}</th>
-              <th className="px-4 py-3 font-medium">{t("app.projects.lastSync", "Синхронизация")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.name", "Проект")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.source", "Источник")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.board", "Доска")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.status", "Статус")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.progress", "Прогресс")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.owner", "Ответственный")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.tasks", "Задачи")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.lastSync", "Синхронизация")}</th>
             </tr>
           </thead>
           <tbody>
@@ -128,7 +126,7 @@ function ProjectsPage() {
               <tr><td colSpan={8} className="px-4 py-10 text-center text-white/50"><Loader2 className="inline h-4 w-4 animate-spin" /></td></tr>
             )}
             {!isLoading && projects.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-10 text-center text-white/50">{t("app.projects.empty", "Проектов пока нет — создайте задачи или подключите YouGile/Trello.")}</td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-white/50">{t("workspaceUi.projects.empty", "Проектов пока нет — создайте задачи или подключите YouGile/Trello.")}</td></tr>
             )}
             {projects.map((project) => (
               <tr key={project.key} className="border-t border-white/5">

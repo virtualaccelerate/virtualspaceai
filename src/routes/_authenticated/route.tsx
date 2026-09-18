@@ -273,7 +273,7 @@ function AuthenticatedLayout() {
               <button
                 onClick={() => setMobileOpen(false)}
                 className="lg:hidden text-white/60 p-2"
-                aria-label="Close"
+                aria-label={t("shellUi.nav.ariaClose", "Close")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -360,7 +360,7 @@ function AuthenticatedLayout() {
 
       {mobileOpen && (
         <button
-          aria-label="Close sidebar"
+          aria-label={t("shellUi.nav.ariaCloseSidebar", "Close sidebar")}
           className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
@@ -372,7 +372,7 @@ function AuthenticatedLayout() {
           <button
             className={`${isTg ? "" : "lg:hidden"} text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5`}
             onClick={() => setMobileOpen(true)}
-            aria-label="Open sidebar"
+            aria-label={t("shellUi.nav.ariaOpenSidebar", "Open sidebar")}
           >
             <PanelLeftOpen className="h-5 w-5" />
           </button>
@@ -407,7 +407,7 @@ function AuthenticatedLayout() {
             <button
               onClick={() => navigate({ to: "/app/settings" })}
               className="h-9 w-9 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition flex items-center justify-center"
-              aria-label="Settings"
+              aria-label={t("shellUi.nav.ariaSettings", "Settings")}
             >
               <Settings className="h-4 w-4" />
             </button>
@@ -529,7 +529,7 @@ function InviteModal({ teamspace, onClose }: { teamspace: Teamspace; onClose: ()
               <p className="text-xs text-white/55">{t("app.invite.subtitle")}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label="Close">
+          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label={t("shellUi.nav.ariaClose", "Close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -610,7 +610,7 @@ function JoinModal({ onClose, onJoined }: { onClose: () => void; onJoined: () =>
           <h3 className="font-display text-lg text-white">
             {t("app.header.joinTeamspace", "Присоединиться к пространству")}
           </h3>
-          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label="Close">
+          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label={t("shellUi.nav.ariaClose", "Close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -680,7 +680,7 @@ function CreateTeamspaceModal({ onClose, onCreated }: { onClose: () => void; onC
           <h3 className="font-display text-lg text-white">
             {t("app.header.createTeamspace", "Создать пространство")}
           </h3>
-          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label="Close">
+          <button onClick={onClose} className="text-white/50 hover:text-white p-1" aria-label={t("shellUi.nav.ariaClose", "Close")}>
             <X className="h-4 w-4" />
           </button>
         </div>

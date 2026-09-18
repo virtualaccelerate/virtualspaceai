@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowUpDown, Flag, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -92,6 +93,7 @@ function TaskTableBase({
     empty: string;
   };
 }) {
+  const { t } = useTranslation();
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "status", dir: 1 });
   const selectable = !!onToggleSelect;
   const selected = useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
@@ -168,7 +170,7 @@ function TaskTableBase({
               <th className="w-10 px-3 py-2">
                 <input
                   type="checkbox"
-                  aria-label="Select all"
+                  aria-label={t("tasksUi.selectAll", "Select all")}
                   className="h-4 w-4 accent-primary align-middle"
                   checked={allSelected}
                   onChange={() => onToggleSelectAll?.(selectableIds)}
@@ -198,7 +200,7 @@ function TaskTableBase({
                 <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
-                    aria-label="Select task"
+                    aria-label={t("tasksUi.selectTask", "Select task")}
                     className="h-4 w-4 accent-primary align-middle"
                     disabled={task.external_source === "yougile" || task.external_source === "trello"}
                     checked={selected.has(task.id)}
@@ -265,7 +267,7 @@ function TaskTableBase({
                       onClick={() => onDelete(task)}
                       className="text-rose-600 dark:text-rose-300"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      <Trash2 className="mr-2 h-4 w-4" /> {t("tasksUi.delete", "Delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>}

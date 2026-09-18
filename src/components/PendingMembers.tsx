@@ -44,7 +44,7 @@ export default function PendingMembers({ teamspaceId }: { teamspaceId?: string }
     try {
       await save({ data: { id: row.id, email: drafts[row.id]?.trim() || null } });
       await refresh(teamspaceId);
-      toast.success(t("app.team.pending.saved", "Сохранено"));
+      toast.success(t("workspaceUi.team.pending.saved", "Сохранено"));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -69,9 +69,9 @@ export default function PendingMembers({ teamspaceId }: { teamspaceId?: string }
       <div className="flex items-center gap-2 p-4 border-b border-[color:var(--border)]">
         <UserPlus className="h-4 w-4 text-primary" />
         <div>
-          <h2 className="text-sm font-semibold">{t("app.team.pending.title", "Добавлены из таблицы")}</h2>
+          <h2 className="text-sm font-semibold">{t("workspaceUi.team.pending.title", "Добавлены из таблицы")}</h2>
           <p className="text-xs text-[color:var(--muted-foreground)]">
-            {t("app.team.pending.hint", "Укажите почту — человек станет участником и получит свои задачи.")}
+            {t("workspaceUi.team.pending.hint", "Укажите почту — человек станет участником и получит свои задачи.")}
           </p>
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function PendingMembers({ teamspaceId }: { teamspaceId?: string }
             <div className="min-w-0 flex-1">
               <div className="text-sm font-medium truncate">{r.name}</div>
               <div className="text-xs text-[color:var(--muted-foreground)]">
-                {t("app.team.open", "Активных")}: {r.open_tasks} · {t("app.team.done", "Готово")}: {r.done_tasks}
+                {t("workspaceUi.team.open", "Активных")}: {r.open_tasks} · {t("workspaceUi.team.done", "Готово")}: {r.done_tasks}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export default function PendingMembers({ teamspaceId }: { teamspaceId?: string }
                 className="h-9 w-[220px] text-sm"
               />
               <Button size="sm" disabled={busy === r.id} onClick={() => onSave(r)}>
-                {busy === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t("common.save", "Сохранить")}
+                {busy === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t("workspaceUi.common.save", "Сохранить")}
               </Button>
               <Button size="sm" variant="ghost" disabled={busy === r.id} onClick={() => onDelete(r)} aria-label="delete">
                 <Trash2 className="h-4 w-4" />

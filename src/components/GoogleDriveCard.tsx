@@ -76,7 +76,7 @@ export function GoogleDriveCard() {
 
   const reconnectRequired = error?.includes("GOOGLE_DRIVE_RECONNECT_REQUIRED") ?? false;
   const friendlyError = reconnectRequired
-    ? t("app.integrations.reconnectRequired", "Срок доступа истёк. Подключите Google Drive повторно.")
+    ? t("integrationsUi.reconnectRequired", "Access has expired. Please reconnect Google Drive.")
     : error;
 
   const createDoc = async () => {
@@ -144,7 +144,7 @@ export function GoogleDriveCard() {
     setError(null);
     const popup = window.open("", "google-drive-oauth", "width=600,height=740");
     if (!popup) {
-      setError(t("app.integrations.popupBlocked", "Разрешите всплывающие окна и попробуйте снова."));
+      setError(t("integrationsUi.popupBlocked", "Please allow pop-ups and try again."));
       return;
     }
     setBusy(true);
@@ -189,7 +189,7 @@ export function GoogleDriveCard() {
             {connected && (
               <span className="text-[9px] uppercase tracking-wider text-primary border border-primary/30 rounded-full px-1.5 py-0.5 inline-flex items-center gap-1">
                 <Check className="h-2.5 w-2.5" />
-                {t("app.integrations.connected", "Подключено")}
+                {t("integrationsUi.connected", "Connected")}
               </span>
             )}
           </div>
@@ -197,8 +197,8 @@ export function GoogleDriveCard() {
             {connected && email
               ? email
               : t(
-                  "app.integrations.desc.gdriveFull",
-                  "Чтение и поиск файлов, Google Docs, создание документов и папок, перемещение файлов.",
+                  "integrationsUi.desc.gdriveFull",
+                  "Read and search files, Google Docs, create documents and folders, move files.",
                 )}
           </p>
         </div>
@@ -208,7 +208,7 @@ export function GoogleDriveCard() {
             size="icon"
             onClick={() => void refresh()}
             className="text-muted-foreground"
-            title={t("app.integrations.refresh", "Обновить")}
+            title={t("integrationsUi.refresh", "Refresh")}
           >
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>
@@ -249,21 +249,21 @@ export function GoogleDriveCard() {
               className="w-full text-xs"
             >
               <FilePlus2 className="h-3.5 w-3.5" />
-              {t("app.integrations.createDoc", "Создать документ в Google Docs")}
+              {t("integrationsUi.createDoc", "Create a Google Docs document")}
             </Button>
           ) : (
             <>
               <input
                 value={docName}
                 onChange={(e) => setDocName(e.target.value)}
-                placeholder={t("app.integrations.docTitle", "Название документа")}
+                placeholder={t("integrationsUi.docTitle", "Document title")}
                 className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder:text-white/35 outline-none focus:border-primary/50"
               />
               <textarea
                 value={docContent}
                 onChange={(e) => setDocContent(e.target.value)}
                 rows={4}
-                placeholder={t("app.integrations.docContent", "Текст документа (необязательно)")}
+                placeholder={t("integrationsUi.docContent", "Document text (optional)")}
                 className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder:text-white/35 outline-none focus:border-primary/50 resize-y"
               />
               <div className="flex gap-2">
@@ -273,14 +273,14 @@ export function GoogleDriveCard() {
                   className="flex-1 text-xs"
                 >
                   {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  {t("app.integrations.create", "Создать")}
+                  {t("integrationsUi.create", "Create")}
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => setCreating(false)}
                   className="text-xs"
                 >
-                  {t("common.cancel", "Отмена")}
+                  {t("common.cancel", "Cancel")}
                 </Button>
               </div>
             </>
@@ -293,7 +293,7 @@ export function GoogleDriveCard() {
               className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
             >
               <ExternalLink className="h-3 w-3" />
-              {t("app.integrations.openDoc", "Открыть созданный документ")}
+              {t("integrationsUi.openDoc", "Open created document")}
             </a>
           )}
         </div>
@@ -307,14 +307,14 @@ export function GoogleDriveCard() {
       )}
 
       <button type="button" onClick={() => setGuideOpen((value) => !value)} className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground">
-        <span>{t("app.integrations.guide", "Как подключить")}</span>
+        <span>{t("integrationsUi.guide", "How to connect")}</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${guideOpen ? "rotate-180" : ""}`} />
       </button>
       {guideOpen && (
         <ol className="list-decimal space-y-1 pl-5 text-xs leading-relaxed text-muted-foreground">
-          <li>{t("app.integrations.driveGuide1", "Нажмите «Подключить» и выберите свой Google-аккаунт.")}</li>
-          <li>{t("app.integrations.driveGuide2", "Разрешите доступ к файлам и документам Drive.")}</li>
-          <li>{t("app.integrations.driveGuide3", "После подключения AI сможет читать доступные вам файлы и все листы таблиц.")}</li>
+          <li>{t("integrationsUi.driveGuide1", "Click \"Connect\" and choose your Google account.")}</li>
+          <li>{t("integrationsUi.driveGuide2", "Grant access to your Drive files and documents.")}</li>
+          <li>{t("integrationsUi.driveGuide3", "Once connected, the AI can read files you have access to and all spreadsheet sheets.")}</li>
         </ol>
       )}
 
@@ -326,10 +326,10 @@ export function GoogleDriveCard() {
       >
         {(busy || loading) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {connected
-          ? t("app.integrations.disconnect", "Отключить")
+          ? t("integrationsUi.disconnect", "Disconnect")
           : reconnectRequired
-            ? t("app.integrations.reconnect", "Подключить повторно")
-            : t("app.integrations.connect", "Подключить")}
+            ? t("integrationsUi.reconnect", "Reconnect")
+            : t("integrationsUi.connect", "Connect")}
       </Button>
     </div>
   );
