@@ -88,7 +88,7 @@ export function YouGileCard() {
             <Label>{t("app.integrations.yougile.project")}</Label>
             <Select value={projectId} onValueChange={(value) => {
               setProjectId(value);
-              if (teamspaceId) void run(async () => {
+              if (teamspaceId) void runInspect(async () => {
                 const structure = await inspectFn({ data: { teamspace_id: teamspaceId, project_id: value } });
                 setState((old: any) => ({ ...old, ...structure }));
               });
