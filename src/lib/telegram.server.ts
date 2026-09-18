@@ -700,8 +700,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     "\nTo create a task, emit a line [[task:Title||priority||YYYY-MM-DD||description||assigneeIdOrName||project||department||workspaceIdOrName]] (priority low|medium|high|urgent; due date is required and cannot be earlier than CURRENT DATE; empty fields stay empty)." +
     "\nWorkspace field (8th): the id or exact name from WORKSPACES. Whenever the message names a workspace (\"для воркспейса X\", \"воркспейс: X\", \"в пространстве X\"), you MUST put that workspace's id there — never fall back to the default. If not mentioned use the default workspace." +
     "\nTitle must contain ONLY the work itself: never include the workspace name or phrases like \"для воркспейса …\", \"воркспейс: …\", and never append the workspace with a dash." +
-    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS (each task is labelled with its workspace)." +
-    "\nSTATUS CHANGES ARE MANDATORY TOKENS: whenever the user says a task is started, in progress, finished, done, closed, ready, sent for review, or should go back to backlog — immediately emit [[task-update:TASK_ID||status=...]] for the matching task from OPEN TASKS. Wording: сделал/готово/выполнил/закрыл/завершил = done; начал/в работе/делаю = in_progress; на проверку/на ревью = review; вернуть/в бэклог = backlog. Never answer that you changed the status without emitting the token. Match the task by title even if worded loosely; only if several open tasks match equally, ask one short question naming them." +
+    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS or NOTIFIED TASKS (each task is labelled with its workspace)." +
+    "\nSTATUS CHANGES ARE MANDATORY TOKENS: whenever the user says a task is started, in progress, finished, done, closed, ready, sent for review, or should go back to backlog — immediately emit [[task-update:TASK_ID||status=...]] for the matching task from OPEN TASKS or NOTIFIED TASKS. Wording: сделал/готово/выполнил/закрыл/завершил = done; начал/в работе/делаю = in_progress; на проверку/на ревью = review; вернуть/в бэклог = backlog. Never answer that you changed the status without emitting the token. Match the task by title even if worded loosely; only if several open tasks match equally, ask one short question naming them." +
     "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nWhen CREATING a task, if the title, assignee or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
     "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status, deadline and workspace." +
@@ -920,7 +920,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     : {};
 
   if (!clean.trim()) clean = lang === "en" ? "✅ Done." : "✅ Готово.";
-  await sendMessage(chatId, clean.slice(0, 3800), openTracker);
+  await sendMessage(chatId, clean.slice(0, 3800), withMenu(lang, openTracker));
 }
 
 // ---------------- callbacks ----------------
@@ -1222,6 +1222,12 @@ export async function handleUpdate(update: any) {
     "📋 tasks": "/tasks",
     "🚀 приложение": "/app",
     "🚀 app": "/app",
+    "➕ новая задача": "/new",
+    "➕ new task": "/new",
+    "✅ завершить": "/done",
+    "✅ complete": "/done",
+    "❓ помощь": "/help",
+    "❓ help": "/help",
   };
   const mapped = MENU_MAP[text.trim().toLowerCase()];
   if (mapped) text = mapped;
