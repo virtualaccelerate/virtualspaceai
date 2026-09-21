@@ -549,9 +549,13 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   // All workspaces of the user — the agent picks the right one from the message
   const { data: memRows } = await supabaseAdmin
     .from("teamspace_members")
-    .select("teamspace_id")
+    .select("teamspace_id, role")
     .eq("user_id", link.user_id);
   const spaceIds = Array.from(new Set(((memRows as any[]) ?? []).map((m) => m.teamspace_id)));
+  // A plain member only ever sees their own tasks; owner/admin see the whole workspace.
+  const managerSpaceIds = new Set(
+    ((memRows as any[]) ?? []).filter((m) => m.role === "owner" || m.role === "admin").map((m) => m.teamspace_id),
+  );
   if (link.teamspace_id && !spaceIds.includes(link.teamspace_id)) spaceIds.push(link.teamspace_id);
   const spaceMap = await spaceNames(spaceIds).catch(() => new Map<string, string>());
   const defaultSpaceId = link.teamspace_id ?? spaceIds[0] ?? null;
