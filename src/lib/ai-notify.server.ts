@@ -266,6 +266,9 @@ async function claim(input: {
   return !error;
 }
 
+/** Reports about the whole team go to owner/admin only. */
+const MANAGER_ONLY_TYPES = new Set(["team_brief", "owner_brief", "project_brief"]);
+
 const TYPE_ICON: Record<string, string> = {
   daily_brief: "☀️",
   evening_brief: "🌆",
