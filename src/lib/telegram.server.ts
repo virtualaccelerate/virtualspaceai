@@ -564,13 +564,13 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     spaceIds.length
       ? supabaseAdmin
           .from("tasks")
-          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .select("id, title, status, priority, due_date, assignee_name, assignee_id, user_id, project, department, teamspace_id")
           .in("teamspace_id", spaceIds)
           .neq("status", "done")
           .limit(80)
       : supabaseAdmin
           .from("tasks")
-          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .select("id, title, status, priority, due_date, assignee_name, assignee_id, user_id, project, department, teamspace_id")
           .eq("user_id", link.user_id)
           .is("teamspace_id", null)
           .neq("status", "done")
