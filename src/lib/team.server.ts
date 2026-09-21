@@ -76,6 +76,53 @@ export async function getTeamOverview(userId: string, requested?: string) {
   };
 }
 
+// ---------------- roles ----------------
+
+/** Role of the signed-in user in the active (or requested) workspace. */
+export async function getMyWorkspaceRole(userId: string, requested?: string) {
+  const db = await admin();
+  let teamspaceId = requested;
+  if (!teamspaceId) {
+    const { data } = await db.from("profiles").select("current_teamspace_id").eq("id", userId).maybeSingle();
+    teamspaceId = data?.current_teamspace_id ?? undefined;
+  }
+  if (!teamspaceId) return { teamspace_id: null, role: null as string | null, is_manager: false };
+  const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+  const role = await getWorkspaceRole(userId, teamspaceId);
+  return { teamspace_id: teamspaceId, role, is_manager: isManagerRole(role) };
+}
+
+/** Only the owner promotes a member to admin or demotes an admin back. */
+export async function setMemberRoleForUser(
+  userId: string,
+  input: { teamspace_id: string; user_id: string; role: "admin" | "member" },
+) {
+  const db = await admin();
+  const { data: ts } = await db
+    .from("teamspaces")
+    .select("id, owner_id")
+    .eq("id", input.teamspace_id)
+    .maybeSingle();
+  if (!ts) throw new Error("Рабочее пространство не найдено");
+  if (ts.owner_id !== userId) throw new Error("Менять роли может только владелец пространства");
+  if (input.user_id === ts.owner_id) throw new Error("Роль владельца изменить нельзя");
+
+  const { data: membership } = await db
+    .from("teamspace_members")
+    .select("id")
+    .eq("teamspace_id", input.teamspace_id)
+    .eq("user_id", input.user_id)
+    .maybeSingle();
+  if (!membership) throw new Error("Этот пользователь не участник пространства");
+
+  const { error } = await db
+    .from("teamspace_members")
+    .update({ role: input.role })
+    .eq("id", membership.id);
+  if (error) throw new Error(error.message);
+  return { ok: true, role: input.role };
+}
+
 // ---------------- performance cards ----------------
 
 export type MemberProjectStat = {
