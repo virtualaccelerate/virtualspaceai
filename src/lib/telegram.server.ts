@@ -873,9 +873,12 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       else if (field === "priority" && ["low", "medium", "high", "urgent"].includes(value)) patch.priority = value;
       else if (field === "status" && ["backlog", "in_progress", "review", "done"].includes(value)) patch.status = value;
       else if (field === "due_date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) patch.due_date = value;
-      else if (field === "assignee" && UUID.test(value)) patch.assignee_id = value;
+      else if (field === "assignee") {
+        if (UUID.test(value)) patch.assignee_id = value;
+        else assigneeName = value;
+      }
     }
-    if (!Object.keys(patch).length) continue;
+    if (!Object.keys(patch).length && !assigneeName) continue;
 
     const { data: existing } = await supabaseAdmin
       .from("tasks")
