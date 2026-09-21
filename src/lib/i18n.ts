@@ -203,6 +203,7 @@ const resources = {
       app: {
         nav: {
           chat: "Chat", chatSubtitle: "Team conversations",
+          mobileChat: "Chat", mobileOverview: "Overview", mobileTasks: "Tasks", mobileKnowledge: "Docs", mobileAgents: "Agents",
           communication: "Communication",
           workspace: "Workspace",
           overview: "Overview", overviewSubtitle: "Workspace insights",
@@ -548,6 +549,7 @@ const resources = {
       app: {
         nav: {
           chat: "Чат", chatSubtitle: "Командные переписки",
+          mobileChat: "Чат", mobileOverview: "Обзор", mobileTasks: "Задачи", mobileKnowledge: "База", mobileAgents: "Агенты",
           communication: "Коммуникация",
           workspace: "Рабочая область",
           overview: "Обзор", overviewSubtitle: "Обзор рабочей области",
@@ -870,6 +872,7 @@ const resources = {
       app: {
         nav: {
           chat: "Чат", chatSubtitle: "Командалық баарлашуулар",
+          mobileChat: "Чат", mobileOverview: "Шолу", mobileTasks: "Істер", mobileKnowledge: "Білім", mobileAgents: "Агенттер",
           communication: "Байланыс",
           workspace: "Жұмыс кеңістігі",
           overview: "Шолу", overviewSubtitle: "Жұмыс кеңістігінің шолуы",
@@ -1183,6 +1186,7 @@ const resources = {
       app: {
         nav: {
           chat: "Чат", chatSubtitle: "Команда баарлашуулары",
+          mobileChat: "Чат", mobileOverview: "Кароо", mobileTasks: "Иштер", mobileKnowledge: "Билим", mobileAgents: "Агенттер",
           communication: "Байланыш",
           workspace: "Иш мейкиндиги",
           overview: "Кароо", overviewSubtitle: "Иш мейкиндигинин талдоосу",
@@ -1496,6 +1500,7 @@ const resources = {
       app: {
         nav: {
           chat: "Chat", chatSubtitle: "Jamoa suhbatlari",
+          mobileChat: "Chat", mobileOverview: "Sharh", mobileTasks: "Vazifa", mobileKnowledge: "Bilim", mobileAgents: "Agentlar",
           communication: "Aloqa",
           workspace: "Ish maydoni",
           overview: "Umumiy koʻrinish", overviewSubtitle: "Ish maydoni tahlili",
@@ -1809,6 +1814,7 @@ const resources = {
       app: {
         nav: {
           chat: "Чат", chatSubtitle: "Гуфтугӯҳои даста",
+          mobileChat: "Чат", mobileOverview: "Шарҳ", mobileTasks: "Корҳо", mobileKnowledge: "Дониш", mobileAgents: "Агентҳо",
           communication: "Пайвастшавӣ",
           workspace: "Фазои корӣ",
           overview: "Шарҳ", overviewSubtitle: "Таҳлили фазои корӣ",
