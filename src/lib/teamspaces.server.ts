@@ -15,21 +15,51 @@ export async function deleteTeamspaceForUser(userId: string, teamspaceId: string
     .select("storage_path")
     .eq("teamspace_id", teamspaceId);
 
-  const [profilesResult, activityResult, conversationsResult, telegramResult] = await Promise.all([
+  // Detach user-level references that must survive the workspace.
+  const [profilesResult, telegramResult] = await Promise.all([
     supabaseAdmin.from("profiles").update({ current_teamspace_id: null }).eq("current_teamspace_id", teamspaceId),
-    supabaseAdmin.from("activity_events").update({ teamspace_id: null }).eq("teamspace_id", teamspaceId),
-    supabaseAdmin.from("chat_conversations").update({ teamspace_id: null }).eq("teamspace_id", teamspaceId),
     supabaseAdmin.from("telegram_links").update({ teamspace_id: null }).eq("teamspace_id", teamspaceId),
   ]);
-  const referenceError = [profilesResult, activityResult, conversationsResult, telegramResult]
-    .find((result) => result.error)?.error;
+  const referenceError = [profilesResult, telegramResult].find((result) => result.error)?.error;
   if (referenceError) throw new Error(referenceError.message);
 
-  const { error: logError } = await supabaseAdmin
-    .from("ai_notification_log")
-    .delete()
+  // Remove everything that belongs to the workspace, deepest dependencies first.
+  const { data: taskRows } = await supabaseAdmin
+    .from("tasks")
+    .select("id")
     .eq("teamspace_id", teamspaceId);
-  if (logError) throw new Error(logError.message);
+  const taskIds = (taskRows ?? []).map((row) => row.id);
+
+  for (let index = 0; index < taskIds.length; index += 200) {
+    const chunk = taskIds.slice(index, index + 200);
+    const [remindersResult, calendarResult] = await Promise.all([
+      supabaseAdmin.from("task_reminders").delete().in("task_id", chunk),
+      supabaseAdmin.from("google_calendar_links").delete().in("task_id", chunk),
+    ]);
+    const taskChildError = [remindersResult, calendarResult].find((result) => result.error)?.error;
+    if (taskChildError) throw new Error(taskChildError.message);
+  }
+
+  const scopedTables = [
+    "notifications",
+    "ai_notification_log",
+    "activity_events",
+    "chat_messages",
+    "chat_conversations",
+    "financial_chat_messages",
+    "financial_sources",
+    "documents",
+    "pending_members",
+    "task_sync_sources",
+    "tasks",
+    "teamspace_members",
+  ] as const;
+
+  for (const table of scopedTables) {
+    const { error } = await supabaseAdmin.from(table).delete().eq("teamspace_id", teamspaceId);
+    if (error) throw new Error(`${table}: ${error.message}`);
+  }
+
 
   const { error: deleteError } = await supabaseAdmin.from("teamspaces").delete().eq("id", teamspaceId);
   if (deleteError) throw new Error(deleteError.message);
