@@ -106,6 +106,17 @@ export async function createTaskForUser(
 ) {
   const db = await admin();
   const teamspaceId = await activeTeamspace(userId, data.teamspace_id);
+  {
+    // Only owner/admin may hand work to somebody else; a member creates tasks for themselves.
+    const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+    const role = await getWorkspaceRole(userId, teamspaceId);
+    const assigningOther = Boolean(
+      (data.assignee_id && data.assignee_id !== userId) || (!data.assignee_id && data.assignee_name),
+    );
+    if (!isManagerRole(role) && assigningOther) {
+      throw new Error("Назначать задачи другим может владелец или администратор");
+    }
+  }
   const status = data.status ?? "backlog";
   // A name without an account (pending member from an import) is kept as a label.
   const name = (await assigneeName(teamspaceId, data.assignee_id)) ?? data.assignee_name ?? null;
