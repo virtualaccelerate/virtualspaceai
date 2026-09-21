@@ -296,6 +296,17 @@ function TasksPage() {
       if (!cancelled) setUserId(session.user.id);
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
+      let manager = true;
+      if (ts) {
+        const { data: membership } = await supabase
+          .from("teamspace_members")
+          .select("role")
+          .eq("teamspace_id", ts)
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        manager = membership?.role === "owner" || membership?.role === "admin";
+        if (!cancelled) setIsManager(manager);
+      }
       // Tasks and members load in parallel — the board no longer waits for the member list.
       let query = supabase.from("tasks").select("*").eq("external_archived", false);
       query = ts ? query.eq("teamspace_id", ts) : query.eq("user_id", session.user.id);
