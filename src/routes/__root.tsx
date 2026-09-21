@@ -7,11 +7,19 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { applyClientLanguage } from "@/lib/i18n";
+import { applyClientLanguage, langFromAcceptLanguage, langFromCookieString, setLanguage } from "@/lib/i18n";
+
+// Resolve the language before the first render so SSR and hydration agree and
+// no English text flashes before the user's language is applied.
+const resolveLanguage = createIsomorphicFn()
+  .server(() => langFromCookieString(getRequestHeader("cookie")) ?? langFromAcceptLanguage(getRequestHeader("accept-language")) ?? "en")
+  .client(() => langFromCookieString(document.cookie) ?? "en");
 
 function NotFoundComponent() {
   return (
