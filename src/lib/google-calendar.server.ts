@@ -114,10 +114,14 @@ function eventBody(task: TaskRow) {
     extendedProperties: { private: { virtualSpaceTaskId: task.id } }, status: "confirmed" };
 }
 export async function syncTaskToCalendar(task: TaskRow, previousUserId?: string | null) {
-  if (task.external_source || !task.due_date) return;
+  if (task.external_source) return;
   const targetUserId = task.assignee_id ?? task.user_id;
   const db = await admin();
   if (previousUserId && previousUserId !== targetUserId) await deleteTaskCalendarEvent(task.id, previousUserId).catch(() => {});
+  if (!task.due_date) {
+    await deleteTaskCalendarEvent(task.id, targetUserId).catch(() => {});
+    return;
+  }
   const connection = await getConnectionKeyForUser(targetUserId, CONNECTOR_ID);
   if (!connection) return;
   const { data: settings } = await db.from("google_calendar_settings").select("calendar_id").eq("user_id", targetUserId).maybeSingle();
@@ -170,6 +174,15 @@ export async function syncUserCalendar(userId: string) {
       updated++;
     }
     await db.from("google_calendar_links").update({ etag: event.etag ?? null, event_updated_at: event.updated ?? null, last_sync_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", link.id);
+  }
+  const linkedTaskIds = new Set((links ?? []).map((link: any) => link.task_id));
+  const { data: tasks } = await db.from("tasks")
+    .select("id,user_id,assignee_id,title,description,due_date,status,priority,external_source")
+    .not("due_date", "is", null)
+    .is("external_source", null)
+    .or(`assignee_id.eq.${userId},and(assignee_id.is.null,user_id.eq.${userId})`);
+  for (const task of tasks ?? []) {
+    if (!linkedTaskIds.has(task.id)) await syncTaskToCalendar(task).catch(() => {});
   }
   const now = new Date().toISOString();
   await db.from("google_calendar_settings").upsert({ user_id: userId, calendar_id: calendarId, last_sync_at: now, last_error: null, reconnect_required: false, updated_at: now });
