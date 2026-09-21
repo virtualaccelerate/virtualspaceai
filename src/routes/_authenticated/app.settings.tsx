@@ -1,10 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Settings as SettingsIcon, User, UserPlus, Building2, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { getActiveTeamspaceId, listMyTeamspaces, removeTeamspaceLogo, uploadTeamspaceLogo, type TeamspaceSummary } from "@/lib/active-teamspace";
+import { deleteTeamspace } from "@/lib/teamspaces.functions";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   component: SettingsPage,
@@ -13,9 +19,11 @@ export const Route = createFileRoute("/_authenticated/app/settings")({
 
 function SettingsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [teamspace, setTeamspace] = useState<TeamspaceSummary | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const canManage = teamspace?.role === "owner" || teamspace?.role === "admin";
 
   const loadTeamspace = async () => {
@@ -51,6 +59,20 @@ function SettingsPage() {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const removeTeamspace = async () => {
+    if (!teamspace || teamspace.role !== "owner") return;
+    setDeleteBusy(true);
+    try {
+      const result = await deleteTeamspace({ data: { teamspaceId: teamspace.id } });
+      toast.success(t("app.settings.delete.success", "Рабочее пространство удалено"));
+      if (result.nextTeamspaceId) window.location.assign("/app");
+      else navigate({ to: "/onboarding", replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+      setDeleteBusy(false);
     }
   };
   const items = [
@@ -126,6 +148,36 @@ function SettingsPage() {
           </div>
         </div>
       </section>
+      {teamspace?.role === "owner" && (
+        <section className="mt-8 border-t border-destructive/30 pt-6">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-foreground">{t("app.settings.delete.title", "Удаление пространства")}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">{t("app.settings.delete.hint", "Все задачи, документы, чаты и настройки пространства будут удалены безвозвратно.")}</p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={deleteBusy} className="shrink-0">
+                  {deleteBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                  {t("app.settings.delete.button", "Удалить")}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("app.settings.delete.confirmTitle", "Удалить {{name}}?", { name: teamspace.name })}</AlertDialogTitle>
+                  <AlertDialogDescription>{t("app.settings.delete.confirmBody", "Отменить это действие невозможно. Все данные рабочего пространства будут удалены.")}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("common.cancel", "Отмена")}</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => void removeTeamspace()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    {t("app.settings.delete.confirm", "Удалить навсегда")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

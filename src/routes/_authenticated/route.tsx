@@ -425,11 +425,11 @@ function AuthenticatedLayout() {
       >
         <ul className="grid grid-cols-5 h-full">
           {[
-            { to: "/app", label: t("app.nav.chat", "Chat"), icon: MessageSquare, exact: true },
-            { to: "/app/overview", label: t("app.nav.overview"), icon: LayoutDashboard },
-            { to: "/app/tasks", label: t("app.nav.tasks"), icon: CheckSquare },
-            { to: "/app/docs", label: t("app.nav.knowledgeBase"), icon: BookOpen },
-            { to: "/app/agents", label: t("app.nav.aiAgents"), icon: Bot },
+            { to: "/app", label: t("app.nav.mobileChat", "Chat"), icon: MessageSquare, exact: true },
+            { to: "/app/overview", label: t("app.nav.mobileOverview", "Overview"), icon: LayoutDashboard },
+            { to: "/app/tasks", label: t("app.nav.mobileTasks", "Tasks"), icon: CheckSquare },
+            { to: "/app/docs", label: t("app.nav.mobileKnowledge", "Knowledge"), icon: BookOpen },
+            { to: "/app/agents", label: t("app.nav.mobileAgents", "Agents"), icon: Bot },
           ].map((item) => {
             const active = isActive(item.to, item.exact);
             return (
