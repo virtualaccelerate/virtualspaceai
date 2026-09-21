@@ -1010,7 +1010,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                                 {tk.priority && <span>{tk.priority}</span>}
                                 {tk.due_date && <span>{tk.due_date}</span>}
                                 {(tk.assignee_name || tk.assignee_id) && (
-                                  <span>{tk.assignee_name ?? t("app.chat.assigned", "назначен участник")}</span>
+                                  <span>{tk.assignee_name ?? t("app.chat.assigned", "assigned member")}</span>
                                 )}
                                 {tk.project && <span>#{tk.project}</span>}
                                 {tk.department && <span>{tk.department}</span>}
@@ -1032,13 +1032,13 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                               onClick={() => void acceptTask(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >
-                              {acceptingIdx === `${i}-${j}` ? "…" : t("app.chat.acceptTask", "Принять")}
+                              {acceptingIdx === `${i}-${j}` ? "…" : t("app.chat.acceptTask", "Accept")}
                             </button>
                             <button
                               onClick={() => rejectTask(i, j)}
                               className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
                             >
-                              {t("app.chat.rejectTask", "Отклонить")}
+                              {t("app.chat.rejectTask", "Reject")}
                             </button>
                           </div>
                         ))}
@@ -1047,7 +1047,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                             onClick={() => void acceptAll(i)}
                             className="text-[11px] font-semibold text-primary hover:underline"
                           >
-                            {t("app.chat.acceptAllTasks", "Принять все")}
+                            {t("app.chat.acceptAllTasks", "Accept all")}
                           </button>
                         )}
                       </div>
@@ -1058,13 +1058,13 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                           <div key={`${u.id}-${j}`} className="rounded-xl border border-border bg-card/60 px-3 py-2 flex items-start gap-2">
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-medium text-foreground">
-                                {u.title ?? t("app.chat.updateTask", "Изменение задачи")}
+                                {u.title ?? t("app.chat.updateTask", "Task update")}
                               </div>
                               <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2 mt-0.5">
                                 {u.status && <span>{u.status}</span>}
                                 {u.priority && <span>{u.priority}</span>}
                                 {u.due_date && <span>{u.due_date}</span>}
-                                {u.assignee_id && <span>{t("app.chat.assigned", "назначен участник")}</span>}
+                                {u.assignee_id && <span>{t("app.chat.assigned", "assigned member")}</span>}
                                 {u.project && <span>#{u.project}</span>}
                                 {u.department && <span>{u.department}</span>}
                               </div>
@@ -1074,13 +1074,13 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                               onClick={() => void applyUpdate(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >
-                              {acceptingIdx === `u${i}-${j}` ? "…" : t("app.chat.applyChange", "Применить")}
+                              {acceptingIdx === `u${i}-${j}` ? "…" : t("app.chat.applyChange", "Apply")}
                             </button>
                             <button
                               onClick={() => rejectUpdate(i, j)}
                               className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
                             >
-                              {t("app.chat.rejectTask", "Отклонить")}
+                              {t("app.chat.rejectTask", "Reject")}
                             </button>
                           </div>
                         ))}

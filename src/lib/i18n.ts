@@ -328,6 +328,8 @@ const resources = {
           newChat: "New chat", history: "History", noHistory: "No previous chats yet",
           confirmDelete: "Delete this chat?", attach: "Attach file — synced to Knowledge Base",
           agentDocs: "Docs", agentTasks: "Tasks", agentAdvisor: "Advisor", clearAgent: "clear",
+          assigned: "assigned member", acceptTask: "Accept", rejectTask: "Reject",
+          acceptAllTasks: "Accept all", updateTask: "Task update", applyChange: "Apply",
         },
         agents: {
           title: "AI Agents",
@@ -674,6 +676,8 @@ const resources = {
           newChat: "Новый чат", history: "История", noHistory: "Пока нет прошлых чатов",
           confirmDelete: "Удалить этот чат?", attach: "Прикрепить файл — синхронизируется с Базой знаний",
           agentDocs: "Документы", agentTasks: "Задачи", agentAdvisor: "Советник", clearAgent: "снять",
+          assigned: "назначен участник", acceptTask: "Принять", rejectTask: "Отклонить",
+          acceptAllTasks: "Принять все", updateTask: "Изменение задачи", applyChange: "Применить",
         },
         agents: {
           title: "AI Агенты",
@@ -996,6 +1000,8 @@ const resources = {
           newChat: "Жаңа чат", history: "Тарих", noHistory: "Әзірге чаттар жоқ",
           confirmDelete: "Осы чатты жоямыз ба?", attach: "Файлды тіркеу — Білім қорымен синхрондалады",
           agentDocs: "Құжаттар", agentTasks: "Тапсырмалар", agentAdvisor: "Кеңесші", clearAgent: "алып тастау",
+          assigned: "қатысушы тағайындалды", acceptTask: "Қабылдау", rejectTask: "Қабылдамау",
+          acceptAllTasks: "Барлығын қабылдау", updateTask: "Тапсырманы өзгерту", applyChange: "Қолдану",
         },
         agents: {
           title: "AI Агенттер",
@@ -1310,6 +1316,8 @@ const resources = {
           newChat: "Жаңы чат", history: "Тарых", noHistory: "Азырынча чаттар жок",
           confirmDelete: "Бул чатты өчүрөбүзбү?", attach: "Файл тиркөө — Билим базасы менен синхрондолот",
           agentDocs: "Документтер", agentTasks: "Тапшырмалар", agentAdvisor: "Кеңешчи", clearAgent: "алып салуу",
+          assigned: "катышуучу дайындалды", acceptTask: "Кабыл алуу", rejectTask: "Четке кагуу",
+          acceptAllTasks: "Баарын кабыл алуу", updateTask: "Тапшырманы өзгөртүү", applyChange: "Колдонуу",
         },
         agents: {
           title: "AI Агенттер",
@@ -1624,6 +1632,8 @@ const resources = {
           newChat: "Yangi chat", history: "Tarix", noHistory: "Hozircha chatlar yo'q",
           confirmDelete: "Ushbu chat o'chirilsinmi?", attach: "Fayl biriktirish — Bilim bazasi bilan sinxronlanadi",
           agentDocs: "Hujjatlar", agentTasks: "Vazifalar", agentAdvisor: "Maslahatchi", clearAgent: "o'chirish",
+          assigned: "ishtirokchi tayinlandi", acceptTask: "Qabul qilish", rejectTask: "Rad etish",
+          acceptAllTasks: "Barchasini qabul qilish", updateTask: "Vazifani o‘zgartirish", applyChange: "Qo‘llash",
         },
         agents: {
           title: "AI Agentlar",
@@ -1938,6 +1948,8 @@ const resources = {
           newChat: "Чати нав", history: "Таърих", noHistory: "Ҳоло чатҳо нест",
           confirmDelete: "Ин чатро нест мекунед?", attach: "Замима кардани файл — бо Пойгоҳи дониш ҳамоҳанг мешавад",
           agentDocs: "Ҳуҷҷатҳо", agentTasks: "Вазифаҳо", agentAdvisor: "Мушовир", clearAgent: "тоза кардан",
+          assigned: "иштирокчӣ таъин шуд", acceptTask: "Қабул кардан", rejectTask: "Рад кардан",
+          acceptAllTasks: "Ҳамаро қабул кардан", updateTask: "Тағйири вазифа", applyChange: "Татбиқ кардан",
         },
         agents: {
           title: "AI Агентҳо",
