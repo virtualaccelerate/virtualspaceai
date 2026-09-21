@@ -221,6 +221,13 @@ export async function deleteTaskForUser(userId: string, id: string) {
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
+  {
+    const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+    const role = await getWorkspaceRole(userId, current.teamspace_id);
+    if (!isManagerRole(role) && current.user_id !== userId) {
+      throw new Error("Удалять чужие задачи может владелец или администратор");
+    }
+  }
   const { deleteTaskCalendarEvent } = await import("./google-calendar.server");
   await deleteTaskCalendarEvent(id).catch(() => {});
   const { error } = await db.from("tasks").delete().eq("id", id);
