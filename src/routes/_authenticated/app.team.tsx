@@ -116,6 +116,12 @@ function TeamPage() {
         ))}
       </div>
 
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4 text-xs text-[color:var(--muted-foreground)] space-y-1">
+        <div className="flex items-center gap-2"><Crown className="h-3.5 w-3.5" /> {t("workspaceUi.team.legendOwner", "Владелец — создал пространство и управляет им целиком.")}</div>
+        <div className="flex items-center gap-2"><Shield className="h-3.5 w-3.5" /> {t("workspaceUi.team.legendAdmin", "Администратор — назначает задачи и получает ежедневный отчёт по всей команде.")}</div>
+        <div className="flex items-center gap-2"><UserIcon className="h-3.5 w-3.5" /> {t("workspaceUi.team.legendMember", "Участник — видит только свои задачи и отчёт только о своей работе.")}</div>
+      </div>
+
       <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] divide-y divide-[color:var(--border)]">
         {data.members.map((m) => (
           <div key={m.id} className="flex flex-wrap items-center gap-3 p-4">
