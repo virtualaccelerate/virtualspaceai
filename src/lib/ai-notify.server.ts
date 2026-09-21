@@ -312,6 +312,18 @@ export async function runAiNotifications(
       const member = snap.members.find((m) => m.user_id === item.user_id);
       if (!member || !item.title || !item.text) continue;
       if (opts?.onlyUserId && member.user_id !== opts.onlyUserId) continue;
+
+      // Role scope: managers see the team, a member only ever hears about their own tasks.
+      const isManager = member.role === "owner" || member.role === "admin";
+      if (!isManager && MANAGER_ONLY_TYPES.has(item.type)) continue;
+      if (item.type === "owner_brief" && member.role !== "owner") continue;
+      if (!isManager) {
+        const referenced = (item.task_ids ?? [])
+          .map((id) => snap.payload.tasks.find((task) => task.id === id))
+          .filter(Boolean) as { assignee_id: string | null }[];
+        if (referenced.length && !referenced.some((task) => task.assignee_id === member.user_id)) continue;
+      }
+
       const count = perUser.get(member.user_id) ?? 0;
       if (count >= 3) continue;
 
