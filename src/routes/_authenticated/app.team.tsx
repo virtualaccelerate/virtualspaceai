@@ -19,6 +19,8 @@ function initials(name?: string | null, email?: string | null) {
 function TeamPage() {
   const { t } = useTranslation();
   const load = useServerFn(loadTeamOverview);
+  const changeRole = useServerFn(setMemberRole);
+  const [roleBusy, setRoleBusy] = useState<string | null>(null);
   const [data, setData] = useState<Overview>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
