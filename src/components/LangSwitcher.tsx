@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Globe, Check } from "lucide-react";
-import { LANGUAGES } from "@/lib/i18n";
+import { LANGUAGES, persistLanguage } from "@/lib/i18n";
 
 export function LangSwitcher({ compact = false }: { compact?: boolean }) {
   const { i18n } = useTranslation();
@@ -37,7 +37,7 @@ export function LangSwitcher({ compact = false }: { compact?: boolean }) {
               key={l.code}
               onClick={() => {
                 void i18n.changeLanguage(l.code);
-                try { localStorage.setItem("i18nextLng", l.code); } catch { /* ignore */ }
+                persistLanguage(l.code);
                 setOpen(false);
               }}
               className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition"

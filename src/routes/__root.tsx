@@ -7,11 +7,19 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { applyClientLanguage } from "@/lib/i18n";
+import { applyClientLanguage, langFromAcceptLanguage, langFromCookieString, setLanguage } from "@/lib/i18n";
+
+// Resolve the language before the first render so SSR and hydration agree and
+// no English text flashes before the user's language is applied.
+const resolveLanguage = createIsomorphicFn()
+  .server(() => langFromCookieString(getRequestHeader("cookie")) ?? langFromAcceptLanguage(getRequestHeader("accept-language")) ?? "en")
+  .client(() => langFromCookieString(document.cookie) ?? "en");
 
 function NotFoundComponent() {
   return (
@@ -105,8 +113,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const lang = resolveLanguage();
+  setLanguage(lang);
   return (
-    <html lang="en">
+    <html lang={lang}>
       <head>
         <HeadContent />
       </head>
@@ -120,15 +130,16 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Server and client resolve the same language from the cookie, so the very
+  // first render is already translated and hydration stays in sync.
+  setLanguage(resolveLanguage());
 
   useEffect(() => {
-    // Apply the detected language only after hydration has fully settled,
-    // otherwise streamed subtrees hydrate against different text. Waiting for
-    // window "load" plus a settle delay lets streamed Suspense boundaries
-    // (e.g. catalog sections) finish hydrating before any text changes.
+    // Only first-time visitors without a language cookie need detection; it
+    // runs after hydration has settled so streamed subtrees stay consistent.
     let timer = 0;
     const schedule = () => {
-      timer = window.setTimeout(applyClientLanguage, 800);
+      timer = window.setTimeout(applyClientLanguage, 300);
     };
     if (document.readyState === "complete") schedule();
     else window.addEventListener("load", schedule, { once: true });
