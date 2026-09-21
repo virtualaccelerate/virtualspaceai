@@ -6,11 +6,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { useQueryClient } from "@tanstack/react-query";
 
+function inviteCodeFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const code = new URLSearchParams(window.location.search).get("code");
+  return code && code.trim() ? code.trim() : null;
+}
+
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
   beforeLoad: async () => {
+    const code = inviteCodeFromUrl();
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) {
+      // Keep the invite code through sign-in/sign-up so the link still works.
+      throw redirect({ href: code ? `/auth?next=${encodeURIComponent(`/onboarding?code=${code}`)}` : "/auth" });
+    }
+    // With an invite code we always show the join step, even for users who
+    // already belong to another workspace.
+    if (code) return { user: data.user };
     const { data: membership } = await supabase
       .from("teamspace_members")
       .select("teamspace_id")
@@ -56,15 +69,33 @@ function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [autoJoining, setAutoJoining] = useState(() => Boolean(inviteCodeFromUrl()));
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const c = params.get("code");
-    if (c) {
-      setCode(c);
-      setTab("join");
-    }
-  }, []);
+    const c = inviteCodeFromUrl();
+    if (!c) return;
+    setCode(c);
+    setTab("join");
+    // Invite links join straight away — no extra step for the new member.
+    let cancelled = false;
+    (async () => {
+      try {
+        const { joinTeamspaceByCodeFn } = await import("@/lib/teamspace-join.functions");
+        await joinTeamspaceByCodeFn({ data: { code: c } });
+        if (cancelled) return;
+        await queryClient.invalidateQueries();
+        navigate({ to: "/app", replace: true });
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Invalid invite code");
+        setAutoJoining(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, queryClient]);
+
 
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -112,6 +143,17 @@ function OnboardingPage() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   };
+
+  if (autoJoining) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-3">
+        <VirtualSpaceLogo className="text-primary" size={30} />
+        <div className="inline-flex items-center gap-2 text-sm text-white/70">
+          <Loader2 className="h-4 w-4 animate-spin" /> Joining workspace…
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
