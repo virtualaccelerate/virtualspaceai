@@ -591,6 +591,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   ]);
 
   const tasks = ((tasksRes.data as any[]) ?? [])
+    .filter((x) => managerSpaceIds.has(x.teamspace_id) || x.assignee_id === link.user_id || x.user_id === link.user_id)
     .map(
       (x) =>
         `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"}${x.project ? `/проект ${x.project}` : ""}${x.department ? `/${x.department}` : ""}/пространство "${spaceMap.get(x.teamspace_id) ?? "личное"}"]`,
