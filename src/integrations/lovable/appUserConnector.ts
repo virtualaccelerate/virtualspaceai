@@ -73,6 +73,7 @@ export interface CallAsAppUserParams {
   connectorId: string;
   path: string;
   init?: RequestInit;
+  requiredScopes?: string[];
 }
 
 export async function callAsAppUser({
@@ -81,12 +82,20 @@ export async function callAsAppUser({
   connectorId,
   path,
   init,
+  requiredScopes,
 }: CallAsAppUserParams): Promise<Response> {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const headers = new Headers(init?.headers);
   headers.set("Authorization", `Bearer ${requireApiKey()}`);
   headers.set("X-Connection-Api-Key", connectionAPIKey);
+  if (requiredScopes?.length) headers.set("X-Lovable-Required-Scopes", requiredScopes.join(" "));
   return fetch(`${gatewayBaseUrl}/${connectorId}${normalizedPath}`, { ...init, headers });
+}
+
+export async function appUserReconnectRequired(res: Response): Promise<boolean> {
+  if (res.status !== 401) return false;
+  const body = (await res.clone().json().catch(() => null)) as { type?: unknown } | null;
+  return typeof body?.type === "string" && body.type.startsWith("credential_");
 }
 
 export interface DisconnectAppUserParams {
