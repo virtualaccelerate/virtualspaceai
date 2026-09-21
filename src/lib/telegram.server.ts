@@ -896,6 +896,26 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       continue;
     }
 
+    // "назначь Бермет" — match the spoken name against the task's workspace team list
+    if (assigneeName) {
+      const { matchMember } = await import("./task-import.server");
+      const found = matchMember(assigneeName, roster.filter((m) => m.teamspace_id === taskSpace));
+      if (found) {
+        patch.assignee_id = found.id;
+        patch.assignee_name = null;
+      } else {
+        updateErrors.push(
+          lang === "en"
+            ? `${assigneeName}: not in this workspace`
+            : `${assigneeName}: нет такого участника в этом пространстве`,
+        );
+      }
+    }
+    if (typeof patch.assignee_id === "string" && !roster.some((m) => m.id === patch.assignee_id && m.teamspace_id === taskSpace)) {
+      delete patch.assignee_id;
+    }
+    if (!Object.keys(patch).length) continue;
+
     // Tasks mirrored from YouGile / Trello are managed there — push the status back
     const { isExternalTask, externalLabel, pushExternalStatus } = await import("./external-tasks.server");
     if (isExternalTask((existing as any).external_source)) {
