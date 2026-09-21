@@ -69,15 +69,33 @@ function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [autoJoining, setAutoJoining] = useState(() => Boolean(inviteCodeFromUrl()));
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const c = params.get("code");
-    if (c) {
-      setCode(c);
-      setTab("join");
-    }
-  }, []);
+    const c = inviteCodeFromUrl();
+    if (!c) return;
+    setCode(c);
+    setTab("join");
+    // Invite links join straight away — no extra step for the new member.
+    let cancelled = false;
+    (async () => {
+      try {
+        const { joinTeamspaceByCodeFn } = await import("@/lib/teamspace-join.functions");
+        await joinTeamspaceByCodeFn({ data: { code: c } });
+        if (cancelled) return;
+        await queryClient.invalidateQueries();
+        navigate({ to: "/app", replace: true });
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Invalid invite code");
+        setAutoJoining(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, queryClient]);
+
 
 
   const handleCreate = async (e: React.FormEvent) => {
