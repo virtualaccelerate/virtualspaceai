@@ -684,7 +684,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
             email: p?.email ?? null,
             teamspace_id: m.teamspace_id,
           });
-          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"`;
+          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" email="${p?.email ?? ""}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"${m.user_id === link.user_id ? " (this is the user writing to you — \"я\"/\"me\")" : ""}`;
         })
         .join("\n");
     }
@@ -718,7 +718,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nWhen CREATING a task, if the title, assignee or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
     "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status, deadline and workspace." +
-    "\nCALENDAR: if the user explicitly asks to create or schedule a meeting, infer title, start/end in Asia/Bishkek and attendee emails from TEAM MEMBERS. Emit [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. Date and time are required; ask one short clarification if missing. Default duration is one hour. Do not use this token for tasks." +
+    "\nCALENDAR: if the user asks to create or schedule a meeting, emit [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. ONLY the date and time are required — if they are present, you MUST emit the token immediately in the same reply. Never ask for the meeting title: if it is not given, use a sensible short default (\"Встреча\" / \"Meeting\", or the workspace name). Attendees are optional: leave the emails field empty when nobody is named; when people are named (including \"я\", \"me\"), resolve their emails from TEAM MEMBERS and skip names you cannot resolve. Never ask the same clarification twice — if you already asked once, create the meeting with defaults. Default duration is one hour. Do not use this token for tasks." +
 
     (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
     spacesBlock +
@@ -962,9 +962,10 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       const event = await createMeeting(link.user_id, { title, start, end, description: description || undefined, attendees: emails ? emails.split(",").map((email) => email.trim()).filter(Boolean) : undefined });
       meetingResults.push(`${event.title}${event.url ? `\n${event.url}` : ""}`);
     } catch (error) {
-      updateErrors.push(error instanceof Error && error.message.includes("RECONNECT")
+      const raw = error instanceof Error ? error.message : String(error);
+      updateErrors.push(raw.includes("RECONNECT")
         ? (lang === "en" ? "Connect Google Calendar in Integrations" : "Подключите Google Calendar в Интеграциях")
-        : (lang === "en" ? "Meeting was not created" : "Не удалось создать встречу"));
+        : `${lang === "en" ? "Meeting was not created" : "Не удалось создать встречу"}: ${raw.slice(0, 200)}`);
     }
   }
   let clean = reply.replace(taskRe, "").replace(meetingRe, "").replace(/[*_`#]/g, "").replace(/\n{3,}/g, "\n\n").trim();
