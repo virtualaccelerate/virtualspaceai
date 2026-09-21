@@ -326,7 +326,7 @@ function TasksPage() {
       if (error) {
         toast.error(error.message);
       } else if (!cancelled) {
-        setTasks((data ?? []) as Task[]);
+        setTasks(scopeToRole((data ?? []) as Task[], session.user.id, manager));
       }
       if (!cancelled) setLoading(false);
     })();
