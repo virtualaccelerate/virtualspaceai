@@ -678,6 +678,12 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       teamBlock = ((members as any[]) ?? [])
         .map((m) => {
           const p = ((profs as any[]) ?? []).find((x) => x.id === m.user_id);
+          roster.push({
+            id: m.user_id,
+            name: p?.full_name || p?.email || "",
+            email: p?.email ?? null,
+            teamspace_id: m.teamspace_id,
+          });
           return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"`;
         })
         .join("\n");
