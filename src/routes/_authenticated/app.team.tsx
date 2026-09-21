@@ -168,9 +168,9 @@ function TeamPage() {
         ))}
       </div>
 
-      <PendingMembers teamspaceId={tsId} />
+      {isManager && <PendingMembers teamspaceId={tsId} />}
 
-      <TeamPerformance teamspaceId={tsId} />
+      {isManager && <TeamPerformance teamspaceId={tsId} />}
     </div>
   );
 }
