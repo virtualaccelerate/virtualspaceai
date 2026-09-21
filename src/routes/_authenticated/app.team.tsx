@@ -135,9 +135,21 @@ function TeamPage() {
               </div>
               <div className="text-xs text-[color:var(--muted-foreground)] truncate">{m.email}</div>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-md bg-[color:var(--muted)] px-2 py-1 text-xs capitalize">
-              {roleIcon(m.role)} {m.role}
-            </span>
+            {isOwner && m.role !== "owner" ? (
+              <select
+                value={m.role === "admin" ? "admin" : "member"}
+                disabled={roleBusy === m.id}
+                onChange={(event) => updateRole(m.id, event.target.value as "admin" | "member")}
+                className="rounded-md border border-[color:var(--border)] bg-[color:var(--background)] px-2 py-1 text-xs"
+              >
+                <option value="admin">{t("workspaceUi.team.roleAdmin", "Администратор")}</option>
+                <option value="member">{t("workspaceUi.team.roleMember", "Участник")}</option>
+              </select>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-md bg-[color:var(--muted)] px-2 py-1 text-xs capitalize">
+                {roleIcon(m.role)} {m.role}
+              </span>
+            )}
             {m.telegram_linked && (
               <span className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary px-2 py-1 text-xs">
                 <Send className="h-3 w-3" /> Telegram
