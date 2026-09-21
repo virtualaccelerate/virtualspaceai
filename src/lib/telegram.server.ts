@@ -663,6 +663,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
 
   // Team members across all workspaces, so the agent can assign by name
   let teamBlock = "";
+  const roster: { id: string; name: string; email: string | null; teamspace_id: string }[] = [];
   if (spaceIds.length) {
     const { data: members } = await supabaseAdmin
       .from("teamspace_members")
@@ -677,6 +678,12 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       teamBlock = ((members as any[]) ?? [])
         .map((m) => {
           const p = ((profs as any[]) ?? []).find((x) => x.id === m.user_id);
+          roster.push({
+            id: m.user_id,
+            name: p?.full_name || p?.email || "",
+            email: p?.email ?? null,
+            teamspace_id: m.teamspace_id,
+          });
           return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"`;
         })
         .join("\n");
@@ -755,7 +762,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     const [title, priority, due, description, assignee, project, department, space] = match[1].split("||");
     if (!title?.trim()) continue;
     const assigneeRaw = (assignee ?? "").trim();
-    const assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
+    let assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
     // Resolve the workspace named in the 8th field; fall back to the message text, then the default
     const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
     const matchSpaceName = (raw: string): string | null => {
@@ -788,6 +795,17 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       if (fromText) targetSpace = fromText;
     }
     const targetSpaceName = targetSpace ? spaceMap.get(targetSpace) : null;
+    // A written name ("Бермет", "bermet") is matched against the workspace team list,
+    // so the task lands on a real person instead of a plain text label.
+    if (!assigneeId && assigneeRaw) {
+      const { matchMember } = await import("./task-import.server");
+      const pool = roster.filter((m) => !targetSpace || m.teamspace_id === targetSpace);
+      const found = matchMember(assigneeRaw, pool);
+      if (found) assigneeId = found.id;
+    }
+    if (assigneeId && targetSpace && !roster.some((m) => m.id === assigneeId && m.teamspace_id === targetSpace)) {
+      assigneeId = null;
+    }
     // The model sometimes glues the workspace phrase into the title — strip it
     let cleanTitle = title
       .trim()
@@ -844,6 +862,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     const taskId = parts.shift() ?? "";
     if (!UUID.test(taskId)) continue;
     const patch: Record<string, unknown> = {};
+    let assigneeName = "";
     for (const part of parts) {
       const eq = part.indexOf("=");
       if (eq < 1) continue;
@@ -854,9 +873,12 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       else if (field === "priority" && ["low", "medium", "high", "urgent"].includes(value)) patch.priority = value;
       else if (field === "status" && ["backlog", "in_progress", "review", "done"].includes(value)) patch.status = value;
       else if (field === "due_date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) patch.due_date = value;
-      else if (field === "assignee" && UUID.test(value)) patch.assignee_id = value;
+      else if (field === "assignee") {
+        if (UUID.test(value)) patch.assignee_id = value;
+        else assigneeName = value;
+      }
     }
-    if (!Object.keys(patch).length) continue;
+    if (!Object.keys(patch).length && !assigneeName) continue;
 
     const { data: existing } = await supabaseAdmin
       .from("tasks")
@@ -873,6 +895,26 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       updateErrors.push(lang === "en" ? "Task not found" : "Задача не найдена");
       continue;
     }
+
+    // "назначь Бермет" — match the spoken name against the task's workspace team list
+    if (assigneeName) {
+      const { matchMember } = await import("./task-import.server");
+      const found = matchMember(assigneeName, roster.filter((m) => m.teamspace_id === taskSpace));
+      if (found) {
+        patch.assignee_id = found.id;
+        patch.assignee_name = null;
+      } else {
+        updateErrors.push(
+          lang === "en"
+            ? `${assigneeName}: not in this workspace`
+            : `${assigneeName}: нет такого участника в этом пространстве`,
+        );
+      }
+    }
+    if (typeof patch.assignee_id === "string" && !roster.some((m) => m.id === patch.assignee_id && m.teamspace_id === taskSpace)) {
+      delete patch.assignee_id;
+    }
+    if (!Object.keys(patch).length) continue;
 
     // Tasks mirrored from YouGile / Trello are managed there — push the status back
     const { isExternalTask, externalLabel, pushExternalStatus } = await import("./external-tasks.server");

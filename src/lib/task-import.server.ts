@@ -158,7 +158,8 @@ function latinKey(v: string) {
     .trim();
 }
 
-function matchMember(raw: string, members: { id: string; name: string; email: string | null }[]) {
+/** Resolve a written name ("Бермет", "bermet", "Бермету") to a workspace member. */
+export function matchMember(raw: string, members: { id: string; name: string; email: string | null }[]) {
   const s = raw.trim().toLowerCase();
   if (!s) return null;
   const key = latinKey(s);
