@@ -15,16 +15,15 @@ export async function deleteTeamspaceForUser(userId: string, teamspaceId: string
     .select("storage_path")
     .eq("teamspace_id", teamspaceId);
 
-  const nullableReferences = [
-    ["profiles", "current_teamspace_id"],
-    ["activity_events", "teamspace_id"],
-    ["chat_conversations", "teamspace_id"],
-    ["telegram_links", "teamspace_id"],
-  ] as const;
-  for (const [table, column] of nullableReferences) {
-    const { error } = await supabaseAdmin.from(table).update({ [column]: null }).eq(column, teamspaceId);
-    if (error) throw new Error(error.message);
-  }
+  const [profilesResult, activityResult, conversationsResult, telegramResult] = await Promise.all([
+    supabaseAdmin.from("profiles").update({ current_teamspace_id: null }).eq("current_teamspace_id", teamspaceId),
+    supabaseAdmin.from("activity_events").update({ teamspace_id: null }).eq("teamspace_id", teamspaceId),
+    supabaseAdmin.from("chat_conversations").update({ teamspace_id: null }).eq("teamspace_id", teamspaceId),
+    supabaseAdmin.from("telegram_links").update({ teamspace_id: null }).eq("teamspace_id", teamspaceId),
+  ]);
+  const referenceError = [profilesResult, activityResult, conversationsResult, telegramResult]
+    .find((result) => result.error)?.error;
+  if (referenceError) throw new Error(referenceError.message);
 
   const { error: logError } = await supabaseAdmin
     .from("ai_notification_log")
