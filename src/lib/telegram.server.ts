@@ -862,6 +862,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     const taskId = parts.shift() ?? "";
     if (!UUID.test(taskId)) continue;
     const patch: Record<string, unknown> = {};
+    let assigneeName = "";
     for (const part of parts) {
       const eq = part.indexOf("=");
       if (eq < 1) continue;
