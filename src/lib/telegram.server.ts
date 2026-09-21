@@ -795,6 +795,17 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       if (fromText) targetSpace = fromText;
     }
     const targetSpaceName = targetSpace ? spaceMap.get(targetSpace) : null;
+    // A written name ("Бермет", "bermet") is matched against the workspace team list,
+    // so the task lands on a real person instead of a plain text label.
+    if (!assigneeId && assigneeRaw) {
+      const { matchMember } = await import("./task-import.server");
+      const pool = roster.filter((m) => !targetSpace || m.teamspace_id === targetSpace);
+      const found = matchMember(assigneeRaw, pool);
+      if (found) assigneeId = found.id;
+    }
+    if (assigneeId && targetSpace && !roster.some((m) => m.id === assigneeId && m.teamspace_id === targetSpace)) {
+      assigneeId = null;
+    }
     // The model sometimes glues the workspace phrase into the title — strip it
     let cleanTitle = title
       .trim()
