@@ -46,6 +46,22 @@ function TeamPage() {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const updateRole = async (memberId: string, role: "admin" | "member") => {
+    if (!data?.teamspace?.id) return;
+    setRoleBusy(memberId);
+    try {
+      await changeRole({ data: { teamspace_id: data.teamspace.id, user_id: memberId, role } });
+      setData((prev) =>
+        prev ? { ...prev, members: prev.members.map((m) => (m.id === memberId ? { ...m, role } : m)) } : prev,
+      );
+      toast.success(t("workspaceUi.team.roleSaved", "Роль обновлена"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setRoleBusy(null);
+    }
+  };
+
   if (loading) {
     return <div className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.common.loading", "Загрузка…")}</div>;
   }
