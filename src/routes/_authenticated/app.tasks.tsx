@@ -189,6 +189,8 @@ function TasksPage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
+  // Members only ever see the tasks assigned to them; owner/admin see the whole board.
+  const [isManager, setIsManager] = useState(true);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [members, setMembers] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
