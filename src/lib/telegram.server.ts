@@ -962,9 +962,10 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       const event = await createMeeting(link.user_id, { title, start, end, description: description || undefined, attendees: emails ? emails.split(",").map((email) => email.trim()).filter(Boolean) : undefined });
       meetingResults.push(`${event.title}${event.url ? `\n${event.url}` : ""}`);
     } catch (error) {
-      updateErrors.push(error instanceof Error && error.message.includes("RECONNECT")
+      const raw = error instanceof Error ? error.message : String(error);
+      updateErrors.push(raw.includes("RECONNECT")
         ? (lang === "en" ? "Connect Google Calendar in Integrations" : "Подключите Google Calendar в Интеграциях")
-        : (lang === "en" ? "Meeting was not created" : "Не удалось создать встречу"));
+        : `${lang === "en" ? "Meeting was not created" : "Не удалось создать встречу"}: ${raw.slice(0, 200)}`);
     }
   }
   let clean = reply.replace(taskRe, "").replace(meetingRe, "").replace(/[*_`#]/g, "").replace(/\n{3,}/g, "\n\n").trim();
