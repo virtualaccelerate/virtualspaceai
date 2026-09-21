@@ -663,6 +663,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
 
   // Team members across all workspaces, so the agent can assign by name
   let teamBlock = "";
+  const roster: { id: string; name: string; email: string | null; teamspace_id: string }[] = [];
   if (spaceIds.length) {
     const { data: members } = await supabaseAdmin
       .from("teamspace_members")
