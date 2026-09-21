@@ -762,7 +762,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     const [title, priority, due, description, assignee, project, department, space] = match[1].split("||");
     if (!title?.trim()) continue;
     const assigneeRaw = (assignee ?? "").trim();
-    const assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
+    let assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
     // Resolve the workspace named in the 8th field; fall back to the message text, then the default
     const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
     const matchSpaceName = (raw: string): string | null => {
