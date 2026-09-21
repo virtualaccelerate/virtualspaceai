@@ -6,11 +6,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { useQueryClient } from "@tanstack/react-query";
 
+function inviteCodeFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const code = new URLSearchParams(window.location.search).get("code");
+  return code && code.trim() ? code.trim() : null;
+}
+
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
   beforeLoad: async () => {
+    const code = inviteCodeFromUrl();
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) {
+      // Keep the invite code through sign-in/sign-up so the link still works.
+      throw redirect({ href: code ? `/auth?next=${encodeURIComponent(`/onboarding?code=${code}`)}` : "/auth" });
+    }
+    // With an invite code we always show the join step, even for users who
+    // already belong to another workspace.
+    if (code) return { user: data.user };
     const { data: membership } = await supabase
       .from("teamspace_members")
       .select("teamspace_id")
