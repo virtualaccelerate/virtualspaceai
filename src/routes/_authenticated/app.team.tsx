@@ -78,6 +78,8 @@ function TeamPage() {
   }
 
   const isOwner = data.teamspace?.owner_id === data.current_user_id;
+  const myRole = data.members.find((m) => m.id === data.current_user_id)?.role ?? "member";
+  const isManager = isOwner || myRole === "owner" || myRole === "admin";
 
   const roleIcon = (role: string) =>
     role === "owner" ? <Crown className="h-3.5 w-3.5" /> : role === "admin" ? <Shield className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />;
