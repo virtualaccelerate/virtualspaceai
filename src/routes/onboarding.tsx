@@ -144,6 +144,17 @@ function OnboardingPage() {
     navigate({ to: "/auth", replace: true });
   };
 
+  if (autoJoining) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-3">
+        <VirtualSpaceLogo className="text-primary" size={30} />
+        <div className="inline-flex items-center gap-2 text-sm text-white/70">
+          <Loader2 className="h-4 w-4 animate-spin" /> Joining workspace…
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-6 py-5 flex items-center justify-between">
