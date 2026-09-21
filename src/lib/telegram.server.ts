@@ -549,9 +549,13 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   // All workspaces of the user — the agent picks the right one from the message
   const { data: memRows } = await supabaseAdmin
     .from("teamspace_members")
-    .select("teamspace_id")
+    .select("teamspace_id, role")
     .eq("user_id", link.user_id);
   const spaceIds = Array.from(new Set(((memRows as any[]) ?? []).map((m) => m.teamspace_id)));
+  // A plain member only ever sees their own tasks; owner/admin see the whole workspace.
+  const managerSpaceIds = new Set(
+    ((memRows as any[]) ?? []).filter((m) => m.role === "owner" || m.role === "admin").map((m) => m.teamspace_id),
+  );
   if (link.teamspace_id && !spaceIds.includes(link.teamspace_id)) spaceIds.push(link.teamspace_id);
   const spaceMap = await spaceNames(spaceIds).catch(() => new Map<string, string>());
   const defaultSpaceId = link.teamspace_id ?? spaceIds[0] ?? null;
@@ -560,13 +564,13 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     spaceIds.length
       ? supabaseAdmin
           .from("tasks")
-          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .select("id, title, status, priority, due_date, assignee_name, assignee_id, user_id, project, department, teamspace_id")
           .in("teamspace_id", spaceIds)
           .neq("status", "done")
           .limit(80)
       : supabaseAdmin
           .from("tasks")
-          .select("id, title, status, priority, due_date, assignee_name, project, department, teamspace_id")
+          .select("id, title, status, priority, due_date, assignee_name, assignee_id, user_id, project, department, teamspace_id")
           .eq("user_id", link.user_id)
           .is("teamspace_id", null)
           .neq("status", "done")
@@ -587,6 +591,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   ]);
 
   const tasks = ((tasksRes.data as any[]) ?? [])
+    .filter((x) => managerSpaceIds.has(x.teamspace_id) || x.assignee_id === link.user_id || x.user_id === link.user_id)
     .map(
       (x) =>
         `- id=${x.id} "${x.title}" [${x.status}/${x.priority}${x.due_date ? `/до ${x.due_date}` : ""}${x.assignee_name ? `/${x.assignee_name}` : "/без ответственного"}${x.project ? `/проект ${x.project}` : ""}${x.department ? `/${x.department}` : ""}/пространство "${spaceMap.get(x.teamspace_id) ?? "личное"}"]`,

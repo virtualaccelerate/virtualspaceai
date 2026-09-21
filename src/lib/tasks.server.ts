@@ -106,6 +106,17 @@ export async function createTaskForUser(
 ) {
   const db = await admin();
   const teamspaceId = await activeTeamspace(userId, data.teamspace_id);
+  {
+    // Only owner/admin may hand work to somebody else; a member creates tasks for themselves.
+    const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+    const role = await getWorkspaceRole(userId, teamspaceId);
+    const assigningOther = Boolean(
+      (data.assignee_id && data.assignee_id !== userId) || (!data.assignee_id && data.assignee_name),
+    );
+    if (!isManagerRole(role) && assigningOther) {
+      throw new Error("Назначать задачи другим может владелец или администратор");
+    }
+  }
   const status = data.status ?? "backlog";
   // A name without an account (pending member from an import) is kept as a label.
   const name = (await assigneeName(teamspaceId, data.assignee_id)) ?? data.assignee_name ?? null;
@@ -143,6 +154,21 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
+  {
+    const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+    const role = await getWorkspaceRole(userId, current.teamspace_id);
+    if (!isManagerRole(role)) {
+      const mine = current.assignee_id === userId || current.user_id === userId;
+      if (!mine) throw new Error("Вы можете менять только свои задачи");
+      if (
+        Object.prototype.hasOwnProperty.call(data, "assignee_id") &&
+        data.assignee_id &&
+        data.assignee_id !== userId
+      ) {
+        throw new Error("Назначать задачи другим может владелец или администратор");
+      }
+    }
+  }
   const patch: {
     title?: string;
     description?: string | null;
@@ -195,6 +221,13 @@ export async function deleteTaskForUser(userId: string, id: string) {
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
+  {
+    const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+    const role = await getWorkspaceRole(userId, current.teamspace_id);
+    if (!isManagerRole(role) && current.user_id !== userId) {
+      throw new Error("Удалять чужие задачи может владелец или администратор");
+    }
+  }
   const { deleteTaskCalendarEvent } = await import("./google-calendar.server");
   await deleteTaskCalendarEvent(id).catch(() => {});
   const { error } = await db.from("tasks").delete().eq("id", id);
@@ -213,6 +246,10 @@ export async function deleteTasksBulkForUser(
   input: { teamspace_id?: string; ids?: string[]; all?: boolean },
 ) {
   const teamspaceId = await activeTeamspace(userId, input.teamspace_id);
+  {
+    const { requireManager } = await import("./roles.server");
+    await requireManager(userId, teamspaceId, "удалять задачи пачкой");
+  }
   const db = await admin();
   let query = db
     .from("tasks")

@@ -189,6 +189,8 @@ function TasksPage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
+  // Members only ever see the tasks assigned to them; owner/admin see the whole board.
+  const [isManager, setIsManager] = useState(true);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [members, setMembers] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
@@ -273,13 +275,17 @@ function TasksPage() {
     }
   }
 
+  function scopeToRole(rows: Task[], uid: string, manager: boolean) {
+    return manager ? rows : rows.filter((task) => task.assignee_id === uid || task.user_id === uid);
+  }
+
   async function reloadTasks() {
     const { data: session } = await supabase.auth.getUser();
     if (!session.user) return;
     let query = supabase.from("tasks").select("*").eq("external_archived", false);
     query = teamspaceId ? query.eq("teamspace_id", teamspaceId) : query.eq("user_id", session.user.id);
     const { data } = await query.order("status").order("position");
-    setTasks((data ?? []) as Task[]);
+    setTasks(scopeToRole((data ?? []) as Task[], session.user.id, isManager));
   }
 
   useEffect(() => {
@@ -290,6 +296,17 @@ function TasksPage() {
       if (!cancelled) setUserId(session.user.id);
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
+      let manager = true;
+      if (ts) {
+        const { data: membership } = await supabase
+          .from("teamspace_members")
+          .select("role")
+          .eq("teamspace_id", ts)
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        manager = membership?.role === "owner" || membership?.role === "admin";
+        if (!cancelled) setIsManager(manager);
+      }
       // Tasks and members load in parallel — the board no longer waits for the member list.
       let query = supabase.from("tasks").select("*").eq("external_archived", false);
       query = ts ? query.eq("teamspace_id", ts) : query.eq("user_id", session.user.id);
@@ -309,7 +326,7 @@ function TasksPage() {
       if (error) {
         toast.error(error.message);
       } else if (!cancelled) {
-        setTasks((data ?? []) as Task[]);
+        setTasks(scopeToRole((data ?? []) as Task[], session.user.id, manager));
       }
       if (!cancelled) setLoading(false);
     })();
