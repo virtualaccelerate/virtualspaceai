@@ -154,6 +154,21 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
+  {
+    const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+    const role = await getWorkspaceRole(userId, current.teamspace_id);
+    if (!isManagerRole(role)) {
+      const mine = current.assignee_id === userId || current.user_id === userId;
+      if (!mine) throw new Error("Вы можете менять только свои задачи");
+      if (
+        Object.prototype.hasOwnProperty.call(data, "assignee_id") &&
+        data.assignee_id &&
+        data.assignee_id !== userId
+      ) {
+        throw new Error("Назначать задачи другим может владелец или администратор");
+      }
+    }
+  }
   const patch: {
     title?: string;
     description?: string | null;
