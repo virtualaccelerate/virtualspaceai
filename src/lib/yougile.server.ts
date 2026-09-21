@@ -198,19 +198,32 @@ export async function configureYouGileForUser(userId: string, input: { teamspace
   const admin = await db();
   const { error } = await admin.from("task_sync_sources").update({ project_id: input.project_id, project_name: input.project_name, column_map: input.column_map, user_map: input.user_map, last_error: null }).eq("id", source.id);
   if (error) throw new Error(error.message);
-  await registerWebhook({ ...source, project_id: input.project_id }).catch((error) => console.error("[yougile] webhook registration failed", error));
-  return syncSource({ ...source, project_id: input.project_id, project_name: input.project_name, column_map: input.column_map, user_map: input.user_map });
+  const webhookError = await registerWebhook({ ...source, project_id: input.project_id });
+  const result = await syncSource({ ...source, project_id: input.project_id, project_name: input.project_name, column_map: input.column_map, user_map: input.user_map });
+  if (webhookError) {
+    await admin.from("task_sync_sources").update({ last_error: webhookError }).eq("id", source.id);
+  }
+  return { ...result, webhook_error: webhookError };
 }
 
-async function registerWebhook(source: Source) {
-  if (!source.project_id) return;
-  const key = decryptConnectionKey(source.api_key_ciphertext);
-  const url = `https://ai-virtualspace.com/api/public/yougile-webhook?id=${encodeURIComponent(source.id)}&secret=${encodeURIComponent(source.webhook_secret)}`;
-  const result = await api<Record<string, unknown>>(key, "/webhooks", { method: "POST", body: JSON.stringify({ url, event: "task-*", projectId: source.project_id }) });
-  const webhookId = typeof result.id === "string" ? result.id : null;
-  if (webhookId) {
-    const admin = await db();
-    await admin.from("task_sync_sources").update({ webhook_id: webhookId }).eq("id", source.id);
+/** Returns null on success, or a human-readable message the admin should see. */
+async function registerWebhook(source: Source): Promise<string | null> {
+  if (!source.project_id) return null;
+  try {
+    const key = decryptConnectionKey(source.api_key_ciphertext);
+    const url = `https://ai-virtualspace.com/api/public/yougile-webhook?id=${encodeURIComponent(source.id)}&secret=${encodeURIComponent(source.webhook_secret)}`;
+    // YouGile's /webhooks endpoint accepts only { url, event } — sending projectId is rejected with 400.
+    const result = await api<Record<string, unknown>>(key, "/webhooks", { method: "POST", body: JSON.stringify({ url, event: "*" }) });
+    const webhookId = typeof result?.id === "string" ? result.id : null;
+    if (webhookId) {
+      const admin = await db();
+      await admin.from("task_sync_sources").update({ webhook_id: webhookId }).eq("id", source.id);
+    }
+    return null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[yougile] webhook registration failed", message);
+    return `Автообновление из YouGile не подключено: ${message}. Задачи будут обновляться по расписанию и вручную.`;
   }
 }
 
