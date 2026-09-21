@@ -1982,6 +1982,49 @@ const COUNTRY_TO_LANG: Record<string, string> = {
 
 const SUPPORTED = ["en", "ru", "kk", "ky", "uz", "tg"];
 
+export const LANG_COOKIE = "vs_lang";
+
+function supported(value?: string | null): string | null {
+  const code = (value || "").trim().toLowerCase().split("-")[0];
+  return code && SUPPORTED.includes(code) ? code : null;
+}
+
+/** Read the stored language from a raw Cookie header / document.cookie string. */
+export function langFromCookieString(cookieString?: string | null): string | null {
+  if (!cookieString) return null;
+  for (const part of cookieString.split(";")) {
+    const [name, ...rest] = part.trim().split("=");
+    if (name === LANG_COOKIE) return supported(decodeURIComponent(rest.join("=")));
+  }
+  return null;
+}
+
+/** Best supported language from an Accept-Language header value. */
+export function langFromAcceptLanguage(header?: string | null): string | null {
+  if (!header) return null;
+  for (const entry of header.split(",")) {
+    const code = supported(entry.split(";")[0]);
+    if (code) return code;
+  }
+  return null;
+}
+
+/** Apply a language without waiting; resources are bundled so this is synchronous. */
+export function setLanguage(code: string) {
+  const picked = supported(code) ?? "en";
+  if (picked !== i18n.language) void i18n.changeLanguage(picked);
+}
+
+/** Persist the user's choice so the server can render the right language next time. */
+export function persistLanguage(code: string) {
+  const picked = supported(code) ?? "en";
+  if (!isBrowser) return;
+  try { localStorage.setItem("i18nextLng", picked); } catch { /* ignore */ }
+  try {
+    document.cookie = `${LANG_COOKIE}=${picked}; path=/; max-age=31536000; samesite=lax`;
+  } catch { /* ignore */ }
+}
+
 async function detectCountryLang(): Promise<string | null> {
   try {
     const cached = localStorage.getItem("i18nGeoCountry");
@@ -2001,20 +2044,25 @@ async function detectCountryLang(): Promise<string | null> {
   return null;
 }
 
-// Detect and apply the preferred language only on the client, AFTER hydration,
-// so SSR and initial client render match (both use "en").
+/**
+ * Language already resolved on the server through the cookie stays as-is.
+ * Only first-time visitors without a cookie fall back to geo/browser detection,
+ * and the result is stored in the cookie so later loads render it server-side.
+ */
 export function applyClientLanguage() {
   if (!isBrowser) return;
   try {
-    const saved = localStorage.getItem("i18nextLng");
-    if (saved && SUPPORTED.includes(saved)) {
-      if (saved !== i18n.language) void i18n.changeLanguage(saved);
+    if (langFromCookieString(document.cookie)) return;
+    const saved = supported(localStorage.getItem("i18nextLng"));
+    if (saved) {
+      setLanguage(saved);
+      persistLanguage(saved);
       return;
     }
     void detectCountryLang().then((geoLang) => {
-      const nav = navigator.language?.split("-")[0];
-      const pick = geoLang || (nav && SUPPORTED.includes(nav) ? nav : "en");
-      if (pick && pick !== i18n.language) void i18n.changeLanguage(pick);
+      const pick = geoLang || supported(navigator.language) || "en";
+      setLanguage(pick);
+      persistLanguage(pick);
     });
   } catch {
     /* ignore */
