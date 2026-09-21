@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Plus, Mic, Loader2, FileText, CheckSquare, Trash2,
   MessageSquarePlus, History, Bot, X, Paperclip, Lightbulb,
-  Users, LayoutGrid, Brain, Search, ShieldAlert,
+  Users, LayoutGrid, Brain, Search, ShieldAlert, CalendarDays, ExternalLink,
 } from "lucide-react";
 import { AGENTS, AGENT_TAG_RE, type AgentId as AgentIdType } from "@/lib/agents";
 import { useServerFn } from "@tanstack/react-start";
@@ -27,6 +27,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
+import { createGoogleCalendarMeeting } from "@/lib/google-calendar.functions";
+import { Button } from "@/components/ui/button";
 
 type CreatedTask = { id: string; title: string };
 type ParsedTask = {
@@ -50,12 +52,15 @@ type ParsedUpdate = {
   project?: string;
   department?: string;
 };
+type ParsedMeeting = { title: string; start: string; end: string; description?: string; attendees?: string[] };
 export type ChatMsg = {
   role: "user" | "assistant";
   content: string;
   tasks?: CreatedTask[];
   proposed?: ParsedTask[];
   updates?: ParsedUpdate[];
+  meetings?: ParsedMeeting[];
+  createdMeetings?: { title: string; url: string | null }[];
 };
 
 // Accepts [[file:UUID|Name]], [[file:driveId|Name]] and malformed variants
@@ -88,6 +93,7 @@ function parseFileToken(body: string): { id: string; name: string } {
 }
 const TASK_TOKEN = /\[\[task:([^\]]+?)\]\]/gi;
 const TASK_UPDATE_TOKEN = /\[\[task-update:([^\]]+?)\]\]/gi;
+const MEETING_TOKEN = /\[\[meeting:([^\]]+?)\]\]/gi;
 const UUID_ONLY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AGENT_TAG = AGENT_TAG_RE;
 type AgentId = AgentIdType;
@@ -116,9 +122,11 @@ function parseTaskTokens(text: string): {
   cleaned: string;
   tasks: ParsedTask[];
   updates: ParsedUpdate[];
+  meetings: ParsedMeeting[];
 } {
   const tasks: ParsedTask[] = [];
   const updates: ParsedUpdate[] = [];
+  const meetings: ParsedMeeting[] = [];
   let cleaned = text.replace(TASK_TOKEN, (_m, body: string) => {
     const parts = body.split("||").map((p) => p.trim());
     const [title, priority, due_date, description, assignee, project, department] = parts;
@@ -163,7 +171,13 @@ function parseTaskTokens(text: string): {
     updates.push(u);
     return "";
   });
-  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks, updates };
+  cleaned = cleaned.replace(MEETING_TOKEN, (_m, body: string) => {
+    const [title, start, end, description, emails] = body.split("||").map((part) => part.trim());
+    if (!title || !start || !end || Number.isNaN(Date.parse(start)) || Number.isNaN(Date.parse(end))) return "";
+    meetings.push({ title, start, end, description: description || undefined, attendees: emails ? emails.split(",").map((email) => email.trim()).filter(Boolean) : undefined });
+    return "";
+  });
+  return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks, updates, meetings };
 }
 
 function MessageContent({
@@ -231,6 +245,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const sign = useServerFn(getDocumentSignedUrl);
   const mkTask = useServerFn(createTask);
   const editTask = useServerFn(updateTask);
+  const mkMeeting = useServerFn(createGoogleCalendarMeeting);
   const mkDoc = useServerFn(createDocument);
   const extract = useServerFn(extractDocumentText);
   const loadHistory = useServerFn(loadChatHistory);
@@ -434,6 +449,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                 tasks: m.tasks ?? undefined,
                 proposed: parsed.tasks.length ? parsed.tasks : undefined,
                 updates: parsed.updates.length ? parsed.updates : undefined,
+                meetings: parsed.meetings.length ? parsed.meetings : undefined,
               };
             }),
         );
@@ -510,6 +526,21 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         i !== msgIdx ? m : { ...m, updates: (m.updates ?? []).filter((_, j) => j !== updIdx) },
       ),
     );
+  };
+
+  const acceptMeeting = async (msgIdx: number, meetingIdx: number) => {
+    const meeting = messages[msgIdx]?.meetings?.[meetingIdx];
+    if (!meeting) return;
+    setAcceptingIdx(`m${msgIdx}-${meetingIdx}`);
+    try {
+      const created = await mkMeeting({ data: meeting });
+      setMessages((prev) => prev.map((message, index) => index !== msgIdx ? message : {
+        ...message,
+        meetings: (message.meetings ?? []).filter((_, itemIndex) => itemIndex !== meetingIdx),
+        createdMeetings: [...(message.createdMeetings ?? []), { title: created.title, url: created.url }],
+      }));
+    } catch (e) { setError(e instanceof Error ? e.message : t("app.chat.meetingFailed", "Failed to create meeting")); }
+    finally { setAcceptingIdx(null); }
   };
 
   const acceptAll = async (msgIdx: number) => {
@@ -652,12 +683,13 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     try {
       const res = await ask({ data: { messages: next, teamspace_id: teamspaceId, agent_id: agent } });
       const cleanedRaw = stripMarkdown(res.reply || "…");
-      const { cleaned, tasks, updates } = parseTaskTokens(cleanedRaw);
+      const { cleaned, tasks, updates, meetings } = parseTaskTokens(cleanedRaw);
       const assistantMsg: ChatMsg = {
         role: "assistant",
-        content: cleaned || (tasks.length || updates.length ? "" : "…"),
+        content: cleaned || (tasks.length || updates.length || meetings.length ? "" : "…"),
         proposed: tasks.length ? tasks : undefined,
         updates: updates.length ? updates : undefined,
+        meetings: meetings.length ? meetings : undefined,
       };
       setMessages([...next, assistantMsg]);
       // Persist the raw reply (with task tokens) so proposals survive a reload.
@@ -1062,6 +1094,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                         ))}
                       </div>
                     )}
+                    {m.role === "assistant" && m.meetings && m.meetings.length > 0 && <div className="mt-2 space-y-2">{m.meetings.map((meeting, j) => <div key={`${meeting.title}-${j}`} className="rounded-xl border border-border bg-card/60 p-3 flex items-start gap-3"><CalendarDays className="h-4 w-4 text-primary mt-0.5" /><div className="min-w-0 flex-1"><div className="text-xs font-medium text-foreground">{meeting.title}</div><div className="text-[11px] text-muted-foreground mt-1">{new Date(meeting.start).toLocaleString(i18n.language)} — {new Date(meeting.end).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}</div>{meeting.attendees?.length ? <div className="text-[11px] text-muted-foreground truncate mt-0.5">{meeting.attendees.join(", ")}</div> : null}</div><Button size="sm" disabled={acceptingIdx === `m${i}-${j}`} onClick={() => void acceptMeeting(i, j)}>{acceptingIdx === `m${i}-${j}` ? "…" : t("app.chat.createMeeting", "Create")}</Button><Button variant="ghost" size="sm" onClick={() => setMessages((prev) => prev.map((item, index) => index !== i ? item : { ...item, meetings: (item.meetings ?? []).filter((_, itemIndex) => itemIndex !== j) }))}>{t("common.cancel", "Cancel")}</Button></div>)}</div>}
+                    {m.role === "assistant" && m.createdMeetings && m.createdMeetings.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{m.createdMeetings.map((meeting) => meeting.url ? <a key={meeting.url} href={meeting.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"><CalendarDays className="h-3 w-3" />{meeting.title}<ExternalLink className="h-3 w-3" /></a> : <span key={meeting.title} className="text-xs text-primary">{meeting.title}</span>)}</div>}
                   </div>
                 </motion.div>
               ))}

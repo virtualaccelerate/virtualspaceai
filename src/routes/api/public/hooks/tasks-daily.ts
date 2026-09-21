@@ -32,16 +32,18 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         const { runAiNotifications } = await import("@/lib/ai-notify.server");
         const { syncAllYouGileSources } = await import("@/lib/yougile.server");
         const { syncAllTrelloSources } = await import("@/lib/trello.server");
+        const { syncAllGoogleCalendars } = await import("@/lib/google-calendar.server");
 
         const hourNow = new Date().getUTCHours();
         const yougile = await syncAllYouGileSources().catch(() => ({ synced: 0, failed: 1 }));
         const trello = await syncAllTrelloSources().catch(() => ({ synced: 0, failed: 1 }));
+        const calendar = await syncAllGoogleCalendars().catch(() => ({ synced: 0, failed: 1 }));
 
         // 09:00 Bishkek = 03:00 UTC, 19:00 Bishkek = 13:00 UTC.
         const pass = hourNow === 3 ? "morning" : hourNow === 13 ? "evening" : "pulse";
         const result = await runAiNotifications(pass).catch(() => ({ sent: 0, spaces: 0 }));
 
-        return Response.json({ ok: true, pass, ...result, yougile, trello });
+        return Response.json({ ok: true, pass, ...result, yougile, trello, calendar });
       },
     },
   },

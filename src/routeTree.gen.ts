@@ -28,6 +28,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as OauthGoogleDriveReturnRouteImport } from './routes/oauth.google-drive.return'
+import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth.google-calendar.return'
 import { Route as ApiPublicYougileWebhookRouteImport } from './routes/api/public/yougile-webhook'
 import { Route as ApiPublicTrelloWebhookRouteImport } from './routes/api/public/trello-webhook'
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
@@ -153,6 +154,12 @@ const OauthGoogleDriveReturnRoute = OauthGoogleDriveReturnRouteImport.update({
   path: '/oauth/google-drive/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthGoogleCalendarReturnRoute =
+  OauthGoogleCalendarReturnRouteImport.update({
+    id: '/oauth/google-calendar/return',
+    path: '/oauth/google-calendar/return',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicYougileWebhookRoute = ApiPublicYougileWebhookRouteImport.update({
   id: '/api/public/yougile-webhook',
   path: '/api/public/yougile-webhook',
@@ -345,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
+  '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
@@ -392,6 +400,7 @@ export interface FileRoutesByTo {
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
+  '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
@@ -442,6 +451,7 @@ export interface FileRoutesById {
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
+  '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
@@ -492,6 +502,7 @@ export interface FileRouteTypes {
     | '/app/time'
     | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
+    | '/oauth/google-calendar/return'
     | '/oauth/google-drive/return'
     | '/app/'
     | '/app/c/$conversationId'
@@ -539,6 +550,7 @@ export interface FileRouteTypes {
     | '/app/time'
     | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
+    | '/oauth/google-calendar/return'
     | '/oauth/google-drive/return'
     | '/app'
     | '/app/c/$conversationId'
@@ -588,6 +600,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/time'
     | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
+    | '/oauth/google-calendar/return'
     | '/oauth/google-drive/return'
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
@@ -620,6 +633,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicTrelloWebhookRoute: typeof ApiPublicTrelloWebhookRoute
   ApiPublicYougileWebhookRoute: typeof ApiPublicYougileWebhookRoute
+  OauthGoogleCalendarReturnRoute: typeof OauthGoogleCalendarReturnRoute
   OauthGoogleDriveReturnRoute: typeof OauthGoogleDriveReturnRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicFinikWebhookRoute: typeof ApiPublicFinikWebhookRoute
@@ -762,6 +776,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth/google-drive/return'
       fullPath: '/oauth/google-drive/return'
       preLoaderRoute: typeof OauthGoogleDriveReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/google-calendar/return': {
+      id: '/oauth/google-calendar/return'
+      path: '/oauth/google-calendar/return'
+      fullPath: '/oauth/google-calendar/return'
+      preLoaderRoute: typeof OauthGoogleCalendarReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/yougile-webhook': {
@@ -1043,6 +1064,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicTrelloWebhookRoute: ApiPublicTrelloWebhookRoute,
   ApiPublicYougileWebhookRoute: ApiPublicYougileWebhookRoute,
+  OauthGoogleCalendarReturnRoute: OauthGoogleCalendarReturnRoute,
   OauthGoogleDriveReturnRoute: OauthGoogleDriveReturnRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicFinikWebhookRoute: ApiPublicFinikWebhookRoute,

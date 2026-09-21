@@ -346,6 +346,7 @@ export const askZukha = createServerFn({ method: "POST" })
       "clarifying question naming only what is missing, and emit the token in the next turn once the user answers.\n" +
       "Questions about a person's tasks (\"что у Тимура\", \"задачи Айзы\") are answered from CURRENT TASKS: list their open tasks with status and deadline, " +
       "flag overdue ones, and say plainly when the person has no tasks. Confirm briefly in the user's language after the tokens. Never wrap tokens in quotes or code.\n" +
+      "CALENDAR AGENT: when the user explicitly asks to create/schedule a meeting, infer title, start and end in Asia/Bishkek and attendee emails from TEAM MEMBERS. Emit exactly [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. If title, date or time is missing, ask one short clarification and do not emit a token. Default duration is one hour. Do not emit this token for tasks or reminders.\n" +
       teamBlock +
       companyBlock +
       knowledgeBlock +

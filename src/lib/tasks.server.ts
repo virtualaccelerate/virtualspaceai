@@ -127,6 +127,8 @@ export async function createTaskForUser(
   if (error) throw new Error(error.message);
   await track(userId, teamspaceId, "Задачи: создание", { taskId: row.id });
   await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId, kind: "assigned", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
+  const { syncTaskToCalendar } = await import("./google-calendar.server");
+  await syncTaskToCalendar(row).catch(() => {});
 
   return row;
 }
@@ -178,6 +180,8 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
     await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: newlyAssigned ? "assigned" : "updated", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
 
   }
+  const { syncTaskToCalendar } = await import("./google-calendar.server");
+  await syncTaskToCalendar(row, current.assignee_id ?? current.user_id).catch(() => {});
   return row;
 }
 
@@ -191,6 +195,8 @@ export async function deleteTaskForUser(userId: string, id: string) {
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
+  const { deleteTaskCalendarEvent } = await import("./google-calendar.server");
+  await deleteTaskCalendarEvent(id).catch(() => {});
   const { error } = await db.from("tasks").delete().eq("id", id);
   if (error) throw new Error(error.message);
   await track(userId, current.teamspace_id, "Задачи: удаление", { taskId: id });
@@ -223,6 +229,8 @@ export async function deleteTasksBulkForUser(
   const deletable = (rows ?? []).filter((r) => !isExternalTask(r.external_source)).map((r) => r.id);
   const skipped = (rows ?? []).length - deletable.length;
   if (!deletable.length) return { ok: true, deleted: 0, skipped };
+  const { deleteTaskCalendarEvent } = await import("./google-calendar.server");
+  for (const id of deletable) await deleteTaskCalendarEvent(id).catch(() => {});
   for (let i = 0; i < deletable.length; i += 200) {
     const chunk = deletable.slice(i, i + 200);
     const { error: delErr } = await db.from("tasks").delete().in("id", chunk);

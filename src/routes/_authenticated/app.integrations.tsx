@@ -9,6 +9,7 @@ import type { LucideIcon } from "lucide-react";
 import { GoogleDriveCard } from "@/components/GoogleDriveCard";
 import { YouGileCard } from "@/components/YouGileCard";
 import { TrelloCard } from "@/components/TrelloCard";
+import { GoogleCalendarCard } from "@/components/GoogleCalendarCard";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/integrations")({
@@ -68,6 +69,7 @@ function IntegrationsPage() {
         </h2>
         <div className="flex flex-col gap-2.5">
           <GoogleDriveCard />
+          <GoogleCalendarCard />
           <YouGileCard />
           <TrelloCard />
           {available.map((s) => (

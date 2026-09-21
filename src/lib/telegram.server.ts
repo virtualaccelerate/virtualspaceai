@@ -706,6 +706,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nWhen CREATING a task, if the title, assignee or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
     "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status, deadline and workspace." +
+    "\nCALENDAR: if the user explicitly asks to create or schedule a meeting, infer title, start/end in Asia/Bishkek and attendee emails from TEAM MEMBERS. Emit [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. Date and time are required; ask one short clarification if missing. Default duration is one hour. Do not use this token for tasks." +
 
     (teamBlock ? `\n\nTEAM MEMBERS (resolve the named person to one of these ids):\n${teamBlock}` : "") +
     spacesBlock +
@@ -738,9 +739,11 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const taskRe = /\[\[task:([^\]]+)\]\]/g;
   const updateRe = /\[\[task-update:([^\]]+)\]\]/g;
+  const meetingRe = /\[\[meeting:([^\]]+)\]\]/g;
   const createdTitles: string[] = [];
   const updatedTitles: string[] = [];
   const updateErrors: string[] = [];
+  const meetingResults: string[] = [];
 
   let match: RegExpExecArray | null;
   while ((match = taskRe.exec(reply))) {
@@ -827,6 +830,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
           dueDate: (data as any).due_date,
         }).catch(() => {});
       }
+      const { syncTaskToCalendar } = await import("./google-calendar.server");
+      await syncTaskToCalendar({ ...(data as any), user_id: link.user_id, description: description?.trim() || null, external_source: null }).catch(() => {});
     }
   }
   while ((match = updateRe.exec(reply))) {
@@ -850,7 +855,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
 
     const { data: existing } = await supabaseAdmin
       .from("tasks")
-      .select("id, title, external_source, teamspace_id")
+      .select("id, title, external_source, teamspace_id, assignee_id, user_id")
       .eq("id", taskId)
       .maybeSingle();
     if (!existing) {
@@ -889,20 +894,38 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       .from("tasks")
       .update(patch as never)
       .eq("id", taskId)
-      .select("title")
+      .select("id,user_id,assignee_id,title,description,due_date,status,priority,external_source")
       .single();
-    if (data) updatedTitles.push((data as any).title);
+    if (data) {
+      updatedTitles.push((data as any).title);
+      const { syncTaskToCalendar } = await import("./google-calendar.server");
+      await syncTaskToCalendar(data as any, (existing as any).assignee_id ?? (existing as any).user_id).catch(() => {});
+    }
     else
       updateErrors.push(
         `${(existing as any).title}: ${error?.message?.slice(0, 120) ?? (lang === "en" ? "update failed" : "не удалось обновить")}`,
       );
 
   }
-  let clean = reply.replace(taskRe, "").replace(/[*_`#]/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  while ((match = meetingRe.exec(reply))) {
+    const [title, start, end, description, emails] = match[1].split("||").map((part) => part.trim());
+    if (!title || Number.isNaN(Date.parse(start)) || Number.isNaN(Date.parse(end)) || new Date(end) <= new Date(start)) continue;
+    try {
+      const { createMeeting } = await import("./google-calendar.server");
+      const event = await createMeeting(link.user_id, { title, start, end, description: description || undefined, attendees: emails ? emails.split(",").map((email) => email.trim()).filter(Boolean) : undefined });
+      meetingResults.push(`${event.title}${event.url ? `\n${event.url}` : ""}`);
+    } catch (error) {
+      updateErrors.push(error instanceof Error && error.message.includes("RECONNECT")
+        ? (lang === "en" ? "Connect Google Calendar in Integrations" : "Подключите Google Calendar в Интеграциях")
+        : (lang === "en" ? "Meeting was not created" : "Не удалось создать встречу"));
+    }
+  }
+  let clean = reply.replace(taskRe, "").replace(meetingRe, "").replace(/[*_`#]/g, "").replace(/\n{3,}/g, "\n\n").trim();
   clean = clean.replace(updateRe, "").trim();
   if (createdTitles.length) clean += `\n\n➕ ${createdTitles.join("\n➕ ")}`;
   if (updatedTitles.length) clean += `\n\n✏️ ${updatedTitles.join("\n✏️ ")}`;
   if (updateErrors.length) clean += `\n\n⚠️ ${updateErrors.join("\n⚠️ ")}`;
+  if (meetingResults.length) clean += `\n\n📅 ${meetingResults.join("\n📅 ")}`;
 
   await supabaseAdmin.from("chat_messages").insert([
     { user_id: link.user_id, teamspace_id: link.teamspace_id, role: "user", content: text },
