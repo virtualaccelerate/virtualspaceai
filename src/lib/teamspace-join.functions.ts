@@ -32,5 +32,12 @@ export const joinTeamspaceByCodeFn = createServerFn({ method: "POST" })
       );
 
     if (insErr) throw new Error(insErr.message);
+
+    // Make the joined workspace active so the invited member lands inside it.
+    await supabaseAdmin
+      .from("profiles")
+      .update({ current_teamspace_id: ts.id })
+      .eq("id", context.userId);
+
     return ts.id as string;
   });
