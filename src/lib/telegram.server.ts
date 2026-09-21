@@ -684,7 +684,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
             email: p?.email ?? null,
             teamspace_id: m.teamspace_id,
           });
-          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"`;
+          return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" email="${p?.email ?? ""}" role=${m.role} space="${spaceMap.get(m.teamspace_id) ?? ""}"${m.user_id === link.user_id ? " (this is the user writing to you — \"я\"/\"me\")" : ""}`;
         })
         .join("\n");
     }
