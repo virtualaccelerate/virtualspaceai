@@ -172,9 +172,11 @@ function parseTaskTokens(text: string): {
     return "";
   });
   cleaned = cleaned.replace(MEETING_TOKEN, (_m, body: string) => {
-    const [title, start, end, description, emails] = body.split("||").map((part) => part.trim());
-    if (!title || !start || !end || Number.isNaN(Date.parse(start)) || Number.isNaN(Date.parse(end))) return "";
-    meetings.push({ title, start, end, description: description || undefined, attendees: emails ? emails.split(",").map((email) => email.trim()).filter(Boolean) : undefined });
+    const [rawTitle, start, end, description, emails] = body.split("||").map((part) => part.trim());
+    if (!start || !end || Number.isNaN(Date.parse(start)) || Number.isNaN(Date.parse(end))) return "";
+    // Keep only real addresses — unresolved names would be rejected when creating the event.
+    const attendees = (emails ?? "").split(",").map((email) => email.trim()).filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    meetings.push({ title: rawTitle || "Встреча", start, end, description: description || undefined, attendees: attendees.length ? attendees : undefined });
     return "";
   });
   return { cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(), tasks, updates, meetings };

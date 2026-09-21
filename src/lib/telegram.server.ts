@@ -955,11 +955,25 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
 
   }
   while ((match = meetingRe.exec(reply))) {
-    const [title, start, end, description, emails] = match[1].split("||").map((part) => part.trim());
-    if (!title || Number.isNaN(Date.parse(start)) || Number.isNaN(Date.parse(end)) || new Date(end) <= new Date(start)) continue;
+    const [rawTitle, start, end, description, emails] = match[1].split("||").map((part) => part.trim());
+    if (Number.isNaN(Date.parse(start)) || Number.isNaN(Date.parse(end)) || new Date(end) <= new Date(start)) continue;
+    const title = rawTitle || (lang === "en" ? "Meeting" : "Встреча");
+    // Only real email addresses can be invited; unresolved names would make Google reject the event.
+    const attendees = (emails ?? "")
+      .split(",")
+      .map((email) => email.trim())
+      .filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
     try {
       const { createMeeting } = await import("./google-calendar.server");
-      const event = await createMeeting(link.user_id, { title, start, end, description: description || undefined, attendees: emails ? emails.split(",").map((email) => email.trim()).filter(Boolean) : undefined });
+      const input = { title, start, end, description: description || undefined };
+      let event;
+      try {
+        event = await createMeeting(link.user_id, { ...input, attendees: attendees.length ? attendees : undefined });
+      } catch (inviteError) {
+        // Retry without attendees so the meeting itself still lands in the calendar.
+        if (!attendees.length || (inviteError instanceof Error && inviteError.message.includes("RECONNECT"))) throw inviteError;
+        event = await createMeeting(link.user_id, input);
+      }
       meetingResults.push(`${event.title}${event.url ? `\n${event.url}` : ""}`);
     } catch (error) {
       const raw = error instanceof Error ? error.message : String(error);
