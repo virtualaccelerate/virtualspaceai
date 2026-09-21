@@ -246,6 +246,10 @@ export async function deleteTasksBulkForUser(
   input: { teamspace_id?: string; ids?: string[]; all?: boolean },
 ) {
   const teamspaceId = await activeTeamspace(userId, input.teamspace_id);
+  {
+    const { requireManager } = await import("./roles.server");
+    await requireManager(userId, teamspaceId, "удалять задачи пачкой");
+  }
   const db = await admin();
   let query = db
     .from("tasks")
