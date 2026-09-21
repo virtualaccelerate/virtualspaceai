@@ -275,13 +275,17 @@ function TasksPage() {
     }
   }
 
+  function scopeToRole(rows: Task[], uid: string, manager: boolean) {
+    return manager ? rows : rows.filter((task) => task.assignee_id === uid || task.user_id === uid);
+  }
+
   async function reloadTasks() {
     const { data: session } = await supabase.auth.getUser();
     if (!session.user) return;
     let query = supabase.from("tasks").select("*").eq("external_archived", false);
     query = teamspaceId ? query.eq("teamspace_id", teamspaceId) : query.eq("user_id", session.user.id);
     const { data } = await query.order("status").order("position");
-    setTasks((data ?? []) as Task[]);
+    setTasks(scopeToRole((data ?? []) as Task[], session.user.id, isManager));
   }
 
   useEffect(() => {
