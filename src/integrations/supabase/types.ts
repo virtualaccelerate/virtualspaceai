@@ -497,6 +497,92 @@ export type Database = {
           },
         ]
       }
+      google_calendar_links: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          etag: string | null
+          event_id: string
+          event_updated_at: string | null
+          id: string
+          last_error: string | null
+          last_sync_at: string
+          task_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_id?: string
+          created_at?: string
+          etag?: string | null
+          event_id: string
+          event_updated_at?: string | null
+          id?: string
+          last_error?: string | null
+          last_sync_at?: string
+          task_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          etag?: string | null
+          event_id?: string
+          event_updated_at?: string | null
+          id?: string
+          last_error?: string | null
+          last_sync_at?: string
+          task_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_calendar_links_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_calendar_settings: {
+        Row: {
+          calendar_id: string
+          calendar_name: string | null
+          created_at: string
+          last_error: string | null
+          last_sync_at: string | null
+          reconnect_required: boolean
+          sync_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_id?: string
+          calendar_name?: string | null
+          created_at?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          reconnect_required?: boolean
+          sync_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          calendar_name?: string | null
+          created_at?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          reconnect_required?: boolean
+          sync_token?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mentors: {
         Row: {
           achievements: string
