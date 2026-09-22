@@ -374,6 +374,37 @@ function TasksPage() {
     return map;
   }, [tasks]);
 
+  // Board columns: mirrored tracker columns when the workspace has them,
+  // otherwise the four base ones. Completed tasks always sit in "Done".
+  const boardCols = useMemo(() => {
+    const meta = (base: TaskStatus) => COLUMNS.find((c) => c.id === base) ?? COLUMNS[0];
+    const baseCol = (id: TaskStatus) => ({ key: `base:${id}`, label: colLabel(id), base: id, pill: meta(id).pill, dot: meta(id).dot });
+    const mirrored = statuses.filter((s) => !s.is_default && s.base_status !== "done");
+    if (!mirrored.length) return COLUMNS.map((c) => baseCol(c.id));
+    const cols = mirrored.map((s) => ({ key: s.id, label: s.name, base: s.base_status, pill: meta(s.base_status).pill, dot: meta(s.base_status).dot }));
+    // Local tasks that never came from a tracker keep their base column.
+    for (const c of COLUMNS) {
+      if (c.id !== "done" && tasks.some((task) => !task.status_id && task.status === c.id)) cols.push(baseCol(c.id));
+    }
+    cols.push(baseCol("done"));
+    return cols;
+  }, [statuses, tasks, t]);
+
+  const groupedByColumn = useMemo(() => {
+    const map: Record<string, Task[]> = {};
+    for (const col of boardCols) map[col.key] = [];
+    for (const task of tasks) {
+      const key = task.status === "done"
+        ? "base:done"
+        : task.status_id && map[task.status_id]
+          ? task.status_id
+          : `base:${task.status}`;
+      (map[key] ??= []).push(task);
+    }
+    return map;
+  }, [tasks, boardCols]);
+
+
   function openCreate(status: TaskStatus = "backlog") {
     setEditing(null);
     setDraft(emptyDraft(status));
