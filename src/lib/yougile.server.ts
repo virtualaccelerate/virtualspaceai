@@ -362,10 +362,8 @@ export async function syncSource(source: Source) {
     if (seen.length) {
       const { data } = await admin.from("tasks").update({ external_archived: true }).eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").not("external_id", "in", `(${seen.join(",")})`).select("id");
       archived = data?.length ?? 0;
-    } else {
-      const { data } = await admin.from("tasks").update({ external_archived: true }).eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").select("id");
-      archived = data?.length ?? 0;
     }
+
     await admin.from("task_sync_sources").update({ last_sync_at: new Date().toISOString(), last_error: null }).eq("id", source.id);
     return { synced, archived };
   } catch (error) {
