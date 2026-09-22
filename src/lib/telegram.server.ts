@@ -63,6 +63,20 @@ export async function spaceNameOf(id: string | null | undefined): Promise<string
   return map.get(id) ?? null;
 }
 
+/** Plain notification to a user's linked Telegram chat; silent when not linked. */
+export async function notifyUserMessage(userId: string, text: string, extra: Record<string, unknown> = {}) {
+  if (!userId) return false;
+  const { data: link } = await supabaseAdmin
+    .from("telegram_links")
+    .select("chat_id")
+    .eq("user_id", userId)
+    .not("chat_id", "is", null)
+    .maybeSingle();
+  if (!link?.chat_id) return false;
+  await sendMessage(Number(link.chat_id), text, extra);
+  return true;
+}
+
 type TaskNoticeKind = "assigned" | "updated" | "deleted";
 
 export async function notifyTaskAssignee(input: {
