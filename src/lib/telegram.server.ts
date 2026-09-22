@@ -289,6 +289,32 @@ function tasksKeyboard(tasks: any[], lang: Lang) {
   };
 }
 
+/** Recent changes across the tracker, Trello and YouGile in one feed. */
+async function handleActivity(link: Link, chatId: number, lang: Lang) {
+  const { data: profile } = await supabaseAdmin
+    .from("profiles").select("current_teamspace_id").eq("id", link.user_id).maybeSingle();
+  const teamspaceId = (link as { teamspace_id?: string | null }).teamspace_id ?? profile?.current_teamspace_id ?? null;
+  if (!teamspaceId) {
+    await sendMessage(chatId, lang === "en" ? "No active workspace." : "Нет активного пространства.");
+    return;
+  }
+  const { listWorkspaceActivity } = await import("./task-events.server");
+  const rows = await listWorkspaceActivity(teamspaceId, 15);
+  if (!rows.length) {
+    await sendMessage(chatId, lang === "en" ? "No recent changes." : "Пока изменений нет.");
+    return;
+  }
+  const tracker = (source: string | null) => (source === "trello" ? "Trello" : source === "yougile" ? "YouGile" : "Virtual Space");
+  const lines = rows.map((row) => {
+    const when = new Date(row.created_at).toLocaleString(lang === "en" ? "en-GB" : "ru-RU", {
+      timeZone: "Asia/Bishkek", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+    });
+    const change = row.from_value || row.to_value ? ` ${row.from_value ?? "—"} → ${row.to_value ?? "—"}` : ` ${row.kind}`;
+    return `• ${row.task_title}${change}\n  ${when} · ${tracker(row.source)}${row.actor_name ? ` · ${row.actor_name}` : ""}`;
+  });
+  await sendMessage(chatId, `${lang === "en" ? "🔄 Recent activity" : "🔄 Последние изменения"}\n\n${lines.join("\n")}`);
+}
+
 async function handleTasks(link: Link, chatId: number, lang: Lang) {
   const { data } = await supabaseAdmin
     .from("tasks")
