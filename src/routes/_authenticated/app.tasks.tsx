@@ -84,7 +84,18 @@ type Task = {
   external_archived?: boolean;
   project?: string | null;
   department?: string | null;
+  status_id?: string | null;
 };
+
+/** Workspace column mirrored from YouGile/Trello (or one of the four base ones). */
+type WorkspaceStatus = {
+  id: string;
+  name: string;
+  base_status: TaskStatus;
+  position: number;
+  is_default: boolean;
+};
+
 
 const COLUMNS: {
   id: TaskStatus;
@@ -190,13 +201,15 @@ function TasksPage() {
   const [editing, setEditing] = useState<Task | null>(null);
   const [draft, setDraft] = useState<TaskDraft>(emptyDraft());
   const [dragId, setDragId] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
   // Members only ever see the tasks assigned to them; owner/admin see the whole board.
   const [isManager, setIsManager] = useState(true);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [members, setMembers] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
+  const [statuses, setStatuses] = useState<WorkspaceStatus[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [view, setView] = useState<"board" | "table">("board");
@@ -299,6 +312,18 @@ function TasksPage() {
       if (!cancelled) setUserId(session.user.id);
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
+      if (ts) {
+        // Workspace columns mirrored from YouGile / Trello.
+        void supabase
+          .from("teamspace_statuses")
+          .select("id, name, base_status, position, is_default")
+          .eq("teamspace_id", ts)
+          .order("position", { ascending: true })
+          .then(({ data }) => {
+            if (!cancelled) setStatuses((data ?? []) as WorkspaceStatus[]);
+          });
+      }
+
       let manager = true;
       if (ts) {
         const { data: membership } = await supabase
@@ -348,6 +373,37 @@ function TasksPage() {
     for (const t of tasks) map[t.status].push(t);
     return map;
   }, [tasks]);
+
+  // Board columns: mirrored tracker columns when the workspace has them,
+  // otherwise the four base ones. Completed tasks always sit in "Done".
+  const boardCols = useMemo(() => {
+    const meta = (base: TaskStatus) => COLUMNS.find((c) => c.id === base) ?? COLUMNS[0];
+    const baseCol = (id: TaskStatus) => ({ key: `base:${id}`, label: colLabel(id), base: id, pill: meta(id).pill, dot: meta(id).dot });
+    const mirrored = statuses.filter((s) => !s.is_default && s.base_status !== "done");
+    if (!mirrored.length) return COLUMNS.map((c) => baseCol(c.id));
+    const cols = mirrored.map((s) => ({ key: s.id, label: s.name, base: s.base_status, pill: meta(s.base_status).pill, dot: meta(s.base_status).dot }));
+    // Local tasks that never came from a tracker keep their base column.
+    for (const c of COLUMNS) {
+      if (c.id !== "done" && tasks.some((task) => !task.status_id && task.status === c.id)) cols.push(baseCol(c.id));
+    }
+    cols.push(baseCol("done"));
+    return cols;
+  }, [statuses, tasks, t]);
+
+  const groupedByColumn = useMemo(() => {
+    const map: Record<string, Task[]> = {};
+    for (const col of boardCols) map[col.key] = [];
+    for (const task of tasks) {
+      const key = task.status === "done"
+        ? "base:done"
+        : task.status_id && map[task.status_id]
+          ? task.status_id
+          : `base:${task.status}`;
+      (map[key] ??= []).push(task);
+    }
+    return map;
+  }, [tasks, boardCols]);
+
 
   function openCreate(status: TaskStatus = "backlog") {
     setEditing(null);
@@ -576,19 +632,19 @@ function TasksPage() {
       ) : (
         <div className="-mx-4 sm:-mx-6 overflow-x-auto pb-4">
           <div className="flex gap-4 px-4 sm:px-6 min-w-max">
-            {COLUMNS.map((col) => {
-              const items = grouped[col.id];
-              const isOver = dragOver === col.id;
+            {boardCols.map((col) => {
+              const items = groupedByColumn[col.key] ?? [];
+              const isOver = dragOver === col.key;
               return (
                 <div
-                  key={col.id}
+                  key={col.key}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    if (dragOver !== col.id) setDragOver(col.id);
+                    if (dragOver !== col.key) setDragOver(col.key);
                   }}
-                  onDragLeave={() => setDragOver((s) => (s === col.id ? null : s))}
+                  onDragLeave={() => setDragOver((s) => (s === col.key ? null : s))}
                   onDrop={() => {
-                    if (dragId) moveTask(dragId, col.id);
+                    if (dragId) moveTask(dragId, col.base);
                     setDragId(null);
                     setDragOver(null);
                   }}
@@ -611,17 +667,18 @@ function TasksPage() {
                             col.dot,
                           )}
                         />
-                        {colLabel(col.id)}
+                        {col.label}
                       </span>
                       <span className="text-xs text-muted-foreground font-medium">{items.length}</span>
                     </div>
                     <button
-                      onClick={() => openCreate(col.id)}
+                      onClick={() => openCreate(col.base)}
                       className="text-muted-foreground hover:text-foreground transition"
-                      aria-label={t("tasksUi.addTaskTo", "Add task to {{col}}", { col: colLabel(col.id) })}
+                      aria-label={t("tasksUi.addTaskTo", "Add task to {{col}}", { col: col.label })}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
+
                   </div>
 
 
@@ -804,7 +861,7 @@ function TasksPage() {
                   </div>
 
                   <button
-                    onClick={() => openCreate(col.id)}
+                    onClick={() => openCreate(col.base)}
                     className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 hover:bg-accent/40 transition"
                   >
                     <Plus className="h-3.5 w-3.5" /> {t("tasksUi.addTask", "Add Task")}

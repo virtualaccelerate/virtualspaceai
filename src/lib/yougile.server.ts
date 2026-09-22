@@ -346,12 +346,14 @@ export async function syncSource(source: Source) {
       const boardId = columnBoard.get(columnId) ?? "";
       const projectId = boardProject.get(boardId) ?? "";
       const workspaceStatus = statusByColumn.get(columnId) ?? null;
-      // YouGile is the source of truth: the mirrored column decides the status.
-      const status: Status = workspaceStatus?.base_status
-        ?? (raw.completed === true || raw.archived === true
-          ? "done"
-          : taskStatus(raw, source.column_map ?? {}));
+      // The mirrored column keeps the board layout, but YouGile's own
+      // "completed" flag decides whether the task counts as done.
+      const completed = raw.completed === true || raw.archived === true;
+      const status: Status = completed
+        ? "done"
+        : workspaceStatus?.base_status ?? taskStatus(raw, source.column_map ?? {});
       const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
+
       const deleted = raw.deleted === true;
       const patch = {
         user_id: source.created_by,
@@ -481,20 +483,30 @@ export async function updateYouGileTaskStatus(taskId: string, status: Status, ac
   return { ok: true, status };
 }
 
-/** Chat messages of a YouGile task, newest last. Used by the task card. */
+/** Chat and log entries of a YouGile task, used by the task card history. */
 export async function listYouGileTaskChat(teamspaceId: string, externalId: string) {
   const source = await sourceFor(teamspaceId);
   if (!source) return [];
   const key = decryptConnectionKey(source.api_key_ciphertext);
   const rows = await pages(key, `/chats/${encodeURIComponent(externalId)}/messages`).catch(() => [] as YouGileItem[]);
+  const users = await pages(key, "/users").catch(() => [] as YouGileItem[]);
+  const names = new Map(
+    users.map((row) => [String(row.id), String(row['realName'] ?? row['name'] ?? row.email ?? "").trim()]),
+  );
+  const clean = (value: unknown) =>
+    String(value ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
   return rows.map((row) => {
-    const text = String(row['text'] ?? row['label'] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    const author = row['fromUserId'] ?? row['userId'] ?? null;
+    const payload = (row['event'] ?? row['action'] ?? null) as Record<string, unknown> | null;
+    // YouGile marks its own log entries as system events; plain messages are comments.
+    const system = row['fromUserId'] == null || Boolean(payload) || row['label'] != null;
+    const text = clean(row['text'] ?? row['label'] ?? (payload ? payload['text'] ?? payload['label'] : ""));
+    const author = String(row['fromUserId'] ?? row['userId'] ?? "");
     return {
       id: `yg-${String(row.id)}`,
       created_at: externalTime(row['timestamp']) ?? new Date().toISOString(),
-      actor_name: typeof author === "string" ? null : null,
-      kind: "comment",
+      actor_name: names.get(author) || null,
+      kind: system ? "external_log" : "comment",
       source: "yougile",
       field: null,
       from_value: null,
@@ -503,6 +515,7 @@ export async function listYouGileTaskChat(teamspaceId: string, externalId: strin
     };
   }).filter((row) => row.note);
 }
+
 
 
 export async function disconnectYouGileForUser(userId: string, teamspaceId: string) {
