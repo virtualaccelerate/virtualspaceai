@@ -1393,6 +1393,9 @@ export async function handleUpdate(update: any) {
     case "/report":
       await handleReport(link, chatId, arg, lang);
       return;
+    case "/activity":
+      await handleActivity(link, chatId, lang);
+      return;
     case "/unlink":
       await supabaseAdmin
         .from("telegram_links")
