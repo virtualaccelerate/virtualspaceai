@@ -555,7 +555,7 @@ function TasksPage() {
           priorityLabel={(p: TaskPriority) => priorityLabel(p)}
           onOpen={(task: { id: string }) => {
             const found = tasks.find((x) => x.id === task.id);
-            if (found) openEdit(found);
+            if (found) openDetail(found);
           }}
           onMove={(id: string, status: TaskStatus) => moveTask(id, status)}
           onDelete={(task: { id: string }) => {
