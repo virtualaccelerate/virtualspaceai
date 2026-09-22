@@ -337,7 +337,13 @@ export async function decideTaskForUser(
   await activeTeamspace(userId, current.teamspace_id);
   const { approverFor, decideTask } = await import("./task-flow.server");
   const approverId = await approverFor(current as never);
-  if (approverId !== userId) throw new Error("Только автор задачи или владелец пространства может принять работу");
+  if (approverId !== userId) {
+    // Workspace managers (owner/admin) get the same approve / send-back access as the owner.
+    const { isWorkspaceManager } = await import("./roles.server");
+    if (!(await isWorkspaceManager(userId, current.teamspace_id))) {
+      throw new Error("Только автор задачи, администратор или владелец пространства может принять работу");
+    }
+  }
   const row = await decideTask({
     taskId: data.id,
     reviewerId: userId,
