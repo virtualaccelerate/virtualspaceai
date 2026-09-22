@@ -258,7 +258,13 @@ export async function syncSource(source: Source) {
       const assigned = Array.isArray(raw.assigned) ? raw.assigned.map(String) : [];
       const mappedId = assigned.map((id) => source.user_map?.[id] ?? profileByEmail.get(userEmail.get(id) ?? "")?.id).find(Boolean) ?? null;
       const mappedProfile = (profiles ?? []).find((row) => row.id === mappedId);
-      const status = taskStatus(raw, source.column_map ?? {});
+      const columnId = String(raw.columnId ?? "");
+      const workspaceStatus = statusByColumn.get(columnId) ?? null;
+      const mapped = source.column_map?.[columnId];
+      const status: Status = raw.completed === true || raw.archived === true
+        ? "done"
+        : mapped ?? workspaceStatus?.base_status ?? taskStatus(raw, source.column_map ?? {});
+      const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
       const deleted = raw.deleted === true;
       const patch = {
         user_id: source.created_by,
