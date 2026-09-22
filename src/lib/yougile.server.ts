@@ -287,9 +287,19 @@ export async function syncSource(source: Source) {
         external_updated_at: externalTime(raw.timestamp),
         external_archived: deleted || raw.archived === true,
       };
-      const { data: before } = await admin.from("tasks").select("id, assignee_id, status, priority, due_date").eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_id", externalId).maybeSingle();
+      const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_id", externalId).maybeSingle();
       const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();
       if (error) throw error;
+      await emitExternalTaskChange({
+        source: "yougile",
+        teamspaceId: source.teamspace_id,
+        taskId: saved.id,
+        title: patch.title,
+        before: before
+          ? { ...before, status_name: statusByColumn.get(before.external_column_id ?? "")?.name ?? before.status }
+          : null,
+        after: { ...patch, status_name: workspaceStatus?.name ?? patch.status },
+      }).catch(() => {});
       if (saved.assignee_id && saved.assignee_id !== before?.assignee_id) {
         const { notifyAssignment } = await import("./tasks.server");
         await notifyAssignment({ assigneeId: saved.assignee_id, actorId: source.created_by, teamspaceId: source.teamspace_id, kind: "assigned", taskId: saved.id, title: saved.title, status: saved.status, priority: saved.priority, dueDate: saved.due_date });
