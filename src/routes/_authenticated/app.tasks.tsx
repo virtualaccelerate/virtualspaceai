@@ -637,7 +637,7 @@ function TasksPage() {
                             setDragId(null);
                             setDragOver(null);
                           }}
-                          onClick={() => openEdit(task)}
+                          onClick={() => openDetail(task)}
                           className={cn(
                             "group cursor-grab active:cursor-grabbing rounded-xl border border-border bg-card p-3 shadow-sm hover:border-primary/30 hover:bg-accent/30 transition",
                             dragId === task.id && "opacity-50",
