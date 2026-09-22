@@ -114,10 +114,14 @@ export function YouGileCard() {
               })}
             </div>
           </div>
-          {projectIds.length > 0 && columns.length > 0 && <div className="space-y-2"><Label>{t("integrationsUi.yougile.columns", "Columns")}</Label>{columns.map((column) => <div key={column.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{column.title ?? column.name ?? column.id}</span><Select value={columnMap[column.id] ?? "backlog"} onValueChange={(value) => setColumnMap((old) => ({ ...old, [column.id]: value as Status }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="backlog">{t("integrationsUi.yougile.todo", "To do")}</SelectItem><SelectItem value="in_progress">{t("integrationsUi.yougile.progress", "In progress")}</SelectItem><SelectItem value="review">{t("integrationsUi.yougile.review", "In review")}</SelectItem><SelectItem value="done">{t("integrationsUi.yougile.done", "Done")}</SelectItem></SelectContent></Select></div>)}</div>}
+          {projectIds.length > 0 && columns.length > 0 && (
+            <p className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+              {t("integrationsUi.yougile.mirrorNote", "Columns are mirrored from YouGile automatically — {{count}} columns found. YouGile stays the source of truth.", { count: columns.length })}
+            </p>
+          )}
           {projectIds.length > 0 && users.length > 0 && <div className="space-y-2"><Label>{t("integrationsUi.yougile.users", "Team members")}</Label>{users.map((user) => <div key={user.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{user.name ?? user.email ?? user.id}</span><Select value={userMap[user.id] || "skip"} onValueChange={(value) => setUserMap((old) => ({ ...old, [user.id]: value === "skip" ? "" : value }))}><SelectTrigger><SelectValue placeholder={t("integrationsUi.yougile.unmatched", "Not matched")} /></SelectTrigger><SelectContent><SelectItem value="skip">{t("integrationsUi.yougile.unmatched", "Not matched")}</SelectItem>{members.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>)}</SelectContent></Select></div>)}</div>}
           <div className="flex flex-wrap gap-2">
-            <Button disabled={busy || !chosen.length} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", projects: chosen, column_map: columnMap, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }))}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.yougile.save", "Save and sync")}</Button>
+            <Button disabled={busy || !chosen.length} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", projects: chosen, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }))}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.yougile.save", "Save and sync")}</Button>
 
             <Button variant="outline" disabled={busy} onClick={() => run(() => disconnectFn({ data: { teamspace_id: teamspaceId ?? "" } }))}><Unplug className="h-4 w-4" /> {t("integrationsUi.yougile.disconnect", "Disconnect")}</Button>
           </div>
