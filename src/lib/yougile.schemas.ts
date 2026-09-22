@@ -8,8 +8,9 @@ export const ConnectYouGileSchema = z.object({
 export const ConfigureYouGileSchema = z.object({
   teamspace_id: z.string().uuid(),
   projects: z.array(z.object({ id: z.string().min(1).max(200), name: z.string().min(1).max(300) })).min(1).max(50),
-  column_map: z.record(z.string(), z.enum(["backlog", "in_progress", "review", "done"])),
-  user_map: z.record(z.string(), z.string().uuid()).default({}),
+  // Columns are mirrored from YouGile automatically; the map is optional legacy input.
+  column_map: z.record(z.string(), z.enum(["backlog", "in_progress", "review", "done"])).optional(),
+  user_map: z.record(z.string(), z.string().uuid()).optional(),
 });
 
 export const YouGileStatusSchema = z.object({
