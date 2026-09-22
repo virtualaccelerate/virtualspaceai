@@ -1310,8 +1310,6 @@ export async function handleUpdate(update: any) {
 
   if (!chatId || !text) return;
 
-  void 0;
-
 
   // Menu buttons arrive as plain text — map them onto the matching command
   const MENU_MAP: Record<string, string> = {
