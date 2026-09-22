@@ -252,6 +252,15 @@ export async function syncTrelloSource(source: Source) {
     const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
     const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
 
+    // Trello lists become workspace columns; missing ones are created.
+    const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
+    const statusByColumn = await ensureStatusesForColumns(
+      source.teamspace_id,
+      "trello",
+      lists.map((row) => ({ id: String(row.id), name: String(row['name'] ?? "Список") })),
+    );
+    const { emitExternalTaskChange } = await import("./task-changes.server");
+
     const cards = await allCards(creds, source.project_id);
     const seen: string[] = [];
     let synced = 0;
