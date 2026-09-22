@@ -184,6 +184,8 @@ function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Task | null>(null);
   const [draft, setDraft] = useState<TaskDraft>(emptyDraft());
   const [dragId, setDragId] = useState<string | null>(null);
