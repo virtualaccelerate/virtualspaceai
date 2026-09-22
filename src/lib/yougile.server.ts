@@ -214,7 +214,13 @@ export async function inspectYouGileProjectForUser(userId: string, teamspaceId: 
   return loadStructure(decryptConnectionKey(source.api_key_ciphertext), projectIds);
 }
 
-export async function configureYouGileForUser(userId: string, input: { teamspace_id: string; projects: { id: string; name: string }[]; column_map: Record<string, Status>; user_map: Record<string, string> }) {
+/**
+ * Saves the mirrored projects. Columns are NOT mapped by hand any more —
+ * YouGile stays the source of truth and its columns are mirrored as workspace
+ * columns during sync. Saving never fails because of a slow sync: the config
+ * is persisted first and sync problems are reported as a warning.
+ */
+export async function configureYouGileForUser(userId: string, input: { teamspace_id: string; projects: { id: string; name: string }[]; column_map?: Record<string, Status>; user_map?: Record<string, string> }) {
   await requireManager(userId, input.teamspace_id);
   const source = await sourceFor(input.teamspace_id);
   if (!source) throw new Error("Сначала подключите YouGile");
@@ -225,19 +231,26 @@ export async function configureYouGileForUser(userId: string, input: { teamspace
     project_id: first.id,
     project_name: first.name,
     project_ids: input.projects,
-    column_map: input.column_map,
-    user_map: input.user_map,
+    column_map: input.column_map ?? source.column_map ?? {},
+    user_map: input.user_map ?? source.user_map ?? {},
     last_error: null,
   };
   const { error } = await admin.from("task_sync_sources").update(patch).eq("id", source.id);
   if (error) throw new Error(error.message);
   const next: Source = { ...source, ...patch };
-  const webhookError = await registerWebhook(next);
-  const result = await syncSource(next);
-  if (webhookError) {
-    await admin.from("task_sync_sources").update({ last_error: webhookError }).eq("id", source.id);
+  const webhookError = await registerWebhook(next).catch(() => null);
+  let result: { synced: number; archived: number } = { synced: 0, archived: 0 };
+  let syncError: string | null = null;
+  try {
+    result = await syncSource(next);
+  } catch (error) {
+    syncError = error instanceof Error ? error.message : String(error);
   }
-  return { ...result, webhook_error: webhookError };
+  const warning = webhookError ?? syncError;
+  if (warning) {
+    await admin.from("task_sync_sources").update({ last_error: warning }).eq("id", source.id);
+  }
+  return { ...result, webhook_error: warning };
 }
 
 
