@@ -105,9 +105,32 @@ async function pages(key: string, path: string) {
 }
 
 function dueDate(value: unknown): string | null {
-  const raw = typeof value === "number" ? value : value && typeof value === "object" ? Number((value as Record<string, unknown>).deadline ?? (value as Record<string, unknown>).date) : Number(value);
+  const raw = typeof value === "number"
+    ? value
+    : value && typeof value === "object"
+      ? Number(
+        (value as Record<string, unknown>).deadline
+        ?? (value as Record<string, unknown>).date
+        ?? (value as Record<string, unknown>).dateTo
+        ?? (value as Record<string, unknown>).timestamp,
+      )
+      : Number(value);
   if (!Number.isFinite(raw) || raw <= 0) return null;
   return new Date(raw < 10_000_000_000 ? raw * 1000 : raw).toISOString().slice(0, 10);
+}
+
+/** YouGile keeps the deadline either on the task or inside its stickers. */
+function taskDeadline(task: Record<string, unknown>): string | null {
+  const candidates: unknown[] = [task['deadline'], task['dateTo'], task['dueDate'], task['endDate']];
+  const stickers = task['stickers'];
+  if (stickers && typeof stickers === "object") {
+    for (const entry of Object.values(stickers as Record<string, unknown>)) candidates.push(entry);
+  }
+  for (const candidate of candidates) {
+    const parsed = dueDate(candidate);
+    if (parsed) return parsed;
+  }
+  return null;
 }
 
 function externalTime(value: unknown): string | null {
@@ -323,10 +346,11 @@ export async function syncSource(source: Source) {
       const boardId = columnBoard.get(columnId) ?? "";
       const projectId = boardProject.get(boardId) ?? "";
       const workspaceStatus = statusByColumn.get(columnId) ?? null;
-      const mapped = source.column_map?.[columnId];
-      const status: Status = raw.completed === true || raw.archived === true
-        ? "done"
-        : mapped ?? workspaceStatus?.base_status ?? taskStatus(raw, source.column_map ?? {});
+      // YouGile is the source of truth: the mirrored column decides the status.
+      const status: Status = workspaceStatus?.base_status
+        ?? (raw.completed === true || raw.archived === true
+          ? "done"
+          : taskStatus(raw, source.column_map ?? {}));
       const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
       const deleted = raw.deleted === true;
       const patch = {
@@ -339,7 +363,7 @@ export async function syncSource(source: Source) {
         priority: priority(raw),
         assignee_id: mappedId,
         assignee_name: mappedProfile?.full_name || mappedProfile?.email || null,
-        due_date: dueDate(raw.deadline),
+        due_date: taskDeadline(raw),
         position: 0,
         external_source: "yougile",
         external_id: externalId,

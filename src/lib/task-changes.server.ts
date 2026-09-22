@@ -91,9 +91,13 @@ export async function emitExternalTaskChange(input: {
     await recordTaskEvent({ taskId, teamspaceId, source, kind: "external_update", field: change.field, from: change.from, to: change.to });
   }
 
-  const body = [`${title}`, ...changes.map((change) => change.text), `Источник: ${tracker}`].join("\n");
   const done = after.status === "done" && before.status !== "done";
-  const heading = done ? `Задача сдана в ${tracker}` : `Изменение в ${tracker}`;
+  // Short factual report: what is already done, no long lists.
+  const main = changes.find((change) => change.field === "status") ?? changes[0];
+  const body = done
+    ? `${title} — выполнено (${tracker})`
+    : `${title} — ${main.text} (${tracker})`;
+  const heading = done ? "Задача выполнена" : "Задача обновлена";
 
   const recipients = new Set<string>(await managerIds(teamspaceId));
   if (after.assignee_id) recipients.add(after.assignee_id);
