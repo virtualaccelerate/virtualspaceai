@@ -352,6 +352,12 @@ function TasksPage() {
     setDialogOpen(true);
   }
 
+  // A click always opens the task card with its history; editing happens from there.
+  function openDetail(task: Task) {
+    setDetailId(task.id);
+    setDetailOpen(true);
+  }
+
   function openEdit(task: Task) {
     if (task.external_source === "yougile" || task.external_source === "trello") {
       const tracker = task.external_source === "trello" ? "Trello" : "YouGile";
