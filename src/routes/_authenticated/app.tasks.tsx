@@ -312,6 +312,18 @@ function TasksPage() {
       if (!cancelled) setUserId(session.user.id);
       const ts = await getActiveTeamspaceId();
       if (!cancelled) setTeamspaceId(ts);
+      if (ts) {
+        // Workspace columns mirrored from YouGile / Trello.
+        void supabase
+          .from("teamspace_statuses")
+          .select("id, name, base_status, position, is_default")
+          .eq("teamspace_id", ts)
+          .order("position", { ascending: true })
+          .then(({ data }) => {
+            if (!cancelled) setStatuses((data ?? []) as WorkspaceStatus[]);
+          });
+      }
+
       let manager = true;
       if (ts) {
         const { data: membership } = await supabase
