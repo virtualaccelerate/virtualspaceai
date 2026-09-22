@@ -1312,6 +1312,7 @@ export async function handleUpdate(update: any) {
 
 
   // Menu buttons arrive as plain text — map them onto the matching command
+  void handleActivity;
   const MENU_MAP: Record<string, string> = {
     "📊 отчёт": "/report",
     "📊 отчет": "/report",
