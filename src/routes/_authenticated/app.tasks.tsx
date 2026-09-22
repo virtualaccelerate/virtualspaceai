@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { TaskTable } from "@/components/TaskTable";
+import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, Upload, User } from "lucide-react";
 import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { toast } from "sonner";
@@ -821,6 +822,17 @@ function TasksPage() {
           </div>
         </div>
       )}
+
+      <TaskDetailDialog
+        taskId={detailId}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onEdit={(id) => {
+          const found = tasks.find((x) => x.id === id);
+          setDetailOpen(false);
+          if (found) openEdit(found);
+        }}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
