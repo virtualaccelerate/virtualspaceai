@@ -289,7 +289,7 @@ export async function syncSource(source: Source) {
     const { emitExternalTaskChange } = await import("./task-changes.server");
     const tasks: YouGileItem[] = [];
     for (const columnId of columnIds) {
-      tasks.push(...(await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`)));
+      tasks.push(...(await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`).catch(() => [] as YouGileItem[])));
     }
     const seen: string[] = [];
     let synced = 0;
