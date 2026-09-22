@@ -272,6 +272,7 @@ export async function syncSource(source: Source) {
         title: String(raw.title ?? "Задача YouGile").slice(0, 500),
         description: typeof raw.description === "string" ? raw.description.slice(0, 10000) : null,
         status,
+        status_id: statusId,
         priority: priority(raw),
         assignee_id: mappedId,
         assignee_name: mappedProfile?.full_name || mappedProfile?.email || null,
