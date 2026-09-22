@@ -483,20 +483,30 @@ export async function updateYouGileTaskStatus(taskId: string, status: Status, ac
   return { ok: true, status };
 }
 
-/** Chat messages of a YouGile task, newest last. Used by the task card. */
+/** Chat and log entries of a YouGile task, used by the task card history. */
 export async function listYouGileTaskChat(teamspaceId: string, externalId: string) {
   const source = await sourceFor(teamspaceId);
   if (!source) return [];
   const key = decryptConnectionKey(source.api_key_ciphertext);
   const rows = await pages(key, `/chats/${encodeURIComponent(externalId)}/messages`).catch(() => [] as YouGileItem[]);
+  const users = await pages(key, "/users").catch(() => [] as YouGileItem[]);
+  const names = new Map(
+    users.map((row) => [String(row.id), String(row['realName'] ?? row['name'] ?? row.email ?? "").trim()]),
+  );
+  const clean = (value: unknown) =>
+    String(value ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
   return rows.map((row) => {
-    const text = String(row['text'] ?? row['label'] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    const author = row['fromUserId'] ?? row['userId'] ?? null;
+    const payload = (row['event'] ?? row['action'] ?? null) as Record<string, unknown> | null;
+    // YouGile marks its own log entries as system events; plain messages are comments.
+    const system = row['fromUserId'] == null || Boolean(payload) || row['label'] != null;
+    const text = clean(row['text'] ?? row['label'] ?? (payload ? payload['text'] ?? payload['label'] : ""));
+    const author = String(row['fromUserId'] ?? row['userId'] ?? "");
     return {
       id: `yg-${String(row.id)}`,
       created_at: externalTime(row['timestamp']) ?? new Date().toISOString(),
-      actor_name: typeof author === "string" ? null : null,
-      kind: "comment",
+      actor_name: names.get(author) || null,
+      kind: system ? "external_log" : "comment",
       source: "yougile",
       field: null,
       from_value: null,
@@ -505,6 +515,7 @@ export async function listYouGileTaskChat(teamspaceId: string, externalId: strin
     };
   }).filter((row) => row.note);
 }
+
 
 
 export async function disconnectYouGileForUser(userId: string, teamspaceId: string) {
