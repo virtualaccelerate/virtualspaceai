@@ -105,9 +105,32 @@ async function pages(key: string, path: string) {
 }
 
 function dueDate(value: unknown): string | null {
-  const raw = typeof value === "number" ? value : value && typeof value === "object" ? Number((value as Record<string, unknown>).deadline ?? (value as Record<string, unknown>).date) : Number(value);
+  const raw = typeof value === "number"
+    ? value
+    : value && typeof value === "object"
+      ? Number(
+        (value as Record<string, unknown>).deadline
+        ?? (value as Record<string, unknown>).date
+        ?? (value as Record<string, unknown>).dateTo
+        ?? (value as Record<string, unknown>).timestamp,
+      )
+      : Number(value);
   if (!Number.isFinite(raw) || raw <= 0) return null;
   return new Date(raw < 10_000_000_000 ? raw * 1000 : raw).toISOString().slice(0, 10);
+}
+
+/** YouGile keeps the deadline either on the task or inside its stickers. */
+function taskDeadline(task: Record<string, unknown>): string | null {
+  const candidates: unknown[] = [task['deadline'], task['dateTo'], task['dueDate'], task['endDate']];
+  const stickers = task['stickers'];
+  if (stickers && typeof stickers === "object") {
+    for (const entry of Object.values(stickers as Record<string, unknown>)) candidates.push(entry);
+  }
+  for (const candidate of candidates) {
+    const parsed = dueDate(candidate);
+    if (parsed) return parsed;
+  }
+  return null;
 }
 
 function externalTime(value: unknown): string | null {
