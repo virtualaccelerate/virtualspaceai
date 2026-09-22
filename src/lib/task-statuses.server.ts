@@ -48,7 +48,8 @@ export async function ensureBaseStatuses(teamspaceId: string): Promise<Teamspace
   const rows = (existing ?? []) as TeamspaceStatus[];
   const missing = BASE_COLUMNS.filter((column) => !rows.some((row) => row.base_status === column.base && row.is_default));
   if (missing.length) {
-    await admin.from("teamspace_statuses").upsert(
+    // The unique index is on lower(name), so duplicates are simply ignored.
+    await admin.from("teamspace_statuses").insert(
       missing.map((column, index) => ({
         teamspace_id: teamspaceId,
         name: column.name,
@@ -57,8 +58,7 @@ export async function ensureBaseStatuses(teamspaceId: string): Promise<Teamspace
         is_default: true,
         source: "virtual_space",
       })),
-      { onConflict: "teamspace_id,name", ignoreDuplicates: true },
-    );
+    ).then(() => undefined, () => undefined);
   }
   return listStatuses(teamspaceId);
 }
@@ -91,8 +91,8 @@ export async function ensureStatusesForColumns(
   const missing = columns.filter((column) => column.name.trim() && !byName.has(column.name.trim().toLowerCase()));
   const unique = [...new Map(missing.map((column) => [column.name.trim().toLowerCase(), column])).values()];
   if (unique.length) {
-    await admin.from("teamspace_statuses").upsert(
-      unique.map((column, index) => ({
+    for (const [index, column] of unique.entries()) {
+      await admin.from("teamspace_statuses").insert({
         teamspace_id: teamspaceId,
         name: column.name.trim(),
         base_status: guessBaseStatus(column.name),
@@ -100,9 +100,8 @@ export async function ensureStatusesForColumns(
         is_default: false,
         source,
         external_column_id: column.id,
-      })),
-      { onConflict: "teamspace_id,name", ignoreDuplicates: true },
-    );
+      }).then(() => undefined, () => undefined);
+    }
   }
 
   const refreshed = await listStatuses(teamspaceId);
