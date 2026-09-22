@@ -79,6 +79,7 @@ export function TaskDetailDialog({
   const locale = i18n.language === "en" ? "en-GB" : "ru-RU";
 
   function describe(event: EventRow) {
+    if (event.kind === "comment") return event.note ?? "";
     const parts: string[] = [];
     if (event.field) parts.push(event.field);
     if (event.from_value || event.to_value) parts.push(`${event.from_value ?? "—"} → ${event.to_value ?? "—"}`);
@@ -86,6 +87,7 @@ export function TaskDetailDialog({
     if (event.note) parts.push(event.note);
     return parts.join(" · ");
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

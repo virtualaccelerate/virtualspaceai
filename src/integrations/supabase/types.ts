@@ -843,6 +843,7 @@ export type Database = {
           actor_id: string | null
           actor_name: string | null
           created_at: string
+          external_event_id: string | null
           field: string | null
           from_value: string | null
           id: string
@@ -857,6 +858,7 @@ export type Database = {
           actor_id?: string | null
           actor_name?: string | null
           created_at?: string
+          external_event_id?: string | null
           field?: string | null
           from_value?: string | null
           id?: string
@@ -871,6 +873,7 @@ export type Database = {
           actor_id?: string | null
           actor_name?: string | null
           created_at?: string
+          external_event_id?: string | null
           field?: string | null
           from_value?: string | null
           id?: string
@@ -938,6 +941,7 @@ export type Database = {
           last_error: string | null
           last_sync_at: string | null
           project_id: string | null
+          project_ids: Json
           project_name: string | null
           provider: string
           teamspace_id: string
@@ -956,6 +960,7 @@ export type Database = {
           last_error?: string | null
           last_sync_at?: string | null
           project_id?: string | null
+          project_ids?: Json
           project_name?: string | null
           provider: string
           teamspace_id: string
@@ -974,6 +979,7 @@ export type Database = {
           last_error?: string | null
           last_sync_at?: string | null
           project_id?: string | null
+          project_ids?: Json
           project_name?: string | null
           provider?: string
           teamspace_id?: string
@@ -1005,6 +1011,7 @@ export type Database = {
           external_column_id: string | null
           external_id: string | null
           external_project: string | null
+          external_project_id: string | null
           external_source: string | null
           external_updated_at: string | null
           external_url: string | null
@@ -1036,6 +1043,7 @@ export type Database = {
           external_column_id?: string | null
           external_id?: string | null
           external_project?: string | null
+          external_project_id?: string | null
           external_source?: string | null
           external_updated_at?: string | null
           external_url?: string | null
@@ -1067,6 +1075,7 @@ export type Database = {
           external_column_id?: string | null
           external_id?: string | null
           external_project?: string | null
+          external_project_id?: string | null
           external_source?: string | null
           external_updated_at?: string | null
           external_url?: string | null

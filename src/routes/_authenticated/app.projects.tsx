@@ -49,14 +49,19 @@ function ProjectsPage() {
   const syncTr = useServerFn(syncTrello);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [board, setBoard] = useState<string>("");
+  const [month, setMonth] = useState<string>("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["projects"],
-    queryFn: () => load({ data: {} }),
+    queryKey: ["projects", board, month],
+    queryFn: () => load({ data: { board: board || null, month: month || null } }),
   });
 
   const projects = (data?.projects ?? []) as any[];
   const sync = (data?.sync ?? []) as any[];
+  const boards = (data?.boards ?? []) as string[];
+  const months = (data?.months ?? []) as string[];
+
 
   async function runSync(provider: string) {
     if (!data?.teamspace_id) return;
@@ -105,7 +110,38 @@ function ProjectsPage() {
         </div>
       )}
 
+      {(boards.length > 0 || months.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {boards.length > 0 && (
+            <select
+              value={board}
+              onChange={(e) => setBoard(e.target.value)}
+              className="rounded-lg border border-white/10 bg-transparent px-3 py-1.5 text-sm text-white/80"
+            >
+              <option value="">{t("workspaceUi.projects.allBoards", "Все доски")}</option>
+              {boards.map((item) => <option key={item} value={item} className="bg-background">{item}</option>)}
+            </select>
+          )}
+          {months.length > 0 && (
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="rounded-lg border border-white/10 bg-transparent px-3 py-1.5 text-sm text-white/80"
+            >
+              <option value="">{t("workspaceUi.projects.allMonths", "Все месяцы")}</option>
+              {months.map((item) => <option key={item} value={item} className="bg-background">{item}</option>)}
+            </select>
+          )}
+          {(board || month) && (
+            <Button size="sm" variant="ghost" onClick={() => { setBoard(""); setMonth(""); }}>
+              {t("workspaceUi.projects.reset", "Сбросить")}
+            </Button>
+          )}
+        </div>
+      )}
+
       {error && <p className="text-sm text-destructive">{error}</p>}
+
 
       <div className="glass-strong rounded-2xl border border-white/10 overflow-x-auto">
         <table className="w-full text-sm">
@@ -113,7 +149,7 @@ function ProjectsPage() {
             <tr className="text-left text-[11px] uppercase tracking-wider text-white/45">
               <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.name", "Проект")}</th>
               <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.source", "Источник")}</th>
-              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.board", "Доска")}</th>
+              <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.board", "Доски")}</th>
               <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.status", "Статус")}</th>
               <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.progress", "Прогресс")}</th>
               <th className="px-4 py-3 font-medium">{t("workspaceUi.projects.owner", "Ответственный")}</th>
@@ -141,7 +177,7 @@ function ProjectsPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-white/70">{SOURCE_LABEL[project.source] ?? project.source}</td>
-                <td className="px-4 py-3 text-white/70">{project.board ?? "—"}</td>
+                <td className="px-4 py-3 text-white/70">{project.boards?.length ? project.boards.join(", ") : "—"}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-0.5 text-[11px] ${STATUS_CLASS[project.status]}`}>{STATUS_LABEL[project.status]}</span>
                 </td>
