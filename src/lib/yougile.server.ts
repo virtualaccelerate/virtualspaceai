@@ -270,6 +270,13 @@ export async function syncSource(source: Source) {
     const key = decryptConnectionKey(source.api_key_ciphertext);
     const { boards, columns, users } = await loadStructure(key, projectList.map((row) => row.id));
     const columnIds = new Set(columns.map((row) => row.id));
+    // A structure read that returns nothing means YouGile is unreachable or the
+    // project was removed — never treat that as "everything is archived".
+    if (!columnIds.size) {
+      await admin.from("task_sync_sources").update({ last_error: "YouGile не вернул колонки проекта — задачи оставлены без изменений" }).eq("id", source.id);
+      return { synced: 0, archived: 0 };
+    }
+
     const projectName = new Map(projectList.map((row) => [row.id, row.name]));
     const boardName = new Map(boards.map((row) => [row.id, String(row.title ?? row['name'] ?? "YouGile")]));
     const boardProject = new Map(boards.map((row) => [row.id, String((row as { projectId?: string }).projectId ?? "")]));
