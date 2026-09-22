@@ -241,6 +241,14 @@ export async function syncSource(source: Source) {
     const memberIds = (memberships ?? []).map((row) => row.user_id);
     const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
     const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
+    // YouGile columns become workspace columns; unknown ones are created.
+    const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
+    const statusByColumn = await ensureStatusesForColumns(
+      source.teamspace_id,
+      "yougile",
+      columns.map((row) => ({ id: String(row.id), name: String(row.title ?? row['name'] ?? "Колонка") })),
+    );
+    const { emitExternalTaskChange } = await import("./task-changes.server");
     const tasks = (await Promise.all([...columnIds].map((columnId) => pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`)))).flat();
     const seen: string[] = [];
     let synced = 0;
