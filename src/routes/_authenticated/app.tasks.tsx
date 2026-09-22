@@ -84,7 +84,18 @@ type Task = {
   external_archived?: boolean;
   project?: string | null;
   department?: string | null;
+  status_id?: string | null;
 };
+
+/** Workspace column mirrored from YouGile/Trello (or one of the four base ones). */
+type WorkspaceStatus = {
+  id: string;
+  name: string;
+  base_status: TaskStatus;
+  position: number;
+  is_default: boolean;
+};
+
 
 const COLUMNS: {
   id: TaskStatus;
