@@ -207,7 +207,9 @@ function TasksPage() {
   const [isManager, setIsManager] = useState(true);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [members, setMembers] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
+  const [statuses, setStatuses] = useState<WorkspaceStatus[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [view, setView] = useState<"board" | "table">("board");
