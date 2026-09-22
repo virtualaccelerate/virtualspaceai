@@ -363,7 +363,7 @@ export async function syncSource(source: Source) {
         priority: priority(raw),
         assignee_id: mappedId,
         assignee_name: mappedProfile?.full_name || mappedProfile?.email || null,
-        due_date: dueDate(raw.deadline),
+        due_date: taskDeadline(raw),
         position: 0,
         external_source: "yougile",
         external_id: externalId,
