@@ -302,9 +302,19 @@ export async function syncTrelloSource(source: Source) {
         external_updated_at: typeof card['dateLastActivity'] === "string" ? card['dateLastActivity'] : null,
         external_archived: card['closed'] === true,
       };
-      const { data: before } = await admin.from("tasks").select("id, assignee_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId).maybeSingle();
+      const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId).maybeSingle();
       const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();
       if (error) throw error;
+      await emitExternalTaskChange({
+        source: "trello",
+        teamspaceId: source.teamspace_id,
+        taskId: saved.id,
+        title: patch.title,
+        before: before
+          ? { ...before, status_name: statusByColumn.get(before.external_column_id ?? "")?.name ?? before.status }
+          : null,
+        after: { ...patch, status_name: workspaceStatus?.name ?? patch.status },
+      }).catch(() => {});
       if (saved.assignee_id && saved.assignee_id !== before?.assignee_id) {
         const { notifyAssignment } = await import("./tasks.server");
         await notifyAssignment({ assigneeId: saved.assignee_id, actorId: source.created_by, teamspaceId: source.teamspace_id, kind: "assigned", taskId: saved.id, title: saved.title, status: saved.status, priority: saved.priority, dueDate: saved.due_date });
