@@ -8,6 +8,8 @@ type Source = {
   api_key_ciphertext: string;
   project_id: string | null;
   project_name: string | null;
+  project_ids: { id: string; name: string }[] | null;
+
   webhook_secret: string;
   webhook_id: string | null;
   column_map: Record<string, Status> | null;
@@ -127,13 +129,32 @@ function priority(task: Record<string, unknown>): "low" | "medium" | "high" | "u
   return "medium";
 }
 
-async function loadStructure(key: string, projectId?: string | null) {
+async function loadStructure(key: string, projectIds?: string[] | null) {
   const projects = await pages(key, "/projects");
-  if (!projectId) return { projects, boards: [], columns: [], users: [] };
-  const boards = await pages(key, `/boards?projectId=${encodeURIComponent(projectId)}`);
-  const columns = (await Promise.all(boards.map((board) => pages(key, `/columns?boardId=${encodeURIComponent(board.id)}`)))).flat();
+  const selected = (projectIds ?? []).filter(Boolean);
+  if (!selected.length) return { projects, boards: [], columns: [], users: [] };
+  const boards: YouGileItem[] = [];
+  for (const projectId of selected) {
+    // A project or board removed in YouGile must not break the whole sync.
+    const list = await pages(key, `/boards?projectId=${encodeURIComponent(projectId)}`).catch(() => [] as YouGileItem[]);
+    boards.push(...list.map((board) => ({ ...board, projectId })));
+  }
+  const columns: YouGileItem[] = [];
+  for (const board of boards) {
+    const list = await pages(key, `/columns?boardId=${encodeURIComponent(board.id)}`).catch(() => [] as YouGileItem[]);
+    columns.push(...list.map((column) => ({ ...column, boardId: board.id, projectId: (board as { projectId?: string }).projectId })));
+  }
+
   const users = await pages(key, "/users");
   return { projects, boards, columns, users };
+}
+
+/** Projects this workspace mirrors, normalised to {id, name}. */
+function selectedProjects(source: Source): { id: string; name: string }[] {
+  const list = Array.isArray(source.project_ids) ? source.project_ids.filter((row) => row && row.id) : [];
+  if (list.length) return list.map((row) => ({ id: String(row.id), name: String(row.name || row.id) }));
+  if (source.project_id) return [{ id: source.project_id, name: source.project_name || source.project_id }];
+  return [];
 }
 
 async function sourceFor(teamspaceId: string) {
@@ -146,8 +167,9 @@ async function sourceFor(teamspaceId: string) {
 export async function getYouGileStatusForUser(userId: string, teamspaceId: string) {
   await requireMember(userId, teamspaceId);
   const source = await sourceFor(teamspaceId);
-  if (!source) return { connected: false, projects: [], boards: [], columns: [], users: [], members: [] };
-  const structure = await loadStructure(decryptConnectionKey(source.api_key_ciphertext), source.project_id).catch(() => ({ projects: [], boards: [], columns: [], users: [] }));
+  if (!source) return { connected: false, projects: [], boards: [], columns: [], users: [], members: [], selected_projects: [] };
+  const selected = selectedProjects(source);
+  const structure = await loadStructure(decryptConnectionKey(source.api_key_ciphertext), selected.map((row) => row.id)).catch(() => ({ projects: [], boards: [], columns: [], users: [] }));
   const admin = await db();
   const { data: memberships } = await admin.from("teamspace_members").select("user_id").eq("teamspace_id", teamspaceId);
   const ids = (memberships ?? []).map((row) => row.user_id);
@@ -156,6 +178,7 @@ export async function getYouGileStatusForUser(userId: string, teamspaceId: strin
     connected: true,
     project_id: source.project_id,
     project_name: source.project_name,
+    selected_projects: selected,
     column_map: source.column_map ?? {},
     user_map: source.user_map ?? {},
     last_sync_at: source.last_sync_at,
@@ -184,27 +207,39 @@ export async function connectYouGileForUser(userId: string, input: { teamspace_i
   return { connected: true, projects };
 }
 
-export async function inspectYouGileProjectForUser(userId: string, teamspaceId: string, projectId: string) {
+export async function inspectYouGileProjectForUser(userId: string, teamspaceId: string, projectIds: string[]) {
   await requireManager(userId, teamspaceId);
   const source = await sourceFor(teamspaceId);
   if (!source) throw new Error("YouGile не подключён");
-  return loadStructure(decryptConnectionKey(source.api_key_ciphertext), projectId);
+  return loadStructure(decryptConnectionKey(source.api_key_ciphertext), projectIds);
 }
 
-export async function configureYouGileForUser(userId: string, input: { teamspace_id: string; project_id: string; project_name: string; column_map: Record<string, Status>; user_map: Record<string, string> }) {
+export async function configureYouGileForUser(userId: string, input: { teamspace_id: string; projects: { id: string; name: string }[]; column_map: Record<string, Status>; user_map: Record<string, string> }) {
   await requireManager(userId, input.teamspace_id);
   const source = await sourceFor(input.teamspace_id);
   if (!source) throw new Error("Сначала подключите YouGile");
+  if (!input.projects.length) throw new Error("Выберите хотя бы один проект YouGile");
   const admin = await db();
-  const { error } = await admin.from("task_sync_sources").update({ project_id: input.project_id, project_name: input.project_name, column_map: input.column_map, user_map: input.user_map, last_error: null }).eq("id", source.id);
+  const first = input.projects[0]!;
+  const patch = {
+    project_id: first.id,
+    project_name: first.name,
+    project_ids: input.projects,
+    column_map: input.column_map,
+    user_map: input.user_map,
+    last_error: null,
+  };
+  const { error } = await admin.from("task_sync_sources").update(patch).eq("id", source.id);
   if (error) throw new Error(error.message);
-  const webhookError = await registerWebhook({ ...source, project_id: input.project_id });
-  const result = await syncSource({ ...source, project_id: input.project_id, project_name: input.project_name, column_map: input.column_map, user_map: input.user_map });
+  const next: Source = { ...source, ...patch };
+  const webhookError = await registerWebhook(next);
+  const result = await syncSource(next);
   if (webhookError) {
     await admin.from("task_sync_sources").update({ last_error: webhookError }).eq("id", source.id);
   }
   return { ...result, webhook_error: webhookError };
 }
+
 
 /** Returns null on success, or a human-readable message the admin should see. */
 async function registerWebhook(source: Source): Promise<string | null> {
@@ -228,13 +263,16 @@ async function registerWebhook(source: Source): Promise<string | null> {
 }
 
 export async function syncSource(source: Source) {
-  if (!source.enabled || !source.project_id) return { synced: 0, archived: 0 };
+  const projectList = selectedProjects(source);
+  if (!source.enabled || !projectList.length) return { synced: 0, archived: 0 };
   const admin = await db();
   try {
     const key = decryptConnectionKey(source.api_key_ciphertext);
-    const { boards, columns, users } = await loadStructure(key, source.project_id);
+    const { boards, columns, users } = await loadStructure(key, projectList.map((row) => row.id));
     const columnIds = new Set(columns.map((row) => row.id));
-    const boardName = new Map(boards.map((row) => [row.id, String(row.title ?? row.name ?? "YouGile")]));
+    const projectName = new Map(projectList.map((row) => [row.id, row.name]));
+    const boardName = new Map(boards.map((row) => [row.id, String(row.title ?? row['name'] ?? "YouGile")]));
+    const boardProject = new Map(boards.map((row) => [row.id, String((row as { projectId?: string }).projectId ?? "")]));
     const columnBoard = new Map(columns.map((row) => [row.id, String(row.boardId ?? "")]));
     const userEmail = new Map(users.map((row) => [row.id, String(row.email ?? "").toLowerCase()]));
     const { data: memberships } = await admin.from("teamspace_members").select("user_id").eq("teamspace_id", source.teamspace_id);
@@ -249,7 +287,10 @@ export async function syncSource(source: Source) {
       columns.map((row) => ({ id: String(row.id), name: String(row.title ?? row['name'] ?? "Колонка") })),
     );
     const { emitExternalTaskChange } = await import("./task-changes.server");
-    const tasks = (await Promise.all([...columnIds].map((columnId) => pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`)))).flat();
+    const tasks: YouGileItem[] = [];
+    for (const columnId of columnIds) {
+      tasks.push(...(await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`)));
+    }
     const seen: string[] = [];
     let synced = 0;
     for (const raw of tasks) {
@@ -259,6 +300,8 @@ export async function syncSource(source: Source) {
       const mappedId = assigned.map((id) => source.user_map?.[id] ?? profileByEmail.get(userEmail.get(id) ?? "")?.id).find(Boolean) ?? null;
       const mappedProfile = (profiles ?? []).find((row) => row.id === mappedId);
       const columnId = String(raw.columnId ?? "");
+      const boardId = columnBoard.get(columnId) ?? "";
+      const projectId = boardProject.get(boardId) ?? "";
       const workspaceStatus = statusByColumn.get(columnId) ?? null;
       const mapped = source.column_map?.[columnId];
       const status: Status = raw.completed === true || raw.archived === true
@@ -281,12 +324,14 @@ export async function syncSource(source: Source) {
         external_source: "yougile",
         external_id: externalId,
         external_url: typeof raw.url === "string" ? raw.url : null,
-        external_project: source.project_name,
-        external_board: boardName.get(columnBoard.get(String(raw.columnId ?? "")) ?? "") ?? null,
-        external_column_id: String(raw.columnId ?? "") || null,
+        external_project: projectName.get(projectId) ?? source.project_name,
+        external_project_id: projectId || null,
+        external_board: boardName.get(boardId) ?? null,
+        external_column_id: columnId || null,
         external_updated_at: externalTime(raw.timestamp),
         external_archived: deleted || raw.archived === true,
       };
+
       const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_id", externalId).maybeSingle();
       const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();
       if (error) throw error;
@@ -353,20 +398,70 @@ export async function handleYouGileWebhook(id: string, secret: string) {
   return true;
 }
 
+/**
+ * Moves the card in YouGile and mirrors the move locally.
+ * The target column is picked on the task's own board, so every project /
+ * timeline board keeps working, not only the one that was mapped by hand.
+ */
 export async function updateYouGileTaskStatus(taskId: string, status: Status, actorId: string) {
   const admin = await db();
-  const { data: task } = await admin.from("tasks").select("id, teamspace_id, external_id, external_source").eq("id", taskId).maybeSingle();
+  const { data: task } = await admin.from("tasks").select("id, teamspace_id, external_id, external_source, external_column_id").eq("id", taskId).maybeSingle();
   if (!task?.teamspace_id || task.external_source !== "yougile" || !task.external_id) throw new Error("Задача YouGile не найдена");
   await requireMember(actorId, task.teamspace_id);
   const source = await sourceFor(task.teamspace_id);
   if (!source) throw new Error("YouGile не подключён");
-  const columnId = Object.entries(source.column_map ?? {}).find(([, mapped]) => mapped === status)?.[0];
-  const body = status === "done" ? { completed: true } : { columnId, completed: false };
-  if (!columnId && status !== "done") throw new Error("Для этого статуса не выбрана колонка YouGile");
-  await api(decryptConnectionKey(source.api_key_ciphertext), `/tasks/${encodeURIComponent(task.external_id)}`, { method: "PUT", body: JSON.stringify(body) });
-  await admin.from("tasks").update({ status }).eq("id", task.id);
+  const key = decryptConnectionKey(source.api_key_ciphertext);
+  const { guessBaseStatus } = await import("./task-statuses.server");
+
+  let columnId: string | undefined;
+  if (task.external_column_id) {
+    const current = await api<Record<string, unknown>>(key, `/columns/${encodeURIComponent(task.external_column_id)}`).catch(() => null);
+    const boardId = current && typeof current['boardId'] === "string" ? current['boardId'] : null;
+    if (boardId) {
+      const columns = await pages(key, `/columns?boardId=${encodeURIComponent(boardId)}`);
+      const mapped = columns.find((column) => source.column_map?.[String(column.id)] === status);
+      const guessed = columns.find((column) => guessBaseStatus(String(column.title ?? column['name'] ?? "")) === status);
+      columnId = String((mapped ?? guessed)?.id ?? "") || undefined;
+    }
+  }
+  if (!columnId) columnId = Object.entries(source.column_map ?? {}).find(([, mapped]) => mapped === status)?.[0];
+  if (!columnId && status !== "done") throw new Error("В YouGile нет колонки для этого статуса");
+
+  const body = columnId ? { columnId, completed: status === "done" } : { completed: true };
+  await api(key, `/tasks/${encodeURIComponent(task.external_id)}`, { method: "PUT", body: JSON.stringify(body) });
+
+  let statusId: string | null = null;
+  if (columnId) {
+    const { data: row } = await admin.from("teamspace_statuses").select("id").eq("teamspace_id", task.teamspace_id).eq("external_column_id", columnId).maybeSingle();
+    statusId = row?.id ?? null;
+  }
+  await admin.from("tasks").update({ status, ...(columnId ? { external_column_id: columnId } : {}), ...(statusId ? { status_id: statusId } : {}) }).eq("id", task.id);
   return { ok: true, status };
 }
+
+/** Chat messages of a YouGile task, newest last. Used by the task card. */
+export async function listYouGileTaskChat(teamspaceId: string, externalId: string) {
+  const source = await sourceFor(teamspaceId);
+  if (!source) return [];
+  const key = decryptConnectionKey(source.api_key_ciphertext);
+  const rows = await pages(key, `/chats/${encodeURIComponent(externalId)}/messages`).catch(() => [] as YouGileItem[]);
+  return rows.map((row) => {
+    const text = String(row['text'] ?? row['label'] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const author = row['fromUserId'] ?? row['userId'] ?? null;
+    return {
+      id: `yg-${String(row.id)}`,
+      created_at: externalTime(row['timestamp']) ?? new Date().toISOString(),
+      actor_name: typeof author === "string" ? null : null,
+      kind: "comment",
+      source: "yougile",
+      field: null,
+      from_value: null,
+      to_value: null,
+      note: text.slice(0, 2000),
+    };
+  }).filter((row) => row.note);
+}
+
 
 export async function disconnectYouGileForUser(userId: string, teamspaceId: string) {
   await requireManager(userId, teamspaceId);

@@ -23,7 +23,7 @@ export const inspectYouGileProject = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => YouGileProjectSchema.parse(raw))
   .handler(async ({ data, context }) => {
     const { inspectYouGileProjectForUser } = await import("./yougile.server");
-    return (await inspectYouGileProjectForUser(context.userId, data.teamspace_id, data.project_id)) as any;
+    return (await inspectYouGileProjectForUser(context.userId, data.teamspace_id, data.project_ids)) as any;
   });
 
 export const configureYouGile = createServerFn({ method: "POST" })

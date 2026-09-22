@@ -7,8 +7,7 @@ export const ConnectYouGileSchema = z.object({
 
 export const ConfigureYouGileSchema = z.object({
   teamspace_id: z.string().uuid(),
-  project_id: z.string().min(1).max(200),
-  project_name: z.string().min(1).max(300),
+  projects: z.array(z.object({ id: z.string().min(1).max(200), name: z.string().min(1).max(300) })).min(1).max(50),
   column_map: z.record(z.string(), z.enum(["backlog", "in_progress", "review", "done"])),
   user_map: z.record(z.string(), z.string().uuid()).default({}),
 });
@@ -19,4 +18,4 @@ export const YouGileStatusSchema = z.object({
 });
 
 export const TeamspaceSchema = z.object({ teamspace_id: z.string().uuid() });
-export const YouGileProjectSchema = TeamspaceSchema.extend({ project_id: z.string().min(1).max(200) });
+export const YouGileProjectSchema = TeamspaceSchema.extend({ project_ids: z.array(z.string().min(1).max(200)).max(50) });

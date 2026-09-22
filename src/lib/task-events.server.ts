@@ -77,7 +77,20 @@ export async function listTaskEventsForUser(userId: string, taskId: string) {
     const { data: status } = await admin.from("teamspace_statuses").select("name").eq("id", task.status_id).maybeSingle();
     statusName = status?.name ?? null;
   }
-  return { task: { ...task, status_name: statusName }, events: events ?? [] };
+  // Discussion that happens inside the tracker is shown next to local history.
+  let chat: Record<string, unknown>[] = [];
+  if (task.external_source === "yougile" && task.teamspace_id) {
+    const { data: external } = await admin.from("tasks").select("external_id").eq("id", taskId).maybeSingle();
+    if (external?.external_id) {
+      const { listYouGileTaskChat } = await import("./yougile.server");
+      chat = (await listYouGileTaskChat(task.teamspace_id, external.external_id).catch(() => [])) as Record<string, unknown>[];
+    }
+  }
+  const merged = [...(events ?? []), ...chat].sort(
+    (a, b) => new Date(String(b['created_at'])).getTime() - new Date(String(a['created_at'])).getTime(),
+  );
+  return { task: { ...task, status_name: statusName }, events: merged };
+
 }
 
 /** Recent activity across both trackers, for the workspace board and the bot. */

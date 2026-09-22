@@ -24,7 +24,7 @@ export function YouGileCard() {
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [state, setState] = useState<any>(null);
   const [key, setKey] = useState("");
-  const [projectId, setProjectId] = useState("");
+  const [projectIds, setProjectIds] = useState<string[]>([]);
   const [columnMap, setColumnMap] = useState<Record<string, Status>>({});
   const [userMap, setUserMap] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -33,7 +33,7 @@ export function YouGileCard() {
   const load = async (id: string) => {
     const next = await statusFn({ data: { teamspace_id: id } });
     setState(next);
-    setProjectId(next.project_id ?? "");
+    setProjectIds(((next.selected_projects ?? []) as { id: string }[]).map((row) => row.id));
     setColumnMap(next.column_map ?? {});
     setUserMap(next.user_map ?? {});
   };
@@ -48,7 +48,12 @@ export function YouGileCard() {
   const columns = (state?.columns ?? []) as Item[];
   const users = (state?.users ?? []) as Item[];
   const members = (state?.members ?? []) as Member[];
-  const project = useMemo(() => ((state?.projects ?? []) as Item[]).find((item) => item.id === projectId), [state, projectId]);
+  const allProjects = (state?.projects ?? []) as Item[];
+  const chosen = useMemo(
+    () => allProjects.filter((item) => projectIds.includes(item.id)).map((item) => ({ id: item.id, name: item.title ?? item.name ?? item.id })),
+    [allProjects, projectIds],
+  );
+
 
   async function run(action: () => Promise<unknown>) {
     if (!teamspaceId) return;
@@ -85,19 +90,35 @@ export function YouGileCard() {
       ) : (
         <div className="space-y-4 border-t border-border pt-4">
           <div className="space-y-2">
-            <Label>{t("integrationsUi.yougile.project", "Project")}</Label>
-            <Select value={projectId} onValueChange={(value) => {
-              setProjectId(value);
-              if (teamspaceId) void runInspect(async () => {
-                const structure = await inspectFn({ data: { teamspace_id: teamspaceId, project_id: value } });
-                setState((old: any) => ({ ...old, ...structure }));
-              });
-            }}><SelectTrigger><SelectValue placeholder={t("integrationsUi.yougile.chooseProject", "Choose a project")} /></SelectTrigger><SelectContent>{((state.projects ?? []) as Item[]).map((item) => <SelectItem key={item.id} value={item.id}>{item.title ?? item.name ?? item.id}</SelectItem>)}</SelectContent></Select>
+            <Label>{t("integrationsUi.yougile.project", "Projects")}</Label>
+            <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+              {allProjects.map((item) => {
+                const checked = projectIds.includes(item.id);
+                return (
+                  <label key={item.id} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        const next = checked ? projectIds.filter((id) => id !== item.id) : [...projectIds, item.id];
+                        setProjectIds(next);
+                        if (teamspaceId && next.length) void runInspect(async () => {
+                          const structure = await inspectFn({ data: { teamspace_id: teamspaceId, project_ids: next } });
+                          setState((old: any) => ({ ...old, ...structure }));
+                        });
+                      }}
+                    />
+                    <span className="truncate">{item.title ?? item.name ?? item.id}</span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
-          {projectId && columns.length > 0 && <div className="space-y-2"><Label>{t("integrationsUi.yougile.columns", "Columns")}</Label>{columns.map((column) => <div key={column.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{column.title ?? column.name ?? column.id}</span><Select value={columnMap[column.id] ?? "backlog"} onValueChange={(value) => setColumnMap((old) => ({ ...old, [column.id]: value as Status }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="backlog">{t("integrationsUi.yougile.todo", "To do")}</SelectItem><SelectItem value="in_progress">{t("integrationsUi.yougile.progress", "In progress")}</SelectItem><SelectItem value="review">{t("integrationsUi.yougile.review", "In review")}</SelectItem><SelectItem value="done">{t("integrationsUi.yougile.done", "Done")}</SelectItem></SelectContent></Select></div>)}</div>}
-          {projectId && users.length > 0 && <div className="space-y-2"><Label>{t("integrationsUi.yougile.users", "Team members")}</Label>{users.map((user) => <div key={user.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{user.name ?? user.email ?? user.id}</span><Select value={userMap[user.id] || "skip"} onValueChange={(value) => setUserMap((old) => ({ ...old, [user.id]: value === "skip" ? "" : value }))}><SelectTrigger><SelectValue placeholder={t("integrationsUi.yougile.unmatched", "Not matched")} /></SelectTrigger><SelectContent><SelectItem value="skip">{t("integrationsUi.yougile.unmatched", "Not matched")}</SelectItem>{members.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>)}</SelectContent></Select></div>)}</div>}
+          {projectIds.length > 0 && columns.length > 0 && <div className="space-y-2"><Label>{t("integrationsUi.yougile.columns", "Columns")}</Label>{columns.map((column) => <div key={column.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{column.title ?? column.name ?? column.id}</span><Select value={columnMap[column.id] ?? "backlog"} onValueChange={(value) => setColumnMap((old) => ({ ...old, [column.id]: value as Status }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="backlog">{t("integrationsUi.yougile.todo", "To do")}</SelectItem><SelectItem value="in_progress">{t("integrationsUi.yougile.progress", "In progress")}</SelectItem><SelectItem value="review">{t("integrationsUi.yougile.review", "In review")}</SelectItem><SelectItem value="done">{t("integrationsUi.yougile.done", "Done")}</SelectItem></SelectContent></Select></div>)}</div>}
+          {projectIds.length > 0 && users.length > 0 && <div className="space-y-2"><Label>{t("integrationsUi.yougile.users", "Team members")}</Label>{users.map((user) => <div key={user.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{user.name ?? user.email ?? user.id}</span><Select value={userMap[user.id] || "skip"} onValueChange={(value) => setUserMap((old) => ({ ...old, [user.id]: value === "skip" ? "" : value }))}><SelectTrigger><SelectValue placeholder={t("integrationsUi.yougile.unmatched", "Not matched")} /></SelectTrigger><SelectContent><SelectItem value="skip">{t("integrationsUi.yougile.unmatched", "Not matched")}</SelectItem>{members.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>)}</SelectContent></Select></div>)}</div>}
           <div className="flex flex-wrap gap-2">
-            <Button disabled={busy || !projectId} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", project_id: projectId, project_name: project?.title ?? project?.name ?? projectId, column_map: columnMap, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }))}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.yougile.save", "Save and sync")}</Button>
+            <Button disabled={busy || !chosen.length} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", projects: chosen, column_map: columnMap, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }))}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.yougile.save", "Save and sync")}</Button>
+
             <Button variant="outline" disabled={busy} onClick={() => run(() => disconnectFn({ data: { teamspace_id: teamspaceId ?? "" } }))}><Unplug className="h-4 w-4" /> {t("integrationsUi.yougile.disconnect", "Disconnect")}</Button>
           </div>
           {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.yougile.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
