@@ -861,7 +861,7 @@ function TasksPage() {
                   </div>
 
                   <button
-                    onClick={() => openCreate(col.id)}
+                    onClick={() => openCreate(col.base)}
                     className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 hover:bg-accent/40 transition"
                   >
                     <Plus className="h-3.5 w-3.5" /> {t("tasksUi.addTask", "Add Task")}
