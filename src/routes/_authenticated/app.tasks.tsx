@@ -632,19 +632,19 @@ function TasksPage() {
       ) : (
         <div className="-mx-4 sm:-mx-6 overflow-x-auto pb-4">
           <div className="flex gap-4 px-4 sm:px-6 min-w-max">
-            {COLUMNS.map((col) => {
-              const items = grouped[col.id];
-              const isOver = dragOver === col.id;
+            {boardCols.map((col) => {
+              const items = groupedByColumn[col.key] ?? [];
+              const isOver = dragOver === col.key;
               return (
                 <div
-                  key={col.id}
+                  key={col.key}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    if (dragOver !== col.id) setDragOver(col.id);
+                    if (dragOver !== col.key) setDragOver(col.key);
                   }}
-                  onDragLeave={() => setDragOver((s) => (s === col.id ? null : s))}
+                  onDragLeave={() => setDragOver((s) => (s === col.key ? null : s))}
                   onDrop={() => {
-                    if (dragId) moveTask(dragId, col.id);
+                    if (dragId) moveTask(dragId, col.base);
                     setDragId(null);
                     setDragOver(null);
                   }}
@@ -667,17 +667,18 @@ function TasksPage() {
                             col.dot,
                           )}
                         />
-                        {colLabel(col.id)}
+                        {col.label}
                       </span>
                       <span className="text-xs text-muted-foreground font-medium">{items.length}</span>
                     </div>
                     <button
-                      onClick={() => openCreate(col.id)}
+                      onClick={() => openCreate(col.base)}
                       className="text-muted-foreground hover:text-foreground transition"
-                      aria-label={t("tasksUi.addTaskTo", "Add task to {{col}}", { col: colLabel(col.id) })}
+                      aria-label={t("tasksUi.addTaskTo", "Add task to {{col}}", { col: col.label })}
                     >
                       <Plus className="h-4 w-4" />
                     </button>
+
                   </div>
 
 
