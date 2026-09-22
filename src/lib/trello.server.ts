@@ -275,6 +275,12 @@ export async function syncTrelloSource(source: Source) {
           ?? profileByEmail.get(`${memberHandle.get(id) ?? ""}`)?.id)
         .find(Boolean) ?? null;
       const mappedProfile = (profiles ?? []).find((row) => row.id === mappedId);
+      const listId = String(card['idList'] ?? "");
+      const workspaceStatus = statusByColumn.get(listId) ?? null;
+      const status: Status = card['dueComplete'] === true
+        ? "done"
+        : source.column_map?.[listId] ?? workspaceStatus?.base_status ?? cardStatus(card, source.column_map ?? {});
+      const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
       const patch = {
         user_id: source.created_by,
         teamspace_id: source.teamspace_id,
