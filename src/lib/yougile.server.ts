@@ -346,12 +346,14 @@ export async function syncSource(source: Source) {
       const boardId = columnBoard.get(columnId) ?? "";
       const projectId = boardProject.get(boardId) ?? "";
       const workspaceStatus = statusByColumn.get(columnId) ?? null;
-      // YouGile is the source of truth: the mirrored column decides the status.
-      const status: Status = workspaceStatus?.base_status
-        ?? (raw.completed === true || raw.archived === true
-          ? "done"
-          : taskStatus(raw, source.column_map ?? {}));
+      // The mirrored column keeps the board layout, but YouGile's own
+      // "completed" flag decides whether the task counts as done.
+      const completed = raw.completed === true || raw.archived === true;
+      const status: Status = completed
+        ? "done"
+        : workspaceStatus?.base_status ?? taskStatus(raw, source.column_map ?? {});
       const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
+
       const deleted = raw.deleted === true;
       const patch = {
         user_id: source.created_by,
