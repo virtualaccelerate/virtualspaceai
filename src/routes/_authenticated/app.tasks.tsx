@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { TaskTable } from "@/components/TaskTable";
+import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, Upload, User } from "lucide-react";
 import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { toast } from "sonner";
@@ -184,6 +185,8 @@ function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Task | null>(null);
   const [draft, setDraft] = useState<TaskDraft>(emptyDraft());
   const [dragId, setDragId] = useState<string | null>(null);
@@ -350,6 +353,12 @@ function TasksPage() {
     setEditing(null);
     setDraft(emptyDraft(status));
     setDialogOpen(true);
+  }
+
+  // A click always opens the task card with its history; editing happens from there.
+  function openDetail(task: Task) {
+    setDetailId(task.id);
+    setDetailOpen(true);
   }
 
   function openEdit(task: Task) {
@@ -547,7 +556,7 @@ function TasksPage() {
           priorityLabel={(p: TaskPriority) => priorityLabel(p)}
           onOpen={(task: { id: string }) => {
             const found = tasks.find((x) => x.id === task.id);
-            if (found) openEdit(found);
+            if (found) openDetail(found);
           }}
           onMove={(id: string, status: TaskStatus) => moveTask(id, status)}
           onDelete={(task: { id: string }) => {
@@ -629,7 +638,7 @@ function TasksPage() {
                             setDragId(null);
                             setDragOver(null);
                           }}
-                          onClick={() => openEdit(task)}
+                          onClick={() => openDetail(task)}
                           className={cn(
                             "group cursor-grab active:cursor-grabbing rounded-xl border border-border bg-card p-3 shadow-sm hover:border-primary/30 hover:bg-accent/30 transition",
                             dragId === task.id && "opacity-50",
@@ -813,6 +822,17 @@ function TasksPage() {
           </div>
         </div>
       )}
+
+      <TaskDetailDialog
+        taskId={detailId}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onEdit={(id) => {
+          const found = tasks.find((x) => x.id === id);
+          setDetailOpen(false);
+          if (found) openEdit(found);
+        }}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">

@@ -252,6 +252,15 @@ export async function syncTrelloSource(source: Source) {
     const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
     const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
 
+    // Trello lists become workspace columns; missing ones are created.
+    const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
+    const statusByColumn = await ensureStatusesForColumns(
+      source.teamspace_id,
+      "trello",
+      lists.map((row) => ({ id: String(row.id), name: String(row['name'] ?? "Список") })),
+    );
+    const { emitExternalTaskChange } = await import("./task-changes.server");
+
     const cards = await allCards(creds, source.project_id);
     const seen: string[] = [];
     let synced = 0;
@@ -266,12 +275,19 @@ export async function syncTrelloSource(source: Source) {
           ?? profileByEmail.get(`${memberHandle.get(id) ?? ""}`)?.id)
         .find(Boolean) ?? null;
       const mappedProfile = (profiles ?? []).find((row) => row.id === mappedId);
+      const listId = String(card['idList'] ?? "");
+      const workspaceStatus = statusByColumn.get(listId) ?? null;
+      const status: Status = card['dueComplete'] === true
+        ? "done"
+        : source.column_map?.[listId] ?? workspaceStatus?.base_status ?? cardStatus(card, source.column_map ?? {});
+      const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
       const patch = {
         user_id: source.created_by,
         teamspace_id: source.teamspace_id,
         title: String(card['name'] ?? "Карточка Trello").slice(0, 500),
         description: typeof card['desc'] === "string" ? card['desc'].slice(0, 10000) : null,
-        status: cardStatus(card, source.column_map ?? {}),
+        status,
+        status_id: statusId,
         priority: priority(card),
         assignee_id: mappedId,
         assignee_name: mappedProfile?.full_name || mappedProfile?.email || null,
@@ -286,9 +302,19 @@ export async function syncTrelloSource(source: Source) {
         external_updated_at: typeof card['dateLastActivity'] === "string" ? card['dateLastActivity'] : null,
         external_archived: card['closed'] === true,
       };
-      const { data: before } = await admin.from("tasks").select("id, assignee_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId).maybeSingle();
+      const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId).maybeSingle();
       const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();
       if (error) throw error;
+      await emitExternalTaskChange({
+        source: "trello",
+        teamspaceId: source.teamspace_id,
+        taskId: saved.id,
+        title: patch.title,
+        before: before
+          ? { ...before, status_name: statusByColumn.get(before.external_column_id ?? "")?.name ?? before.status }
+          : null,
+        after: { ...patch, status_name: workspaceStatus?.name ?? patch.status },
+      }).catch(() => {});
       if (saved.assignee_id && saved.assignee_id !== before?.assignee_id) {
         const { notifyAssignment } = await import("./tasks.server");
         await notifyAssignment({ assigneeId: saved.assignee_id, actorId: source.created_by, teamspaceId: source.teamspace_id, kind: "assigned", taskId: saved.id, title: saved.title, status: saved.status, priority: saved.priority, dueDate: saved.due_date });

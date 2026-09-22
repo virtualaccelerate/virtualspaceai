@@ -838,6 +838,66 @@ export type Database = {
         }
         Relationships: []
       }
+      task_events: {
+        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          field: string | null
+          from_value: string | null
+          id: string
+          kind: string
+          note: string | null
+          source: string
+          task_id: string
+          teamspace_id: string | null
+          to_value: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          field?: string | null
+          from_value?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          source?: string
+          task_id: string
+          teamspace_id?: string | null
+          to_value?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          field?: string | null
+          from_value?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          source?: string
+          task_id?: string
+          teamspace_id?: string | null
+          to_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_events_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_reminders: {
         Row: {
           id: string
@@ -957,6 +1017,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["task_status"]
+          status_id: string | null
           submitted_at: string | null
           teamspace_id: string | null
           title: string
@@ -987,6 +1048,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["task_status"]
+          status_id?: string | null
           submitted_at?: string | null
           teamspace_id?: string | null
           title: string
@@ -1017,6 +1079,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["task_status"]
+          status_id?: string | null
           submitted_at?: string | null
           teamspace_id?: string | null
           title?: string
@@ -1024,6 +1087,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "teamspace_statuses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_teamspace_id_fkey"
             columns: ["teamspace_id"]
@@ -1058,6 +1128,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "teamspace_members_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teamspace_statuses: {
+        Row: {
+          base_status: Database["public"]["Enums"]["task_status"]
+          created_at: string
+          external_column_id: string | null
+          id: string
+          is_default: boolean
+          name: string
+          position: number
+          source: string | null
+          teamspace_id: string
+        }
+        Insert: {
+          base_status?: Database["public"]["Enums"]["task_status"]
+          created_at?: string
+          external_column_id?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          position?: number
+          source?: string | null
+          teamspace_id: string
+        }
+        Update: {
+          base_status?: Database["public"]["Enums"]["task_status"]
+          created_at?: string
+          external_column_id?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          position?: number
+          source?: string | null
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teamspace_statuses_teamspace_id_fkey"
             columns: ["teamspace_id"]
             isOneToOne: false
             referencedRelation: "teamspaces"

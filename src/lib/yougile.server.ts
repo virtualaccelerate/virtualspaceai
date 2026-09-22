@@ -241,6 +241,14 @@ export async function syncSource(source: Source) {
     const memberIds = (memberships ?? []).map((row) => row.user_id);
     const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
     const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
+    // YouGile columns become workspace columns; unknown ones are created.
+    const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
+    const statusByColumn = await ensureStatusesForColumns(
+      source.teamspace_id,
+      "yougile",
+      columns.map((row) => ({ id: String(row.id), name: String(row.title ?? row['name'] ?? "Колонка") })),
+    );
+    const { emitExternalTaskChange } = await import("./task-changes.server");
     const tasks = (await Promise.all([...columnIds].map((columnId) => pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`)))).flat();
     const seen: string[] = [];
     let synced = 0;
@@ -250,7 +258,13 @@ export async function syncSource(source: Source) {
       const assigned = Array.isArray(raw.assigned) ? raw.assigned.map(String) : [];
       const mappedId = assigned.map((id) => source.user_map?.[id] ?? profileByEmail.get(userEmail.get(id) ?? "")?.id).find(Boolean) ?? null;
       const mappedProfile = (profiles ?? []).find((row) => row.id === mappedId);
-      const status = taskStatus(raw, source.column_map ?? {});
+      const columnId = String(raw.columnId ?? "");
+      const workspaceStatus = statusByColumn.get(columnId) ?? null;
+      const mapped = source.column_map?.[columnId];
+      const status: Status = raw.completed === true || raw.archived === true
+        ? "done"
+        : mapped ?? workspaceStatus?.base_status ?? taskStatus(raw, source.column_map ?? {});
+      const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
       const deleted = raw.deleted === true;
       const patch = {
         user_id: source.created_by,
@@ -258,6 +272,7 @@ export async function syncSource(source: Source) {
         title: String(raw.title ?? "Задача YouGile").slice(0, 500),
         description: typeof raw.description === "string" ? raw.description.slice(0, 10000) : null,
         status,
+        status_id: statusId,
         priority: priority(raw),
         assignee_id: mappedId,
         assignee_name: mappedProfile?.full_name || mappedProfile?.email || null,
@@ -272,9 +287,19 @@ export async function syncSource(source: Source) {
         external_updated_at: externalTime(raw.timestamp),
         external_archived: deleted || raw.archived === true,
       };
-      const { data: before } = await admin.from("tasks").select("id, assignee_id, status, priority, due_date").eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_id", externalId).maybeSingle();
+      const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_id", externalId).maybeSingle();
       const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();
       if (error) throw error;
+      await emitExternalTaskChange({
+        source: "yougile",
+        teamspaceId: source.teamspace_id,
+        taskId: saved.id,
+        title: patch.title,
+        before: before
+          ? { ...before, status_name: statusByColumn.get(before.external_column_id ?? "")?.name ?? before.status }
+          : null,
+        after: { ...patch, status_name: workspaceStatus?.name ?? patch.status },
+      }).catch(() => {});
       if (saved.assignee_id && saved.assignee_id !== before?.assignee_id) {
         const { notifyAssignment } = await import("./tasks.server");
         await notifyAssignment({ assigneeId: saved.assignee_id, actorId: source.created_by, teamspaceId: source.teamspace_id, kind: "assigned", taskId: saved.id, title: saved.title, status: saved.status, priority: saved.priority, dueDate: saved.due_date });

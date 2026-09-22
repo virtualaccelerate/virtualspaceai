@@ -206,6 +206,20 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
     await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: newlyAssigned ? "assigned" : "updated", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
 
   }
+  if (row.status !== current.status) {
+    const { emitLocalStatusChange } = await import("./task-changes.server");
+    const { externalLabel } = await import("./external-tasks.server");
+    await emitLocalStatusChange({
+      taskId: row.id,
+      teamspaceId: current.teamspace_id,
+      actorId: userId,
+      actorName: await assigneeName(current.teamspace_id, userId),
+      from: current.status,
+      to: row.status,
+      title: row.title,
+      tracker: externalLabel(row.external_source) || null,
+    }).catch(() => {});
+  }
   const { syncTaskToCalendar } = await import("./google-calendar.server");
   await syncTaskToCalendar(row, current.assignee_id ?? current.user_id).catch(() => {});
   return row;
