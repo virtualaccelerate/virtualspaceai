@@ -2077,6 +2077,12 @@ export function applyClientLanguage() {
       persistLanguage(saved);
       return;
     }
+    // The server already rendered in the browser's language; keep it, no flip.
+    const rendered = supported(document.documentElement.lang);
+    if (rendered) {
+      persistLanguage(rendered);
+      return;
+    }
     void detectCountryLang().then((geoLang) => {
       const pick = geoLang || supported(navigator.language) || "en";
       setLanguage(pick);

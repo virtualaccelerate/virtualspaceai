@@ -382,9 +382,10 @@ function TasksPage() {
     const mirrored = statuses.filter((s) => !s.is_default && s.base_status !== "done");
     if (!mirrored.length) return COLUMNS.map((c) => baseCol(c.id));
     const cols = mirrored.map((s) => ({ key: s.id, label: s.name, base: s.base_status, pill: meta(s.base_status).pill, dot: meta(s.base_status).dot }));
-    // Local tasks that never came from a tracker keep their base column.
+    // Tasks not in a mirrored column (local, default or unmatched) keep their base column.
+    const mirroredIds = new Set(mirrored.map((s) => s.id));
     for (const c of COLUMNS) {
-      if (c.id !== "done" && tasks.some((task) => !task.status_id && task.status === c.id)) cols.push(baseCol(c.id));
+      if (c.id !== "done" && tasks.some((task) => task.status !== "done" && !(task.status_id && mirroredIds.has(task.status_id)) && task.status === c.id)) cols.push(baseCol(c.id));
     }
     cols.push(baseCol("done"));
     return cols;

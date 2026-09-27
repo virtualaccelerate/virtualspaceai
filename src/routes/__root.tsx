@@ -19,7 +19,8 @@ import { applyClientLanguage, langFromAcceptLanguage, langFromCookieString, setL
 // no English text flashes before the user's language is applied.
 const resolveLanguage = createIsomorphicFn()
   .server(() => langFromCookieString(getRequestHeader("cookie")) ?? langFromAcceptLanguage(getRequestHeader("accept-language")) ?? "en")
-  .client(() => langFromCookieString(document.cookie) ?? "en");
+  // Without a cookie, reuse the language the server rendered (<html lang>).
+  .client(() => langFromCookieString(document.cookie) ?? (document.documentElement.lang || "en"));
 
 function NotFoundComponent() {
   return (
