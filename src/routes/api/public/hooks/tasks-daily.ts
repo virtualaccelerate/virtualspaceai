@@ -35,14 +35,23 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         const { syncAllTrelloSources } = await import("@/lib/trello.server");
         const { syncAllGoogleCalendars } = await import("@/lib/google-calendar.server");
 
-        const hourNow = new Date().getUTCHours();
+        const now = new Date();
+        const hourNow = now.getUTCHours();
         const yougile = await syncAllYouGileSources().catch(() => ({ synced: 0, failed: 1 }));
         const trello = await syncAllTrelloSources().catch(() => ({ synced: 0, failed: 1 }));
         const calendar = await syncAllGoogleCalendars().catch(() => ({ synced: 0, failed: 1 }));
 
         // 09:00 Bishkek = 03:00 UTC, 19:00 Bishkek = 13:00 UTC.
-        const pass = hourNow === 3 ? "morning" : hourNow === 13 ? "evening" : "pulse";
-        const result = await runAiNotifications(pass).catch(() => ({ sent: 0, spaces: 0 }));
+        // Only the two daily briefs — no hourly pulse. Saturday/Sunday (Bishkek
+        // time) get no scheduled digests at all; instant assignment/review
+        // notifications are sent elsewhere and are not affected.
+        const bishkekDay = new Date(now.getTime() + 6 * 3600_000).getUTCDay();
+        const isWeekend = bishkekDay === 0 || bishkekDay === 6;
+        const pass = hourNow === 3 ? "morning" : hourNow === 13 ? "evening" : null;
+        const result =
+          !isWeekend && pass
+            ? await runAiNotifications(pass).catch(() => ({ sent: 0, spaces: 0 }))
+            : { sent: 0, spaces: 0, skipped: isWeekend ? "weekend" : "not-a-brief-hour" };
 
         return Response.json({ ok: true, pass, ...result, yougile, trello, calendar });
       },
