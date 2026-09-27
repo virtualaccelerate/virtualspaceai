@@ -6,10 +6,11 @@ import { createFileRoute } from "@tanstack/react-router";
  * Notifications are decided by the AI engine (`ai-notify.server`), not by
  * mechanical per-event rules: it analyses the whole workspace snapshot and
  * emits only what needs attention, to the people it affects.
- *  - every hour  -> "pulse"   (deadline / overdue / no activity / waiting /
- *                              blocked / risk / follow-up / task update)
  *  - 09:00 BISH  -> "morning" (daily brief, team brief, owner brief, project brief)
  *  - 19:00 BISH  -> "evening" (evening brief)
+ * No scheduled digests on Saturday/Sunday, and no hourly pulse — only the two
+ * daily briefs. Instant events (task assignment, task submission/review) are
+ * sent immediately elsewhere and are unaffected by this schedule.
  */
 export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
   server: {
