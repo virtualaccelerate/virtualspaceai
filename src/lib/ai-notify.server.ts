@@ -65,7 +65,7 @@ const PASS_RULES: Record<NotifyPass, string> = {
     "task_update: уведомляй только тех, на кого изменение реально влияет.",
   ].join("\n"),
   morning: [
-    "Это утренний проход (09:00).",
+    "Это утренний проход (10:00).",
     "daily_brief — каждому активному участнику: что сегодня требует его внимания. Не перечисляй все задачи, только 1–3 главных пункта и вывод.",
     "team_brief — руководителям (owner/admin): только проблемы, риски и действия команды.",
     "owner_brief — владельцу: только важные изменения и риски.",
@@ -73,7 +73,7 @@ const PASS_RULES: Record<NotifyPass, string> = {
     "Если у человека нечего выделить — не отправляй ему ничего.",
   ].join("\n"),
   evening: [
-    "Это вечерний проход (19:00).",
+    "Это вечерний проход (18:00).",
     "evening_brief — подведи итоги дня и скажи, что требует внимания завтра. Только людям, у которых день был содержательным или завтра есть риск.",
   ].join("\n"),
 };
@@ -287,7 +287,7 @@ const TYPE_ICON: Record<string, string> = {
 
 /**
  * Runs one AI pass over every workspace that has open tasks.
- * `pulse` is hourly, `morning` at 09:00 and `evening` at 19:00 Bishkek time.
+ * `pulse` is hourly, `morning` at 10:00 and `evening` at 18:00 Bishkek time.
  */
 export async function runAiNotifications(
   pass: NotifyPass,
