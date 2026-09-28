@@ -30,6 +30,17 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
           return new Response("Unauthorized", { status: 401 });
         }
 
+        let body: { pass?: unknown; force?: unknown } = {};
+        try {
+          body = (await request.json()) as typeof body;
+        } catch {
+          body = {};
+        }
+        const manualPass =
+          body.pass === "pulse" || body.pass === "morning" || body.pass === "evening"
+            ? (body.pass as "pulse" | "morning" | "evening")
+            : null;
+
         const { runAiNotifications } = await import("@/lib/ai-notify.server");
         const { syncAllYouGileSources } = await import("@/lib/yougile.server");
         const { syncAllTrelloSources } = await import("@/lib/trello.server");
@@ -45,15 +56,21 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
         // Only the two daily briefs — no hourly pulse. Saturday/Sunday (Bishkek
         // time) get no scheduled digests at all; instant assignment/review
         // notifications are sent elsewhere and are not affected.
+        // A manual trigger may set { pass: "morning"|"evening"|"pulse",
+        // force: true } to run a pass immediately (force skips dedupe).
         const bishkekDay = new Date(now.getTime() + 6 * 3600_000).getUTCDay();
         const isWeekend = bishkekDay === 0 || bishkekDay === 6;
-        const pass = hourNow === 4 ? "morning" : hourNow === 12 ? "evening" : null;
+        const scheduledPass = hourNow === 4 ? "morning" : hourNow === 12 ? "evening" : null;
+        const pass = manualPass ?? scheduledPass;
+        const force = body.force === true;
         const result =
-          !isWeekend && pass
-            ? await runAiNotifications(pass).catch(() => ({ sent: 0, spaces: 0 }))
+          manualPass || (!isWeekend && scheduledPass)
+            ? await runAiNotifications(pass as "pulse" | "morning" | "evening", undefined, {
+                ignoreDedupe: force,
+              }).catch(() => ({ sent: 0, spaces: 0 }))
             : { sent: 0, spaces: 0, skipped: isWeekend ? "weekend" : "not-a-brief-hour" };
 
-        return Response.json({ ok: true, pass, ...result, yougile, trello, calendar });
+        return Response.json({ ok: true, pass, forced: force || undefined, ...result, yougile, trello, calendar });
       },
     },
   },
