@@ -57,7 +57,7 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
   const spaceId = await activeTeamspace(userId, teamspaceId);
   const db = await admin();
 
-  const [{ data: tasks }, { data: sources }, { data: docProjects }] = await Promise.all([
+  const [{ data: tasks }, { data: sources }, { data: docProjects }, { data: savedProjects }] = await Promise.all([
     db
       .from("tasks")
       .select("status, project, due_date, updated_at, assignee_name, external_source, external_project, external_board, external_url, external_archived")
@@ -69,6 +69,7 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
       .select("provider, project_name, last_sync_at, last_error")
       .eq("teamspace_id", spaceId),
     db.from("documents").select("project").eq("teamspace_id", spaceId).not("project", "is", null).limit(2000),
+    db.from("projects").select("name, tag").eq("teamspace_id", spaceId).order("created_at"),
   ]);
 
   const syncByProvider = new Map((sources ?? []).map((row) => [row.provider as string, row]));
@@ -130,7 +131,7 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
   // Projects that so far exist only in the knowledge base.
   if (!filters.board && !filters.month) {
     const known = new Set([...buckets.values()].map((b) => b.name.trim().toLowerCase()));
-    for (const d of docProjects ?? []) {
+    for (const d of [...(savedProjects ?? []).map((p) => ({ project: p.name })), ...(docProjects ?? [])]) {
       const n = d.project?.trim();
       if (!n || known.has(n.toLowerCase())) continue;
       known.add(n.toLowerCase());
@@ -161,6 +162,7 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
   return {
     teamspace_id: spaceId,
     projects: rows,
+    saved: (savedProjects ?? []).map((p) => ({ name: p.name, tag: p.tag })),
     boards: [...allBoards].sort(),
     months: [...allMonths].sort().reverse(),
     sync: (sources ?? []).map((row) => ({
@@ -274,4 +276,21 @@ export async function getProjectMaterialsForUser(userId: string, key: string, te
   }
 
   return { key, name: rawName, source, tasks: matchedTasks, links, knowledge };
+}
+
+export function projectTag(name: string) {
+  return name.trim().replace(/^#/, "").replace(/[^\p{L}\p{N}_-]+/gu, "");
+}
+
+export async function createProjectForUser(userId: string, name: string, teamspaceId?: string | null) {
+  const spaceId = await activeTeamspace(userId, teamspaceId);
+  const db = await admin();
+  const clean = name.trim();
+  const tag = projectTag(clean);
+  if (!clean || !tag) throw new Error("Укажите название проекта");
+  const { data: existing } = await db.from("projects").select("name, tag").eq("teamspace_id", spaceId).ilike("name", clean).maybeSingle();
+  if (existing) return existing;
+  const { data, error } = await db.from("projects").insert({ teamspace_id: spaceId, name: clean, tag, created_by: userId }).select("name, tag").single();
+  if (error) throw new Error(error.message);
+  return data;
 }

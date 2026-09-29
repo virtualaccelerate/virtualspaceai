@@ -31,3 +31,13 @@ export const getProjectMaterials = createServerFn({ method: "POST" })
     const { getProjectMaterialsForUser } = await import("./projects.server");
     return (await getProjectMaterialsForUser(context.userId, data.key, data.teamspace_id ?? null)) as any;
   });
+
+export const createProject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ name: z.string().trim().min(1).max(160), teamspace_id: z.string().uuid().nullish() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { createProjectForUser } = await import("./projects.server");
+    return createProjectForUser(context.userId, data.name, data.teamspace_id ?? null);
+  });
