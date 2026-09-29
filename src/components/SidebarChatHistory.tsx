@@ -6,6 +6,7 @@ import { ChevronDown, ChevronRight, History, MessageSquarePlus, Bot, X } from "l
 import {
   listConversations,
   deleteConversation,
+  createConversation,
   type Conversation,
 } from "@/lib/chat-history.functions";
 
