@@ -39,6 +39,7 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
+import { Route as AuthenticatedAppOnboardingRouteImport } from './routes/_authenticated/app.onboarding'
 import { Route as AuthenticatedAppMentorsRouteImport } from './routes/_authenticated/app.mentors'
 import { Route as AuthenticatedAppLearnRouteImport } from './routes/_authenticated/app.learn'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
@@ -57,6 +58,7 @@ import { Route as ApiPublicHooksTrackersSyncRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksTasksDailyRouteImport } from './routes/api/public/hooks/tasks-daily'
 import { Route as ApiPublicFinikWebhookRouteImport } from './routes/api/public/finik.webhook'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
+import { Route as AuthenticatedAppOnboardingProgramIdRouteImport } from './routes/_authenticated/app.onboarding.$programId'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
 
 const TgRoute = TgRouteImport.update({
@@ -215,6 +217,12 @@ const AuthenticatedAppOverviewRoute =
     path: '/overview',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppOnboardingRoute =
+  AuthenticatedAppOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppMentorsRoute = AuthenticatedAppMentorsRouteImport.update({
   id: '/mentors',
   path: '/mentors',
@@ -314,6 +322,12 @@ const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
   path: '/api/public/calendar/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppOnboardingProgramIdRoute =
+  AuthenticatedAppOnboardingProgramIdRouteImport.update({
+    id: '/$programId',
+    path: '/$programId',
+    getParentRoute: () => AuthenticatedAppOnboardingRoute,
+  } as any)
 const AuthenticatedAppCConversationIdRoute =
   AuthenticatedAppCConversationIdRouteImport.update({
     id: '/c/$conversationId',
@@ -349,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
   '/app/mentors': typeof AuthenticatedAppMentorsRoute
+  '/app/onboarding': typeof AuthenticatedAppOnboardingRouteWithChildren
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -363,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
@@ -398,6 +414,7 @@ export interface FileRoutesByTo {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
   '/app/mentors': typeof AuthenticatedAppMentorsRoute
+  '/app/onboarding': typeof AuthenticatedAppOnboardingRouteWithChildren
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -412,6 +429,7 @@ export interface FileRoutesByTo {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
@@ -450,6 +468,7 @@ export interface FileRoutesById {
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/learn': typeof AuthenticatedAppLearnRoute
   '/_authenticated/app/mentors': typeof AuthenticatedAppMentorsRoute
+  '/_authenticated/app/onboarding': typeof AuthenticatedAppOnboardingRouteWithChildren
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -464,6 +483,7 @@ export interface FileRoutesById {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/_authenticated/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
@@ -502,6 +522,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/learn'
     | '/app/mentors'
+    | '/app/onboarding'
     | '/app/overview'
     | '/app/profile'
     | '/app/projects'
@@ -516,6 +537,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app/'
     | '/app/c/$conversationId'
+    | '/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
@@ -551,6 +573,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/learn'
     | '/app/mentors'
+    | '/app/onboarding'
     | '/app/overview'
     | '/app/profile'
     | '/app/projects'
@@ -565,6 +588,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app'
     | '/app/c/$conversationId'
+    | '/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
@@ -602,6 +626,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/learn'
     | '/_authenticated/app/mentors'
+    | '/_authenticated/app/onboarding'
     | '/_authenticated/app/overview'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/projects'
@@ -616,6 +641,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
+    | '/_authenticated/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
@@ -869,6 +895,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/onboarding': {
+      id: '/_authenticated/app/onboarding'
+      path: '/onboarding'
+      fullPath: '/app/onboarding'
+      preLoaderRoute: typeof AuthenticatedAppOnboardingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/mentors': {
       id: '/_authenticated/app/mentors'
       path: '/mentors'
@@ -995,6 +1028,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/app/onboarding/$programId': {
+      id: '/_authenticated/app/onboarding/$programId'
+      path: '/$programId'
+      fullPath: '/app/onboarding/$programId'
+      preLoaderRoute: typeof AuthenticatedAppOnboardingProgramIdRouteImport
+      parentRoute: typeof AuthenticatedAppOnboardingRoute
+    }
     '/_authenticated/app/c/$conversationId': {
       id: '/_authenticated/app/c/$conversationId'
       path: '/c/$conversationId'
@@ -1004,6 +1044,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAppOnboardingRouteChildren {
+  AuthenticatedAppOnboardingProgramIdRoute: typeof AuthenticatedAppOnboardingProgramIdRoute
+}
+
+const AuthenticatedAppOnboardingRouteChildren: AuthenticatedAppOnboardingRouteChildren =
+  {
+    AuthenticatedAppOnboardingProgramIdRoute:
+      AuthenticatedAppOnboardingProgramIdRoute,
+  }
+
+const AuthenticatedAppOnboardingRouteWithChildren =
+  AuthenticatedAppOnboardingRoute._addFileChildren(
+    AuthenticatedAppOnboardingRouteChildren,
+  )
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAgentsRoute: typeof AuthenticatedAppAgentsRoute
@@ -1015,6 +1070,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLearnRoute: typeof AuthenticatedAppLearnRoute
   AuthenticatedAppMentorsRoute: typeof AuthenticatedAppMentorsRoute
+  AuthenticatedAppOnboardingRoute: typeof AuthenticatedAppOnboardingRouteWithChildren
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRoute
@@ -1037,6 +1093,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLearnRoute: AuthenticatedAppLearnRoute,
   AuthenticatedAppMentorsRoute: AuthenticatedAppMentorsRoute,
+  AuthenticatedAppOnboardingRoute: AuthenticatedAppOnboardingRouteWithChildren,
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRoute,
