@@ -32,23 +32,32 @@ export async function getTeamOverview(userId: string, requested?: string) {
     .maybeSingle();
   if (!me) return null;
 
+  const { isWorkspaceManager } = await import("./roles.server");
+  const isManager = await isWorkspaceManager(userId, teamspaceId);
+
   const { data: ts } = await db
     .from("teamspaces")
     .select("id, name, invite_code, owner_id, business_type, team_size, created_at")
     .eq("id", teamspaceId)
     .maybeSingle();
 
-  const { data: memberships } = await db
+  const { data: allMemberships } = await db
     .from("teamspace_members")
     .select("user_id, role, created_at")
     .eq("teamspace_id", teamspaceId)
     .order("created_at", { ascending: true });
 
+  // A plain member only ever sees their own card.
+  const memberships = isManager
+    ? allMemberships
+    : (allMemberships ?? []).filter((m) => m.user_id === userId);
+
   const ids = (memberships ?? []).map((m) => m.user_id);
+  const taskQuery = db.from("tasks").select("assignee_id, status").eq("teamspace_id", teamspaceId);
   const [{ data: profiles }, { data: links }, { data: tasks }] = await Promise.all([
     ids.length ? db.from("profiles").select("id, full_name, email, avatar_url").in("id", ids) : Promise.resolve({ data: [] as never[] }),
     ids.length ? db.from("telegram_links").select("user_id, chat_id").in("user_id", ids) : Promise.resolve({ data: [] as never[] }),
-    db.from("tasks").select("assignee_id, status").eq("teamspace_id", teamspaceId),
+    isManager ? taskQuery : taskQuery.eq("assignee_id", userId),
   ]);
 
   const members: TeamMember[] = (memberships ?? []).map((m) => {
