@@ -20,7 +20,49 @@ const CreateSchema = z.object({
   mime_type: z.string().max(200).optional(),
   size_bytes: z.number().int().nonnegative().optional(),
   extracted_text: z.string().max(200_000).optional(),
+  project: z.string().max(200).optional(),
+  tags: z.array(z.string().max(60)).max(20).optional(),
 });
+
+const LinkSchema = z.object({
+  teamspace_id: z.string().uuid(),
+  url: z.string().url().max(2000),
+  name: z.string().max(300).optional(),
+  note: z.string().max(5000).optional(),
+  project: z.string().max(200).optional(),
+  tags: z.array(z.string().max(60)).max(20).optional(),
+});
+
+export const createLinkDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => LinkSchema.parse(raw))
+  .handler(async ({ data, context }) => {
+    const { detectLinkKind, LINK_LABEL } = await import("./links");
+    const kind = detectLinkKind(data.url);
+    const name = data.name?.trim() || `${LINK_LABEL[kind]} — ${new URL(data.url).hostname}`;
+    const text = [name, data.url, data.project ? `Project: ${data.project}` : "", data.tags?.length ? `Tags: ${data.tags.join(", ")}` : "", data.note ?? ""]
+      .filter(Boolean).join("\n");
+    const { data: row, error } = await context.supabase
+      .from("documents")
+      .insert({
+        teamspace_id: data.teamspace_id,
+        user_id: context.userId,
+        name,
+        storage_path: "",
+        mime_type: "text/uri-list",
+        size_bytes: 0,
+        url: data.url,
+        link_kind: kind,
+        project: data.project?.trim() || null,
+        tags: data.tags ?? [],
+        extracted_text: text,
+        extract_status: "ready",
+      })
+      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id, url, link_kind, project, tags, extract_status")
+      .single();
+    if (error) throw new Error(error.message);
+    return { ...row, text_len: text.length };
+  });
 
 export const listDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -31,7 +73,7 @@ export const listDocuments = createServerFn({ method: "GET" })
     const { data: rows, error } = await context.supabase
       .from("documents")
       .select(
-        "id, name, storage_path, mime_type, size_bytes, created_at, user_id, extract_status, extract_error",
+        "id, name, storage_path, mime_type, size_bytes, created_at, user_id, extract_status, extract_error, url, link_kind, project, tags",
       )
       .eq("teamspace_id", data.teamspace_id)
       .order("created_at", { ascending: false });
@@ -61,8 +103,10 @@ export const createDocument = createServerFn({ method: "POST" })
         mime_type: data.mime_type,
         size_bytes: data.size_bytes ?? 0,
         extracted_text: data.extracted_text ?? null,
+        project: data.project?.trim() || null,
+        tags: data.tags ?? [],
       })
-      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id")
+      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id, url, link_kind, project, tags")
       .single();
     if (error) throw new Error(error.message);
     return row;
@@ -79,7 +123,7 @@ export const deleteDocument = createServerFn({ method: "POST" })
       .maybeSingle();
     if (fetchErr) throw new Error(fetchErr.message);
     if (!doc) return { ok: true };
-    await context.supabase.storage.from("documents").remove([doc.storage_path]);
+    if (doc.storage_path) await context.supabase.storage.from("documents").remove([doc.storage_path]);
     const { error } = await context.supabase.from("documents").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -91,11 +135,12 @@ export const getDocumentSignedUrl = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: doc, error } = await context.supabase
       .from("documents")
-      .select("id, name, storage_path")
+      .select("id, name, storage_path, url")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!doc) throw new Error("Document not found");
+    if (doc.url) return { url: doc.url, name: doc.name };
     const { data: signed, error: sErr } = await context.supabase.storage
       .from("documents")
       .createSignedUrl(doc.storage_path, 60 * 10);
@@ -131,11 +176,12 @@ export const extractDocumentText = createServerFn({ method: "POST" })
 
     const { data: doc, error } = await context.supabase
       .from("documents")
-      .select("id, name, storage_path, mime_type, extracted_text")
+      .select("id, name, storage_path, mime_type, extracted_text, url")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!doc) throw new Error("Document not found");
+    if (doc.url) return { ok: true, skipped: true as const, length: doc.extracted_text?.length ?? 0 };
 
     if (!data.force && doc.extracted_text && doc.extracted_text.length > 0) {
       return { ok: true, skipped: true as const, length: doc.extracted_text.length };
