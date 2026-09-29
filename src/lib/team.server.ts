@@ -53,16 +53,23 @@ export async function getTeamOverview(userId: string, requested?: string) {
     : (allMemberships ?? []).filter((m) => m.user_id === userId);
 
   const ids = (memberships ?? []).map((m) => m.user_id);
-  const taskQuery = db.from("tasks").select("assignee_id, status").eq("teamspace_id", teamspaceId);
+  const taskQuery = db.from("tasks").select("assignee_id, assignee_name, status").eq("teamspace_id", teamspaceId);
   const [{ data: profiles }, { data: links }, { data: tasks }] = await Promise.all([
     ids.length ? db.from("profiles").select("id, full_name, email, avatar_url").in("id", ids) : Promise.resolve({ data: [] as never[] }),
     ids.length ? db.from("telegram_links").select("user_id, chat_id").in("user_id", ids) : Promise.resolve({ data: [] as never[] }),
-    isManager ? taskQuery : taskQuery.eq("assignee_id", userId),
+    taskQuery,
   ]);
 
   const members: TeamMember[] = (memberships ?? []).map((m) => {
     const p = profiles?.find((x) => x.id === m.user_id);
-    const mine = (tasks ?? []).filter((t) => t.assignee_id === m.user_id);
+    const nameKeys = [p?.full_name, p?.email?.split("@")[0]]
+      .map((v) => (v ?? "").trim().toLowerCase())
+      .filter(Boolean);
+    const mine = (tasks ?? []).filter(
+      (t) =>
+        t.assignee_id === m.user_id ||
+        (!t.assignee_id && nameKeys.includes((t.assignee_name ?? "").trim().toLowerCase())),
+    );
     return {
       id: m.user_id,
       role: m.role,

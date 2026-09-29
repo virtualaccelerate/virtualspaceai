@@ -75,9 +75,9 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
   ]);
 
   // Plain members only roll up projects they actually work on.
-  const tasks = isManager
-    ? allTasks
-    : (allTasks ?? []).filter((t) => t.assignee_id === userId || t.user_id === userId);
+  const { viewerIdentity, taskBelongsTo } = await import("./task-visibility.server");
+  const viewer = isManager ? null : await viewerIdentity(userId);
+  const tasks = viewer ? (allTasks ?? []).filter((t) => taskBelongsTo(t, viewer)) : allTasks;
 
   const syncByProvider = new Map((sources ?? []).map((row) => [row.provider as string, row]));
 

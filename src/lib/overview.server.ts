@@ -87,9 +87,9 @@ export async function getOverview(userId: string, requested?: string): Promise<O
     ]);
 
   // Plain members only see their own work; managers see the whole workspace.
-  const rows = isManager
-    ? (tasks ?? [])
-    : (tasks ?? []).filter((t) => t.assignee_id === userId || t.user_id === userId);
+  const { viewerIdentity, taskBelongsTo } = await import("./task-visibility.server");
+  const viewer = isManager ? null : await viewerIdentity(userId);
+  const rows = viewer ? (tasks ?? []).filter((t) => taskBelongsTo(t, viewer)) : (tasks ?? []);
   const now = Date.now();
   const open = rows.filter((t) => t.status !== "done");
   const done = rows.filter((t) => t.status === "done");
