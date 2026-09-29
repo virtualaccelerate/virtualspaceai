@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+import { Users } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -251,6 +253,13 @@ function KnowledgeBase() {
           </p>
         </div>
       </div>
+      <Link to="/app/clients" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/60 transition">
+        <Users className="h-5 w-5 text-primary" />
+        <div className="flex-1">
+          <div className="font-medium text-foreground">Company Documents · База клиентов</div>
+          <div className="text-xs text-muted-foreground">Единая база клиентов из задач, Google Таблица и методичка</div>
+        </div>
+      </Link>
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
         <div className="grid gap-2 sm:grid-cols-2">

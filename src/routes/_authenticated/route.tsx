@@ -146,6 +146,7 @@ function AuthenticatedLayout() {
 
   const workspaceNav: NavItem[] = [
     { to: "/app/docs", label: t("app.nav.knowledgeBase", "Knowledge Base"), icon: FileText },
+    { to: "/app/clients", label: t("app.nav.clientDb", "Client Database"), icon: Users },
     { to: "/app/tasks", label: t("app.nav.taskBoard", "Task Board"), subtitle: t("app.nav.taskBoardSubtitle", "Team tasks & deadlines"), icon: KanbanSquare },
     { to: "/app/projects", label: t("app.nav.projects", "Projects"), subtitle: t("app.nav.projectsSubtitle", "Sources, progress & sync"), icon: FolderKanban },
     { to: "/app/onboarding", label: t("app.nav.onboarding", "Onboarding & Training"), subtitle: t("app.nav.onboardingSubtitle", "Programs, checklists & progress"), icon: GraduationCap },
