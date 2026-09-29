@@ -144,6 +144,8 @@ function AuthenticatedLayout() {
     { to: "/app/overview", label: t("app.nav.overview"), subtitle: t("app.nav.overviewSubtitle", "Workspace insights"), icon: LayoutDashboard },
   ];
 
+  const managerOnlyPaths = ["/app/financials", "/app/clients", "/app/integrations"];
+
   const workspaceNav: NavItem[] = [
     { to: "/app/docs", label: t("app.nav.knowledgeBase", "Knowledge Base"), icon: FileText },
     { to: "/app/clients", label: t("app.nav.clientDb", "Client Database"), icon: Users },
@@ -161,6 +163,9 @@ function AuthenticatedLayout() {
     { to: "/app/telegram", label: t("app.nav.telegramBot", "Telegram Bot"), subtitle: t("app.nav.telegramBotSubtitle", "Bot commands & updates"), icon: TelegramIcon },
     { to: "/app/team", label: t("app.nav.team"), subtitle: t("app.nav.teamSubtitle", "Members & roles"), icon: Users },
   ];
+
+  const visible = (items: NavItem[]) =>
+    isManager ? items : items.filter((i) => !managerOnlyPaths.includes(i.to));
 
   const bottomNav: NavItem[] = [
     { to: "/app/settings", label: t("app.nav.settings"), subtitle: t("app.nav.settingsSubtitle", "Preferences"), icon: Settings },
