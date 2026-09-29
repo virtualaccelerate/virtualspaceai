@@ -288,7 +288,7 @@ export async function createProjectForUser(userId: string, name: string, teamspa
   const clean = name.trim();
   const tag = projectTag(clean);
   if (!clean || !tag) throw new Error("Укажите название проекта");
-  const { data: existing } = await db.from("projects").select("name, tag").eq("teamspace_id", spaceId).ilike("name", clean).maybeSingle();
+  const { data: existing } = await db.from("projects").select("name, tag").eq("teamspace_id", spaceId).ilike("name", clean.replace(/[\\%_]/g, (c) => `\\${c}`)).maybeSingle();
   if (existing) return existing;
   const { data, error } = await db.from("projects").insert({ teamspace_id: spaceId, name: clean, tag, created_by: userId }).select("name, tag").single();
   if (error) throw new Error(error.message);
