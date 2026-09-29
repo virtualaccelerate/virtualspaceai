@@ -85,11 +85,11 @@ export async function upsertClient(teamspaceId: string, c: Extracted, taskId?: s
   const existing = await findExisting(teamspaceId, c);
   const clean = (v?: string) => (v && v.trim() ? v.trim() : null);
   if (existing) {
-    const patch: Record<string, unknown> = {};
-    if (clean(c.name) && !existing.name) patch.name = clean(c.name);
+    const patch: { name?: string; phone?: string | null; phone_norm?: string; email?: string; company?: string; notes?: string; source_task_ids?: string[] } = {};
+    if (clean(c.name) && !existing.name) patch.name = clean(c.name)!;
     if (phone && !existing.phone_norm) { patch.phone = clean(c.phone); patch.phone_norm = phone; }
-    if (clean(c.email) && clean(c.email) !== existing.email) patch.email = clean(c.email);
-    if (clean(c.company) && clean(c.company) !== existing.company) patch.company = clean(c.company);
+    if (clean(c.email) && clean(c.email) !== existing.email) patch.email = clean(c.email)!;
+    if (clean(c.company) && clean(c.company) !== existing.company) patch.company = clean(c.company)!;
     if (clean(c.notes) && !(existing.notes ?? "").includes(clean(c.notes)!)) patch.notes = [existing.notes, clean(c.notes)].filter(Boolean).join("\n").slice(-2000);
     if (taskId && !existing.source_task_ids.includes(taskId)) patch.source_task_ids = [...existing.source_task_ids, taskId];
     if (Object.keys(patch).length) await db.from("clients").update(patch).eq("id", existing.id);
