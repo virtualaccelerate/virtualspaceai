@@ -141,6 +141,7 @@ export async function createTaskForUser(
   await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId, kind: "assigned", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
   const { syncTaskToCalendar } = await import("./google-calendar.server");
   await syncTaskToCalendar(row).catch(() => {});
+  await import("./clients.server").then((m) => m.syncClientsFromTask(row.id)).catch(() => {});
 
   return row;
 }
@@ -225,6 +226,9 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   }
   const { syncTaskToCalendar } = await import("./google-calendar.server");
   await syncTaskToCalendar(row, current.assignee_id ?? current.user_id).catch(() => {});
+  if (row.title !== current.title || row.description !== current.description) {
+    await import("./clients.server").then((m) => m.syncClientsFromTask(row.id)).catch(() => {});
+  }
   return row;
 }
 

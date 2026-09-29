@@ -291,6 +291,100 @@ export type Database = {
           },
         ]
       }
+      client_db_settings: {
+        Row: {
+          created_at: string
+          doc_url: string | null
+          last_error: string | null
+          last_sync_at: string | null
+          owner_user_id: string
+          sheet_id: string | null
+          sheet_url: string | null
+          teamspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_url?: string | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          owner_user_id: string
+          sheet_id?: string | null
+          sheet_url?: string | null
+          teamspace_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_url?: string | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          owner_user_id?: string
+          sheet_id?: string | null
+          sheet_url?: string | null
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_db_settings_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: true
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          phone_norm: string | null
+          source_task_ids: string[]
+          status: string | null
+          teamspace_id: string
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          phone_norm?: string | null
+          source_task_ids?: string[]
+          status?: string | null
+          teamspace_id: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          phone_norm?: string | null
+          source_task_ids?: string[]
+          status?: string | null
+          teamspace_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_purchases: {
         Row: {
           amount: number
