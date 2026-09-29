@@ -369,12 +369,16 @@ export type Database = {
           extract_status: string
           extracted_text: string | null
           id: string
+          link_kind: string | null
           mime_type: string | null
           name: string
+          project: string | null
           size_bytes: number | null
           storage_path: string
+          tags: string[]
           teamspace_id: string
           updated_at: string
+          url: string | null
           user_id: string
         }
         Insert: {
@@ -383,12 +387,16 @@ export type Database = {
           extract_status?: string
           extracted_text?: string | null
           id?: string
+          link_kind?: string | null
           mime_type?: string | null
           name: string
+          project?: string | null
           size_bytes?: number | null
           storage_path: string
+          tags?: string[]
           teamspace_id: string
           updated_at?: string
+          url?: string | null
           user_id: string
         }
         Update: {
@@ -397,12 +405,16 @@ export type Database = {
           extract_status?: string
           extracted_text?: string | null
           id?: string
+          link_kind?: string | null
           mime_type?: string | null
           name?: string
+          project?: string | null
           size_bytes?: number | null
           storage_path?: string
+          tags?: string[]
           teamspace_id?: string
           updated_at?: string
+          url?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1026,6 +1038,7 @@ export type Database = {
           status: Database["public"]["Enums"]["task_status"]
           status_id: string | null
           submitted_at: string | null
+          tags: string[]
           teamspace_id: string | null
           title: string
           updated_at: string
@@ -1058,6 +1071,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["task_status"]
           status_id?: string | null
           submitted_at?: string | null
+          tags?: string[]
           teamspace_id?: string | null
           title: string
           updated_at?: string
@@ -1090,6 +1104,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["task_status"]
           status_id?: string | null
           submitted_at?: string | null
+          tags?: string[]
           teamspace_id?: string | null
           title?: string
           updated_at?: string

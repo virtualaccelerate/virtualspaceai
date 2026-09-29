@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { listProjects } from "@/lib/projects.functions";
 import { syncYouGile } from "@/lib/yougile.functions";
 import { syncTrello } from "@/lib/trello.functions";
+import { ProjectMaterialsDialog } from "@/components/ProjectMaterialsDialog";
 
 export const Route = createFileRoute("/_authenticated/app/projects")({
   component: ProjectsPage,
@@ -51,6 +52,7 @@ function ProjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [board, setBoard] = useState<string>("");
   const [month, setMonth] = useState<string>("");
+  const [openProject, setOpenProject] = useState<{ key: string; name: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["projects", board, month],
@@ -165,12 +167,12 @@ function ProjectsPage() {
               <tr><td colSpan={8} className="px-4 py-10 text-center text-white/50">{t("workspaceUi.projects.empty", "Проектов пока нет — создайте задачи или подключите YouGile/Trello.")}</td></tr>
             )}
             {projects.map((project) => (
-              <tr key={project.key} className="border-t border-white/5">
+              <tr key={project.key} onClick={() => setOpenProject({ key: project.key, name: project.name })} className="border-t border-white/5 cursor-pointer hover:bg-white/5">
                 <td className="px-4 py-3 text-white">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="truncate">{project.name}</span>
                     {project.url && (
-                      <a href={project.url} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white">
+                      <a href={project.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-white/40 hover:text-white">
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     )}
@@ -197,6 +199,12 @@ function ProjectsPage() {
           </tbody>
         </table>
       </div>
+      <ProjectMaterialsDialog
+        projectKey={openProject?.key ?? null}
+        projectName={openProject?.name ?? ""}
+        teamspaceId={data?.teamspace_id ?? null}
+        onClose={() => setOpenProject(null)}
+      />
     </div>
   );
 }
