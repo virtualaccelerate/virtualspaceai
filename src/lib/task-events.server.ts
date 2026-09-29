@@ -51,7 +51,7 @@ export async function listTaskEventsForUser(userId: string, taskId: string) {
   const admin = await db();
   const { data: task } = await admin
     .from("tasks")
-    .select("id, teamspace_id, title, description, status, priority, due_date, assignee_id, assignee_name, project, department, created_at, updated_at, external_source, external_url, external_project, external_board, external_archived, status_id")
+    .select("id, teamspace_id, user_id, title, description, status, priority, due_date, assignee_id, assignee_name, project, department, created_at, updated_at, external_source, external_url, external_project, external_board, external_archived, status_id")
     .eq("id", taskId)
     .maybeSingle();
   if (!task) throw new Error("Задача не найдена");
@@ -63,6 +63,11 @@ export async function listTaskEventsForUser(userId: string, taskId: string) {
       .eq("user_id", userId)
       .maybeSingle();
     if (!membership) throw new Error("Нет доступа к задаче");
+    const { isWorkspaceManager } = await import("./roles.server");
+    const isManager = await isWorkspaceManager(userId, task.teamspace_id);
+    if (!isManager && task.assignee_id !== userId && task.user_id !== userId) {
+      throw new Error("Нет доступа к задаче");
+    }
   } else if (task.assignee_id !== userId) {
     throw new Error("Нет доступа к задаче");
   }
