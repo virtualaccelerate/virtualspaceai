@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWorkspaceRole } from "@/hooks/useWorkspaceRole";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -134,6 +135,8 @@ function AuthenticatedLayout() {
     navigate({ to: "/auth", replace: true });
   };
 
+  const { isManager } = useWorkspaceRole();
+
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
@@ -143,6 +146,8 @@ function AuthenticatedLayout() {
     { to: "/app", label: t("app.nav.chat", "Chat"), subtitle: t("app.nav.chatSubtitle", "Team conversations"), icon: MessageSquare, exact: true },
     { to: "/app/overview", label: t("app.nav.overview"), subtitle: t("app.nav.overviewSubtitle", "Workspace insights"), icon: LayoutDashboard },
   ];
+
+  const managerOnlyPaths = ["/app/financials", "/app/clients", "/app/integrations"];
 
   const workspaceNav: NavItem[] = [
     { to: "/app/docs", label: t("app.nav.knowledgeBase", "Knowledge Base"), icon: FileText },
@@ -161,6 +166,9 @@ function AuthenticatedLayout() {
     { to: "/app/telegram", label: t("app.nav.telegramBot", "Telegram Bot"), subtitle: t("app.nav.telegramBotSubtitle", "Bot commands & updates"), icon: TelegramIcon },
     { to: "/app/team", label: t("app.nav.team"), subtitle: t("app.nav.teamSubtitle", "Members & roles"), icon: Users },
   ];
+
+  const visible = (items: NavItem[]) =>
+    isManager ? items : items.filter((i) => !managerOnlyPaths.includes(i.to));
 
   const bottomNav: NavItem[] = [
     { to: "/app/settings", label: t("app.nav.settings"), subtitle: t("app.nav.settingsSubtitle", "Preferences"), icon: Settings },
@@ -340,7 +348,7 @@ function AuthenticatedLayout() {
             </div>
           )}
           <div className="space-y-0.5">
-            {workspaceNav.map((item) => <NavButton key={item.to} item={item} />)}
+            {visible(workspaceNav).map((item) => <NavButton key={item.to} item={item} />)}
           </div>
 
           {showLabels && (
@@ -351,7 +359,7 @@ function AuthenticatedLayout() {
             </div>
           )}
           <div className="space-y-0.5">
-            {communicationNav.map((item) => <NavButton key={item.to} item={item} />)}
+            {visible(communicationNav).map((item) => <NavButton key={item.to} item={item} />)}
           </div>
         </nav>
 

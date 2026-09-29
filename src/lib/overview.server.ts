@@ -56,13 +56,16 @@ export async function getOverview(userId: string, requested?: string): Promise<O
     .maybeSingle();
   if (!membership) return null;
 
+  const { isWorkspaceManager } = await import("./roles.server");
+  const isManager = await isWorkspaceManager(userId, teamspaceId);
+
   const [{ data: ts }, { data: memberships }, { data: tasks }, { count: documents }, { data: events }, { data: notes }] =
     await Promise.all([
       db.from("teamspaces").select("id, name").eq("id", teamspaceId).maybeSingle(),
       db.from("teamspace_members").select("user_id, role").eq("teamspace_id", teamspaceId),
       db
         .from("tasks")
-        .select("id, title, status, priority, due_date, assignee_id, assignee_name, created_at, updated_at, reviewed_at")
+        .select("id, title, status, priority, due_date, assignee_id, user_id, assignee_name, created_at, updated_at, reviewed_at")
         .eq("teamspace_id", teamspaceId)
         .eq("external_archived", false)
         .order("created_at", { ascending: false })
@@ -83,7 +86,10 @@ export async function getOverview(userId: string, requested?: string): Promise<O
         .limit(6),
     ]);
 
-  const rows = tasks ?? [];
+  // Plain members only see their own work; managers see the whole workspace.
+  const { viewerIdentity, taskBelongsTo } = await import("./task-visibility.server");
+  const viewer = isManager ? null : await viewerIdentity(userId);
+  const rows = viewer ? (tasks ?? []).filter((t) => taskBelongsTo(t, viewer)) : (tasks ?? []);
   const now = Date.now();
   const open = rows.filter((t) => t.status !== "done");
   const done = rows.filter((t) => t.status === "done");
@@ -94,9 +100,10 @@ export async function getOverview(userId: string, requested?: string): Promise<O
   };
   const overdueRows = open.filter((t) => t.due_date && dueTs(t.due_date) < now);
   const dueSoon = open.filter((t) => t.due_date && dueTs(t.due_date) >= now && dueTs(t.due_date) - now <= 3 * DAY);
-  const unassigned = open.filter((t) => !t.assignee_id).length;
+  const unassigned = isManager ? open.filter((t) => !t.assignee_id).length : 0;
 
   const ids = (memberships ?? []).map((m) => m.user_id);
+  const memberIds = isManager ? ids : [userId];
   const { data: profiles } = ids.length
     ? await db.from("profiles").select("id, full_name, email").in("id", ids)
     : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
@@ -106,7 +113,7 @@ export async function getOverview(userId: string, requested?: string): Promise<O
     return p?.full_name || p?.email?.split("@")[0] || "Участник";
   };
 
-  const top_members = ids
+  const top_members = memberIds
     .map((id) => {
       const mine = rows.filter((t) => t.assignee_id === id);
       return {
@@ -186,7 +193,7 @@ export async function getOverview(userId: string, requested?: string): Promise<O
         overdue: Boolean(t.due_date && dueTs(t.due_date) < now),
       })),
     insights,
-    activity: (events ?? []).map((e) => ({
+    activity: (isManager ? (events ?? []) : (events ?? []).filter((e) => e.user_id === userId)).map((e) => ({
       id: e.id,
       feature: e.feature,
       kind: e.kind,

@@ -1,3 +1,4 @@
+import { ManagerOnly } from "@/components/ManagerOnly";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -66,7 +67,11 @@ function splitSheets(csv: string): { name: string; rows: string[][] }[] {
 
 
 export const Route = createFileRoute("/_authenticated/app/financials")({
-  component: FinancialsPage,
+  component: () => (
+    <ManagerOnly>
+      <FinancialsPage />
+    </ManagerOnly>
+  ),
   head: () => ({
     meta: [{ title: "Financials — Virtual Space" }, { name: "robots", content: "noindex" }],
   }),

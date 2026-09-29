@@ -169,6 +169,20 @@
       "when": 1790654921075,
       "tag": "0023_create_client_database",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790655309949,
+      "tag": "0024_role_access_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790655592491,
+      "tag": "0025_member_task_visibility_by_name",
+      "breakpoints": true
     }
   ]
 }

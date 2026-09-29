@@ -1,3 +1,4 @@
+import { ManagerOnly } from "@/components/ManagerOnly";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,7 +8,11 @@ import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { listClientsFn, saveClientFn, deleteClientFn, scanClientTasksFn, setupClientDbFn, syncClientSheetFn } from "@/lib/clients.functions";
 
 export const Route = createFileRoute("/_authenticated/app/clients")({
-  component: ClientsPage,
+  component: () => (
+    <ManagerOnly>
+      <ClientsPage />
+    </ManagerOnly>
+  ),
   head: () => ({ meta: [{ title: "Client Database — Virtual Space" }, { name: "robots", content: "noindex" }] }),
 });
 

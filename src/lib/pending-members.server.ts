@@ -92,6 +92,8 @@ export async function reconcilePendingMembers(teamspaceId: string) {
 
 export async function listPendingMembers(userId: string, teamspaceId: string): Promise<PendingMember[]> {
   await assertMember(userId, teamspaceId);
+  const { isWorkspaceManager } = await import("./roles.server");
+  if (!(await isWorkspaceManager(userId, teamspaceId))) return [];
   await reconcilePendingMembers(teamspaceId).catch(() => {});
   const db = await admin();
   const [{ data: rows }, { data: tasks }] = await Promise.all([
