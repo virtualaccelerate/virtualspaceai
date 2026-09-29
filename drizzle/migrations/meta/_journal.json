@@ -162,6 +162,13 @@
       "when": 1790654678927,
       "tag": "0022_create_payroll_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790654921075,
+      "tag": "0023_create_client_database",
+      "breakpoints": true
     }
   ]
 }
