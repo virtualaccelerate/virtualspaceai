@@ -315,6 +315,7 @@ export const askZukha = createServerFn({ method: "POST" })
       companyBlock = "";
     }
 
+    const { AGENT_AUTOMATION_PROMPT: AGENT_PROMPT } = await import("./agent-automation.server");
     const systemPrompt =
       agentPreamble +
       "You are Virtual Space AI, the assistant inside Virtual Space — an AI virtual office for teams. " +
@@ -347,6 +348,7 @@ export const askZukha = createServerFn({ method: "POST" })
       "Questions about a person's tasks (\"что у Тимура\", \"задачи Айзы\") are answered from CURRENT TASKS: list their open tasks with status and deadline, " +
       "flag overdue ones, and say plainly when the person has no tasks. Confirm briefly in the user's language after the tokens. Never wrap tokens in quotes or code.\n" +
       "CALENDAR AGENT: when the user asks to create/schedule a meeting, emit exactly [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. ONLY the date and time are required — when they are present you MUST emit the token in the same reply. Never ask for the title: default to \"Встреча\"/\"Meeting\". Attendees are optional: leave the emails field empty when nobody is named, otherwise resolve real emails from TEAM MEMBERS and skip names you cannot resolve. Never repeat a clarification you already asked. Default duration is one hour. Do not emit this token for tasks or reminders.\n" +
+      AGENT_PROMPT +
       teamBlock +
       companyBlock +
       knowledgeBlock +
@@ -380,6 +382,13 @@ export const askZukha = createServerFn({ method: "POST" })
     const json = (await res.json()) as {
       choices?: { message?: { content?: string } }[];
     };
-    const reply = json.choices?.[0]?.message?.content ?? "";
+    let reply = json.choices?.[0]?.message?.content ?? "";
+    try {
+      const agent = await import("./agent-automation.server");
+      reply = (await agent.dedupeTaskTokens(reply, data.teamspace_id ?? null)).reply;
+      reply = (await agent.executeAgentTokens(reply, { userId: context.userId, teamspaceId: data.teamspace_id ?? null })).reply;
+    } catch (e) {
+      console.error("agent automation failed", e);
+    }
     return { reply };
   });

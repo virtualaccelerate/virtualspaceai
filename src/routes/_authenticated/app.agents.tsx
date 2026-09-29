@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { useNavigate } from "@tanstack/react-router";
 import { AGENTS, UPCOMING_AGENTS, type AgentDef } from "@/lib/agents";
+import { AgentAutomations } from "@/components/AgentAutomations";
 
 export const Route = createFileRoute("/_authenticated/app/agents")({
   component: AgentsPage,
@@ -67,6 +68,9 @@ function AgentsPage() {
     }
   };
 
+  const [autoSpace, setAutoSpace] = useState<string | null>(null);
+  useEffect(() => { getActiveTeamspaceId().then(setAutoSpace).catch(() => {}); }, []);
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
@@ -89,6 +93,8 @@ function AgentsPage() {
         </span>{" "}
         {t("app.agents.howBody", "Type an agent tag inside any chat (e.g. @contracts) — the agent will handle that message. Or click 'Open' to start a dedicated conversation with the agent.")}
       </div>
+
+      <AgentAutomations teamspaceId={autoSpace} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {AGENTS.map((a) => {

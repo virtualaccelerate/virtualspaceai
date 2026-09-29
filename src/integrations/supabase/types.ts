@@ -55,6 +55,78 @@ export type Database = {
           },
         ]
       }
+      agent_automations: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          last_error: string | null
+          last_run_at: string | null
+          message: string
+          next_run_at: string | null
+          run_time: string | null
+          runs: number
+          schedule: string
+          target_name: string | null
+          target_user_id: string | null
+          task_id: string | null
+          teamspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          message: string
+          next_run_at?: string | null
+          run_time?: string | null
+          runs?: number
+          schedule?: string
+          target_name?: string | null
+          target_user_id?: string | null
+          task_id?: string | null
+          teamspace_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          message?: string
+          next_run_at?: string | null
+          run_time?: string | null
+          runs?: number
+          schedule?: string
+          target_name?: string | null
+          target_user_id?: string | null
+          task_id?: string | null
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_automations_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_automations_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_notification_log: {
         Row: {
           created_at: string

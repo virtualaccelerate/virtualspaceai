@@ -29,7 +29,10 @@ export const Route = createFileRoute("/api/public/hooks/trackers-sync")({
         const trello = await syncAllTrelloSources().catch(() => ({ synced: 0, failed: 1 }));
         const yougile = await syncAllYouGileSources().catch(() => ({ synced: 0, failed: 1 }));
 
-        return Response.json({ ok: true, trello, yougile });
+        const { runDueAutomations } = await import("@/lib/agent-automation.server");
+        const automations = await runDueAutomations().catch((e) => ({ ran: 0, failed: 1, error: String(e) }));
+
+        return Response.json({ ok: true, trello, yougile, automations });
       },
     },
   },
