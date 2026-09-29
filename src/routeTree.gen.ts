@@ -39,7 +39,6 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
-import { Route as AuthenticatedAppOnboardingRouteImport } from './routes/_authenticated/app.onboarding'
 import { Route as AuthenticatedAppMentorsRouteImport } from './routes/_authenticated/app.mentors'
 import { Route as AuthenticatedAppLearnRouteImport } from './routes/_authenticated/app.learn'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
@@ -51,6 +50,7 @@ import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as AuthenticatedAppOnboardingIndexRouteImport } from './routes/_authenticated/app.onboarding.index'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
 import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
@@ -217,12 +217,6 @@ const AuthenticatedAppOverviewRoute =
     path: '/overview',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppOnboardingRoute =
-  AuthenticatedAppOnboardingRouteImport.update({
-    id: '/onboarding',
-    path: '/onboarding',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
 const AuthenticatedAppMentorsRoute = AuthenticatedAppMentorsRouteImport.update({
   id: '/mentors',
   path: '/mentors',
@@ -282,6 +276,12 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppOnboardingIndexRoute =
+  AuthenticatedAppOnboardingIndexRouteImport.update({
+    id: '/onboarding/',
+    path: '/onboarding/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -324,9 +324,9 @@ const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
 } as any)
 const AuthenticatedAppOnboardingProgramIdRoute =
   AuthenticatedAppOnboardingProgramIdRouteImport.update({
-    id: '/$programId',
-    path: '/$programId',
-    getParentRoute: () => AuthenticatedAppOnboardingRoute,
+    id: '/onboarding/$programId',
+    path: '/onboarding/$programId',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppCConversationIdRoute =
   AuthenticatedAppCConversationIdRouteImport.update({
@@ -363,7 +363,6 @@ export interface FileRoutesByFullPath {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
   '/app/mentors': typeof AuthenticatedAppMentorsRoute
-  '/app/onboarding': typeof AuthenticatedAppOnboardingRouteWithChildren
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -386,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/app/onboarding/': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -414,7 +414,6 @@ export interface FileRoutesByTo {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
   '/app/mentors': typeof AuthenticatedAppMentorsRoute
-  '/app/onboarding': typeof AuthenticatedAppOnboardingRouteWithChildren
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -437,6 +436,7 @@ export interface FileRoutesByTo {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/app/onboarding': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -468,7 +468,6 @@ export interface FileRoutesById {
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/learn': typeof AuthenticatedAppLearnRoute
   '/_authenticated/app/mentors': typeof AuthenticatedAppMentorsRoute
-  '/_authenticated/app/onboarding': typeof AuthenticatedAppOnboardingRouteWithChildren
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -491,6 +490,7 @@ export interface FileRoutesById {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/_authenticated/app/onboarding/': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -522,7 +522,6 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/learn'
     | '/app/mentors'
-    | '/app/onboarding'
     | '/app/overview'
     | '/app/profile'
     | '/app/projects'
@@ -545,6 +544,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/app/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -573,7 +573,6 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/learn'
     | '/app/mentors'
-    | '/app/onboarding'
     | '/app/overview'
     | '/app/profile'
     | '/app/projects'
@@ -596,6 +595,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/app/onboarding'
   id:
     | '__root__'
     | '/'
@@ -626,7 +626,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/learn'
     | '/_authenticated/app/mentors'
-    | '/_authenticated/app/onboarding'
     | '/_authenticated/app/overview'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/projects'
@@ -649,6 +648,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/_authenticated/app/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -895,13 +895,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/onboarding': {
-      id: '/_authenticated/app/onboarding'
-      path: '/onboarding'
-      fullPath: '/app/onboarding'
-      preLoaderRoute: typeof AuthenticatedAppOnboardingRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/app/mentors': {
       id: '/_authenticated/app/mentors'
       path: '/mentors'
@@ -979,6 +972,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/app/onboarding/': {
+      id: '/_authenticated/app/onboarding/'
+      path: '/onboarding'
+      fullPath: '/app/onboarding/'
+      preLoaderRoute: typeof AuthenticatedAppOnboardingIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -1030,10 +1030,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/app/onboarding/$programId': {
       id: '/_authenticated/app/onboarding/$programId'
-      path: '/$programId'
+      path: '/onboarding/$programId'
       fullPath: '/app/onboarding/$programId'
       preLoaderRoute: typeof AuthenticatedAppOnboardingProgramIdRouteImport
-      parentRoute: typeof AuthenticatedAppOnboardingRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/c/$conversationId': {
       id: '/_authenticated/app/c/$conversationId'
@@ -1045,21 +1045,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAppOnboardingRouteChildren {
-  AuthenticatedAppOnboardingProgramIdRoute: typeof AuthenticatedAppOnboardingProgramIdRoute
-}
-
-const AuthenticatedAppOnboardingRouteChildren: AuthenticatedAppOnboardingRouteChildren =
-  {
-    AuthenticatedAppOnboardingProgramIdRoute:
-      AuthenticatedAppOnboardingProgramIdRoute,
-  }
-
-const AuthenticatedAppOnboardingRouteWithChildren =
-  AuthenticatedAppOnboardingRoute._addFileChildren(
-    AuthenticatedAppOnboardingRouteChildren,
-  )
-
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAgentsRoute: typeof AuthenticatedAppAgentsRoute
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
@@ -1070,7 +1055,6 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLearnRoute: typeof AuthenticatedAppLearnRoute
   AuthenticatedAppMentorsRoute: typeof AuthenticatedAppMentorsRoute
-  AuthenticatedAppOnboardingRoute: typeof AuthenticatedAppOnboardingRouteWithChildren
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRoute
@@ -1081,6 +1065,8 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppCConversationIdRoute: typeof AuthenticatedAppCConversationIdRoute
+  AuthenticatedAppOnboardingProgramIdRoute: typeof AuthenticatedAppOnboardingProgramIdRoute
+  AuthenticatedAppOnboardingIndexRoute: typeof AuthenticatedAppOnboardingIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -1093,7 +1079,6 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLearnRoute: AuthenticatedAppLearnRoute,
   AuthenticatedAppMentorsRoute: AuthenticatedAppMentorsRoute,
-  AuthenticatedAppOnboardingRoute: AuthenticatedAppOnboardingRouteWithChildren,
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRoute,
@@ -1104,6 +1089,9 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppCConversationIdRoute: AuthenticatedAppCConversationIdRoute,
+  AuthenticatedAppOnboardingProgramIdRoute:
+    AuthenticatedAppOnboardingProgramIdRoute,
+  AuthenticatedAppOnboardingIndexRoute: AuthenticatedAppOnboardingIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
