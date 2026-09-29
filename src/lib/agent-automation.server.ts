@@ -271,7 +271,7 @@ export async function runDueAutomations(limit = 50) {
       .from("agent_automations")
       .update({ next_run_at: next?.toISOString() ?? null, active: !!next, last_run_at: now.toISOString(), runs: row.runs + 1 })
       .eq("id", row.id)
-      .eq("next_run_at", row.next_run_at)
+      .eq("next_run_at", row.next_run_at as string)
       .select("id");
     if (!claimed?.length) continue;
     try {
