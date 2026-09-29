@@ -166,6 +166,31 @@ function TeamPage() {
             <span className="text-xs text-[color:var(--muted-foreground)]">
               {t("workspaceUi.team.open", "Активных")}: {m.open_tasks} · {t("workspaceUi.team.done", "Готово")}: {m.done_tasks}
             </span>
+            <div className="w-full sm:w-auto sm:min-w-[220px]">
+              {training?.by_user?.[m.id] ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                    <div className="h-1.5 w-24 rounded-full bg-[color:var(--muted)] overflow-hidden">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${training.by_user[m.id].progress}%` }} />
+                    </div>
+                    <span className="text-xs text-[color:var(--muted-foreground)]">
+                      {training.by_user[m.id].progress}% · {training.by_user[m.id].completed}/{training.by_user[m.id].programs}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[color:var(--muted-foreground)] truncate">
+                    {training.by_user[m.id].details
+                      .map((d) => `${d.title} — ${d.progress}%${d.score != null ? ` (${d.score})` : ""}`)
+                      .join(" · ")}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-[color:var(--muted-foreground)]">
+                  {t("workspaceUi.team.noTraining", "Обучение не назначено")}
+                </span>
+              )}
+            </div>
+
           </div>
         ))}
       </div>
