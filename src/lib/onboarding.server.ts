@@ -228,12 +228,18 @@ export async function updateProgramForUser(
   const program = await programOf(userId, input.program_id);
   await requireManager(userId, program.teamspace_id);
   const db = await admin();
-  const patch: Record<string, unknown> = {};
-  if (input.title !== undefined) patch["title"] = input.title;
-  if (input.description !== undefined) patch["description"] = input.description;
-  if (input.audience !== undefined) patch["audience"] = input.audience;
-  if (input.published !== undefined) patch["published"] = input.published;
+  const patch: {
+    title?: string;
+    description?: string | null;
+    audience?: string | null;
+    published?: boolean;
+  } = {};
+  if (input.title !== undefined) patch.title = input.title;
+  if (input.description !== undefined) patch.description = input.description;
+  if (input.audience !== undefined) patch.audience = input.audience;
+  if (input.published !== undefined) patch.published = input.published;
   const { error } = await db.from("onboarding_programs").update(patch).eq("id", program.id);
+
   if (error) throw new Error(error.message);
   return { ok: true };
 }
