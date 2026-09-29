@@ -1131,6 +1131,20 @@ async function handleCallback(cb: any) {
   const lang = pickLang(link.language);
   const [action, taskId] = String(cb.data ?? "").split(":");
 
+  if (action === "resched") {
+    const days = Number(String(cb.data).split(":")[2] ?? "1") || 1;
+    try {
+      const { rescheduleFromTelegram } = await import("./task-flow.server");
+      const r = await rescheduleFromTelegram(link.user_id, taskId, days);
+      await tg("answerCallbackQuery", { callback_query_id: cb.id, text: `📅 ${r.due}` });
+      await sendMessage(chatId, `📅 Дедлайн перенесён: ${r.title}
+Новый срок: ${r.due}`);
+    } catch (error) {
+      await tg("answerCallbackQuery", { callback_query_id: cb.id, text: error instanceof Error ? error.message.slice(0, 180) : "Ошибка" });
+    }
+    return;
+  }
+
   if (action === "report") {
     await tg("answerCallbackQuery", { callback_query_id: cb.id });
     const period = taskId === "m" ? "month" : taskId === "w" ? "week" : "day";

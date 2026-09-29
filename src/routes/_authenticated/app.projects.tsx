@@ -2,10 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ExternalLink, FolderKanban, Loader2, Plug, RefreshCw } from "lucide-react";
+import { ExternalLink, FolderKanban, Loader2, Plug, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { listProjects } from "@/lib/projects.functions";
+import { createProject, listProjects } from "@/lib/projects.functions";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { syncYouGile } from "@/lib/yougile.functions";
 import { syncTrello } from "@/lib/trello.functions";
 import { ProjectMaterialsDialog } from "@/components/ProjectMaterialsDialog";
@@ -52,6 +54,23 @@ function ProjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [board, setBoard] = useState<string>("");
   const [month, setMonth] = useState<string>("");
+  const create = useServerFn(createProject);
+  const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
+  async function addProject() {
+    if (!newName.trim()) return;
+    setCreating(true);
+    try {
+      const p = await create({ data: { name: newName.trim(), teamspace_id: data?.teamspace_id ?? null } });
+      toast.success(t("workspaceUi.projects.created", "Проект создан, тег #{{tag}}", { tag: p.tag }));
+      setNewName("");
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCreating(false);
+    }
+  }
   const [openProject, setOpenProject] = useState<{ key: string; name: string } | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -96,6 +115,15 @@ function ProjectsPage() {
           <Link to="/app/integrations"><Plug className="h-4 w-4" /> {t("workspaceUi.projects.integrations", "Интеграции")}</Link>
         </Button>
       </header>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Input value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addProject()}
+          placeholder={t("workspaceUi.projects.newPh", "Новый проект, например: Hackathon Osh")} className="sm:max-w-sm" />
+        <Button size="sm" onClick={addProject} disabled={creating || !newName.trim()}>
+          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {t("workspaceUi.projects.add", "Добавить проект")}
+        </Button>
+        {newName.trim() && <span className="text-xs text-white/50">#{newName.trim().replace(/[^\p{L}\p{N}_-]+/gu, "")}</span>}
+      </div>
 
       {sync.length > 0 && (
         <div className="flex flex-wrap gap-2">

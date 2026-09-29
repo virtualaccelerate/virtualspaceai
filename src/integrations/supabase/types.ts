@@ -805,6 +805,41 @@ export type Database = {
           },
         ]
       }
+      projects: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          tag: string
+          teamspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          tag: string
+          teamspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          tag?: string
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startups: {
         Row: {
           created_at: string

@@ -132,6 +132,7 @@ export async function createTaskForUser(
     assignee_name: name,
     project: data.project ?? null,
     department: data.department ?? null,
+    tags: (data as { tags?: string[] }).tags ?? [],
     due_date: data.due_date ?? null,
     position: (count ?? 0) * 1000,
   }).select("*").single();
@@ -180,7 +181,9 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
     position?: number;
     project?: string | null;
     department?: string | null;
+    tags?: string[];
   } = {
+    tags: (data as { tags?: string[] }).tags,
     title: data.title,
     description: data.description,
     project: (data as { project?: string | null }).project,
@@ -352,4 +355,25 @@ export async function decideTaskForUser(
   });
   await track(userId, current.teamspace_id, `Задачи: ${data.decision === "approve" ? "принята" : "на доработку"}`, { taskId: data.id });
   return row;
+}
+
+export async function updateTasksBulkForUser(
+  userId: string,
+  data: { ids: string[]; assignee_id?: string | null; due_date?: string },
+) {
+  let updated = 0;
+  const errors: string[] = [];
+  const rows: unknown[] = [];
+  for (const id of data.ids) {
+    const patch: UpdateTaskInput = { id };
+    if (Object.prototype.hasOwnProperty.call(data, "assignee_id")) patch.assignee_id = data.assignee_id ?? null;
+    if (data.due_date) patch.due_date = data.due_date;
+    try {
+      rows.push(await updateTaskForUser(userId, patch));
+      updated++;
+    } catch (e) {
+      errors.push(e instanceof Error ? e.message : String(e));
+    }
+  }
+  return { updated, failed: errors.length, errors: [...new Set(errors)].slice(0, 3), rows };
 }

@@ -15,6 +15,7 @@ export const CreateTaskSchema = z.object({
   assignee_name: z.string().trim().max(160).optional().nullable(),
   project: z.string().trim().max(160).optional().nullable(),
   department: z.string().trim().max(160).optional().nullable(),
+  tags: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
   due_date: RequiredDueDateSchema,
 });
 
@@ -28,6 +29,7 @@ export const UpdateTaskSchema = z.object({
   project: z.string().trim().max(160).optional().nullable(),
   department: z.string().trim().max(160).optional().nullable(),
   due_date: OptionalDueDateSchema,
+  tags: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
   position: z.number().int().min(0).optional(),
 });
 
@@ -52,4 +54,10 @@ export const DecideTaskSchema = z.object({
   id: z.string().uuid(),
   decision: z.enum(["approve", "rework"]),
   comment: z.string().trim().max(2000).optional().nullable(),
+});
+
+export const UpdateTasksBulkSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(500),
+  assignee_id: z.string().uuid().nullable().optional(),
+  due_date: RequiredDueDateSchema.optional(),
 });

@@ -70,7 +70,15 @@ export const Route = createFileRoute("/api/public/hooks/tasks-daily")({
               }).catch(() => ({ sent: 0, spaces: 0 }))
             : { sent: 0, spaces: 0, skipped: isWeekend ? "weekend" : "not-a-brief-hour" };
 
-        return Response.json({ ok: true, pass, forced: force || undefined, ...result, yougile, trello, calendar });
+        // Weekday mornings: offer assignees of overdue tasks to move the deadline.
+        const reschedule =
+          pass === "morning" && (manualPass || !isWeekend)
+            ? await import("@/lib/task-flow.server")
+                .then((m) => m.runOverdueRescheduleOffers())
+                .catch(() => ({ sent: 0 }))
+            : undefined;
+
+        return Response.json({ ok: true, pass, reschedule, forced: force || undefined, ...result, yougile, trello, calendar });
       },
     },
   },
