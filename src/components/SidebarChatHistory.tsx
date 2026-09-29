@@ -69,7 +69,21 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
     }
   };
 
-  if (!showLabels) return null;
+  if (!showLabels) {
+    return (
+      <button
+        onClick={() => void onNewChat()}
+        disabled={creating}
+        title={t("app.chat.newChat", "New chat")}
+        aria-label={t("app.chat.newChat", "New chat")}
+        className="w-full group flex items-center justify-center rounded-lg px-2.5 py-2 text-sm text-primary hover:bg-primary/10 transition disabled:opacity-50"
+      >
+        <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-primary/15">
+          <MessageSquarePlus className="h-[18px] w-[18px]" />
+        </span>
+      </button>
+    );
+  }
 
   return (
     <div className="space-y-0.5">
