@@ -77,11 +77,20 @@ export async function getTeamOverview(userId: string, requested?: string) {
   });
 
   return {
-    teamspace: ts ? { id: ts.id, name: ts.name, invite_code: ts.invite_code, owner_id: ts.owner_id } : null,
+    teamspace: ts
+      ? {
+          id: ts.id,
+          name: ts.name,
+          // the invite link is a management tool
+          invite_code: isManager ? ts.invite_code : null,
+          owner_id: ts.owner_id,
+        }
+      : null,
     members,
     total_tasks: (tasks ?? []).length,
-    unassigned_tasks: (tasks ?? []).filter((t) => !t.assignee_id).length,
+    unassigned_tasks: isManager ? (tasks ?? []).filter((t) => !t.assignee_id).length : 0,
     current_user_id: userId,
+    is_manager: isManager,
   };
 }
 
