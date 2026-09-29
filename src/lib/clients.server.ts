@@ -256,8 +256,8 @@ export async function setupClientDatabase(userId: string, teamspaceId: string) {
     sheet_url: sheet.webViewLink, doc_url: docUrl, last_sync_at: new Date().toISOString() });
 
   const docs = [
-    { name: "База клиентов", url: docUrl ?? sheet.webViewLink, link_kind: docUrl ? "docs" : "sheets", text: GUIDE(sheet.webViewLink) },
-    { name: "База клиентов — Google Таблица", url: sheet.webViewLink, link_kind: "sheets", text: `Google Таблица базы клиентов: ${sheet.webViewLink}` },
+    { name: "База клиентов", url: docUrl ?? sheet.webViewLink, link_kind: docUrl ? "google_docs" : "google_sheets", text: GUIDE(sheet.webViewLink) },
+    { name: "База клиентов — Google Таблица", url: sheet.webViewLink, link_kind: "google_sheets", text: `Google Таблица базы клиентов: ${sheet.webViewLink}` },
   ];
   for (const d of docs) {
     await db.from("documents").insert({ teamspace_id: teamspaceId, user_id: userId, name: d.name, storage_path: "",

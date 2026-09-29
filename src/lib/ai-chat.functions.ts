@@ -311,6 +311,10 @@ export const askZukha = createServerFn({ method: "POST" })
     try {
       const { buildCompanyContext } = await import("./company-context.server");
       companyBlock = await buildCompanyContext(data.teamspace_id);
+      if (data.teamspace_id) {
+        const { clientsContext } = await import("./clients.server");
+        companyBlock += await clientsContext(data.teamspace_id).catch(() => "");
+      }
     } catch {
       companyBlock = "";
     }
