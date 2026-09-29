@@ -56,11 +56,13 @@ function rollUpStatus(counts: Record<ProjectStatus, number>, total: number): Pro
 export async function listProjectsForUser(userId: string, teamspaceId?: string | null, filters: ProjectFilters = {}) {
   const spaceId = await activeTeamspace(userId, teamspaceId);
   const db = await admin();
+  const { isWorkspaceManager } = await import("./roles.server");
+  const isManager = await isWorkspaceManager(userId, spaceId);
 
-  const [{ data: tasks }, { data: sources }, { data: docProjects }, { data: savedProjects }] = await Promise.all([
+  const [{ data: allTasks }, { data: sources }, { data: docProjects }, { data: savedProjects }] = await Promise.all([
     db
       .from("tasks")
-      .select("status, project, due_date, updated_at, assignee_name, external_source, external_project, external_board, external_url, external_archived")
+      .select("status, project, due_date, updated_at, assignee_id, user_id, assignee_name, external_source, external_project, external_board, external_url, external_archived")
       .eq("teamspace_id", spaceId)
       .eq("external_archived", false)
       .limit(5000),
@@ -71,6 +73,11 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
     db.from("documents").select("project").eq("teamspace_id", spaceId).not("project", "is", null).limit(2000),
     db.from("projects").select("name, tag").eq("teamspace_id", spaceId).order("created_at"),
   ]);
+
+  // Plain members only roll up projects they actually work on.
+  const tasks = isManager
+    ? allTasks
+    : (allTasks ?? []).filter((t) => t.assignee_id === userId || t.user_id === userId);
 
   const syncByProvider = new Map((sources ?? []).map((row) => [row.provider as string, row]));
 

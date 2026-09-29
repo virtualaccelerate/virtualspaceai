@@ -147,13 +147,15 @@ export async function getProgramForUser(userId: string, programId: string) {
   });
 
   const me = people.find((p) => p.user_id === userId) ?? null;
+  // Members never see other employees' progress or quiz results.
+  const visiblePeople = isManager ? people : me ? [me] : [];
 
   return {
     program,
     is_manager: isManager,
     materials: materials ?? [],
     steps: (steps ?? []).map((s) => ({ ...s, items: (items ?? []).filter((i) => i.step_id === s.id) })),
-    people: people.sort((a, b) => a.name.localeCompare(b.name)),
+    people: visiblePeople.sort((a, b) => a.name.localeCompare(b.name)),
     me,
     totals: { items: totalItems, materials: totalMaterials },
   };
