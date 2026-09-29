@@ -8,3 +8,14 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Workspace roles and access
+
+- Owner/admin = manager, everyone else = plain member. Enforce role checks server-side
+  (`src/lib/roles.server.ts`) and in RLS (`private.is_teamspace_manager`), never only in the UI —
+  hiding a nav item does not protect the data behind it.
+- Members may only read their own work: task visibility is matched by assignee id and, for
+  imported tracker tasks, by assignee name via `private.task_belongs_to_user` /
+  `src/lib/task-visibility.server.ts`. Keep both implementations in sync.
+- Payroll, financials, client database, integrations, HR analytics, other people's cards and other
+  people's onboarding/quiz results are manager-only in both the server functions and RLS.
