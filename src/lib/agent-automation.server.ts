@@ -25,7 +25,7 @@ export function normTitle(s: string) {
 }
 
 function words(s: string) {
-  return new Set(normTitle(s).split(" ").filter((w) => w.length > 2));
+  return new Set(normTitle(s).split(" ").filter((w) => w.length > 3).map((w) => w.slice(0, 5)));
 }
 
 export function isDuplicateTitle(a: string, b: string) {
@@ -38,7 +38,7 @@ export function isDuplicateTitle(a: string, b: string) {
   if (wa.size < 2 || wb.size < 2) return false;
   let inter = 0;
   for (const w of wa) if (wb.has(w)) inter++;
-  return inter / (wa.size + wb.size - inter) >= 0.8;
+  return inter / (wa.size + wb.size - inter) >= 0.75;
 }
 
 export async function findDuplicateTask(teamspaceId: string | null, title: string, extra: string[] = []) {
