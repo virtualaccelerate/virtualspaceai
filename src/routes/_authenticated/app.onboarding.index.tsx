@@ -15,7 +15,7 @@ import {
   listOnboarding,
 } from "@/lib/onboarding.functions";
 
-export const Route = createFileRoute("/_authenticated/app/onboarding")({
+export const Route = createFileRoute("/_authenticated/app/onboarding/")({
   component: OnboardingPage,
   head: () => ({
     meta: [
