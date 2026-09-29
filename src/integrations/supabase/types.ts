@@ -786,6 +786,316 @@ export type Database = {
           },
         ]
       }
+      onboarding_assignments: {
+        Row: {
+          assigned_by: string | null
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          program_id: string
+          score: number | null
+          started_at: string | null
+          status: string
+          teamspace_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          program_id: string
+          score?: number | null
+          started_at?: string | null
+          status?: string
+          teamspace_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          program_id?: string
+          score?: number | null
+          started_at?: string | null
+          status?: string
+          teamspace_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_assignments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_assignments_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_items: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          material_id: string | null
+          position: number
+          program_id: string
+          step_id: string
+          teamspace_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          material_id?: string | null
+          position?: number
+          program_id: string
+          step_id: string
+          teamspace_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          material_id?: string | null
+          position?: number
+          program_id?: string
+          step_id?: string
+          teamspace_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_items_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_items_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_items_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_items_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_materials: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          kind: string
+          position: number
+          program_id: string
+          teamspace_id: string
+          title: string
+          url: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          position?: number
+          program_id: string
+          teamspace_id: string
+          title: string
+          url?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          position?: number
+          program_id?: string
+          teamspace_id?: string
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_materials_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_materials_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_programs: {
+        Row: {
+          audience: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          published: boolean
+          teamspace_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          published?: boolean
+          teamspace_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          published?: boolean
+          teamspace_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_programs_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_progress: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          done: boolean
+          id: string
+          ref_id: string
+          ref_kind: string
+          score: number | null
+          teamspace_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          ref_id: string
+          ref_kind: string
+          score?: number | null
+          teamspace_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          ref_id?: string
+          ref_kind?: string
+          score?: number | null
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_progress_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_progress_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_steps: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          position: number
+          program_id: string
+          teamspace_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          position?: number
+          program_id: string
+          teamspace_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          position?: number
+          program_id?: string
+          teamspace_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_steps_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_steps_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_members: {
         Row: {
           created_at: string
