@@ -74,6 +74,16 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
   return (
     <div className="space-y-0.5">
       <button
+        onClick={() => void onNewChat()}
+        disabled={creating}
+        className="w-full group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition disabled:opacity-50"
+      >
+        <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-primary/15">
+          <MessageSquarePlus className="h-[18px] w-[18px]" />
+        </span>
+        <span className="flex-1 text-left truncate">{t("app.chat.newChat", "New chat")}</span>
+      </button>
+      <button
         onClick={() => setOpen((v) => !v)}
         className="w-full group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-foreground hover:bg-muted transition"
       >
