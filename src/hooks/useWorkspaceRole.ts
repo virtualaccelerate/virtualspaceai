@@ -10,7 +10,7 @@ export function useWorkspaceRole() {
     queryKey: ["workspace-role"],
     queryFn: async () => {
       const teamspaceId = await getActiveTeamspaceId();
-      return load({ data: { teamspace_id: teamspaceId ?? null } });
+      return load({ data: teamspaceId ? { teamspace_id: teamspaceId } : {} });
     },
     staleTime: 60_000,
   });
