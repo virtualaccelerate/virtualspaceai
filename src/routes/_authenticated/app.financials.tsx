@@ -298,7 +298,8 @@ function FinancialsPage() {
         <button
           onClick={runAnalysis}
           disabled={analyzing || sources.length === 0}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary text-black font-semibold px-4 py-2 text-sm disabled:opacity-50 hover:opacity-90 transition"
+          className={tab === "payroll" ? "hidden" : undefined}
+          data-x="inline-flex items-center gap-2 rounded-xl bg-primary text-black font-semibold px-4 py-2 text-sm disabled:opacity-50 hover:opacity-90 transition"
         >
           {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           {t("app.fin.analyze", "Analyze & build dashboard")}
@@ -308,7 +309,7 @@ function FinancialsPage() {
       <div className="inline-flex rounded-xl border border-border bg-card p-1">
         {(["metrics","payroll"] as const).map((k) => (
           <button key={k} onClick={() => setTab(k)} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-            {k === "metrics" ? t("app.fin.tabMetrics", "Company metrics") : t("app.fin.tabPayroll", "Payroll")}
+            {k === "metrics" ? t("app.fin.tabMetrics", i18n.language.startsWith("en") ? "Company metrics" : "Показатели компании") : t("app.fin.tabPayroll", i18n.language.startsWith("en") ? "Payroll" : "Зарплаты")}
           </button>
         ))}
       </div>
