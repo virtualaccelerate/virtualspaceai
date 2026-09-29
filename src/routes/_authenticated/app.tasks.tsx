@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
-import { createTask, deleteTask, deleteTasksBulk, listTaskMembers, reviewTask, submitTaskForReview, updateTask } from "@/lib/tasks.functions";
+import { createTask, deleteTask, deleteTasksBulk, listTaskMembers, reviewTask, submitTaskForReview, updateTask, updateTasksBulk } from "@/lib/tasks.functions";
+import { listProjects } from "@/lib/projects.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,7 @@ type Task = {
   external_archived?: boolean;
   project?: string | null;
   department?: string | null;
+  tags?: string[] | null;
   status_id?: string | null;
 };
 
@@ -169,6 +171,8 @@ type TaskDraft = {
   priority: TaskPriority;
   assignee_id: string;
   due_date: string;
+  project: string;
+  tags: string;
 };
 
 const emptyDraft = (status: TaskStatus = "backlog"): TaskDraft => ({
@@ -178,7 +182,12 @@ const emptyDraft = (status: TaskStatus = "backlog"): TaskDraft => ({
   priority: "medium",
   assignee_id: "",
   due_date: "",
+  project: "",
+  tags: "",
 });
+
+const cleanTag = (v: string) => v.trim().replace(/^#/, "").replace(/[^\p{L}\p{N}_-]+/gu, "");
+const parseTagList = (v: string) => [...new Set(v.split(/[,\s]+/).map(cleanTag).filter(Boolean))].slice(0, 20);
 
 function TasksPage() {
   const { t } = useTranslation();
@@ -219,6 +228,44 @@ function TasksPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkMode, setBulkMode] = useState<"selected" | "all" | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const bulkUpdateFn = useServerFn(updateTasksBulk);
+  const loadProjectsFn = useServerFn(listProjects);
+  const [projectOptions, setProjectOptions] = useState<{ name: string; tag: string }[]>([]);
+  const [bulkAssignee, setBulkAssignee] = useState<string>("");
+  const [bulkDue, setBulkDue] = useState<string>("");
+
+  useEffect(() => {
+    loadProjectsFn({ data: {} })
+      .then((r: any) => {
+        const saved = (r?.saved ?? []) as { name: string; tag: string }[];
+        const names = new Set(saved.map((p) => p.name.toLowerCase()));
+        const others = ((r?.projects ?? []) as any[])
+          .filter((p) => p.source === "virtual_space" && p.name !== "Без проекта" && !names.has(String(p.name).toLowerCase()))
+          .map((p) => ({ name: p.name as string, tag: cleanTag(p.name) }));
+        setProjectOptions([...saved, ...others]);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function runBulkUpdate(kind: "assignee" | "due") {
+    if (!selectedIds.length) return;
+    if (kind === "due" && !bulkDue) return;
+    setBulkBusy(true);
+    try {
+      const payload: any = { ids: selectedIds };
+      if (kind === "assignee") payload.assignee_id = bulkAssignee === "unassigned" || !bulkAssignee ? null : bulkAssignee;
+      else payload.due_date = bulkDue;
+      const res = (await bulkUpdateFn({ data: payload })) as { updated: number; failed: number; errors: string[]; rows: Task[] };
+      const byId = new Map(res.rows.map((r) => [r.id, r]));
+      setTasks((prev) => prev.map((x) => byId.get(x.id) ?? x));
+      if (res.updated) toast.success(t("tasksUi.bulkUpdated", "Updated tasks: {{count}}", { count: res.updated }));
+      if (res.failed) toast.error(`${res.failed}: ${res.errors.join("; ")}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -433,6 +480,8 @@ function TasksPage() {
       priority: task.priority,
       assignee_id: task.assignee_id ?? "",
       due_date: task.due_date ?? "",
+      project: task.project ?? "",
+      tags: (task.tags ?? []).map((x) => `#${x}`).join(" "),
     });
     setDialogOpen(true);
   }
@@ -455,6 +504,8 @@ function TasksPage() {
       priority: draft.priority,
       assignee_id: draft.assignee_id || null,
       due_date: draft.due_date,
+      project: draft.project.trim() || null,
+      tags: parseTagList(draft.tags),
     };
 
     setSaving(true);
@@ -585,7 +636,21 @@ function TasksPage() {
           <p className="text-sm text-foreground">
             {t("tasksUi.selectedCount", "Selected tasks: {{count}}", { count: selectedIds.length })}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={bulkAssignee} onValueChange={setBulkAssignee}>
+              <SelectTrigger className="h-8 w-44"><SelectValue placeholder={t("tasksUi.bulkAssignee", "Assignee…")} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">{t("tasksUi.unassigned", "Unassigned")}</SelectItem>
+                {members.map((m) => <SelectItem key={m.id} value={m.id}>{m.full_name || m.email || m.id}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" disabled={bulkBusy || !bulkAssignee} onClick={() => runBulkUpdate("assignee")}>
+              {t("tasksUi.bulkAssign", "Assign")}
+            </Button>
+            <Input type="date" value={bulkDue} onChange={(e) => setBulkDue(e.target.value)} className="h-8 w-40" />
+            <Button size="sm" variant="outline" disabled={bulkBusy || !bulkDue} onClick={() => runBulkUpdate("due")}>
+              {t("tasksUi.bulkDue", "Set deadline")}
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
               {t("tasksUi.clearSelection", "Clear selection")}
             </Button>
@@ -968,6 +1033,43 @@ function TasksPage() {
                   onChange={(e) => setDraft((d) => ({ ...d, due_date: e.target.value }))}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("tasksUi.fProject", "Project")}</Label>
+                <Select
+                  value={draft.project || "none"}
+                  onValueChange={(v) => setDraft((d) => {
+                    if (v === "none") return { ...d, project: "" };
+                    const opt = projectOptions.find((p) => p.name === v);
+                    const tags = parseTagList(d.tags);
+                    if (opt && !tags.includes(opt.tag)) tags.push(opt.tag);
+                    return { ...d, project: v, tags: tags.map((x) => `#${x}`).join(" ") };
+                  })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t("tasksUi.noProject", "No project")}</SelectItem>
+                    {draft.project && !projectOptions.some((p) => p.name === draft.project) && (
+                      <SelectItem value={draft.project}>{draft.project}</SelectItem>
+                    )}
+                    {projectOptions.map((p) => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="task-tags">{t("tasksUi.fTags", "Tags")}</Label>
+                <Input id="task-tags" value={draft.tags} onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))} placeholder="#marketing #osh" />
+                {projectOptions.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {projectOptions.slice(0, 8).map((p) => (
+                      <button key={p.tag} type="button" onClick={() => setDraft((d) => {
+                        const tags = parseTagList(d.tags);
+                        if (!tags.includes(p.tag)) tags.push(p.tag);
+                        return { ...d, tags: tags.map((x) => `#${x}`).join(" "), project: d.project || p.name };
+                      })} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">#{p.tag}</button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
