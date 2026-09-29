@@ -1096,6 +1096,63 @@ export type Database = {
           },
         ]
       }
+      payroll_rules: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          kind: string
+          note: string | null
+          project: string | null
+          task_id: string | null
+          teamspace_id: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by: string
+          currency?: string
+          id?: string
+          kind: string
+          note?: string | null
+          project?: string | null
+          task_id?: string | null
+          teamspace_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          currency?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          project?: string | null
+          task_id?: string | null
+          teamspace_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_rules_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_rules_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_members: {
         Row: {
           created_at: string

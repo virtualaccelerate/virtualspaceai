@@ -26,6 +26,7 @@ import {
   BarChart, Bar, Legend,
 } from "recharts";
 import * as XLSX from "xlsx";
+import { PayrollPanel } from "@/components/PayrollPanel";
 
 function parseCsvLine(line: string): string[] {
   const out: string[] = [];
@@ -154,6 +155,7 @@ function FinancialsPage() {
   };
 
 
+  const [tab, setTab] = useState<"metrics" | "payroll">("metrics");
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [sources, setSources] = useState<Src[]>([]);
   const [loading, setLoading] = useState(true);
@@ -296,13 +298,24 @@ function FinancialsPage() {
         <button
           onClick={runAnalysis}
           disabled={analyzing || sources.length === 0}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary text-black font-semibold px-4 py-2 text-sm disabled:opacity-50 hover:opacity-90 transition"
+          className={`inline-flex items-center gap-2 rounded-xl bg-primary text-black font-semibold px-4 py-2 text-sm disabled:opacity-50 hover:opacity-90 transition ${tab === "payroll" ? "hidden" : ""}`}
         >
           {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           {t("app.fin.analyze", "Analyze & build dashboard")}
         </button>
       </div>
 
+      <div className="inline-flex rounded-xl border border-border bg-card p-1">
+        {(["metrics","payroll"] as const).map((k) => (
+          <button key={k} onClick={() => setTab(k)} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            {k === "metrics" ? t("app.fin.tabMetrics", i18n.language.startsWith("en") ? "Company metrics" : "Показатели компании") : t("app.fin.tabPayroll", i18n.language.startsWith("en") ? "Payroll" : "Зарплаты")}
+          </button>
+        ))}
+      </div>
+
+      {tab === "payroll" && (teamspaceId ? <PayrollPanel teamspaceId={teamspaceId} language={i18n.language} /> : null)}
+
+      <div className={tab === "payroll" ? "hidden" : "space-y-6"}>
       {/* Add sources */}
       <div className="grid md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border bg-card p-4">
@@ -618,6 +631,7 @@ function FinancialsPage() {
             <Send className="h-4 w-4" />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
