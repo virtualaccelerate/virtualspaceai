@@ -57,7 +57,7 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
   const spaceId = await activeTeamspace(userId, teamspaceId);
   const db = await admin();
 
-  const [{ data: tasks }, { data: sources }] = await Promise.all([
+  const [{ data: tasks }, { data: sources }, { data: docProjects }] = await Promise.all([
     db
       .from("tasks")
       .select("status, project, due_date, updated_at, assignee_name, external_source, external_project, external_board, external_url, external_archived")
@@ -68,6 +68,7 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
       .from("task_sync_sources")
       .select("provider, project_name, last_sync_at, last_error")
       .eq("teamspace_id", spaceId),
+    db.from("documents").select("project").eq("teamspace_id", spaceId).not("project", "is", null).limit(2000),
   ]);
 
   const syncByProvider = new Map((sources ?? []).map((row) => [row.provider as string, row]));
@@ -124,6 +125,22 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
     if (board) bucket.boardSet.add(board);
     if (task.assignee_name) bucket.owners.set(task.assignee_name, (bucket.owners.get(task.assignee_name) ?? 0) + 1);
     if (!bucket.url && task.external_url) bucket.url = task.external_url;
+  }
+
+  // Projects that so far exist only in the knowledge base.
+  if (!filters.board && !filters.month) {
+    const known = new Set([...buckets.values()].map((b) => b.name.trim().toLowerCase()));
+    for (const d of docProjects ?? []) {
+      const n = d.project?.trim();
+      if (!n || known.has(n.toLowerCase())) continue;
+      known.add(n.toLowerCase());
+      const key = `virtual_space::${n}`;
+      buckets.set(key, {
+        key, name: n, source: "virtual_space", boards: [], status: "backlog", progress: 0, owner: null,
+        done: 0, total: 0, last_sync_at: null, url: null,
+        counts: { backlog: 0, in_progress: 0, review: 0, done: 0 }, owners: new Map(), boardSet: new Set<string>(),
+      });
+    }
   }
 
   const rows: ProjectRow[] = [...buckets.values()].map((bucket) => {
