@@ -26,6 +26,7 @@ import {
   BarChart, Bar, Legend,
 } from "recharts";
 import * as XLSX from "xlsx";
+import { PayrollPanel } from "@/components/PayrollPanel";
 
 function parseCsvLine(line: string): string[] {
   const out: string[] = [];
@@ -154,6 +155,7 @@ function FinancialsPage() {
   };
 
 
+  const [tab, setTab] = useState<"metrics" | "payroll">("metrics");
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [sources, setSources] = useState<Src[]>([]);
   const [loading, setLoading] = useState(true);
@@ -303,6 +305,17 @@ function FinancialsPage() {
         </button>
       </div>
 
+      <div className="inline-flex rounded-xl border border-border bg-card p-1">
+        {(["metrics","payroll"] as const).map((k) => (
+          <button key={k} onClick={() => setTab(k)} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            {k === "metrics" ? t("app.fin.tabMetrics", "Company metrics") : t("app.fin.tabPayroll", "Payroll")}
+          </button>
+        ))}
+      </div>
+
+      {tab === "payroll" && (teamspaceId ? <PayrollPanel teamspaceId={teamspaceId} language={i18n.language} /> : null)}
+
+      <div className={tab === "payroll" ? "hidden" : "space-y-6"}>
       {/* Add sources */}
       <div className="grid md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border bg-card p-4">
@@ -618,6 +631,7 @@ function FinancialsPage() {
             <Send className="h-4 w-4" />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
