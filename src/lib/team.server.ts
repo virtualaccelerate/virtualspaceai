@@ -94,7 +94,9 @@ export async function getTeamOverview(userId: string, requested?: string) {
         }
       : null,
     members,
-    total_tasks: (tasks ?? []).length,
+    total_tasks: isManager
+      ? (tasks ?? []).length
+      : members.reduce((sum, m) => sum + m.open_tasks + m.done_tasks, 0),
     unassigned_tasks: isManager ? (tasks ?? []).filter((t) => !t.assignee_id).length : 0,
     current_user_id: userId,
     is_manager: isManager,
