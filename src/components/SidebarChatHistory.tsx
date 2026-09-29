@@ -16,6 +16,23 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
   const location = useLocation();
   const listConvs = useServerFn(listConversations);
   const removeConv = useServerFn(deleteConversation);
+  const createConv = useServerFn(createConversation);
+  const [creating, setCreating] = useState(false);
+
+  const onNewChat = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const conv = await createConv({ data: { title: t("app.chat.newChat", "New chat") } });
+      setConversations((prev) => [conv, ...prev]);
+      window.dispatchEvent(new Event("virtualspace:chats-changed"));
+      navigate({ to: "/app/c/$conversationId", params: { conversationId: conv.id } });
+    } catch {
+      /* ignore */
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
