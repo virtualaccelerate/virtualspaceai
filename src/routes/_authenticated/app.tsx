@@ -15,6 +15,8 @@ const FEATURE_BY_SEGMENT: Record<string, string> = {
   courses: "Обучение",
   mentors: "Менторы",
   learn: "Обучение",
+  onboarding: "Онбординг",
+
   overview: "Обзор",
   clients: "Клиенты",
   settings: "Настройки",

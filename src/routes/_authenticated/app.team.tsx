@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Users, Copy, Check, Send, Crown, Shield, User as UserIcon } from "lucide-react";
+import { Users, Copy, Check, Send, Crown, Shield, User as UserIcon, GraduationCap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { loadTeamOverview, setMemberRole } from "@/lib/team.functions";
+import { teamTrainingProgress } from "@/lib/onboarding.functions";
 import { toast } from "sonner";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import TeamPerformance from "@/components/TeamPerformance";
 import PendingMembers from "@/components/PendingMembers";
+
 
 type Overview = Awaited<ReturnType<typeof loadTeamOverview>>;
 
@@ -19,9 +21,11 @@ function initials(name?: string | null, email?: string | null) {
 function TeamPage() {
   const { t } = useTranslation();
   const load = useServerFn(loadTeamOverview);
+  const loadTraining = useServerFn(teamTrainingProgress);
   const changeRole = useServerFn(setMemberRole);
   const [roleBusy, setRoleBusy] = useState<string | null>(null);
   const [data, setData] = useState<Overview>(null);
+  const [training, setTraining] = useState<{ by_user: Record<string, { programs: number; completed: number; progress: number; details: { title: string; progress: number; status: string; score: number | null }[] }> } | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [tsId, setTsId] = useState<string | undefined>(undefined);
@@ -33,11 +37,17 @@ function TeamPage() {
         setTsId(active);
         const res = await load({ data: active ? { teamspace_id: active } : {} });
         setData(res);
+        try {
+          setTraining(await loadTraining({ data: active ? { teamspace_id: active } : {} }));
+        } catch {
+          /* training is optional */
+        }
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
 
   const copyCode = async () => {
     if (!data?.teamspace?.invite_code) return;
@@ -166,6 +176,31 @@ function TeamPage() {
             <span className="text-xs text-[color:var(--muted-foreground)]">
               {t("workspaceUi.team.open", "Активных")}: {m.open_tasks} · {t("workspaceUi.team.done", "Готово")}: {m.done_tasks}
             </span>
+            <div className="w-full sm:w-auto sm:min-w-[220px]">
+              {training?.by_user?.[m.id] ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                    <div className="h-1.5 w-24 rounded-full bg-[color:var(--muted)] overflow-hidden">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${training.by_user[m.id].progress}%` }} />
+                    </div>
+                    <span className="text-xs text-[color:var(--muted-foreground)]">
+                      {training.by_user[m.id].progress}% · {training.by_user[m.id].completed}/{training.by_user[m.id].programs}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[color:var(--muted-foreground)] truncate">
+                    {training.by_user[m.id].details
+                      .map((d) => `${d.title} — ${d.progress}%${d.score != null ? ` (${d.score})` : ""}`)
+                      .join(" · ")}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-[color:var(--muted-foreground)]">
+                  {t("workspaceUi.team.noTraining", "Обучение не назначено")}
+                </span>
+              )}
+            </div>
+
           </div>
         ))}
       </div>

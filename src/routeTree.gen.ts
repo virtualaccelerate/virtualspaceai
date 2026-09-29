@@ -50,6 +50,7 @@ import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as AuthenticatedAppOnboardingIndexRouteImport } from './routes/_authenticated/app.onboarding.index'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
 import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
@@ -57,6 +58,7 @@ import { Route as ApiPublicHooksTrackersSyncRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksTasksDailyRouteImport } from './routes/api/public/hooks/tasks-daily'
 import { Route as ApiPublicFinikWebhookRouteImport } from './routes/api/public/finik.webhook'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
+import { Route as AuthenticatedAppOnboardingProgramIdRouteImport } from './routes/_authenticated/app.onboarding.$programId'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
 
 const TgRoute = TgRouteImport.update({
@@ -274,6 +276,12 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppOnboardingIndexRoute =
+  AuthenticatedAppOnboardingIndexRouteImport.update({
+    id: '/onboarding/',
+    path: '/onboarding/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -314,6 +322,12 @@ const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
   path: '/api/public/calendar/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppOnboardingProgramIdRoute =
+  AuthenticatedAppOnboardingProgramIdRouteImport.update({
+    id: '/onboarding/$programId',
+    path: '/onboarding/$programId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppCConversationIdRoute =
   AuthenticatedAppCConversationIdRouteImport.update({
     id: '/c/$conversationId',
@@ -363,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
@@ -370,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/app/onboarding/': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -412,6 +428,7 @@ export interface FileRoutesByTo {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
@@ -419,6 +436,7 @@ export interface FileRoutesByTo {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/app/onboarding': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -464,6 +482,7 @@ export interface FileRoutesById {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/_authenticated/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
   '/api/public/hooks/tasks-daily': typeof ApiPublicHooksTasksDailyRoute
@@ -471,6 +490,7 @@ export interface FileRoutesById {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/_authenticated/app/onboarding/': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -516,6 +536,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app/'
     | '/app/c/$conversationId'
+    | '/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
@@ -523,6 +544,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/app/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -565,6 +587,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app'
     | '/app/c/$conversationId'
+    | '/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
@@ -572,6 +595,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/app/onboarding'
   id:
     | '__root__'
     | '/'
@@ -616,6 +640,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
+    | '/_authenticated/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
     | '/api/public/hooks/tasks-daily'
@@ -623,6 +648,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/_authenticated/app/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -946,6 +972,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/app/onboarding/': {
+      id: '/_authenticated/app/onboarding/'
+      path: '/onboarding'
+      fullPath: '/app/onboarding/'
+      preLoaderRoute: typeof AuthenticatedAppOnboardingIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -995,6 +1028,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/app/onboarding/$programId': {
+      id: '/_authenticated/app/onboarding/$programId'
+      path: '/onboarding/$programId'
+      fullPath: '/app/onboarding/$programId'
+      preLoaderRoute: typeof AuthenticatedAppOnboardingProgramIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/c/$conversationId': {
       id: '/_authenticated/app/c/$conversationId'
       path: '/c/$conversationId'
@@ -1025,6 +1065,8 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppCConversationIdRoute: typeof AuthenticatedAppCConversationIdRoute
+  AuthenticatedAppOnboardingProgramIdRoute: typeof AuthenticatedAppOnboardingProgramIdRoute
+  AuthenticatedAppOnboardingIndexRoute: typeof AuthenticatedAppOnboardingIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -1047,6 +1089,9 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppCConversationIdRoute: AuthenticatedAppCConversationIdRoute,
+  AuthenticatedAppOnboardingProgramIdRoute:
+    AuthenticatedAppOnboardingProgramIdRoute,
+  AuthenticatedAppOnboardingIndexRoute: AuthenticatedAppOnboardingIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =

@@ -245,8 +245,26 @@ export async function executeAgentTokens(reply: string, ctx: { userId: string; t
     results.push(`🔁 Автоматизация: ${label[schedule]} → ${to.name}, ближайший запуск ${local(next).toISOString().slice(0, 16).replace("T", " ")}`);
   }
 
+  for (const m of [...reply.matchAll(/\[\[onboarding:([^\]]+)\]\]/g)]) {
+    out = out.replace(m[0], "");
+    const [promptRaw = "", programRaw = ""] = m[1].split("||").map((x) => x.trim());
+    if (!ctx.teamspaceId || promptRaw.length < 3) continue;
+    try {
+      const { generateProgramForUser } = await import("./onboarding.server");
+      const res = await generateProgramForUser(ctx.userId, {
+        prompt: promptRaw,
+        program_id: UUID.test(programRaw) ? programRaw : null,
+        teamspace_id: ctx.teamspaceId,
+      });
+      results.push(`🎓 Обучение готово: «${res.title}» — откройте раздел «Онбординг и обучение»`);
+    } catch (e) {
+      results.push(`⚠️ Не удалось собрать обучение: ${e instanceof Error ? e.message.slice(0, 140) : e}`);
+    }
+  }
+
   if (results.length) out = `${out.trim()}\n\n${results.join("\n")}`.trim();
   return { reply: out, results };
+
 }
 
 // ---------------- cron runner ----------------
