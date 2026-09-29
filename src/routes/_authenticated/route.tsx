@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWorkspaceRole } from "@/hooks/useWorkspaceRole";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -133,6 +134,8 @@ function AuthenticatedLayout() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   };
+
+  const { isManager } = useWorkspaceRole();
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
@@ -345,7 +348,7 @@ function AuthenticatedLayout() {
             </div>
           )}
           <div className="space-y-0.5">
-            {workspaceNav.map((item) => <NavButton key={item.to} item={item} />)}
+            {visible(workspaceNav).map((item) => <NavButton key={item.to} item={item} />)}
           </div>
 
           {showLabels && (
@@ -356,7 +359,7 @@ function AuthenticatedLayout() {
             </div>
           )}
           <div className="space-y-0.5">
-            {communicationNav.map((item) => <NavButton key={item.to} item={item} />)}
+            {visible(communicationNav).map((item) => <NavButton key={item.to} item={item} />)}
           </div>
         </nav>
 
