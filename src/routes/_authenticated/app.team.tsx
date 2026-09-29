@@ -21,9 +21,11 @@ function initials(name?: string | null, email?: string | null) {
 function TeamPage() {
   const { t } = useTranslation();
   const load = useServerFn(loadTeamOverview);
+  const loadTraining = useServerFn(teamTrainingProgress);
   const changeRole = useServerFn(setMemberRole);
   const [roleBusy, setRoleBusy] = useState<string | null>(null);
   const [data, setData] = useState<Overview>(null);
+  const [training, setTraining] = useState<{ by_user: Record<string, { programs: number; completed: number; progress: number; details: { title: string; progress: number; status: string; score: number | null }[] }> } | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [tsId, setTsId] = useState<string | undefined>(undefined);
@@ -35,11 +37,17 @@ function TeamPage() {
         setTsId(active);
         const res = await load({ data: active ? { teamspace_id: active } : {} });
         setData(res);
+        try {
+          setTraining(await loadTraining({ data: active ? { teamspace_id: active } : {} }));
+        } catch {
+          /* training is optional */
+        }
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
 
   const copyCode = async () => {
     if (!data?.teamspace?.invite_code) return;
