@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Users, Copy, Check, Send, Crown, Shield, User as UserIcon } from "lucide-react";
+import { Users, Copy, Check, Send, Crown, Shield, User as UserIcon, GraduationCap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { loadTeamOverview, setMemberRole } from "@/lib/team.functions";
+import { teamTrainingProgress } from "@/lib/onboarding.functions";
 import { toast } from "sonner";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import TeamPerformance from "@/components/TeamPerformance";
 import PendingMembers from "@/components/PendingMembers";
+
 
 type Overview = Awaited<ReturnType<typeof loadTeamOverview>>;
 
