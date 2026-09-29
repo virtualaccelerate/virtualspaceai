@@ -212,7 +212,13 @@ export async function getTeamPerformance(userId: string, requested?: string) {
   ]);
   const projectName = new Map((spaces ?? []).map((s) => [s.id, s.name as string]));
 
-  const ids = Array.from(new Set((memberships ?? []).map((m) => m.user_id)));
+  const { isWorkspaceManager } = await import("./roles.server");
+  const isManager = await isWorkspaceManager(userId, teamspaceId);
+
+  // Plain members only get a performance card for themselves.
+  const ids = isManager
+    ? Array.from(new Set((memberships ?? []).map((m) => m.user_id)))
+    : [userId];
   if (!ids.length) return { members: [] as MemberPerformance[], projects: [] as string[] };
 
   const [{ data: profiles }, { data: tasks }] = await Promise.all([
