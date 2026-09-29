@@ -55,3 +55,61 @@ export function extractUrls(text: string | null | undefined): string[] {
 export function parseTags(raw: string): string[] {
   return [...new Set(raw.split(/[,#\n]/).map((t) => t.trim()).filter(Boolean))].slice(0, 20);
 }
+
+/**
+ * Embeddable player URL for a video link (YouTube, Vimeo, Rutube, Loom,
+ * Google Drive, VK). Returns null when the link cannot be embedded in an
+ * iframe — callers then show a plain external link.
+ */
+export function videoEmbedUrl(raw: string): string | null {
+  const normalized = normalizeUrl(raw);
+  if (!normalized) return null;
+  let u: URL;
+  try { u = new URL(normalized); } catch { return null; }
+  const h = u.hostname.replace(/^www\./, "");
+  const p = u.pathname;
+
+  if (h === "youtu.be") {
+    const id = p.slice(1).split("/")[0];
+    return id ? `https://www.youtube.com/embed/${id}` : null;
+  }
+  if (h.endsWith("youtube.com") || h.endsWith("youtube-nocookie.com")) {
+    if (p.startsWith("/embed/") || p.startsWith("/shorts/")) {
+      const id = p.split("/")[2];
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+    if (p.startsWith("/live/")) {
+      const id = p.split("/")[2];
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+    const id = u.searchParams.get("v");
+    const list = u.searchParams.get("list");
+    if (id) return `https://www.youtube.com/embed/${id}${list ? `?list=${list}` : ""}`;
+    if (list) return `https://www.youtube.com/embed/videoseries?list=${list}`;
+    return null;
+  }
+  if (h.endsWith("vimeo.com")) {
+    const id = p.split("/").filter(Boolean)[0];
+    return /^\d+$/.test(id ?? "") ? `https://player.vimeo.com/video/${id}` : null;
+  }
+  if (h.endsWith("rutube.ru")) {
+    const parts = p.split("/").filter(Boolean);
+    const id = parts[0] === "video" ? parts[1] : null;
+    return id ? `https://rutube.ru/play/embed/${id}` : null;
+  }
+  if (h.endsWith("loom.com")) {
+    const id = p.split("/").filter(Boolean)[1];
+    return id ? `https://www.loom.com/embed/${id}` : null;
+  }
+  if (h === "drive.google.com") {
+    const id = p.match(/\/file\/d\/([^/]+)/)?.[1] ?? u.searchParams.get("id");
+    return id ? `https://drive.google.com/file/d/${id}/preview` : null;
+  }
+  if (h.endsWith("vk.com") && p.startsWith("/video")) {
+    const m = p.match(/\/video(-?\d+)_(\d+)/);
+    return m ? `https://vk.com/video_ext.php?oid=${m[1]}&id=${m[2]}` : null;
+  }
+  if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(normalized)) return normalized;
+  return null;
+}
+
