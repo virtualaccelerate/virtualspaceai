@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
+import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle, Link2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
@@ -11,7 +11,10 @@ import {
   deleteDocument,
   getDocumentSignedUrl,
   extractDocumentText,
+  createLinkDocument,
 } from "@/lib/documents.functions";
+import { listProjects } from "@/lib/projects.functions";
+import { LINK_LABEL, detectLinkKind, normalizeUrl, parseTags, type LinkKind } from "@/lib/links";
 
 export const Route = createFileRoute("/_authenticated/app/docs")({
   component: KnowledgeBase,
@@ -31,6 +34,10 @@ type Doc = {
   extract_status?: string | null;
   extract_error?: string | null;
   text_len?: number;
+  url?: string | null;
+  link_kind?: string | null;
+  project?: string | null;
+  tags?: string[] | null;
 };
 
 const TEXT_MIMES = /^(text\/|application\/(json|xml|x-yaml|yaml|javascript|typescript|sql|csv|markdown))/i;
@@ -60,6 +67,37 @@ function KnowledgeBase() {
   const [dragOver, setDragOver] = useState(false);
   const [indexing, setIndexing] = useState<Record<string, boolean>>({});
   const inputRef = useRef<HTMLInputElement>(null);
+  const createLink = useServerFn(createLinkDocument);
+  const loadProjects = useServerFn(listProjects);
+  const [projectNames, setProjectNames] = useState<string[]>([]);
+  const [project, setProject] = useState("");
+  const [tagsRaw, setTagsRaw] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkName, setLinkName] = useState("");
+  const [addingLink, setAddingLink] = useState(false);
+
+  useEffect(() => {
+    loadProjects({ data: {} })
+      .then((r: any) => setProjectNames([...new Set(((r?.projects ?? []) as any[]).map((p) => p.name as string))]))
+      .catch(() => {});
+  }, []);
+
+  const addLink = async () => {
+    if (!teamspaceId) return;
+    const url = normalizeUrl(linkUrl);
+    if (!url) { setError(t("integrationsUi.docs.badUrl", "Введите корректную ссылку")); return; }
+    setError(null);
+    setAddingLink(true);
+    try {
+      const row = await createLink({ data: { teamspace_id: teamspaceId, url, name: linkName.trim() || undefined, project: project.trim() || undefined, tags: parseTags(tagsRaw) } });
+      setDocs((prev) => [row as Doc, ...prev]);
+      setLinkUrl(""); setLinkName("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAddingLink(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -112,6 +150,8 @@ function KnowledgeBase() {
             mime_type: file.type || undefined,
             size_bytes: file.size,
             extracted_text: extracted,
+            project: project.trim() || undefined,
+            tags: parseTags(tagsRaw),
           },
         });
         setDocs((prev) => [row as Doc, ...prev]);
@@ -212,6 +252,41 @@ function KnowledgeBase() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="text-xs text-white/60 space-y-1">
+            <span>{t("integrationsUi.docs.project", "Проект")}</span>
+            <input list="kb-projects" value={project} onChange={(e) => setProject(e.target.value)} placeholder={t("integrationsUi.docs.projectPh", "Например: Hackathon Osh")}
+              className="w-full rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white" />
+            <datalist id="kb-projects">{projectNames.map((n) => <option key={n} value={n} />)}</datalist>
+          </label>
+          <label className="text-xs text-white/60 space-y-1">
+            <span>{t("integrationsUi.docs.tags", "Теги (через запятую)")}</span>
+            <input value={tagsRaw} onChange={(e) => setTagsRaw(e.target.value)} placeholder="#marketing, #osh"
+              className="w-full rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white" />
+          </label>
+        </div>
+        <p className="text-[11px] text-white/45">{t("integrationsUi.docs.projectHint", "Проект и теги применяются к новым ссылкам и файлам — материал автоматически появится внутри проекта.")}</p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative flex-1">
+            <Link2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+            <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addLink()}
+              placeholder={t("integrationsUi.docs.linkPh", "Ссылка: Google Sheets, Docs, Trello, Canva, Figma, Notion…")}
+              className="w-full rounded-lg border border-white/10 bg-transparent py-2 pl-9 pr-3 text-sm text-white" />
+          </div>
+          <input value={linkName} onChange={(e) => setLinkName(e.target.value)} placeholder={t("integrationsUi.docs.linkName", "Название (необязательно)")}
+            className="sm:w-56 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white" />
+          <button onClick={addLink} disabled={addingLink || !linkUrl.trim()}
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
+            {addingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            {t("integrationsUi.docs.addLink", "Добавить ссылку")}
+          </button>
+        </div>
+        {linkUrl.trim() && normalizeUrl(linkUrl) && (
+          <p className="text-[11px] text-primary">{LINK_LABEL[detectLinkKind(normalizeUrl(linkUrl)!)]}</p>
+        )}
+      </div>
+
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -288,7 +363,7 @@ function KnowledgeBase() {
             {docs.map((d) => (
               <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition">
                 <div className="h-9 w-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                  <FileIcon className="h-4 w-4 text-white/60" />
+                  {d.url ? <Link2 className="h-4 w-4 text-primary" /> : <FileIcon className="h-4 w-4 text-white/60" />}
                 </div>
                 <button
                   onClick={() => openDoc(d.id)}
@@ -296,7 +371,9 @@ function KnowledgeBase() {
                 >
                   <div className="text-sm text-white truncate group-hover:underline">{d.name}</div>
                   <div className="text-xs text-white/40 truncate">
-                    {formatBytes(d.size_bytes)} · {new Date(d.created_at).toLocaleDateString()}
+                    {d.url ? (LINK_LABEL[(d.link_kind ?? "web") as LinkKind] ?? "Web") : formatBytes(d.size_bytes)} · {new Date(d.created_at).toLocaleDateString()}
+                    {d.project && ` · ${d.project}`}
+                    {d.tags?.length ? ` · ${d.tags.map((x) => `#${x.replace(/^#/, "")}`).join(" ")}` : ""}
                     {(d.text_len ?? 0) > 0 && ` · ${(d.text_len ?? 0).toLocaleString()} ${t("integrationsUi.docs.chars", "characters of text")}`}
                     {d.extract_error && ` · ${d.extract_error}`}
                   </div>
