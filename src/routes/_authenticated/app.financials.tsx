@@ -298,7 +298,6 @@ function FinancialsPage() {
         <button
           onClick={runAnalysis}
           disabled={analyzing || sources.length === 0}
-          className={tab === "payroll" ? "hidden" : undefined}
           data-x="inline-flex items-center gap-2 rounded-xl bg-primary text-black font-semibold px-4 py-2 text-sm disabled:opacity-50 hover:opacity-90 transition"
         >
           {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
