@@ -1,3 +1,4 @@
+import { ManagerOnly } from "@/components/ManagerOnly";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,7 +14,11 @@ import { GoogleCalendarCard } from "@/components/GoogleCalendarCard";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/integrations")({
-  component: IntegrationsPage,
+  component: () => (
+    <ManagerOnly>
+      <IntegrationsPage />
+    </ManagerOnly>
+  ),
 });
 
 type Source = {
