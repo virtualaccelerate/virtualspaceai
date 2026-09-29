@@ -380,3 +380,68 @@ export async function decideTask(input: {
   });
   return row;
 }
+
+// ---------------- overdue: offer to move the deadline ----------------
+
+function addDays(date: string, days: number) {
+  const d = new Date(`${date}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function rescheduleKeyboard(taskId: string) {
+  return {
+    inline_keyboard: [
+      [
+        { text: "📅 +1 день", callback_data: `resched:${taskId}:1` },
+        { text: "📅 +3 дня", callback_data: `resched:${taskId}:3` },
+        { text: "📅 +неделя", callback_data: `resched:${taskId}:7` },
+      ],
+      [{ text: "📎 Сдать", callback_data: `submit:${taskId}` }],
+    ],
+  };
+}
+
+/**
+ * Once per overdue deadline, the bot asks the assignee whether to move the
+ * deadline. Local tasks only — tracker deadlines are managed in YouGile/Trello.
+ */
+export async function runOverdueRescheduleOffers(): Promise<{ sent: number }> {
+  const db = await admin();
+  const today = localDateString();
+  const { data } = await db
+    .from("tasks")
+    .select("id, title, status, priority, due_date, assignee_id, assignee_name, user_id, teamspace_id, external_source")
+    .neq("status", "done")
+    .eq("external_archived", false)
+    .is("external_source", null)
+    .not("assignee_id", "is", null)
+    .lt("due_date", today)
+    .limit(500);
+  const { sendMessage } = await tgApi();
+  let sent = 0;
+  for (const task of (data ?? []) as (TaskRow & { external_source: string | null })[]) {
+    const chatId = await chatIdFor(task.assignee_id);
+    if (!chatId || !task.due_date) continue;
+    if (await alreadySent(task.id, `resched_offer:${task.due_date}`)) continue;
+    await sendMessage(
+      chatId,
+      `🔴 Задача просрочена\n\n${taskCard(task, await spaceName(task.teamspace_id))}\n\nПеренести дедлайн?`,
+      { reply_markup: rescheduleKeyboard(task.id) },
+    );
+    sent++;
+  }
+  return { sent };
+}
+
+/** Move a task deadline from a Telegram button, with the usual permission checks. */
+export async function rescheduleFromTelegram(userId: string, taskId: string, days: number) {
+  const db = await admin();
+  const { data: task } = await db.from("tasks").select("id, title, due_date").eq("id", taskId).maybeSingle();
+  if (!task) throw new Error("Задача не найдена");
+  const base = task.due_date && task.due_date > localDateString() ? task.due_date : localDateString();
+  const due = addDays(base, days);
+  const { updateTaskForUser } = await import("./tasks.server");
+  await updateTaskForUser(userId, { id: taskId, due_date: due });
+  return { title: task.title as string, due };
+}
