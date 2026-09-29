@@ -21,3 +21,13 @@ export const listProjects = createServerFn({ method: "POST" })
     })) as any;
   });
 
+
+export const getProjectMaterials = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ key: z.string().min(1).max(500), teamspace_id: z.string().uuid().nullish() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { getProjectMaterialsForUser } = await import("./projects.server");
+    return (await getProjectMaterialsForUser(context.userId, data.key, data.teamspace_id ?? null)) as any;
+  });

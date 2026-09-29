@@ -155,3 +155,106 @@ export async function listProjectsForUser(userId: string, teamspaceId?: string |
   };
 }
 
+
+// ---------------------------------------------------------------------------
+// Project → related materials (tasks / links / knowledge base).
+// Matching is automatic: explicit project field, tracker project, tags and
+// #hashtags, or the project name appearing in the title/description/content.
+// ---------------------------------------------------------------------------
+
+const GENERIC_NAMES = new Set(["без проекта", "импортированный проект"]);
+
+function norm(s: string | null | undefined) {
+  return (s ?? "").trim().toLowerCase();
+}
+
+function hashtags(text: string | null | undefined): string[] {
+  return [...(text ?? "").matchAll(/#([\p{L}\p{N}_\-]{2,60})/gu)].map((m) => m[1].toLowerCase());
+}
+
+function mentions(haystack: string | null | undefined, needle: string) {
+  if (!haystack || needle.length < 3) return false;
+  const h = haystack.toLowerCase();
+  const idx = h.indexOf(needle);
+  if (idx < 0) return false;
+  // Avoid matching inside a longer word ("ai" in "said").
+  const before = idx === 0 ? " " : h[idx - 1];
+  const after = h[idx + needle.length] ?? " ";
+  return !/[\p{L}\p{N}]/u.test(before) && !/[\p{L}\p{N}]/u.test(after);
+}
+
+function tagMatch(tags: string[] | null | undefined, name: string) {
+  const slug = name.replace(/\s+/g, "");
+  return (tags ?? []).some((t) => {
+    const n = norm(t).replace(/^#/, "");
+    return n === name || n.replace(/\s+/g, "") === slug;
+  });
+}
+
+export async function getProjectMaterialsForUser(userId: string, key: string, teamspaceId?: string | null) {
+  const spaceId = await activeTeamspace(userId, teamspaceId);
+  const db = await admin();
+  const sep = key.indexOf("::");
+  const source = (sep > 0 ? key.slice(0, sep) : "virtual_space") as ProjectSource;
+  const rawName = sep > 0 ? key.slice(sep + 2) : key;
+  const name = norm(rawName);
+  const generic = GENERIC_NAMES.has(name);
+  const slug = name.replace(/\s+/g, "");
+
+  const [{ data: tasks }, { data: docs }] = await Promise.all([
+    db.from("tasks")
+      .select("id, title, description, status, priority, due_date, assignee_name, project, tags, proof_url, external_source, external_project, external_url, updated_at")
+      .eq("teamspace_id", spaceId).eq("external_archived", false).limit(5000),
+    db.from("documents")
+      .select("id, name, url, link_kind, project, tags, mime_type, size_bytes, created_at, extracted_text")
+      .eq("teamspace_id", spaceId).order("created_at", { ascending: false }).limit(2000),
+  ]);
+
+  type Reason = "project" | "tracker" | "tag" | "mention";
+  const matchedTasks: any[] = [];
+  for (const t of tasks ?? []) {
+    const tSource = t.external_source === "yougile" || t.external_source === "trello" ? t.external_source : "virtual_space";
+    let reason: Reason | null = null;
+    if (tSource === "virtual_space" && norm(t.project || "без проекта") === name && (source === "virtual_space" || !generic)) reason = "project";
+    else if (tSource !== "virtual_space" && norm(t.external_project || "импортированный проект") === name && (tSource === source || !generic)) reason = "tracker";
+    else if (!generic && norm(t.project) === name) reason = "project";
+    else if (!generic && (tagMatch(t.tags, name) || hashtags(`${t.title} ${t.description ?? ""}`).includes(slug))) reason = "tag";
+    else if (!generic && (mentions(t.title, name) || mentions(t.description, name))) reason = "mention";
+    if (!reason) continue;
+    const { description, tags, proof_url, ...rest } = t;
+    void tags;
+    matchedTasks.push({ ...rest, reason, _description: description, _proof: proof_url });
+  }
+
+  const links: { url: string; title: string; kind: string | null; origin: "knowledge" | "task"; ref_id: string; reason: Reason; created_at: string | null }[] = [];
+  const knowledge: any[] = [];
+  const seen = new Set<string>();
+
+  for (const d of docs ?? []) {
+    let reason: Reason | null = null;
+    if (norm(d.project) === name) reason = "project";
+    else if (!generic && tagMatch(d.tags, name)) reason = "tag";
+    else if (!generic && (mentions(d.name, name) || hashtags(d.extracted_text?.slice(0, 20000)).includes(slug) || mentions(d.extracted_text?.slice(0, 20000), name))) reason = "mention";
+    if (!reason) continue;
+    if (d.url) {
+      seen.add(d.url);
+      links.push({ url: d.url, title: d.name, kind: d.link_kind, origin: "knowledge", ref_id: d.id, reason, created_at: d.created_at });
+    }
+    const { extracted_text, ...rest } = d;
+    knowledge.push({ ...rest, reason, excerpt: extracted_text ? extracted_text.slice(0, 240) : null });
+  }
+
+  const { extractUrls, detectLinkKind } = await import("./links");
+  for (const t of matchedTasks) {
+    const urls = [...extractUrls(t._description), ...(t._proof ? [t._proof] : [])];
+    for (const url of urls) {
+      if (seen.has(url)) continue;
+      seen.add(url);
+      links.push({ url, title: t.title, kind: detectLinkKind(url), origin: "task", ref_id: t.id, reason: t.reason, created_at: t.updated_at });
+    }
+    delete t._description;
+    delete t._proof;
+  }
+
+  return { key, name: rawName, source, tasks: matchedTasks, links, knowledge };
+}
