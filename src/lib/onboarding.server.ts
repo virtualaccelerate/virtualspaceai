@@ -86,9 +86,9 @@ export async function listProgramsForUser(userId: string, requested?: string | n
       ...p,
       steps_total: total,
       materials_total: (materials ?? []).filter((m) => m.program_id === p.id).length,
-      assigned: mine.length,
-      completed: mine.filter((a) => a.status === "completed").length,
-      avg_progress: percents.length ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : 0,
+      assigned: isManager ? mine.length : 0,
+      completed: isManager ? mine.filter((a) => a.status === "completed").length : 0,
+      avg_progress: isManager && percents.length ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : 0,
       my_progress: myAssignment
         ? pct((progress ?? []).filter((x) => x.assignment_id === myAssignment.id && x.ref_kind === "item" && x.done).length, total)
         : null,
@@ -165,9 +165,15 @@ export async function getProgramForUser(userId: string, programId: string) {
 export async function trainingProgressForTeam(userId: string, requested?: string | null) {
   const teamspaceId = await activeTeamspace(userId, requested);
   const db = await admin();
+  const isManager = await manager(userId, teamspaceId);
+
+  const assignmentQuery = db
+    .from("onboarding_assignments")
+    .select("id, user_id, program_id, status, score")
+    .eq("teamspace_id", teamspaceId);
 
   const [{ data: assignments }, { data: items }, { data: programs }] = await Promise.all([
-    db.from("onboarding_assignments").select("id, user_id, program_id, status, score").eq("teamspace_id", teamspaceId),
+    isManager ? assignmentQuery : assignmentQuery.eq("user_id", userId),
     db.from("onboarding_items").select("id, program_id").eq("teamspace_id", teamspaceId),
     db.from("onboarding_programs").select("id, title").eq("teamspace_id", teamspaceId),
   ]);
