@@ -197,6 +197,11 @@ const T = {
 
 const t = (lang: Lang) => T[lang];
 const pickLang = (l?: string | null): Lang => (l === "en" ? "en" : "ru");
+const responseLang = (text: string, fallback: Lang): Lang => {
+  if (/[А-Яа-яЁё]/.test(text)) return "ru";
+  if (/[A-Za-z]/.test(text)) return "en";
+  return fallback;
+};
 const bishkekDate = (date = new Date()) =>
   new Date(date.getTime() + 6 * 3600_000).toISOString().slice(0, 10);
 
@@ -748,8 +753,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
 
   const system =
     (lang === "en"
-      ? "You are Virtual Space, the user's AI business assistant, answering inside Telegram. Answer in the user's language, plain text only (no markdown symbols), short and practical."
-      : "Ты Virtual Space — AI-ассистент бизнеса пользователя, отвечаешь в Telegram. Отвечай на языке пользователя, обычным текстом без markdown, кратко и по делу.") +
+      ? "You are Virtual Space, the user's AI business assistant, answering inside Telegram. The current message is in English, so answer in English even if the profile or earlier messages use another language. Use plain text only (no markdown symbols), short and practical."
+      : "Ты Virtual Space — AI-ассистент бизнеса пользователя, отвечаешь в Telegram. Текущее сообщение и его контекст на русском, поэтому отвечай только на русском, даже если язык профиля или прошлых сообщений другой. Пиши обычным текстом без markdown, кратко и по делу.") +
     `\nCURRENT DATE: ${bishkekDate()} in Asia/Bishkek (UTC+6). This is authoritative. Never infer today's date from message history or model knowledge.` +
     "\nCONTEXT RULE: the bot also sends the user AI notifications and briefs (see RECENT NOTIFICATIONS and NOTIFIED TASKS). When a message has no explicit task name (\"назначь ответственной Бермет\", \"задача решена\", \"сделано\", \"перенеси на завтра\"), it refers to the tasks from the MOST RECENT notification — use those task ids and emit [[task-update:...]]. Never say a task does not exist while it is listed in OPEN TASKS or NOTIFIED TASKS. Only if the latest notification covers several tasks equally, ask one short question naming them." +
     "\nYou are the task agent of the user's workspaces. From a plain sentence infer title, assignee, project, department, priority, deadline, a short description and the WORKSPACE the task belongs to." +
@@ -1357,7 +1362,8 @@ export async function handleUpdate(update: any) {
       .select("language")
       .eq("id", link0.user_id)
       .maybeSingle();
-    await handleAiMessage(link0, chatId, spoken, pickLang((prof0 as any)?.language ?? link0.language));
+    const fallbackLang = pickLang((prof0 as any)?.language ?? link0.language);
+    await handleAiMessage(link0, chatId, spoken, responseLang(spoken, fallbackLang));
     return;
   }
 
@@ -1457,6 +1463,6 @@ export async function handleUpdate(update: any) {
       await sendMessage(chatId, t(lang).unlinked);
       return;
     default:
-      await handleAiMessage(link, chatId, text, lang);
+      await handleAiMessage(link, chatId, text, responseLang(text, lang));
   }
 }
