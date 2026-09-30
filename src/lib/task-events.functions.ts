@@ -9,3 +9,11 @@ export const getTaskHistory = createServerFn({ method: "POST" })
     const { listTaskEventsForUser } = await import("./task-events.server");
     return (await listTaskEventsForUser(context.userId, data.task_id)) as any;
   });
+
+export const getActivityFeed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ teamspace_id: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const { listActivityFeedForUser } = await import("./task-events.server");
+    return (await listActivityFeedForUser(context.userId, data.teamspace_id)) as any[];
+  });
