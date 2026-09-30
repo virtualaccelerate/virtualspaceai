@@ -219,10 +219,16 @@ function KnowledgeBase() {
   };
 
   const openDoc = async (id: string) => {
+    const d = docs.find((x) => x.id === id);
+    if (d?.url) { window.open(d.url, "_blank", "noopener,noreferrer"); return; }
+    // Open the tab synchronously so browsers don't block it as a popup.
+    const win = window.open("about:blank", "_blank");
     try {
       const { url } = await sign({ data: { id } });
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (win) win.location.href = url;
+      else window.location.href = url;
     } catch (e) {
+      win?.close();
       setError(e instanceof Error ? e.message : t("integrationsUi.docs.openFailed", "Could not open file"));
     }
   };
@@ -378,7 +384,7 @@ function KnowledgeBase() {
                   onClick={() => openDoc(d.id)}
                   className="flex-1 min-w-0 text-left"
                 >
-                  <div className="text-sm text-white truncate group-hover:underline">{d.name}</div>
+                  <div className="text-sm text-primary truncate hover:underline cursor-pointer">{d.name}</div>
                   <div className="text-xs text-white/40 truncate">
                     {d.url ? (LINK_LABEL[(d.link_kind ?? "web") as LinkKind] ?? "Web") : formatBytes(d.size_bytes)} · {new Date(d.created_at).toLocaleDateString()}
                     {d.project && ` · ${d.project}`}
