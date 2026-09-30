@@ -48,6 +48,7 @@ import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
+import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated/app.activity'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedAppOnboardingIndexRouteImport } from './routes/_authenticated/app.onboarding.index'
@@ -265,6 +266,12 @@ const AuthenticatedAppAgentsRoute = AuthenticatedAppAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppActivityRoute =
+  AuthenticatedAppActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
@@ -354,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/mentors/$id': typeof MentorsIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/app/activity': typeof AuthenticatedAppActivityRoute
   '/app/agents': typeof AuthenticatedAppAgentsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
@@ -405,6 +413,7 @@ export interface FileRoutesByTo {
   '/mentors/$id': typeof MentorsIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/app/activity': typeof AuthenticatedAppActivityRoute
   '/app/agents': typeof AuthenticatedAppAgentsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/clients': typeof AuthenticatedAppClientsRoute
@@ -459,6 +468,7 @@ export interface FileRoutesById {
   '/mentors/$id': typeof MentorsIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/app/activity': typeof AuthenticatedAppActivityRoute
   '/_authenticated/app/agents': typeof AuthenticatedAppAgentsRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
@@ -513,6 +523,7 @@ export interface FileRouteTypes {
     | '/mentors/$id'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/app/activity'
     | '/app/agents'
     | '/app/analytics'
     | '/app/clients'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/mentors/$id'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/app/activity'
     | '/app/agents'
     | '/app/analytics'
     | '/app/clients'
@@ -617,6 +629,7 @@ export interface FileRouteTypes {
     | '/mentors/$id'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/app/activity'
     | '/_authenticated/app/agents'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/clients'
@@ -958,6 +971,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAgentsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/activity': {
+      id: '/_authenticated/app/activity'
+      path: '/activity'
+      fullPath: '/app/activity'
+      preLoaderRoute: typeof AuthenticatedAppActivityRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
       path: '/.mcp/invoke-tool/$tool'
@@ -1046,6 +1066,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppActivityRoute: typeof AuthenticatedAppActivityRoute
   AuthenticatedAppAgentsRoute: typeof AuthenticatedAppAgentsRoute
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
@@ -1070,6 +1091,7 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppActivityRoute: AuthenticatedAppActivityRoute,
   AuthenticatedAppAgentsRoute: AuthenticatedAppAgentsRoute,
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
