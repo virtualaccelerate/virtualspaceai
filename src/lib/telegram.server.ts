@@ -316,9 +316,10 @@ async function handleActivity(link: Link, chatId: number, lang: Lang) {
 }
 
 async function handleTasks(link: Link, chatId: number, lang: Lang) {
+  const today = bishkekDate();
   const { data } = await supabaseAdmin
     .from("tasks")
-    .select("id, title, status, priority, due_date, teamspace_id")
+    .select("id, title, status, priority, due_date, teamspace_id, project")
     .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .neq("status", "done")
     .eq("external_archived", false)
@@ -329,35 +330,37 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
     await sendMessage(chatId, t(lang).noTasks, withMenu(lang));
     return;
   }
-  const names = await spaceNames(tasks.map((x) => x.teamspace_id));
-  const noSpace = lang === "en" ? "Personal" : "Личные";
-  const groups = new Map<string, any[]>();
-  for (const task of tasks) {
-    const label = names.get(task.teamspace_id ?? "") ?? noSpace;
-    groups.set(label, [...(groups.get(label) ?? []), task]);
-  }
-  const order = ["in_progress", "review", "backlog"];
-  const body = Array.from(groups.entries())
-    .map(([space, list]) => {
-      const inner = order
-        .filter((s) => list.some((task) => task.status === s))
-        .map((s) => {
-          const rows = list
-            .filter((task) => task.status === s)
-            .map(
-              (task) =>
-                `${STATUS_ICON[s] ?? "⬜️"} ${PRIORITY_ICON[task.priority] ?? ""} ${task.title}${
-                  task.due_date ? ` (${lang === "en" ? "due" : "до"} ${task.due_date})` : ""
-                }`,
-            )
-            .join("\n");
-          return `${statusTag(s, lang)}\n${rows}`;
-        })
-        .join("\n\n");
-      return `🏢 ${space}\n${inner}`;
+  const formatDate = (value: string) => {
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "ru-RU", {
+      day: "numeric",
+      month: "long",
+      timeZone: "UTC",
+    }).format(date);
+  };
+  const repeatedTitles = new Set(
+    tasks
+      .filter((task, index) => tasks.findIndex((candidate) => candidate.title === task.title) !== index)
+      .map((task) => task.title),
+  );
+  const body = tasks
+    .map((task) => {
+      const deadline = task.due_date
+        ? task.due_date < today
+          ? lang === "en"
+            ? ` — overdue since ${formatDate(task.due_date)}`
+            : ` — просрочено с ${formatDate(task.due_date)}`
+          : lang === "en"
+            ? ` — due ${formatDate(task.due_date)}`
+            : ` — до ${formatDate(task.due_date)}`
+        : "";
+      const project = task.project && repeatedTitles.has(task.title) ? ` · ${task.project}` : "";
+      return `${task.title}${deadline}${project}`;
     })
     .join("\n\n");
-  await sendMessage(chatId, `${t(lang).tasksHeader}\n\n${body}`, {
+  const header = lang === "en" ? "Here are your current tasks:" : "Вот ваши текущие задачи:";
+  await sendMessage(chatId, `${header}\n\n${body}`, {
     reply_markup: tasksKeyboard(tasks, lang),
   });
 }
@@ -757,7 +760,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     "\nSTATUS CHANGES ARE MANDATORY TOKENS: whenever the user says a task is started, in progress, finished, done, closed, ready, sent for review, or should go back to backlog — immediately emit [[task-update:TASK_ID||status=...]] for the matching task from OPEN TASKS or NOTIFIED TASKS. Wording: сделал/готово/выполнил/закрыл/завершил = done; начал/в работе/делаю = in_progress; на проверку/на ревью = review; вернуть/в бэклог = backlog. Never answer that you changed the status without emitting the token. Match the task by title even if worded loosely; only if several open tasks match equally, ask one short question naming them." +
     "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
     "\nWhen CREATING a task, if the title, assignee or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
-    "\nQuestions about a person's tasks are answered from OPEN TASKS: list their open tasks with status, deadline and workspace." +
+    "\nOPEN TASK LIST FORMAT: when asked for the user's or another person's open/current tasks, start with the localized equivalent of \"Вот ваши текущие задачи:\" and put each task on its own plain line. Format future/today deadlines as \"Task title — до D month\", overdue deadlines as \"Task title — просрочено с D month\", and tasks without a deadline as the title only. Use natural localized month names, not YYYY-MM-DD. Do not include status, priority, icons, bullets, numbering, assignee, department, or workspace. Append \" · Project name\" only when the project helps explain context. Adapt the heading naturally when listing another person's tasks." +
     (await import("./agent-automation.server")).AGENT_AUTOMATION_PROMPT +
     "\nCALENDAR: if the user asks to create or schedule a meeting, emit [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. ONLY the date and time are required — if they are present, you MUST emit the token immediately in the same reply. Never ask for the meeting title: if it is not given, use a sensible short default (\"Встреча\" / \"Meeting\", or the workspace name). Attendees are optional: leave the emails field empty when nobody is named; when people are named (including \"я\", \"me\"), resolve their emails from TEAM MEMBERS and skip names you cannot resolve. Never ask the same clarification twice — if you already asked once, create the meeting with defaults. Default duration is one hour. Do not use this token for tasks." +
 
