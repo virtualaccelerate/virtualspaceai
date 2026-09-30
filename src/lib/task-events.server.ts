@@ -114,3 +114,38 @@ export async function listWorkspaceActivity(teamspaceId: string, limit = 20) {
   const titles = new Map((tasks ?? []).map((row) => [row.id, row.title]));
   return (data ?? []).map((row) => ({ ...row, task_title: titles.get(row.task_id) ?? "Задача" }));
 }
+
+/** Readable activity feed. Managers see the whole workspace, members only their own tasks. */
+export async function listActivityFeedForUser(userId: string, teamspaceId: string, limit = 200) {
+  const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+  const role = await getWorkspaceRole(userId, teamspaceId);
+  if (!role) throw new Error("Нет доступа к пространству");
+  const admin = await db();
+  const { data } = await admin
+    .from("task_events")
+    .select("id, task_id, kind, field, from_value, to_value, note, actor_name, source, created_at")
+    .eq("teamspace_id", teamspaceId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  const ids = [...new Set((data ?? []).map((r) => r.task_id))];
+  const { data: tasks } = ids.length
+    ? await admin.from("tasks").select("id, title, project, assignee_id, assignee_name, user_id").in("id", ids)
+    : { data: [] as any[] };
+  const byId = new Map((tasks ?? []).map((t: any) => [t.id, t]));
+  let visible = (data ?? []).filter((r) => byId.has(r.task_id));
+  if (!isManagerRole(role)) {
+    const { viewerIdentity, taskBelongsTo } = await import("./task-visibility.server");
+    const viewer = await viewerIdentity(userId);
+    visible = visible.filter((r) => taskBelongsTo(byId.get(r.task_id), viewer));
+  }
+  const ids2 = [...new Set(visible.flatMap((r) => [r.from_value, r.to_value]).filter((v): v is string => !!v && /^[0-9a-f-]{36}$/i.test(v)))];
+  const { data: statuses } = ids2.length
+    ? await admin.from("teamspace_statuses").select("id, name").in("id", ids2)
+    : { data: [] as any[] };
+  const statusNames = new Map((statuses ?? []).map((s: any) => [s.id, s.name]));
+  const label = (v: string | null) => (v ? statusNames.get(v) ?? v : v);
+  return visible.map((r) => {
+    const t: any = byId.get(r.task_id);
+    return { ...r, from_value: label(r.from_value), to_value: label(r.to_value), task_title: t.title, project: t.project };
+  });
+}
