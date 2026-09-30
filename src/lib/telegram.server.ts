@@ -339,6 +339,11 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
       timeZone: "UTC",
     }).format(date);
   };
+  const repeatedTitles = new Set(
+    tasks
+      .filter((task, index) => tasks.findIndex((candidate) => candidate.title === task.title) !== index)
+      .map((task) => task.title),
+  );
   const body = tasks
     .map((task) => {
       const deadline = task.due_date
@@ -350,7 +355,8 @@ async function handleTasks(link: Link, chatId: number, lang: Lang) {
             ? ` — due ${formatDate(task.due_date)}`
             : ` — до ${formatDate(task.due_date)}`
         : "";
-      return `${task.title}${deadline}${task.project ? ` · ${task.project}` : ""}`;
+      const project = task.project && repeatedTitles.has(task.title) ? ` · ${task.project}` : "";
+      return `${task.title}${deadline}${project}`;
     })
     .join("\n\n");
   const header = lang === "en" ? "Here are your current tasks:" : "Вот ваши текущие задачи:";
