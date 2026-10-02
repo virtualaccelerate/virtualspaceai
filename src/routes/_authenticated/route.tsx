@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
 import { FloatingChat } from "@/components/FloatingChat";
-import { SidebarChatProvider, NewChatButton, ChatHistorySection } from "@/components/SidebarChatHistory";
+import { SidebarChatProvider, NewChatButton, ChatsNavItem } from "@/components/SidebarChatHistory";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode, createTeamspace } from "@/lib/active-teamspace";
 
@@ -143,7 +143,6 @@ function AuthenticatedLayout() {
   const tsInitial = (teamspace?.name?.[0] ?? "T").toUpperCase();
 
   const topNav: NavItem[] = [
-    { to: "/app", label: t("app.nav.chat", "Chat"), subtitle: t("app.nav.chatSubtitle", "Team conversations"), icon: MessageSquare, exact: true },
     { to: "/app/overview", label: t("app.nav.overview"), subtitle: t("app.nav.overviewSubtitle", "Workspace insights"), icon: LayoutDashboard },
   ];
 
@@ -339,8 +338,8 @@ function AuthenticatedLayout() {
           <SidebarChatProvider showLabels={showLabels}>
             <div className="space-y-0.5">
               <NewChatButton />
+              <ChatsNavItem />
               {topNav.map((item) => <NavButton key={item.to} item={item} />)}
-              <ChatHistorySection />
             </div>
           </SidebarChatProvider>
 
