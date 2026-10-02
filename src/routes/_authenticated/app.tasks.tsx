@@ -954,7 +954,16 @@ function TasksPage() {
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent
+          className="sm:max-w-lg"
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" || saving) return;
+            const target = e.target as HTMLElement;
+            if (target.tagName === "TEXTAREA") return;
+            e.preventDefault();
+            handleSave();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{editing ? t("tasksUi.dlgEdit", "Edit task") : t("tasksUi.dlgNew", "New task")}</DialogTitle>
           </DialogHeader>
