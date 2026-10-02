@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -10,7 +10,24 @@ import {
   type Conversation,
 } from "@/lib/chat-history.functions";
 
-export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
+interface SidebarChatCtx {
+  showLabels: boolean;
+  conversations: Conversation[];
+  activeId?: string;
+  creating: boolean;
+  onNewChat: () => void;
+  onDelete: (id: string, e: React.MouseEvent) => void;
+}
+
+const Ctx = createContext<SidebarChatCtx | null>(null);
+
+export function SidebarChatProvider({
+  showLabels,
+  children,
+}: {
+  showLabels: boolean;
+  children: ReactNode;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,25 +35,7 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
   const removeConv = useServerFn(deleteConversation);
   const createConv = useServerFn(createConversation);
   const [creating, setCreating] = useState(false);
-
-  const onNewChat = async () => {
-    if (creating) return;
-    setCreating(true);
-    try {
-      const conv = await createConv({ data: { title: t("app.chat.newChat", "New chat") } });
-      setConversations((prev) => [conv, ...prev]);
-      window.dispatchEvent(new Event("virtualspace:chats-changed"));
-      navigate({ to: "/app/c/$conversationId", params: { conversationId: conv.id } });
-    } catch {
-      /* ignore */
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [userToggled, setUserToggled] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -52,6 +51,21 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
     window.addEventListener("virtualspace:chats-changed", handler);
     return () => window.removeEventListener("virtualspace:chats-changed", handler);
   }, [refresh]);
+
+  const onNewChat = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const conv = await createConv({ data: { title: t("app.chat.newChat", "New chat") } });
+      setConversations((prev) => [conv, ...prev]);
+      window.dispatchEvent(new Event("virtualspace:chats-changed"));
+      navigate({ to: "/app/c/$conversationId", params: { conversationId: conv.id } });
+    } catch {
+      /* ignore */
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const activeId = location.pathname.startsWith("/app/c/")
     ? location.pathname.split("/app/c/")[1]?.split("/")[0]
@@ -70,10 +84,27 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
     }
   };
 
+  return (
+    <Ctx.Provider value={{ showLabels, conversations, activeId, creating, onNewChat, onDelete }}>
+      {children}
+    </Ctx.Provider>
+  );
+}
+
+function useSidebarChat(): SidebarChatCtx {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("SidebarChatProvider missing");
+  return ctx;
+}
+
+export function NewChatButton() {
+  const { showLabels, onNewChat, creating } = useSidebarChat();
+  const { t } = useTranslation();
+
   if (!showLabels) {
     return (
       <button
-        onClick={() => void onNewChat()}
+        onClick={onNewChat}
         disabled={creating}
         title={t("app.chat.newChat", "New chat")}
         aria-label={t("app.chat.newChat", "New chat")}
@@ -87,17 +118,30 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
   }
 
   return (
-    <div className="space-y-0.5">
-      <button
-        onClick={() => void onNewChat()}
-        disabled={creating}
-        className="w-full group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition disabled:opacity-50"
-      >
-        <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-primary/15">
-          <MessageSquarePlus className="h-[18px] w-[18px]" />
-        </span>
-        <span className="flex-1 text-left truncate">{t("app.chat.newChat", "New chat")}</span>
-      </button>
+    <button
+      onClick={onNewChat}
+      disabled={creating}
+      className="w-full group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition disabled:opacity-50"
+    >
+      <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-primary/15">
+        <MessageSquarePlus className="h-[18px] w-[18px]" />
+      </span>
+      <span className="flex-1 text-left truncate">{t("app.chat.newChat", "New chat")}</span>
+    </button>
+  );
+}
+
+export function ChatHistorySection() {
+  const { showLabels } = useSidebarChat();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { conversations, activeId, onDelete } = useSidebarChat();
+  const [open, setOpen] = useState(false);
+
+  if (!showLabels) return null;
+
+  return (
+    <>
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-foreground hover:bg-muted transition"
@@ -149,6 +193,6 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
