@@ -36,6 +36,7 @@ export function SidebarChatHistory({ showLabels }: { showLabels: boolean }) {
 
   const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [userToggled, setUserToggled] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
