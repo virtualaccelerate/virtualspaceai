@@ -22,7 +22,7 @@ export function normPhone(raw: string | null | undefined): string | null {
 }
 
 const PHONE_RE = /\+?\d[\d\s\-().]{7,}\d/g;
-const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/g;
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 
 export function hasClientSignals(text: string) {
   const phones = (text.match(PHONE_RE) ?? []).filter((p) => normPhone(p));
@@ -130,6 +130,29 @@ export async function syncClientsFromTask(taskId: string) {
   }
   if (changed) await syncSheet(t.teamspace_id).catch(() => {});
   return { found: list.length, changed };
+}
+
+/** Process task-triggered client extraction outside the user-visible save path. */
+export async function processClientSyncQueue(limit = 10) {
+  const db = await admin();
+  const { data: queued } = await db
+    .from("client_sync_queue")
+    .select("task_id, queued_at")
+    .order("queued_at", { ascending: true })
+    .limit(limit);
+  let processed = 0;
+  let failed = 0;
+  for (const item of queued ?? []) {
+    try {
+      await syncClientsFromTask(item.task_id);
+      // Keep a newer queue entry if the task changed again while this one ran.
+      await db.from("client_sync_queue").delete().eq("task_id", item.task_id).eq("queued_at", item.queued_at);
+      processed++;
+    } catch {
+      failed++;
+    }
+  }
+  return { processed, failed, pending: Math.max(0, (queued?.length ?? 0) - processed) };
 }
 
 export async function listClients(userId: string, teamspaceId: string) {

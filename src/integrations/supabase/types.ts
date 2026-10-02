@@ -332,6 +332,29 @@ export type Database = {
           },
         ]
       }
+      client_sync_queue: {
+        Row: {
+          queued_at: string
+          task_id: string
+        }
+        Insert: {
+          queued_at?: string
+          task_id: string
+        }
+        Update: {
+          queued_at?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sync_queue_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: true
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           company: string | null

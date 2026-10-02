@@ -199,7 +199,10 @@ const t = (lang: Lang) => T[lang];
 const pickLang = (l?: string | null): Lang => (l === "en" ? "en" : "ru");
 const responseLang = (text: string, fallback: Lang): Lang => {
   if (/[А-Яа-яЁё]/.test(text)) return "ru";
-  if (/[A-Za-z]/.test(text)) return "en";
+  const words = text.match(/[A-Za-z]+/g) ?? [];
+  // A short acknowledgement, acronym or Latin-spelled name is not enough to
+  // override the user's established language. Switch only for clear English.
+  if (words.length >= 3 || words.join("").length >= 18) return "en";
   return fallback;
 };
 const bishkekDate = (date = new Date()) =>

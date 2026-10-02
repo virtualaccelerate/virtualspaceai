@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
@@ -13,14 +14,18 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { applyClientLanguage, langFromAcceptLanguage, langFromCookieString, setLanguage } from "@/lib/i18n";
+import { applyClientLanguage, langFromAcceptLanguage, langFromCookieString, langFromCountry, setLanguage } from "@/lib/i18n";
 
 // Resolve the language before the first render so SSR and hydration agree and
 // no English text flashes before the user's language is applied.
 const resolveLanguage = createIsomorphicFn()
-  .server(() => langFromCookieString(getRequestHeader("cookie")) ?? langFromAcceptLanguage(getRequestHeader("accept-language")) ?? "en")
+  .server(() => langFromCookieString(getRequestHeader("cookie")) ?? langFromCountry(getRequestHeader("cf-ipcountry")) ?? langFromAcceptLanguage(getRequestHeader("accept-language")) ?? "en")
   // Without a cookie, reuse the language the server rendered (<html lang>).
   .client(() => langFromCookieString(document.cookie) ?? (document.documentElement.lang || "en"));
+
+const resolvedFromCountry = createIsomorphicFn()
+  .server(() => !langFromCookieString(getRequestHeader("cookie")) && Boolean(langFromCountry(getRequestHeader("cf-ipcountry"))))
+  .client(() => document.documentElement.dataset.languageCountry === "true");
 
 function NotFoundComponent() {
   return (
@@ -44,11 +49,11 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportLovableError(error instanceof Error ? error : new Error(String(error)), { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
@@ -115,9 +120,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   const lang = resolveLanguage();
+  const fromCountry = resolvedFromCountry();
   setLanguage(lang);
   return (
-    <html lang={lang}>
+    <html lang={lang} data-language-country={fromCountry ? "true" : undefined}>
       <head>
         <HeadContent />
       </head>

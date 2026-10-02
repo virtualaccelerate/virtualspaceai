@@ -1998,6 +1998,11 @@ const COUNTRY_TO_LANG: Record<string, string> = {
   TJ: "tg",
 };
 
+export function langFromCountry(country?: string | null): string | null {
+  const code = (country || "").trim().toUpperCase();
+  return COUNTRY_TO_LANG[code] ?? null;
+}
+
 const SUPPORTED = ["en", "ru", "kk", "ky", "uz", "tg"];
 
 export const LANG_COOKIE = "vs_lang";
@@ -2055,7 +2060,7 @@ async function detectCountryLang(): Promise<string | null> {
         if (country) localStorage.setItem("i18nGeoCountry", country);
       }
     }
-    if (country && COUNTRY_TO_LANG[country]) return COUNTRY_TO_LANG[country];
+    if (country) return langFromCountry(country);
   } catch {
     /* ignore */
   }
@@ -2077,9 +2082,9 @@ export function applyClientLanguage() {
       persistLanguage(saved);
       return;
     }
-    // The server already rendered in the browser's language; keep it, no flip.
+    // A country-aware server render is already the desired first-visit result.
     const rendered = supported(document.documentElement.lang);
-    if (rendered) {
+    if (rendered && document.documentElement.dataset.languageCountry === "true") {
       persistLanguage(rendered);
       return;
     }

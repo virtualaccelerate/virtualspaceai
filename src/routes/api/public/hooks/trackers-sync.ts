@@ -32,7 +32,10 @@ export const Route = createFileRoute("/api/public/hooks/trackers-sync")({
         const { runDueAutomations } = await import("@/lib/agent-automation.server");
         const automations = await runDueAutomations().catch((e) => ({ ran: 0, failed: 1, error: String(e) }));
 
-        return Response.json({ ok: true, trello, yougile, automations });
+        const { processClientSyncQueue } = await import("@/lib/clients.server");
+        const clients = await processClientSyncQueue().catch(() => ({ processed: 0, failed: 1, pending: 0 }));
+
+        return Response.json({ ok: true, trello, yougile, automations, clients });
       },
     },
   },
