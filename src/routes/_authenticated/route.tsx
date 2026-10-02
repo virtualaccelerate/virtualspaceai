@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangSwitcher } from "@/components/LangSwitcher";
 import { FloatingChat } from "@/components/FloatingChat";
-import { SidebarChatHistory } from "@/components/SidebarChatHistory";
+import { SidebarChatProvider, NewChatButton, ChatHistorySection } from "@/components/SidebarChatHistory";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { listMyTeamspaces, getActiveTeamspaceId, setActiveTeamspace, joinTeamspaceByCode, createTeamspace } from "@/lib/active-teamspace";
 
