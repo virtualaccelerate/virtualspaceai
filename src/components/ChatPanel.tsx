@@ -279,6 +279,40 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const waveformFrameRef = useRef<number | null>(null);
+  const [waveform, setWaveform] = useState<number[]>(() => Array(28).fill(0));
+
+  const stopWaveform = () => {
+    if (waveformFrameRef.current !== null) {
+      cancelAnimationFrame(waveformFrameRef.current);
+      waveformFrameRef.current = null;
+    }
+    const audioContext = audioContextRef.current;
+    audioContextRef.current = null;
+    if (audioContext && audioContext.state !== "closed") void audioContext.close();
+    setWaveform(Array(28).fill(0));
+  };
+
+  const startWaveform = (stream: MediaStream) => {
+    const audioContext = new AudioContext();
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 64;
+    analyser.smoothingTimeConstant = 0.72;
+    audioContext.createMediaStreamSource(stream).connect(analyser);
+    audioContextRef.current = audioContext;
+    const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+    const draw = () => {
+      analyser.getByteFrequencyData(frequencyData);
+      setWaveform(Array.from({ length: 28 }, (_, index) => {
+        const sample = frequencyData[Math.min(index, frequencyData.length - 1)] ?? 0;
+        return Math.min(4, Math.floor(sample / 42));
+      }));
+      waveformFrameRef.current = requestAnimationFrame(draw);
+    };
+    draw();
+  };
 
   const startRecording = async () => {
     if (recording || transcribing) return;
@@ -303,6 +337,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       chunksRef.current = [];
       rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
       rec.onstop = async () => {
+        stopWaveform();
         streamRef.current?.getTracks().forEach((tr) => tr.stop());
         streamRef.current = null;
         const type = rec.mimeType || mimeType || "audio/webm";
@@ -339,7 +374,11 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       rec.start();
       recorderRef.current = rec;
       setRecording(true);
+      startWaveform(stream);
     } catch (e) {
+      stopWaveform();
+      streamRef.current?.getTracks().forEach((tr) => tr.stop());
+      streamRef.current = null;
       setError(
         e instanceof Error && e.name === "NotAllowedError"
           ? t("app.chat.micDenied", "Microphone access denied. Enable it in browser settings.")
@@ -353,11 +392,15 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     if (rec && rec.state !== "inactive") rec.stop();
     recorderRef.current = null;
     setRecording(false);
+    stopWaveform();
   };
 
   const toggleMic = () => { recording ? stopRecording() : startRecording(); };
 
   useEffect(() => () => {
+    if (waveformFrameRef.current !== null) cancelAnimationFrame(waveformFrameRef.current);
+    const audioContext = audioContextRef.current;
+    if (audioContext && audioContext.state !== "closed") void audioContext.close();
     streamRef.current?.getTracks().forEach((tr) => tr.stop());
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       try { recorderRef.current.stop(); } catch { /* ignore */ }
@@ -1184,15 +1227,34 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
           >
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           </button>
-          <textarea
-            ref={inputRef}
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={onKey}
-            placeholder={t("app.overview.placeholder")}
-            className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40 py-1.5"
-          />
+          {recording ? (
+            <div
+              className="flex h-10 min-w-0 flex-1 items-center gap-1 overflow-hidden px-1"
+              role="status"
+              aria-label={t("shellUi.chat.ariaRecording", "Recording voice")}
+            >
+              <span className="mr-1 h-2 w-2 shrink-0 rounded-full bg-destructive" />
+              {waveform.map((level, index) => {
+                const heights = ["h-1", "h-2", "h-3", "h-5", "h-7"];
+                return (
+                  <span
+                    key={index}
+                    className={`w-1 min-w-0 flex-1 rounded-full bg-primary transition-[height] duration-75 ${heights[level] ?? "h-1"}`}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <textarea
+              ref={inputRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKey}
+              placeholder={t("app.overview.placeholder")}
+              className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40 py-1.5"
+            />
+          )}
           <button
             type="button"
             onClick={toggleMic}
@@ -1201,7 +1263,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             aria-label={recording ? t("shellUi.chat.ariaStopRecording", "Stop recording") : t("shellUi.chat.ariaVoiceInput", "Voice input")}
             className={`p-1.5 rounded-lg transition shrink-0 disabled:opacity-50 ${
               recording
-                ? "text-red-500 bg-red-500/10 animate-pulse"
+                ? "bg-destructive/15 text-destructive ring-1 ring-destructive/30"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
             }`}
           >
