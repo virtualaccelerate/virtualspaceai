@@ -19,3 +19,7 @@
   `src/lib/task-visibility.server.ts`. Keep both implementations in sync.
 - Payroll, financials, client database, integrations, HR analytics, other people's cards and other
   people's onboarding/quiz results are manager-only in both the server functions and RLS.
+
+## Background client extraction
+
+- Task writes only enqueue client extraction through the database trigger; the five-minute authenticated cron drains `client_sync_queue`, so AI and Google Sheets never delay task saves.
