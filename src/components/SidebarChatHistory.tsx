@@ -132,10 +132,9 @@ export function NewChatButton() {
 }
 
 export function ChatHistorySection() {
-  const { showLabels } = useSidebarChat();
+  const { showLabels, conversations, activeId, onDelete } = useSidebarChat();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { conversations, activeId, onDelete } = useSidebarChat();
   const [open, setOpen] = useState(false);
 
   if (!showLabels) return null;
