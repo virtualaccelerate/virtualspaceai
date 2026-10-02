@@ -137,7 +137,7 @@ export async function processClientSyncQueue(limit = 10) {
   const db = await admin();
   const { data: queued } = await db
     .from("client_sync_queue")
-    .select("task_id")
+    .select("task_id, queued_at")
     .order("queued_at", { ascending: true })
     .limit(limit);
   let processed = 0;
@@ -145,7 +145,8 @@ export async function processClientSyncQueue(limit = 10) {
   for (const item of queued ?? []) {
     try {
       await syncClientsFromTask(item.task_id);
-      await db.from("client_sync_queue").delete().eq("task_id", item.task_id);
+      // Keep a newer queue entry if the task changed again while this one ran.
+      await db.from("client_sync_queue").delete().eq("task_id", item.task_id).eq("queued_at", item.queued_at);
       processed++;
     } catch {
       failed++;
