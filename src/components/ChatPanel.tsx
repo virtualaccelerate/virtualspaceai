@@ -295,23 +295,32 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   };
 
   const startWaveform = (stream: MediaStream) => {
-    const audioContext = new AudioContext();
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 64;
-    analyser.smoothingTimeConstant = 0.72;
-    audioContext.createMediaStreamSource(stream).connect(analyser);
-    audioContextRef.current = audioContext;
-    const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+    try {
+      const AudioContextClass = window.AudioContext ?? (window as typeof window & {
+        webkitAudioContext?: typeof AudioContext;
+      }).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const audioContext = new AudioContextClass();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 128;
+      analyser.smoothingTimeConstant = 0.65;
+      audioContext.createMediaStreamSource(stream).connect(analyser);
+      audioContextRef.current = audioContext;
+      if (audioContext.state === "suspended") void audioContext.resume();
+      const frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
-    const draw = () => {
-      analyser.getByteFrequencyData(frequencyData);
-      setWaveform(Array.from({ length: 28 }, (_, index) => {
-        const sample = frequencyData[Math.min(index, frequencyData.length - 1)] ?? 0;
-        return Math.min(4, Math.floor(sample / 42));
-      }));
-      waveformFrameRef.current = requestAnimationFrame(draw);
-    };
-    draw();
+      const draw = () => {
+        analyser.getByteFrequencyData(frequencyData);
+        const relevant = frequencyData.slice(0, 28);
+        const peak = Math.max(24, ...relevant);
+        setWaveform(Array.from(relevant, (sample) => Math.max(1, Math.min(4, Math.ceil((sample / peak) * 4)))));
+        waveformFrameRef.current = requestAnimationFrame(draw);
+      };
+      draw();
+    } catch {
+      // Recording remains available even if this browser cannot analyse audio.
+      setWaveform(Array.from({ length: 28 }, (_, index) => 1 + (index % 4)));
+    }
   };
 
   const startRecording = async () => {
@@ -1229,17 +1238,17 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
           </button>
           {recording ? (
             <div
-              className="flex h-10 min-w-0 flex-1 items-center gap-1 overflow-hidden px-1"
+              className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden px-1"
               role="status"
               aria-label={t("shellUi.chat.ariaRecording", "Recording voice")}
             >
-              <span className="mr-1 h-2 w-2 shrink-0 rounded-full bg-destructive" />
+              <span className="mr-2 h-2 w-2 shrink-0 animate-pulse rounded-full bg-destructive" />
               {waveform.map((level, index) => {
                 const heights = ["h-1", "h-2", "h-3", "h-5", "h-7"];
                 return (
                   <span
                     key={index}
-                    className={`w-1 min-w-0 flex-1 rounded-full bg-primary transition-[height] duration-75 ${heights[level] ?? "h-1"}`}
+                    className={`w-1 shrink-0 rounded-full bg-primary transition-[height] duration-75 ${heights[level] ?? "h-2"}`}
                   />
                 );
               })}
