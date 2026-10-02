@@ -187,9 +187,6 @@ export function ChatsNavItem() {
         </span>
         <div className="min-w-0 flex-1 leading-tight">
           <div className="truncate">{t("app.nav.chat", "Chats")}</div>
-          <div className="text-[11px] text-muted-foreground/70 truncate">
-            {t("app.nav.chatSubtitle", "Team conversations")}
-          </div>
         </div>
         <span className="text-xs text-muted-foreground">{conversations.length}</span>
         <button
