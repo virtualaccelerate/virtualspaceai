@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Users, Loader2, Plus, Trash2, RefreshCw, ScanSearch, ExternalLink, FileSpreadsheet, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { listClientsFn, saveClientFn, deleteClientFn, scanClientTasksFn, setupClientDbFn, syncClientSheetFn } from "@/lib/clients.functions";
 
@@ -13,22 +14,31 @@ export const Route = createFileRoute("/_authenticated/app/clients")({
       <ClientsPage />
     </ManagerOnly>
   ),
-  head: () => ({ meta: [{ title: "Client Database — Virtual Space" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+    { title: "Client Database — Virtual Space" },
+    { name: "description", content: "Manage your company client database in Virtual Space." },
+    { property: "og:title", content: "Client Database — Virtual Space" },
+    { property: "og:description", content: "Manage your company client database in Virtual Space." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
+  ] }),
 });
 
 type Data = Awaited<ReturnType<typeof listClientsFn>>;
 type Row = Data["clients"][number];
-const COLS: { key: keyof Row; label: string; w: string }[] = [
-  { key: "name", label: "Имя", w: "min-w-[160px]" },
-  { key: "phone", label: "Телефон", w: "min-w-[150px]" },
-  { key: "email", label: "Email", w: "min-w-[180px]" },
-  { key: "company", label: "Компания", w: "min-w-[150px]" },
-  { key: "status", label: "Статус", w: "min-w-[110px]" },
-  { key: "notes", label: "Заметки", w: "min-w-[260px]" },
+const COLS: { key: keyof Row; w: string }[] = [
+  { key: "name", w: "min-w-[160px]" },
+  { key: "phone", w: "min-w-[150px]" },
+  { key: "email", w: "min-w-[180px]" },
+  { key: "company", w: "min-w-[150px]" },
+  { key: "status", w: "min-w-[110px]" },
+  { key: "notes", w: "min-w-[260px]" },
 ];
 const letter = (i: number) => String.fromCharCode(65 + i);
 
 function ClientsPage() {
+  const { t, i18n } = useTranslation();
   const list = useServerFn(listClientsFn);
   const save = useServerFn(saveClientFn);
   const del = useServerFn(deleteClientFn);
@@ -77,32 +87,32 @@ function ClientsPage() {
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><Users className="h-5 w-5" /></div>
           <div>
-            <h1 className="font-display text-2xl text-foreground">База клиентов</h1>
-            <p className="text-sm text-muted-foreground">Клиенты из задач Task Tracker собираются автоматически, без дубликатов по телефону.</p>
+             <h1 className="font-display text-2xl text-foreground">{t("clientsUi.title")}</h1>
+             <p className="text-sm text-muted-foreground">{t("clientsUi.description")}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {s?.sheet_url ? (
             <>
-              <a href={s.sheet_url} target="_blank" rel="noreferrer" className={btn}><FileSpreadsheet className="h-4 w-4 text-primary" />Google Таблица<ExternalLink className="h-3 w-3" /></a>
-              <button className={btn} disabled={!!busy} onClick={() => act("sync", () => sync({ data: { teamspace_id: ts } }), () => "Таблица обновлена")}>
-                {busy === "sync" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}Синхронизировать
+               <a href={s.sheet_url} target="_blank" rel="noreferrer" className={btn}><FileSpreadsheet className="h-4 w-4 text-primary" />{t("clientsUi.sheet")}<ExternalLink className="h-3 w-3" /></a>
+               <button className={btn} disabled={!!busy} onClick={() => act("sync", () => sync({ data: { teamspace_id: ts } }), () => t("clientsUi.sheetUpdated"))}>
+                 {busy === "sync" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}{t("clientsUi.sync")}
               </button>
             </>
           ) : (
-            <button className={btn} disabled={!!busy} onClick={() => act("setup", () => setup({ data: { teamspace_id: ts } }), () => "Google Таблица и методичка созданы")}>
-              {busy === "setup" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}Создать Google Таблицу
+             <button className={btn} disabled={!!busy} onClick={() => act("setup", () => setup({ data: { teamspace_id: ts } }), () => t("clientsUi.setupDone"))}>
+               {busy === "setup" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}{t("clientsUi.createSheet")}
             </button>
           )}
-          <button className={btn} disabled={!!busy} onClick={() => act("scan", () => scan({ data: { teamspace_id: ts } }), (r) => `Задач с контактами: ${r.with_contacts}, изменено клиентов: ${r.changed}`)}>
-            {busy === "scan" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanSearch className="h-4 w-4" />}Найти клиентов в задачах
+           <button className={btn} disabled={!!busy} onClick={() => act("scan", () => scan({ data: { teamspace_id: ts } }), (r) => t("clientsUi.scanDone", { contacts: r.with_contacts, changed: r.changed }))}>
+             {busy === "scan" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanSearch className="h-4 w-4" />}{t("clientsUi.scan")}
           </button>
         </div>
       </div>
 
       {!s?.sheet_url && (
         <div className="rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
-          Для Google Таблицы нужен подключённый Google Drive — <Link to="/app/integrations" className="text-primary underline">Интеграции</Link>. Ссылка и методичка «База клиентов» появятся в Базе знаний.
+           {t("clientsUi.driveHint")} <Link to="/app/integrations" className="text-primary underline">{t("clientsUi.integrations")}</Link>. {t("clientsUi.knowledgeHint")}
         </div>
       )}
       {s?.last_error && <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">{s.last_error}</div>}
@@ -110,10 +120,10 @@ function ClientsPage() {
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск по имени, телефону, компании…" className="w-full rounded-lg bg-background border border-border pl-9 pr-3 py-2 text-sm outline-none focus:border-primary/60" />
+           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("clientsUi.search")} className="w-full rounded-lg bg-background border border-border pl-9 pr-3 py-2 text-sm outline-none focus:border-primary/60" />
         </div>
-        <span className="text-xs text-muted-foreground">{rows.length} из {data.clients.length}</span>
-        {s?.last_sync_at && <span className="text-xs text-muted-foreground ml-auto">Синхр. с таблицей: {new Date(s.last_sync_at).toLocaleString("ru-RU")}</span>}
+         <span className="text-xs text-muted-foreground">{t("clientsUi.count", { shown: rows.length, total: data.clients.length })}</span>
+         {s?.last_sync_at && <span className="text-xs text-muted-foreground ml-auto">{t("clientsUi.synced", { date: new Date(s.last_sync_at).toLocaleString(i18n.resolvedLanguage ?? i18n.language) })}</span>}
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-auto max-h-[70vh]">
@@ -127,8 +137,8 @@ function ClientsPage() {
             </tr>
             <tr>
               <th className="border border-border text-xs text-muted-foreground font-normal">1</th>
-              {COLS.map((c) => <th key={c.key} className={`${c.w} border border-border px-2 py-1.5 text-left font-semibold text-foreground`}>{c.label}</th>)}
-              <th className="border border-border px-2 py-1.5 text-left font-semibold text-foreground min-w-[80px]">Задачи</th>
+               {COLS.map((c) => <th key={c.key} className={`${c.w} border border-border px-2 py-1.5 text-left font-semibold text-foreground`}>{t(`clientsUi.columns.${c.key}`)}</th>)}
+               <th className="border border-border px-2 py-1.5 text-left font-semibold text-foreground min-w-[80px]">{t("clientsUi.columns.tasks")}</th>
               <th className="border border-border" />
             </tr>
           </thead>
@@ -151,17 +161,17 @@ function ClientsPage() {
                 })}
                 <td className="border border-border px-2 py-1.5 text-xs text-muted-foreground">{r.source_task_ids.length || ""}</td>
                 <td className="border border-border text-center">
-                  <button aria-label="Удалить клиента" onClick={() => confirm(`Удалить «${r.name || r.phone}»?`) && act("del", () => del({ data: { teamspace_id: ts, id: r.id } }))} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                   <button aria-label={t("clientsUi.deleteClient")} onClick={() => confirm(t("clientsUi.deleteConfirm", { name: r.name || r.phone })) && act("del", () => del({ data: { teamspace_id: ts, id: r.id } }))} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={COLS.length + 3} className="border border-border p-6 text-center text-muted-foreground text-sm">Клиентов пока нет. Добавьте строку или нажмите «Найти клиентов в задачах».</td></tr>
+               <tr><td colSpan={COLS.length + 3} className="border border-border p-6 text-center text-muted-foreground text-sm">{t("clientsUi.empty")}</td></tr>
             )}
           </tbody>
         </table>
       </div>
-      <button className={btn} disabled={!!busy} onClick={() => act("add", () => save({ data: { teamspace_id: ts, name: "Новый клиент" } }))}><Plus className="h-4 w-4" />Добавить строку</button>
+       <button className={btn} disabled={!!busy} onClick={() => act("add", () => save({ data: { teamspace_id: ts, name: t("clientsUi.newClient") } }))}><Plus className="h-4 w-4" />{t("clientsUi.addRow")}</button>
     </div>
   );
 }
