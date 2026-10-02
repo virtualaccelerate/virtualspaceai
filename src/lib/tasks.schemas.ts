@@ -16,7 +16,7 @@ export const CreateTaskSchema = z.object({
   project: z.string().trim().max(160).optional().nullable(),
   department: z.string().trim().max(160).optional().nullable(),
   tags: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
-  due_date: RequiredDueDateSchema,
+  due_date: OptionalDueDateSchema,
 });
 
 export const UpdateTaskSchema = z.object({
