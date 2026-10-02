@@ -336,10 +336,13 @@ function AuthenticatedLayout() {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-4 mt-1">
-          <div className="space-y-0.5">
-            {topNav.map((item) => <NavButton key={item.to} item={item} />)}
-            <SidebarChatHistory showLabels={showLabels} />
-          </div>
+          <SidebarChatProvider showLabels={showLabels}>
+            <div className="space-y-0.5">
+              <NewChatButton />
+              {topNav.map((item) => <NavButton key={item.to} item={item} />)}
+              <ChatHistorySection />
+            </div>
+          </SidebarChatProvider>
 
           {showLabels && (
             <div className="px-2.5 pt-2">
