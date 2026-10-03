@@ -1219,7 +1219,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
       <div className="relative mt-1">
         <div className="pointer-events-none absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,transparent,hsl(var(--primary)/0.6),transparent_40%)] opacity-70 blur-[6px] animate-[spin_6s_linear_infinite]" />
-        <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
+        <div className="relative flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
           <input
             ref={fileInputRef}
             type="file"
@@ -1262,7 +1262,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKey}
               placeholder={t("app.overview.placeholder")}
-              className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40 py-1.5"
+              className="block flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40"
             />
           )}
           <button

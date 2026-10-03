@@ -112,6 +112,13 @@ html.light {
 @layer base {
   * { border-color: var(--color-border); }
   html, body { background-color: var(--color-background); color: var(--color-foreground); }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    box-sizing: border-box;
+    line-height: 1.25rem;
+  }
+  textarea { display: block; }
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
