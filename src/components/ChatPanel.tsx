@@ -727,7 +727,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     const currentConv = conversations.find((c) => c.id === convId);
     if (currentConv && (currentConv.title === "New chat" || currentConv.title === t("app.chat.newChat", "New chat") || !currentConv.title)) {
       summarizeTitle({ data: { id: convId, message: raw } })
-        .then(({ title }) => {
+        .then(({ title }: { title: string }) => {
           setConversations((prev) => prev.map((c) => (c.id === convId ? { ...c, title } : c)));
           window.dispatchEvent(new Event("virtualspace:chats-changed"));
         })
