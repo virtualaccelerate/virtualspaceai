@@ -21,7 +21,7 @@ import {
   listConversations,
   createConversation,
   deleteConversation,
-  renameConversation,
+  summarizeChatTitle,
   type Conversation,
 } from "@/lib/chat-history.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -256,7 +256,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const listConvs = useServerFn(listConversations);
   const createConv = useServerFn(createConversation);
   const removeConv = useServerFn(deleteConversation);
-  const renameConv = useServerFn(renameConversation);
+  const summarizeTitle = useServerFn(summarizeChatTitle);
   const stt = useServerFn(transcribeAudio);
 
   const isCompact = variant === "compact";
@@ -723,13 +723,14 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
     saveMsg({ data: { role: "user", content: contentForSend, teamspace_id: teamspaceId, conversation_id: convId } }).catch(() => {});
 
-    // Auto-title conversation from first user message
-    const currentConv = conversations.find((c) => c.id === convId);
-    if (currentConv && (currentConv.title === "New chat" || currentConv.title === t("app.chat.newChat", "New chat") || !currentConv.title)) {
-      const title = raw.slice(0, 60);
-      setConversations((prev) => prev.map((c) => c.id === convId ? { ...c, title } : c));
-      renameConv({ data: { id: convId, title } })
-        .then(() => window.dispatchEvent(new Event("virtualspace:chats-changed")))
+    // Auto-title conversation from the first user message (short AI summary).
+    // The server only renames while the title is still the default "New chat".
+    if (messages.length === 0) {
+      summarizeTitle({ data: { id: convId, message: raw } })
+        .then(({ title }: { title: string }) => {
+          setConversations((prev) => prev.map((c) => (c.id === convId ? { ...c, title } : c)));
+          window.dispatchEvent(new Event("virtualspace:chats-changed"));
+        })
         .catch(() => {});
     }
 
