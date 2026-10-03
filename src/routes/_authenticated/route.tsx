@@ -56,7 +56,7 @@ const TelegramIcon = ({ className }: { className?: string }) => (
 );
 
 function AuthenticatedLayout() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
