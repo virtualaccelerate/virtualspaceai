@@ -191,16 +191,18 @@ export function ChatsNavItem() {
         {conversations.length > 0 && (
           <span className="text-xs text-muted-foreground">{conversations.length}</span>
         )}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen((v) => !v);
-          }}
-          aria-label={open ? "collapse" : "expand"}
-          className="p-0.5 text-muted-foreground hover:text-foreground"
-        >
-          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </button>
+        {conversations.length > 0 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((v) => !v);
+            }}
+            aria-label={open ? "collapse" : "expand"}
+            className="p-0.5 text-muted-foreground hover:text-foreground"
+          >
+            {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+        )}
       </div>
 
       {open && (
