@@ -246,7 +246,7 @@ function AuthenticatedLayout() {
       >
 
         {/* Top: teamspace + collapse */}
-        <div className={`relative px-2 border-b border-white/10 ${showLabels ? "h-16 flex items-center" : "pt-2 pb-2 flex flex-col items-center"}`} ref={menuRef}>
+        <div className={`relative px-2 border-b border-white/10 ${showLabels ? "h-18 flex items-center" : "pt-2 pb-2 flex flex-col items-center"}`} ref={menuRef}>
           <div className={`flex items-center gap-1 w-full ${showLabels ? "" : "flex-col"}`}>
             <button
               onClick={() => (showLabels ? setMenuOpen((v) => !v) : setExpanded(true))}
@@ -383,7 +383,7 @@ function AuthenticatedLayout() {
 
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-20 h-16 border-b border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 flex items-center gap-3">
+        <header className="sticky top-0 z-20 h-18 border-b border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 flex items-center gap-3">
           <button
             className={`${isTg ? "" : "lg:hidden"} text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5`}
             onClick={() => setMobileOpen(true)}
