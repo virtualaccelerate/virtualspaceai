@@ -35,6 +35,7 @@ import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app.courses'
 import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticated/app.docs'
+import { Route as AuthenticatedAppFaqRouteImport } from './routes/_authenticated/app.faq'
 import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
 import { Route as AuthenticatedAppLearnRouteImport } from './routes/_authenticated/app.learn'
@@ -194,6 +195,11 @@ const AuthenticatedAppCoursesRoute = AuthenticatedAppCoursesRouteImport.update({
 const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppFaqRoute = AuthenticatedAppFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppFinancialsRoute =
@@ -367,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/faq': typeof AuthenticatedAppFaqRoute
   '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/faq': typeof AuthenticatedAppFaqRoute
   '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
@@ -474,6 +482,7 @@ export interface FileRoutesById {
   '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/docs': typeof AuthenticatedAppDocsRoute
+  '/_authenticated/app/faq': typeof AuthenticatedAppFaqRoute
   '/_authenticated/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/learn': typeof AuthenticatedAppLearnRoute
@@ -529,6 +538,7 @@ export interface FileRouteTypes {
     | '/app/clients'
     | '/app/courses'
     | '/app/docs'
+    | '/app/faq'
     | '/app/financials'
     | '/app/integrations'
     | '/app/learn'
@@ -581,6 +591,7 @@ export interface FileRouteTypes {
     | '/app/clients'
     | '/app/courses'
     | '/app/docs'
+    | '/app/faq'
     | '/app/financials'
     | '/app/integrations'
     | '/app/learn'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/clients'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/docs'
+    | '/_authenticated/app/faq'
     | '/_authenticated/app/financials'
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/learn'
@@ -880,6 +892,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/faq': {
+      id: '/_authenticated/app/faq'
+      path: '/faq'
+      fullPath: '/app/faq'
+      preLoaderRoute: typeof AuthenticatedAppFaqRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/financials': {
       id: '/_authenticated/app/financials'
       path: '/financials'
@@ -1072,6 +1091,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppDocsRoute: typeof AuthenticatedAppDocsRoute
+  AuthenticatedAppFaqRoute: typeof AuthenticatedAppFaqRoute
   AuthenticatedAppFinancialsRoute: typeof AuthenticatedAppFinancialsRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLearnRoute: typeof AuthenticatedAppLearnRoute
@@ -1097,6 +1117,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppDocsRoute: AuthenticatedAppDocsRoute,
+  AuthenticatedAppFaqRoute: AuthenticatedAppFaqRoute,
   AuthenticatedAppFinancialsRoute: AuthenticatedAppFinancialsRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLearnRoute: AuthenticatedAppLearnRoute,
