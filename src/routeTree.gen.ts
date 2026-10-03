@@ -9,107 +9,67 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TgRouteImport } from './routes/tg'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as CoursesRouteImport } from './routes/courses'
-import { Route as BookDemoRouteImport } from './routes/book-demo'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as MentorsIdRouteImport } from './routes/mentors.$id'
-import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BookDemoRouteImport } from './routes/book-demo'
+import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TgRouteImport } from './routes/tg'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
-import { Route as OauthGoogleDriveReturnRouteImport } from './routes/oauth.google-drive.return'
-import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth.google-calendar.return'
-import { Route as ApiPublicYougileWebhookRouteImport } from './routes/api/public/yougile-webhook'
-import { Route as ApiPublicTrelloWebhookRouteImport } from './routes/api/public/trello-webhook'
-import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
-import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
-import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
-import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
-import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
-import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
-import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
-import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
-import { Route as AuthenticatedAppMentorsRouteImport } from './routes/_authenticated/app.mentors'
-import { Route as AuthenticatedAppLearnRouteImport } from './routes/_authenticated/app.learn'
-import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
-import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
-import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticated/app.docs'
-import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app.courses'
-import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
-import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
-import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
-import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated/app.activity'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as MentorsIdRouteImport } from './routes/mentors.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
-import { Route as AuthenticatedAppOnboardingIndexRouteImport } from './routes/_authenticated/app.onboarding.index'
-import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
-import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
-import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
-import { Route as ApiPublicHooksTrackersSyncRouteImport } from './routes/api/public/hooks/trackers-sync'
-import { Route as ApiPublicHooksTasksDailyRouteImport } from './routes/api/public/hooks/tasks-daily'
-import { Route as ApiPublicFinikWebhookRouteImport } from './routes/api/public/finik.webhook'
-import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
-import { Route as AuthenticatedAppOnboardingProgramIdRouteImport } from './routes/_authenticated/app.onboarding.$programId'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated/app.activity'
+import { Route as AuthenticatedAppAgentsRouteImport } from './routes/_authenticated/app.agents'
+import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
+import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/app.clients'
+import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app.courses'
+import { Route as AuthenticatedAppDocsRouteImport } from './routes/_authenticated/app.docs'
+import { Route as AuthenticatedAppFaqRouteImport } from './routes/_authenticated/app.faq'
+import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
+import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
+import { Route as AuthenticatedAppLearnRouteImport } from './routes/_authenticated/app.learn'
+import { Route as AuthenticatedAppMentorsRouteImport } from './routes/_authenticated/app.mentors'
+import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
+import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
+import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
+import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
+import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
+import { Route as ApiPublicTrelloWebhookRouteImport } from './routes/api/public/trello-webhook'
+import { Route as ApiPublicYougileWebhookRouteImport } from './routes/api/public/yougile-webhook'
+import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth.google-calendar.return'
+import { Route as OauthGoogleDriveReturnRouteImport } from './routes/oauth.google-drive.return'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
+import { Route as AuthenticatedAppOnboardingIndexRouteImport } from './routes/_authenticated/app.onboarding.index'
+import { Route as AuthenticatedAppOnboardingProgramIdRouteImport } from './routes/_authenticated/app.onboarding.$programId'
+import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
+import { Route as ApiPublicFinikWebhookRouteImport } from './routes/api/public/finik.webhook'
+import { Route as ApiPublicHooksTasksDailyRouteImport } from './routes/api/public/hooks/tasks-daily'
+import { Route as ApiPublicHooksTrackersSyncRouteImport } from './routes/api/public/hooks/trackers-sync'
+import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
+import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
-const TgRoute = TgRouteImport.update({
-  id: '/tg',
-  path: '/tg',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CoursesRoute = CoursesRouteImport.update({
-  id: '/courses',
-  path: '/courses',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookDemoRoute = BookDemoRouteImport.update({
-  id: '/book-demo',
-  path: '/book-demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -117,153 +77,92 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const BookDemoRoute = BookDemoRouteImport.update({
+  id: '/book-demo',
+  path: '/book-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MentorsIdRoute = MentorsIdRouteImport.update({
-  id: '/mentors/$id',
-  path: '/mentors/$id',
+const CoursesRoute = CoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TgRoute = TgRouteImport.update({
+  id: '/tg',
+  path: '/tg',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93ListToolsRoute =
   Char91DotmcpChar93ListToolsRouteImport.update({
     id: '/.mcp/list-tools',
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const MentorsIdRoute = MentorsIdRouteImport.update({
+  id: '/mentors/$id',
+  path: '/mentors/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const OauthGoogleDriveReturnRoute = OauthGoogleDriveReturnRouteImport.update({
-  id: '/oauth/google-drive/return',
-  path: '/oauth/google-drive/return',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OauthGoogleCalendarReturnRoute =
-  OauthGoogleCalendarReturnRouteImport.update({
-    id: '/oauth/google-calendar/return',
-    path: '/oauth/google-calendar/return',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicYougileWebhookRoute = ApiPublicYougileWebhookRouteImport.update({
-  id: '/api/public/yougile-webhook',
-  path: '/api/public/yougile-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicTrelloWebhookRoute = ApiPublicTrelloWebhookRouteImport.update({
-  id: '/api/public/trello-webhook',
-  path: '/api/public/trello-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
-  id: '/time',
-  path: '/time',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppTelegramRoute =
-  AuthenticatedAppTelegramRouteImport.update({
-    id: '/telegram',
-    path: '/telegram',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppSettingsRoute =
-  AuthenticatedAppSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppProjectsRoute =
-  AuthenticatedAppProjectsRouteImport.update({
-    id: '/projects',
-    path: '/projects',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppOverviewRoute =
-  AuthenticatedAppOverviewRouteImport.update({
-    id: '/overview',
-    path: '/overview',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppMentorsRoute = AuthenticatedAppMentorsRouteImport.update({
-  id: '/mentors',
-  path: '/mentors',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppLearnRoute = AuthenticatedAppLearnRouteImport.update({
-  id: '/learn',
-  path: '/learn',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppIntegrationsRoute =
-  AuthenticatedAppIntegrationsRouteImport.update({
-    id: '/integrations',
-    path: '/integrations',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppFinancialsRoute =
-  AuthenticatedAppFinancialsRouteImport.update({
-    id: '/financials',
-    path: '/financials',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppCoursesRoute = AuthenticatedAppCoursesRouteImport.update({
-  id: '/courses',
-  path: '/courses',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppClientsRoute = AuthenticatedAppClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppAnalyticsRoute =
-  AuthenticatedAppAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppAgentsRoute = AuthenticatedAppAgentsRouteImport.update({
-  id: '/agents',
-  path: '/agents',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppActivityRoute =
@@ -272,39 +171,156 @@ const AuthenticatedAppActivityRoute =
     path: '/activity',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
+const AuthenticatedAppAgentsRoute = AuthenticatedAppAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppAnalyticsRoute =
+  AuthenticatedAppAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
+const AuthenticatedAppClientsRoute = AuthenticatedAppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppCoursesRoute = AuthenticatedAppCoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppDocsRoute = AuthenticatedAppDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppFaqRoute = AuthenticatedAppFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppFinancialsRoute =
+  AuthenticatedAppFinancialsRouteImport.update({
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppIntegrationsRoute =
+  AuthenticatedAppIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppLearnRoute = AuthenticatedAppLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppMentorsRoute = AuthenticatedAppMentorsRouteImport.update({
+  id: '/mentors',
+  path: '/mentors',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppOverviewRoute =
+  AuthenticatedAppOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppProjectsRoute =
+  AuthenticatedAppProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppTelegramRoute =
+  AuthenticatedAppTelegramRouteImport.update({
+    id: '/telegram',
+    path: '/telegram',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
+  id: '/time',
+  path: '/time',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const ApiPublicTrelloWebhookRoute = ApiPublicTrelloWebhookRouteImport.update({
+  id: '/api/public/trello-webhook',
+  path: '/api/public/trello-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicYougileWebhookRoute = ApiPublicYougileWebhookRouteImport.update({
+  id: '/api/public/yougile-webhook',
+  path: '/api/public/yougile-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthGoogleCalendarReturnRoute =
+  OauthGoogleCalendarReturnRouteImport.update({
+    id: '/oauth/google-calendar/return',
+    path: '/oauth/google-calendar/return',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OauthGoogleDriveReturnRoute = OauthGoogleDriveReturnRouteImport.update({
+  id: '/oauth/google-drive/return',
+  path: '/oauth/google-drive/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppCConversationIdRoute =
+  AuthenticatedAppCConversationIdRouteImport.update({
+    id: '/c/$conversationId',
+    path: '/c/$conversationId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppOnboardingIndexRoute =
   AuthenticatedAppOnboardingIndexRouteImport.update({
     id: '/onboarding/',
     path: '/onboarding/',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const ApiPublicTelegramWebhookRoute =
-  ApiPublicTelegramWebhookRouteImport.update({
-    id: '/api/public/telegram/webhook',
-    path: '/api/public/telegram/webhook',
-    getParentRoute: () => rootRouteImport,
+const AuthenticatedAppOnboardingProgramIdRoute =
+  AuthenticatedAppOnboardingProgramIdRouteImport.update({
+    id: '/onboarding/$programId',
+    path: '/onboarding/$programId',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const ApiPublicTelegramMiniappAuthRoute =
-  ApiPublicTelegramMiniappAuthRouteImport.update({
-    id: '/api/public/telegram/miniapp-auth',
-    path: '/api/public/telegram/miniapp-auth',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicStartupLogoSplatRoute =
-  ApiPublicStartupLogoSplatRouteImport.update({
-    id: '/api/public/startup-logo/$',
-    path: '/api/public/startup-logo/$',
+const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
+  id: '/api/public/calendar/$token',
+  path: '/api/public/calendar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicFinikWebhookRoute = ApiPublicFinikWebhookRouteImport.update({
+  id: '/api/public/finik/webhook',
+  path: '/api/public/finik/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksTasksDailyRoute =
+  ApiPublicHooksTasksDailyRouteImport.update({
+    id: '/api/public/hooks/tasks-daily',
+    path: '/api/public/hooks/tasks-daily',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksTrackersSyncRoute =
@@ -313,33 +329,23 @@ const ApiPublicHooksTrackersSyncRoute =
     path: '/api/public/hooks/trackers-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksTasksDailyRoute =
-  ApiPublicHooksTasksDailyRouteImport.update({
-    id: '/api/public/hooks/tasks-daily',
-    path: '/api/public/hooks/tasks-daily',
+const ApiPublicStartupLogoSplatRoute =
+  ApiPublicStartupLogoSplatRouteImport.update({
+    id: '/api/public/startup-logo/$',
+    path: '/api/public/startup-logo/$',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicFinikWebhookRoute = ApiPublicFinikWebhookRouteImport.update({
-  id: '/api/public/finik/webhook',
-  path: '/api/public/finik/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
-  id: '/api/public/calendar/$token',
-  path: '/api/public/calendar/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAppOnboardingProgramIdRoute =
-  AuthenticatedAppOnboardingProgramIdRouteImport.update({
-    id: '/onboarding/$programId',
-    path: '/onboarding/$programId',
-    getParentRoute: () => AuthenticatedAppRoute,
+const ApiPublicTelegramMiniappAuthRoute =
+  ApiPublicTelegramMiniappAuthRouteImport.update({
+    id: '/api/public/telegram/miniapp-auth',
+    path: '/api/public/telegram/miniapp-auth',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedAppCConversationIdRoute =
-  AuthenticatedAppCConversationIdRouteImport.update({
-    id: '/c/$conversationId',
-    path: '/c/$conversationId',
-    getParentRoute: () => AuthenticatedAppRoute,
+const ApiPublicTelegramWebhookRoute =
+  ApiPublicTelegramWebhookRouteImport.update({
+    id: '/api/public/telegram/webhook',
+    path: '/api/public/telegram/webhook',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -367,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/faq': typeof AuthenticatedAppFaqRoute
   '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/app/clients': typeof AuthenticatedAppClientsRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/docs': typeof AuthenticatedAppDocsRoute
+  '/app/faq': typeof AuthenticatedAppFaqRoute
   '/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/learn': typeof AuthenticatedAppLearnRoute
@@ -474,6 +482,7 @@ export interface FileRoutesById {
   '/_authenticated/app/clients': typeof AuthenticatedAppClientsRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/docs': typeof AuthenticatedAppDocsRoute
+  '/_authenticated/app/faq': typeof AuthenticatedAppFaqRoute
   '/_authenticated/app/financials': typeof AuthenticatedAppFinancialsRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/learn': typeof AuthenticatedAppLearnRoute
@@ -529,6 +538,7 @@ export interface FileRouteTypes {
     | '/app/clients'
     | '/app/courses'
     | '/app/docs'
+    | '/app/faq'
     | '/app/financials'
     | '/app/integrations'
     | '/app/learn'
@@ -581,6 +591,7 @@ export interface FileRouteTypes {
     | '/app/clients'
     | '/app/courses'
     | '/app/docs'
+    | '/app/faq'
     | '/app/financials'
     | '/app/integrations'
     | '/app/learn'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/clients'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/docs'
+    | '/_authenticated/app/faq'
     | '/_authenticated/app/financials'
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/learn'
@@ -698,81 +710,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tg': {
-      id: '/tg'
-      path: '/tg'
-      fullPath: '/tg'
-      preLoaderRoute: typeof TgRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/courses': {
-      id: '/courses'
-      path: '/courses'
-      fullPath: '/courses'
-      preLoaderRoute: typeof CoursesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/book-demo': {
-      id: '/book-demo'
-      path: '/book-demo'
-      fullPath: '/book-demo'
-      preLoaderRoute: typeof BookDemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -782,32 +724,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mentors/$id': {
-      id: '/mentors/$id'
-      path: '/mentors/$id'
-      fullPath: '/mentors/$id'
-      preLoaderRoute: typeof MentorsIdRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app': {
-      id: '/_authenticated/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AuthenticatedAppRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/book-demo': {
+      id: '/book-demo'
+      path: '/book-demo'
+      fullPath: '/book-demo'
+      preLoaderRoute: typeof BookDemoRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/courses': {
+      id: '/courses'
+      path: '/courses'
+      fullPath: '/courses'
+      preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tg': {
+      id: '/tg'
+      path: '/tg'
+      fullPath: '/tg'
+      preLoaderRoute: typeof TgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -817,172 +808,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app/': {
-      id: '/_authenticated/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/oauth/google-drive/return': {
-      id: '/oauth/google-drive/return'
-      path: '/oauth/google-drive/return'
-      fullPath: '/oauth/google-drive/return'
-      preLoaderRoute: typeof OauthGoogleDriveReturnRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oauth/google-calendar/return': {
-      id: '/oauth/google-calendar/return'
-      path: '/oauth/google-calendar/return'
-      fullPath: '/oauth/google-calendar/return'
-      preLoaderRoute: typeof OauthGoogleCalendarReturnRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/yougile-webhook': {
-      id: '/api/public/yougile-webhook'
-      path: '/api/public/yougile-webhook'
-      fullPath: '/api/public/yougile-webhook'
-      preLoaderRoute: typeof ApiPublicYougileWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/trello-webhook': {
-      id: '/api/public/trello-webhook'
-      path: '/api/public/trello-webhook'
-      fullPath: '/api/public/trello-webhook'
-      preLoaderRoute: typeof ApiPublicTrelloWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/app/time': {
-      id: '/_authenticated/app/time'
-      path: '/time'
-      fullPath: '/app/time'
-      preLoaderRoute: typeof AuthenticatedAppTimeRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/telegram': {
-      id: '/_authenticated/app/telegram'
-      path: '/telegram'
-      fullPath: '/app/telegram'
-      preLoaderRoute: typeof AuthenticatedAppTelegramRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/team': {
-      id: '/_authenticated/app/team'
-      path: '/team'
-      fullPath: '/app/team'
-      preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/tasks': {
-      id: '/_authenticated/app/tasks'
-      path: '/tasks'
-      fullPath: '/app/tasks'
-      preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/settings': {
-      id: '/_authenticated/app/settings'
-      path: '/settings'
-      fullPath: '/app/settings'
-      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/projects': {
-      id: '/_authenticated/app/projects'
-      path: '/projects'
-      fullPath: '/app/projects'
-      preLoaderRoute: typeof AuthenticatedAppProjectsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/profile': {
-      id: '/_authenticated/app/profile'
-      path: '/profile'
-      fullPath: '/app/profile'
-      preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/overview': {
-      id: '/_authenticated/app/overview'
-      path: '/overview'
-      fullPath: '/app/overview'
-      preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/mentors': {
-      id: '/_authenticated/app/mentors'
-      path: '/mentors'
-      fullPath: '/app/mentors'
-      preLoaderRoute: typeof AuthenticatedAppMentorsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/learn': {
-      id: '/_authenticated/app/learn'
-      path: '/learn'
-      fullPath: '/app/learn'
-      preLoaderRoute: typeof AuthenticatedAppLearnRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/integrations': {
-      id: '/_authenticated/app/integrations'
-      path: '/integrations'
-      fullPath: '/app/integrations'
-      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/financials': {
-      id: '/_authenticated/app/financials'
-      path: '/financials'
-      fullPath: '/app/financials'
-      preLoaderRoute: typeof AuthenticatedAppFinancialsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/docs': {
-      id: '/_authenticated/app/docs'
-      path: '/docs'
-      fullPath: '/app/docs'
-      preLoaderRoute: typeof AuthenticatedAppDocsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/courses': {
-      id: '/_authenticated/app/courses'
-      path: '/courses'
-      fullPath: '/app/courses'
-      preLoaderRoute: typeof AuthenticatedAppCoursesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/clients': {
-      id: '/_authenticated/app/clients'
-      path: '/clients'
-      fullPath: '/app/clients'
-      preLoaderRoute: typeof AuthenticatedAppClientsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/analytics': {
-      id: '/_authenticated/app/analytics'
-      path: '/analytics'
-      fullPath: '/app/analytics'
-      preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/agents': {
-      id: '/_authenticated/app/agents'
-      path: '/agents'
-      fullPath: '/app/agents'
-      preLoaderRoute: typeof AuthenticatedAppAgentsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/activity': {
-      id: '/_authenticated/app/activity'
-      path: '/activity'
-      fullPath: '/app/activity'
-      preLoaderRoute: typeof AuthenticatedAppActivityRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/mentors/$id': {
+      id: '/mentors/$id'
+      path: '/mentors/$id'
+      fullPath: '/mentors/$id'
+      preLoaderRoute: typeof MentorsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -992,6 +836,188 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/activity': {
+      id: '/_authenticated/app/activity'
+      path: '/activity'
+      fullPath: '/app/activity'
+      preLoaderRoute: typeof AuthenticatedAppActivityRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/agents': {
+      id: '/_authenticated/app/agents'
+      path: '/agents'
+      fullPath: '/app/agents'
+      preLoaderRoute: typeof AuthenticatedAppAgentsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/analytics': {
+      id: '/_authenticated/app/analytics'
+      path: '/analytics'
+      fullPath: '/app/analytics'
+      preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/clients': {
+      id: '/_authenticated/app/clients'
+      path: '/clients'
+      fullPath: '/app/clients'
+      preLoaderRoute: typeof AuthenticatedAppClientsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/courses': {
+      id: '/_authenticated/app/courses'
+      path: '/courses'
+      fullPath: '/app/courses'
+      preLoaderRoute: typeof AuthenticatedAppCoursesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/docs': {
+      id: '/_authenticated/app/docs'
+      path: '/docs'
+      fullPath: '/app/docs'
+      preLoaderRoute: typeof AuthenticatedAppDocsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/faq': {
+      id: '/_authenticated/app/faq'
+      path: '/faq'
+      fullPath: '/app/faq'
+      preLoaderRoute: typeof AuthenticatedAppFaqRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/financials': {
+      id: '/_authenticated/app/financials'
+      path: '/financials'
+      fullPath: '/app/financials'
+      preLoaderRoute: typeof AuthenticatedAppFinancialsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/integrations': {
+      id: '/_authenticated/app/integrations'
+      path: '/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/learn': {
+      id: '/_authenticated/app/learn'
+      path: '/learn'
+      fullPath: '/app/learn'
+      preLoaderRoute: typeof AuthenticatedAppLearnRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/mentors': {
+      id: '/_authenticated/app/mentors'
+      path: '/mentors'
+      fullPath: '/app/mentors'
+      preLoaderRoute: typeof AuthenticatedAppMentorsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/overview': {
+      id: '/_authenticated/app/overview'
+      path: '/overview'
+      fullPath: '/app/overview'
+      preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/profile': {
+      id: '/_authenticated/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/projects': {
+      id: '/_authenticated/app/projects'
+      path: '/projects'
+      fullPath: '/app/projects'
+      preLoaderRoute: typeof AuthenticatedAppProjectsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/settings': {
+      id: '/_authenticated/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/tasks': {
+      id: '/_authenticated/app/tasks'
+      path: '/tasks'
+      fullPath: '/app/tasks'
+      preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/team': {
+      id: '/_authenticated/app/team'
+      path: '/team'
+      fullPath: '/app/team'
+      preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/telegram': {
+      id: '/_authenticated/app/telegram'
+      path: '/telegram'
+      fullPath: '/app/telegram'
+      preLoaderRoute: typeof AuthenticatedAppTelegramRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/time': {
+      id: '/_authenticated/app/time'
+      path: '/time'
+      fullPath: '/app/time'
+      preLoaderRoute: typeof AuthenticatedAppTimeRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/public/trello-webhook': {
+      id: '/api/public/trello-webhook'
+      path: '/api/public/trello-webhook'
+      fullPath: '/api/public/trello-webhook'
+      preLoaderRoute: typeof ApiPublicTrelloWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/yougile-webhook': {
+      id: '/api/public/yougile-webhook'
+      path: '/api/public/yougile-webhook'
+      fullPath: '/api/public/yougile-webhook'
+      preLoaderRoute: typeof ApiPublicYougileWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/google-calendar/return': {
+      id: '/oauth/google-calendar/return'
+      path: '/oauth/google-calendar/return'
+      fullPath: '/oauth/google-calendar/return'
+      preLoaderRoute: typeof OauthGoogleCalendarReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/google-drive/return': {
+      id: '/oauth/google-drive/return'
+      path: '/oauth/google-drive/return'
+      fullPath: '/oauth/google-drive/return'
+      preLoaderRoute: typeof OauthGoogleDriveReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app/c/$conversationId': {
+      id: '/_authenticated/app/c/$conversationId'
+      path: '/c/$conversationId'
+      fullPath: '/app/c/$conversationId'
+      preLoaderRoute: typeof AuthenticatedAppCConversationIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/onboarding/': {
       id: '/_authenticated/app/onboarding/'
       path: '/onboarding'
@@ -999,39 +1025,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOnboardingIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/api/public/telegram/webhook': {
-      id: '/api/public/telegram/webhook'
-      path: '/api/public/telegram/webhook'
-      fullPath: '/api/public/telegram/webhook'
-      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/app/onboarding/$programId': {
+      id: '/_authenticated/app/onboarding/$programId'
+      path: '/onboarding/$programId'
+      fullPath: '/app/onboarding/$programId'
+      preLoaderRoute: typeof AuthenticatedAppOnboardingProgramIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/api/public/telegram/miniapp-auth': {
-      id: '/api/public/telegram/miniapp-auth'
-      path: '/api/public/telegram/miniapp-auth'
-      fullPath: '/api/public/telegram/miniapp-auth'
-      preLoaderRoute: typeof ApiPublicTelegramMiniappAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/startup-logo/$': {
-      id: '/api/public/startup-logo/$'
-      path: '/api/public/startup-logo/$'
-      fullPath: '/api/public/startup-logo/$'
-      preLoaderRoute: typeof ApiPublicStartupLogoSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/trackers-sync': {
-      id: '/api/public/hooks/trackers-sync'
-      path: '/api/public/hooks/trackers-sync'
-      fullPath: '/api/public/hooks/trackers-sync'
-      preLoaderRoute: typeof ApiPublicHooksTrackersSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/tasks-daily': {
-      id: '/api/public/hooks/tasks-daily'
-      path: '/api/public/hooks/tasks-daily'
-      fullPath: '/api/public/hooks/tasks-daily'
-      preLoaderRoute: typeof ApiPublicHooksTasksDailyRouteImport
+    '/api/public/calendar/$token': {
+      id: '/api/public/calendar/$token'
+      path: '/api/public/calendar/$token'
+      fullPath: '/api/public/calendar/$token'
+      preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/finik/webhook': {
@@ -1041,26 +1046,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFinikWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/calendar/$token': {
-      id: '/api/public/calendar/$token'
-      path: '/api/public/calendar/$token'
-      fullPath: '/api/public/calendar/$token'
-      preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
+    '/api/public/hooks/tasks-daily': {
+      id: '/api/public/hooks/tasks-daily'
+      path: '/api/public/hooks/tasks-daily'
+      fullPath: '/api/public/hooks/tasks-daily'
+      preLoaderRoute: typeof ApiPublicHooksTasksDailyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app/onboarding/$programId': {
-      id: '/_authenticated/app/onboarding/$programId'
-      path: '/onboarding/$programId'
-      fullPath: '/app/onboarding/$programId'
-      preLoaderRoute: typeof AuthenticatedAppOnboardingProgramIdRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
+    '/api/public/hooks/trackers-sync': {
+      id: '/api/public/hooks/trackers-sync'
+      path: '/api/public/hooks/trackers-sync'
+      fullPath: '/api/public/hooks/trackers-sync'
+      preLoaderRoute: typeof ApiPublicHooksTrackersSyncRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app/c/$conversationId': {
-      id: '/_authenticated/app/c/$conversationId'
-      path: '/c/$conversationId'
-      fullPath: '/app/c/$conversationId'
-      preLoaderRoute: typeof AuthenticatedAppCConversationIdRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
+    '/api/public/startup-logo/$': {
+      id: '/api/public/startup-logo/$'
+      path: '/api/public/startup-logo/$'
+      fullPath: '/api/public/startup-logo/$'
+      preLoaderRoute: typeof ApiPublicStartupLogoSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/miniapp-auth': {
+      id: '/api/public/telegram/miniapp-auth'
+      path: '/api/public/telegram/miniapp-auth'
+      fullPath: '/api/public/telegram/miniapp-auth'
+      preLoaderRoute: typeof ApiPublicTelegramMiniappAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -1072,6 +1091,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppDocsRoute: typeof AuthenticatedAppDocsRoute
+  AuthenticatedAppFaqRoute: typeof AuthenticatedAppFaqRoute
   AuthenticatedAppFinancialsRoute: typeof AuthenticatedAppFinancialsRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLearnRoute: typeof AuthenticatedAppLearnRoute
@@ -1097,6 +1117,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppClientsRoute: AuthenticatedAppClientsRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppDocsRoute: AuthenticatedAppDocsRoute,
+  AuthenticatedAppFaqRoute: AuthenticatedAppFaqRoute,
   AuthenticatedAppFinancialsRoute: AuthenticatedAppFinancialsRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLearnRoute: AuthenticatedAppLearnRoute,
