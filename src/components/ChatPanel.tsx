@@ -21,7 +21,7 @@ import {
   listConversations,
   createConversation,
   deleteConversation,
-  renameConversation,
+  summarizeChatTitle,
   type Conversation,
 } from "@/lib/chat-history.functions";
 import { supabase } from "@/integrations/supabase/client";
