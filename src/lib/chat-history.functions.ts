@@ -83,6 +83,55 @@ export const renameConversation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Generate a short summary title for a conversation from its first user message.
+export const summarizeChatTitle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ id: z.string().uuid(), message: z.string().min(1).max(4000) }).parse(raw),
+  )
+  .handler(async ({ data, context }): Promise<{ title: string }> => {
+    const fallback = data.message.replace(/\s+/g, " ").trim().slice(0, 60);
+    let title = fallback;
+    const key = process.env.LOVABLE_API_KEY;
+    if (key) {
+      try {
+        const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Summarize the user's request as a very short chat title (2-6 words). " +
+                  "Reply with ONLY the title, no quotes, no punctuation at the end. " +
+                  "Use the same language as the user's message.",
+              },
+              { role: "user", content: data.message.slice(0, 2000) },
+            ],
+            max_tokens: 30,
+            temperature: 0.2,
+          }),
+        });
+        if (res.ok) {
+          const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+          const t = json.choices?.[0]?.message?.content?.trim().replace(/^["'«»]+|["'«».]+$/g, "");
+          if (t) title = t.slice(0, 80);
+        }
+      } catch {
+        /* keep fallback */
+      }
+    }
+    const { error } = await context.supabase
+      .from("chat_conversations")
+      .update({ title })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { title };
+  });
+
 export const deleteConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
