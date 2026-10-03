@@ -723,9 +723,9 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
     saveMsg({ data: { role: "user", content: contentForSend, teamspace_id: teamspaceId, conversation_id: convId } }).catch(() => {});
 
-    // Auto-title conversation from first user message (short AI summary)
-    const currentConv = conversations.find((c) => c.id === convId);
-    if (currentConv && (currentConv.title === "New chat" || currentConv.title === t("app.chat.newChat", "New chat") || !currentConv.title)) {
+    // Auto-title conversation from the first user message (short AI summary).
+    // The server only renames while the title is still the default "New chat".
+    if (messages.length === 0) {
       summarizeTitle({ data: { id: convId, message: raw } })
         .then(({ title }: { title: string }) => {
           setConversations((prev) => prev.map((c) => (c.id === convId ? { ...c, title } : c)));

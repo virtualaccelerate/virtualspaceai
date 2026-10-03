@@ -90,6 +90,16 @@ export const summarizeChatTitle = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), message: z.string().min(1).max(4000) }).parse(raw),
   )
   .handler(async ({ data, context }): Promise<{ title: string }> => {
+    // Only auto-title conversations that still carry the default title.
+    const { data: conv } = await context.supabase
+      .from("chat_conversations")
+      .select("title")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (conv && conv.title && conv.title !== "New chat" && conv.title !== "Новый чат") {
+      return { title: conv.title as string };
+    }
     const fallback = data.message.replace(/\s+/g, " ").trim().slice(0, 60);
     let title = fallback;
     const key = process.env.LOVABLE_API_KEY;
