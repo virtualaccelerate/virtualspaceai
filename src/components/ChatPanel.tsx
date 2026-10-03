@@ -1286,7 +1286,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             className={`${isCompact ? "h-9 w-9" : "h-10 w-10"} rounded-full bg-primary text-black flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.45)]`}
             aria-label={t("shellUi.chat.ariaSend", "Send")}
           >
-            {loading ? <Loader2 className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} animate-spin`} /> : <Send className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} fill-current`} />}
+            {loading ? <Loader2 className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} animate-spin`} /> : <Send className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} fill-current -translate-x-px translate-y-px`} />}
           </button>
         </div>
       </div>
