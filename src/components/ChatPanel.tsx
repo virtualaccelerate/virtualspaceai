@@ -1028,7 +1028,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.05 * i }}
                     onClick={() => send(s)}
-                    className="text-left rounded-xl border border-border bg-card hover:bg-accent/40 transition px-3 py-2.5 text-xs text-foreground/80"
+                    className="text-center rounded-xl border border-border bg-card hover:bg-accent/40 transition px-3 py-2.5 text-xs text-foreground/80"
                   >{s}</motion.button>
                 ))}
               </div>
