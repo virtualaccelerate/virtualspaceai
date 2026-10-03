@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, ChevronRight, MessageSquare, MessageSquarePlus, Bot, X } from "lucide-react";
+import { ChevronDown, ChevronRight, MessageSquare, MessageSquarePlus, Bot, Trash2 } from "lucide-react";
 import {
   listConversations,
   deleteConversation,
@@ -229,7 +229,7 @@ export function ChatsNavItem() {
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
                   aria-label="delete"
                 >
-                  <X className="h-3 w-3" />
+                  <Trash2 className="h-3 w-3" />
                 </button>
               </div>
             ))
