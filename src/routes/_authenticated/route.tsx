@@ -246,7 +246,7 @@ function AuthenticatedLayout() {
       >
 
         {/* Top: teamspace + collapse */}
-        <div className={`relative px-2 border-b border-white/10 ${showLabels ? "h-14 flex items-center" : "pt-2 pb-2 flex flex-col items-center"}`} ref={menuRef}>
+        <div className={`relative px-2 border-b border-white/10 ${showLabels ? "h-16 flex items-center" : "pt-2 pb-2 flex flex-col items-center"}`} ref={menuRef}>
           <div className={`flex items-center gap-1 w-full ${showLabels ? "" : "flex-col"}`}>
             <button
               onClick={() => (showLabels ? setMenuOpen((v) => !v) : setExpanded(true))}
