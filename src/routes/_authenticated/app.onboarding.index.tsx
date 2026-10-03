@@ -85,7 +85,7 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <header className="flex flex-wrap items-start gap-4">
         <div className="h-11 w-11 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
           <GraduationCap className="h-5 w-5" />

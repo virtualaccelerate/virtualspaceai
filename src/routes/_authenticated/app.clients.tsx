@@ -82,7 +82,7 @@ function ClientsPage() {
   const btn = "inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:border-primary/60 disabled:opacity-50";
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5 pb-10">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><Users className="h-5 w-5" /></div>

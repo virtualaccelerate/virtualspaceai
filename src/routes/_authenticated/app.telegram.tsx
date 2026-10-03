@@ -68,7 +68,7 @@ function TelegramPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-6">
       <header className="flex items-start gap-4">
         <div className="h-11 w-11 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
           <Send className="h-5 w-5" />

@@ -18,8 +18,8 @@ function AppCoursesPage() {
   const { data, isLoading } = useCourses();
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8 flex items-center gap-3">
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
           <GraduationCap className="h-5 w-5 text-primary" />
         </div>
