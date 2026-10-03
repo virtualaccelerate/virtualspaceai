@@ -5,7 +5,7 @@ import {
   Bot, Users, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon,
-  Plus, FileText, KanbanSquare, FolderKanban, History, TrendingUp, Plug, GraduationCap,
+  Plus, FileText, KanbanSquare, FolderKanban, History, TrendingUp, Plug, GraduationCap, HelpCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,6 +165,7 @@ function AuthenticatedLayout() {
   const communicationNav: NavItem[] = [
     { to: "/app/telegram", label: t("app.nav.telegramBot", "Telegram Bot"), subtitle: t("app.nav.telegramBotSubtitle", "Bot commands & updates"), icon: TelegramIcon },
     { to: "/app/team", label: t("app.nav.team"), subtitle: t("app.nav.teamSubtitle", "Members & roles"), icon: Users },
+    { to: "/app/faq", label: t("app.nav.faq", i18n.language?.startsWith("ru") ? "FAQ по AI-агентам" : "AI Agents FAQ"), subtitle: t("app.nav.faqSubtitle", i18n.language?.startsWith("ru") ? "Как работать с ассистентом" : "How to use the assistant"), icon: HelpCircle },
   ];
 
   const visible = (items: NavItem[]) =>
