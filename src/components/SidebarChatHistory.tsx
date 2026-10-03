@@ -205,7 +205,7 @@ export function ChatsNavItem() {
         )}
       </div>
 
-      {open && (
+      {open && conversations.length > 0 && (
         <div className="ml-4 pl-2 border-l border-border max-h-72 overflow-y-auto space-y-0.5">
           {conversations.length === 0 ? (
             <div className="px-2 py-2 text-xs text-muted-foreground">
