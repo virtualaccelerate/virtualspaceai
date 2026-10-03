@@ -94,7 +94,7 @@ function ProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-6xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <h1 className="font-display text-3xl text-white">{t("app.profile.title")}</h1>
         <p className="mt-2 text-sm text-white/60">{t("app.profile.subtitle")}</p>
