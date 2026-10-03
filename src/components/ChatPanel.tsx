@@ -723,13 +723,14 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
     saveMsg({ data: { role: "user", content: contentForSend, teamspace_id: teamspaceId, conversation_id: convId } }).catch(() => {});
 
-    // Auto-title conversation from first user message
+    // Auto-title conversation from first user message (short AI summary)
     const currentConv = conversations.find((c) => c.id === convId);
     if (currentConv && (currentConv.title === "New chat" || currentConv.title === t("app.chat.newChat", "New chat") || !currentConv.title)) {
-      const title = raw.slice(0, 60);
-      setConversations((prev) => prev.map((c) => c.id === convId ? { ...c, title } : c));
-      renameConv({ data: { id: convId, title } })
-        .then(() => window.dispatchEvent(new Event("virtualspace:chats-changed")))
+      summarizeTitle({ data: { id: convId, message: raw } })
+        .then(({ title }) => {
+          setConversations((prev) => prev.map((c) => (c.id === convId ? { ...c, title } : c)));
+          window.dispatchEvent(new Event("virtualspace:chats-changed"));
+        })
         .catch(() => {});
     }
 
