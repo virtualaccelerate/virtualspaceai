@@ -188,7 +188,9 @@ export function ChatsNavItem() {
         <div className="min-w-0 flex-1 leading-tight">
           <div className="truncate">{t("app.nav.chat", "Chats")}</div>
         </div>
-        <span className="text-xs text-muted-foreground">{conversations.length}</span>
+        {conversations.length > 0 && (
+          <span className="text-xs text-muted-foreground">{conversations.length}</span>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
