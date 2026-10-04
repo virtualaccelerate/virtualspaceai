@@ -190,7 +190,7 @@ function TaskTableBase({
           {rows.map((task) => (
             <tr
               key={task.id}
-              onClick={() => task.external_source && task.external_url ? window.open(task.external_url, "_blank", "noreferrer") : onOpen(task)}
+              onClick={() => onOpen(task)}
               className={cn(
                 "cursor-pointer border-b border-border/60 last:border-0 hover:bg-accent/30 transition-colors",
                 selected.has(task.id) && "bg-primary/[0.06]",

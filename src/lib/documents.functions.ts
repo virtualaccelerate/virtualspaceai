@@ -6,7 +6,11 @@ import {
   TEXT_EXT,
   SPREADSHEET_MIME,
   SPREADSHEET_EXT,
+  PRESENTATION_MIME,
+  PRESENTATION_EXT,
   extractSpreadsheetText,
+  extractPresentationText,
+  fetchWebpageText,
   toBase64,
   callGateway,
   EXTRACT_SYSTEM_PROMPT,
@@ -40,8 +44,23 @@ export const createLinkDocument = createServerFn({ method: "POST" })
     const { detectLinkKind, LINK_LABEL } = await import("./links");
     const kind = detectLinkKind(data.url);
     const name = data.name?.trim() || `${LINK_LABEL[kind]} — ${new URL(data.url).hostname}`;
-    const text = [name, data.url, data.project ? `Project: ${data.project}` : "", data.tags?.length ? `Tags: ${data.tags.join(", ")}` : "", data.note ?? ""]
+    const header = [name, data.url, data.project ? `Project: ${data.project}` : "", data.tags?.length ? `Tags: ${data.tags.join(", ")}` : "", data.note ?? ""]
       .filter(Boolean).join("\n");
+
+    // A plain website link (not an app we only know how to label, like Trello
+    // or Google Sheets) can actually be read — fetch and store its page text
+    // so the AI can answer questions from it, not just see the URL.
+    let text = header;
+    let extractStatus = "ready";
+    if (kind === "web") {
+      const page = await fetchWebpageText(data.url).catch(() => null);
+      if (page) {
+        text = `${header}\n\n---\n\n${page}`;
+      } else {
+        extractStatus = "failed";
+      }
+    }
+
     const { data: row, error } = await context.supabase
       .from("documents")
       .insert({
@@ -56,7 +75,8 @@ export const createLinkDocument = createServerFn({ method: "POST" })
         project: data.project?.trim() || null,
         tags: data.tags ?? [],
         extracted_text: text,
-        extract_status: "ready",
+        extract_status: extractStatus,
+        extract_error: extractStatus === "failed" ? "Не удалось прочитать содержимое страницы (сайт недоступен или блокирует автоматический доступ)." : null,
       })
       .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id, url, link_kind, project, tags, extract_status")
       .single();
@@ -196,11 +216,21 @@ export const extractDocumentText = createServerFn({ method: "POST" })
         mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(doc.name);
       const isText = TEXT_MIME.test(mime) || TEXT_EXT.test(doc.name);
       const isSpreadsheet = SPREADSHEET_MIME.test(mime) || SPREADSHEET_EXT.test(doc.name);
+      const isLegacyPresentation = /\.(ppt|odp)$/i.test(doc.name) || /vnd\.ms-powerpoint|vnd\.oasis\.opendocument\.presentation/i.test(mime);
+      const isPresentation = (PRESENTATION_MIME.test(mime) || PRESENTATION_EXT.test(doc.name)) && !isLegacyPresentation;
 
-      if (!isPdf && !isImage && !isText && !isSpreadsheet) {
+      if (isLegacyPresentation) {
         await setStatus(
           "unsupported",
-          "Формат не поддерживается для автоматического чтения (поддерживаются PDF, изображения, таблицы и текстовые файлы).",
+          "Старый формат .ppt/.odp не поддерживается — пересохраните презентацию в .pptx.",
+        );
+        return { ok: false, unsupported: true as const };
+      }
+
+      if (!isPdf && !isImage && !isText && !isSpreadsheet && !isPresentation) {
+        await setStatus(
+          "unsupported",
+          "Формат не поддерживается для автоматического чтения (поддерживаются PDF, изображения, таблицы, презентации .pptx и текстовые файлы).",
         );
         return { ok: false, unsupported: true as const };
       }
@@ -221,6 +251,12 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       if (isSpreadsheet) {
         const text = await extractSpreadsheetText(bytes);
         await setStatus(text.trim() ? "ready" : "empty", text.trim() ? null : "В таблице нет данных", text);
+        return { ok: true, length: text.length };
+      }
+
+      if (isPresentation) {
+        const text = await extractPresentationText(bytes);
+        await setStatus(text.trim() ? "ready" : "empty", text.trim() ? null : "В презентации нет текста", text);
         return { ok: true, length: text.length };
       }
 

@@ -100,7 +100,10 @@ export async function getOverview(userId: string, requested?: string): Promise<O
   };
   const overdueRows = open.filter((t) => t.due_date && dueTs(t.due_date) < now);
   const dueSoon = open.filter((t) => t.due_date && dueTs(t.due_date) >= now && dueTs(t.due_date) - now <= 3 * DAY);
-  const unassigned = isManager ? open.filter((t) => !t.assignee_id).length : 0;
+  // A task imported from Trello/YouGile (or typed in manually) often only has an
+  // assignee_name label and no linked assignee_id — the board already shows that
+  // name, so it must not be counted as "unassigned" here too.
+  const unassigned = isManager ? open.filter((t) => !t.assignee_id && !t.assignee_name).length : 0;
 
   const ids = (memberships ?? []).map((m) => m.user_id);
   const memberIds = isManager ? ids : [userId];
