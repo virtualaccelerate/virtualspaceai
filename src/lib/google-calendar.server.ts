@@ -22,6 +22,8 @@ export const GOOGLE_CALENDAR_SCOPES = [
   // Same connection also syncs task due dates into the user's Google Tasks list.
   "https://www.googleapis.com/auth/tasks",
 ];
+/** Scopes required for Calendar calls — excludes tasks so pre-Tasks connections keep working for meetings. */
+const CALENDAR_REQUIRED_SCOPES = GOOGLE_CALENDAR_SCOPES.filter((s) => !s.endsWith("/auth/tasks"));
 export const RECONNECT_REQUIRED = "GOOGLE_CALENDAR_RECONNECT_REQUIRED";
 
 type Calendar = { id: string; summary: string; primary?: boolean; accessRole?: string };
@@ -58,7 +60,7 @@ async function calendarFetch(userId: string, path: string, init?: RequestInit) {
   const key = await getConnectionKeyForUser(userId, CONNECTOR_ID);
   if (!key) throw new Error(RECONNECT_REQUIRED);
   const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key,
-    connectorId: CONNECTOR_ID, path, init, requiredScopes: GOOGLE_CALENDAR_SCOPES });
+    connectorId: CONNECTOR_ID, path, init, requiredScopes: CALENDAR_REQUIRED_SCOPES });
   if (await appUserReconnectRequired(res)) {
     const db = await admin();
     await db.from("google_calendar_settings").upsert({ user_id: userId, reconnect_required: true, last_error: RECONNECT_REQUIRED, updated_at: new Date().toISOString() });
@@ -86,7 +88,7 @@ export async function completeConnect(userId: string, code: string) {
 }
 async function listCalendarsWithKey(connectionAPIKey: string): Promise<Calendar[]> {
   const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey, connectorId: CONNECTOR_ID,
-    path: "/calendar/v3/users/me/calendarList?minAccessRole=writer&maxResults=250", requiredScopes: GOOGLE_CALENDAR_SCOPES });
+    path: "/calendar/v3/users/me/calendarList?minAccessRole=writer&maxResults=250", requiredScopes: CALENDAR_REQUIRED_SCOPES });
   const text = await res.text();
   if (!res.ok) throw new Error(`Google Calendar request failed [${res.status}]: ${text.slice(0, 500)}`);
   return ((JSON.parse(text).items ?? []) as Calendar[]).filter((item) => item.accessRole === "owner" || item.accessRole === "writer");
@@ -234,14 +236,15 @@ export async function syncUserCalendar(userId: string) {
     }
     await db.from("google_calendar_links").update({ etag: event.etag ?? null, event_updated_at: event.updated ?? null, last_sync_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", link.id);
   }
-  const linkedTaskIds = new Set((links ?? []).map((link: any) => link.task_id));
+  const { data: taskLinks } = await db.from("google_tasks_links").select("task_id").eq("user_id", userId);
+  const linkedTaskIds = new Set((taskLinks ?? []).map((link: any) => link.task_id));
   const { data: tasks } = await db.from("tasks")
     .select("id,user_id,assignee_id,title,description,due_date,status,priority,external_source")
     .not("due_date", "is", null)
     .is("external_source", null)
     .or(`assignee_id.eq.${userId},and(assignee_id.is.null,user_id.eq.${userId})`);
   for (const task of tasks ?? []) {
-    if (!linkedTaskIds.has(task.id)) await syncTaskToCalendar(task).catch(() => {});
+    if (!linkedTaskIds.has(task.id)) await syncTaskToGoogleTasks(task).catch(() => {});
   }
   const now = new Date().toISOString();
   await db.from("google_calendar_settings").upsert({ user_id: userId, calendar_id: calendarId, last_sync_at: now, last_error: null, reconnect_required: false, updated_at: now });
@@ -262,6 +265,7 @@ export async function disconnect(userId: string) {
   if (key) try { await disconnectAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: CONNECTOR_ID }); } catch { /* local disconnect still proceeds */ }
   const db = await admin();
   await db.from("google_calendar_links").delete().eq("user_id", userId);
+  await db.from("google_tasks_links").delete().eq("user_id", userId);
   await db.from("google_calendar_settings").delete().eq("user_id", userId);
   await deleteConnectionForUser(userId, CONNECTOR_ID);
   return { ok: true };
