@@ -914,8 +914,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
           dueDate: (data as any).due_date,
         }).catch(() => {});
       }
-      const { syncTaskToCalendar } = await import("./google-calendar.server");
-      await syncTaskToCalendar({ ...(data as any), user_id: link.user_id, description: description?.trim() || null, external_source: null }).catch(() => {});
+      const { syncTaskToGoogleTasks } = await import("./google-calendar.server");
+      await syncTaskToGoogleTasks({ ...(data as any), user_id: link.user_id, description: description?.trim() || null, external_source: null }).catch(() => {});
     }
   }
   while ((match = updateRe.exec(reply))) {
@@ -1006,8 +1006,8 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       .single();
     if (data) {
       updatedTitles.push((data as any).title);
-      const { syncTaskToCalendar } = await import("./google-calendar.server");
-      await syncTaskToCalendar(data as any, (existing as any).assignee_id ?? (existing as any).user_id).catch(() => {});
+      const { syncTaskToGoogleTasks } = await import("./google-calendar.server");
+      await syncTaskToGoogleTasks(data as any, (existing as any).assignee_id ?? (existing as any).user_id).catch(() => {});
     }
     else
       updateErrors.push(
