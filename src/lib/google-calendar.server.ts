@@ -19,6 +19,8 @@ export const GOOGLE_CALENDAR_SCOPES = [
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/userinfo.profile",
   "https://www.googleapis.com/auth/calendar",
+  // Same connection also syncs task due dates into the user's Google Tasks list.
+  "https://www.googleapis.com/auth/tasks",
 ];
 export const RECONNECT_REQUIRED = "GOOGLE_CALENDAR_RECONNECT_REQUIRED";
 
@@ -146,6 +148,63 @@ export async function deleteTaskCalendarEvent(taskId: string, onlyUserId?: strin
       if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Google Calendar delete failed [${res.status}]`);
     }
     await db.from("google_calendar_links").delete().eq("id", link.id);
+  }
+}
+export const TASKS_SCOPE_MISSING = "GOOGLE_TASKS_RECONNECT_REQUIRED";
+type GoogleTask = { id: string };
+const TASKS_BASE = "/tasks/v1/lists/%40default/tasks";
+/** Google Tasks calls go through the same Calendar connection; old tokens lack the tasks scope. */
+async function tasksFetch(userId: string, path: string, init?: RequestInit) {
+  const key = await getConnectionKeyForUser(userId, CONNECTOR_ID);
+  if (!key) throw new Error(RECONNECT_REQUIRED);
+  const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: CONNECTOR_ID, path, init });
+  if (await appUserReconnectRequired(res)) {
+    const db = await admin();
+    await db.from("google_calendar_settings").upsert({ user_id: userId, reconnect_required: true, last_error: RECONNECT_REQUIRED, updated_at: new Date().toISOString() });
+    throw new Error(RECONNECT_REQUIRED);
+  }
+  if (res.status === 401 || res.status === 403) {
+    const text = await res.clone().text();
+    if (/insufficient authentication scopes|insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(text)) {
+      const db = await admin();
+      await db.from("google_calendar_settings").update({ last_error: TASKS_SCOPE_MISSING, updated_at: new Date().toISOString() }).eq("user_id", userId);
+      throw new Error(TASKS_SCOPE_MISSING);
+    }
+  }
+  return res;
+}
+export async function syncTaskToGoogleTasks(task: TaskRow, previousUserId?: string | null) {
+  if (task.external_source) return;
+  const targetUserId = task.assignee_id ?? task.user_id;
+  const db = await admin();
+  if (previousUserId && previousUserId !== targetUserId) await deleteGoogleTask(task.id, previousUserId).catch(() => {});
+  if (!task.due_date) {
+    await deleteGoogleTask(task.id, targetUserId).catch(() => {});
+    return;
+  }
+  if (!(await getConnectionKeyForUser(targetUserId, CONNECTOR_ID))) return;
+  const { data: link } = await db.from("google_tasks_links").select("google_task_id").eq("user_id", targetUserId).eq("task_id", task.id).maybeSingle();
+  const body = { title: task.title, notes: task.description ?? undefined, due: `${task.due_date}T00:00:00.000Z`, status: task.status === "done" ? "completed" : "needsAction" };
+  const send = (path: string, method: string) => tasksFetch(targetUserId, path, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  let res = link ? await send(`${TASKS_BASE}/${encodeURIComponent(link.google_task_id)}`, "PATCH") : await send(TASKS_BASE, "POST");
+  if (link && res.status === 404) res = await send(TASKS_BASE, "POST"); // deleted in Google — recreate
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Google Tasks request failed [${res.status}]: ${text.slice(0, 500)}`);
+  const created = JSON.parse(text) as GoogleTask;
+  const now = new Date().toISOString();
+  await db.from("google_tasks_links").upsert({ user_id: targetUserId, task_id: task.id, google_task_id: created.id, tasklist_id: "@default", last_sync_at: now, last_error: null, updated_at: now }, { onConflict: "user_id,task_id" });
+}
+export async function deleteGoogleTask(taskId: string, onlyUserId?: string | null) {
+  const db = await admin();
+  let query = db.from("google_tasks_links").select("id,user_id,google_task_id").eq("task_id", taskId);
+  if (onlyUserId) query = query.eq("user_id", onlyUserId);
+  const { data: links } = await query;
+  for (const link of links ?? []) {
+    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID)) {
+      const res = await tasksFetch(link.user_id, `${TASKS_BASE}/${encodeURIComponent(link.google_task_id)}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Google Tasks delete failed [${res.status}]`);
+    }
+    await db.from("google_tasks_links").delete().eq("id", link.id);
   }
 }
 export async function createMeeting(userId: string, input: { title: string; start: string; end: string; description?: string; attendees?: string[] }) {
