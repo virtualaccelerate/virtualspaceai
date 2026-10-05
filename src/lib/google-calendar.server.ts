@@ -185,16 +185,26 @@ export async function syncTaskToGoogleTasks(task: TaskRow, previousUserId?: stri
     return;
   }
   if (!(await getConnectionKeyForUser(targetUserId, CONNECTOR_ID))) return;
-  const { data: link } = await db.from("google_tasks_links").select("google_task_id").eq("user_id", targetUserId).eq("task_id", task.id).maybeSingle();
-  const body = { title: task.title, notes: task.description ?? undefined, due: `${task.due_date}T00:00:00.000Z`, status: task.status === "done" ? "completed" : "needsAction" };
-  const send = (path: string, method: string) => tasksFetch(targetUserId, path, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  let res = link ? await send(`${TASKS_BASE}/${encodeURIComponent(link.google_task_id)}`, "PATCH") : await send(TASKS_BASE, "POST");
-  if (link && res.status === 404) res = await send(TASKS_BASE, "POST"); // deleted in Google — recreate
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Google Tasks request failed [${res.status}]: ${text.slice(0, 500)}`);
-  const created = JSON.parse(text) as GoogleTask;
-  const now = new Date().toISOString();
-  await db.from("google_tasks_links").upsert({ user_id: targetUserId, task_id: task.id, google_task_id: created.id, tasklist_id: "@default", last_sync_at: now, last_error: null, updated_at: now }, { onConflict: "user_id,task_id" });
+  try {
+    const { data: link } = await db.from("google_tasks_links").select("google_task_id").eq("user_id", targetUserId).eq("task_id", task.id).maybeSingle();
+    const body = { title: task.title, notes: task.description ?? undefined, due: `${task.due_date}T00:00:00.000Z`, status: task.status === "done" ? "completed" : "needsAction" };
+    const send = (path: string, method: string) => tasksFetch(targetUserId, path, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    let res = link ? await send(`${TASKS_BASE}/${encodeURIComponent(link.google_task_id)}`, "PATCH") : await send(TASKS_BASE, "POST");
+    if (link && res.status === 404) res = await send(TASKS_BASE, "POST"); // deleted in Google — recreate
+    const text = await res.text();
+    if (!res.ok) throw new Error(`Google Tasks request failed [${res.status}]: ${text.slice(0, 500)}`);
+    const created = JSON.parse(text) as GoogleTask;
+    const now = new Date().toISOString();
+    await db.from("google_tasks_links").upsert({ user_id: targetUserId, task_id: task.id, google_task_id: created.id, tasklist_id: "@default", last_sync_at: now, last_error: null, updated_at: now }, { onConflict: "user_id,task_id" });
+  } catch (error) {
+    // Previously swallowed silently by every call site (.catch(() => {})) — record it so
+    // it actually surfaces on the Integrations page instead of vanishing without a trace.
+    const message = error instanceof Error ? error.message : String(error);
+    if (message !== TASKS_SCOPE_MISSING && message !== RECONNECT_REQUIRED) {
+      await db.from("google_calendar_settings").update({ last_error: message.slice(0, 500), updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
+    }
+    throw error;
+  }
 }
 export async function deleteGoogleTask(taskId: string, onlyUserId?: string | null) {
   const db = await admin();
