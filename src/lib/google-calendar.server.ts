@@ -253,11 +253,15 @@ export async function syncUserCalendar(userId: string) {
     .not("due_date", "is", null)
     .is("external_source", null)
     .or(`assignee_id.eq.${userId},and(assignee_id.is.null,user_id.eq.${userId})`);
+  let tasksSyncError: string | null = null;
   for (const task of tasks ?? []) {
-    if (!linkedTaskIds.has(task.id)) await syncTaskToGoogleTasks(task).catch(() => {});
+    if (!linkedTaskIds.has(task.id)) {
+      // Keep the real failure visible — don't let the unconditional upsert below erase it.
+      await syncTaskToGoogleTasks(task).catch((e) => { tasksSyncError = e instanceof Error ? e.message.slice(0, 500) : String(e); });
+    }
   }
   const now = new Date().toISOString();
-  await db.from("google_calendar_settings").upsert({ user_id: userId, calendar_id: calendarId, last_sync_at: now, last_error: null, reconnect_required: false, updated_at: now });
+  await db.from("google_calendar_settings").upsert({ user_id: userId, calendar_id: calendarId, last_sync_at: now, last_error: tasksSyncError, reconnect_required: false, updated_at: now });
   return { synced: links?.length ?? 0, updated };
 }
 export async function syncAllGoogleCalendars() {
