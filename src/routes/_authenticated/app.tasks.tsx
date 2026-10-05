@@ -959,7 +959,9 @@ function TasksPage() {
           onKeyDown={(e) => {
             if (e.key !== "Enter" || saving) return;
             const target = e.target as HTMLElement;
-            if (target.tagName === "TEXTAREA") return;
+            // Only plain text inputs save on Enter; let selects, buttons,
+            // textareas and tag chips handle Enter themselves.
+            if (target.tagName !== "INPUT") return;
             e.preventDefault();
             handleSave();
           }}

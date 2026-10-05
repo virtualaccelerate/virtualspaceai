@@ -97,7 +97,16 @@ export const summarizeChatTitle = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("user_id", context.userId)
       .maybeSingle();
-    if (conv && conv.title && conv.title !== "New chat" && conv.title !== "Новый чат") {
+    // Default titles in every supported language (en, ru, kk, ky, uz, tg).
+    const DEFAULT_TITLES = new Set([
+      "New chat",
+      "Новый чат",
+      "Жаңа чат",
+      "Жаңы чат",
+      "Yangi chat",
+      "Чати нав",
+    ]);
+    if (conv && conv.title && !DEFAULT_TITLES.has(conv.title)) {
       return { title: conv.title as string };
     }
     const fallback = data.message.replace(/\s+/g, " ").trim().slice(0, 60);
