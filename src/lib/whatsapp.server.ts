@@ -55,7 +55,7 @@ export async function verifyWhatsAppSignature(rawBody: string, header: string | 
 
 export async function handleIncoming(from: string, text: string, profileName?: string | null) {
   const { data: link } = await supabaseAdmin
-    .from("whatsapp_links" as any)
+    .from("whatsapp_links")
     .select("user_id, teamspace_id, language")
     .eq("phone_number", from)
     .not("linked_at", "is", null)
@@ -65,7 +65,7 @@ export async function handleIncoming(from: string, text: string, profileName?: s
     const code = text.trim().toLowerCase();
     const { data: pending } = /^[0-9a-f]{4,32}$/.test(code)
       ? await supabaseAdmin
-          .from("whatsapp_links" as any)
+          .from("whatsapp_links")
           .select("id")
           .ilike("link_code", code)
           .is("linked_at", null)
@@ -79,7 +79,7 @@ export async function handleIncoming(from: string, text: string, profileName?: s
       return;
     }
     const { error } = await supabaseAdmin
-      .from("whatsapp_links" as any)
+      .from("whatsapp_links")
       .update({ phone_number: from, wa_name: profileName ?? null, linked_at: new Date().toISOString() } as never)
       .eq("id", (pending as any).id);
     await sendWhatsAppMessage(
