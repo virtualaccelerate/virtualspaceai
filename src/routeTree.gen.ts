@@ -48,6 +48,7 @@ import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
 import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenticated/app.telegram'
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
+import { Route as AuthenticatedAppWhatsappRouteImport } from './routes/_authenticated/app.whatsapp'
 import { Route as ApiPublicTrelloWebhookRouteImport } from './routes/api/public/trello-webhook'
 import { Route as ApiPublicYougileWebhookRouteImport } from './routes/api/public/yougile-webhook'
 import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth.google-calendar.return'
@@ -62,6 +63,7 @@ import { Route as ApiPublicHooksTrackersSyncRouteImport } from './routes/api/pub
 import { Route as ApiPublicStartupLogoSplatRouteImport } from './routes/api/public/startup-logo.$'
 import { Route as ApiPublicTelegramMiniappAuthRouteImport } from './routes/api/public/telegram/miniapp-auth'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -268,6 +270,12 @@ const AuthenticatedAppTimeRoute = AuthenticatedAppTimeRouteImport.update({
   path: '/time',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppWhatsappRoute =
+  AuthenticatedAppWhatsappRouteImport.update({
+    id: '/whatsapp',
+    path: '/whatsapp',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicTrelloWebhookRoute = ApiPublicTrelloWebhookRouteImport.update({
   id: '/api/public/trello-webhook',
   path: '/api/public/trello-webhook',
@@ -347,6 +355,12 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -386,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
+  '/app/whatsapp': typeof AuthenticatedAppWhatsappRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
@@ -400,6 +415,7 @@ export interface FileRoutesByFullPath {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/app/onboarding/': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRoutesByTo {
@@ -439,6 +455,7 @@ export interface FileRoutesByTo {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/app/time': typeof AuthenticatedAppTimeRoute
+  '/app/whatsapp': typeof AuthenticatedAppWhatsappRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
@@ -453,6 +470,7 @@ export interface FileRoutesByTo {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/app/onboarding': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRoutesById {
@@ -495,6 +513,7 @@ export interface FileRoutesById {
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/_authenticated/app/telegram': typeof AuthenticatedAppTelegramRoute
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
+  '/_authenticated/app/whatsapp': typeof AuthenticatedAppWhatsappRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
@@ -509,6 +528,7 @@ export interface FileRoutesById {
   '/api/public/startup-logo/$': typeof ApiPublicStartupLogoSplatRoute
   '/api/public/telegram/miniapp-auth': typeof ApiPublicTelegramMiniappAuthRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/_authenticated/app/onboarding/': typeof AuthenticatedAppOnboardingIndexRoute
 }
 export interface FileRouteTypes {
@@ -551,6 +571,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/telegram'
     | '/app/time'
+    | '/app/whatsapp'
     | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-calendar/return'
@@ -565,6 +586,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/api/public/whatsapp/webhook'
     | '/app/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -604,6 +626,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/telegram'
     | '/app/time'
+    | '/app/whatsapp'
     | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-calendar/return'
@@ -618,6 +641,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/api/public/whatsapp/webhook'
     | '/app/onboarding'
   id:
     | '__root__'
@@ -659,6 +683,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/team'
     | '/_authenticated/app/telegram'
     | '/_authenticated/app/time'
+    | '/_authenticated/app/whatsapp'
     | '/api/public/trello-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-calendar/return'
@@ -673,6 +698,7 @@ export interface FileRouteTypes {
     | '/api/public/startup-logo/$'
     | '/api/public/telegram/miniapp-auth'
     | '/api/public/telegram/webhook'
+    | '/api/public/whatsapp/webhook'
     | '/_authenticated/app/onboarding/'
   fileRoutesById: FileRoutesById
 }
@@ -706,6 +732,7 @@ export interface RootRouteChildren {
   ApiPublicStartupLogoSplatRoute: typeof ApiPublicStartupLogoSplatRoute
   ApiPublicTelegramMiniappAuthRoute: typeof ApiPublicTelegramMiniappAuthRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -983,6 +1010,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTimeRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/whatsapp': {
+      id: '/_authenticated/app/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/app/whatsapp'
+      preLoaderRoute: typeof AuthenticatedAppWhatsappRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/trello-webhook': {
       id: '/api/public/trello-webhook'
       path: '/api/public/trello-webhook'
@@ -1081,6 +1115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1104,6 +1145,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppTelegramRoute: typeof AuthenticatedAppTelegramRoute
   AuthenticatedAppTimeRoute: typeof AuthenticatedAppTimeRoute
+  AuthenticatedAppWhatsappRoute: typeof AuthenticatedAppWhatsappRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppCConversationIdRoute: typeof AuthenticatedAppCConversationIdRoute
   AuthenticatedAppOnboardingProgramIdRoute: typeof AuthenticatedAppOnboardingProgramIdRoute
@@ -1130,6 +1172,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppTelegramRoute: AuthenticatedAppTelegramRoute,
   AuthenticatedAppTimeRoute: AuthenticatedAppTimeRoute,
+  AuthenticatedAppWhatsappRoute: AuthenticatedAppWhatsappRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppCConversationIdRoute: AuthenticatedAppCConversationIdRoute,
   AuthenticatedAppOnboardingProgramIdRoute:
@@ -1182,6 +1225,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStartupLogoSplatRoute: ApiPublicStartupLogoSplatRoute,
   ApiPublicTelegramMiniappAuthRoute: ApiPublicTelegramMiniappAuthRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

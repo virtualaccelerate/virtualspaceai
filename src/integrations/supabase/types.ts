@@ -1963,6 +1963,50 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_links: {
+        Row: {
+          created_at: string
+          id: string
+          language: string | null
+          link_code: string
+          linked_at: string | null
+          phone_number: string | null
+          teamspace_id: string | null
+          user_id: string
+          wa_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          link_code?: string
+          linked_at?: string | null
+          phone_number?: string | null
+          teamspace_id?: string | null
+          user_id: string
+          wa_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          link_code?: string
+          linked_at?: string | null
+          phone_number?: string | null
+          teamspace_id?: string | null
+          user_id?: string
+          wa_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_links_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -23,3 +23,5 @@
 ## Background client extraction
 
 - Task writes only enqueue client extraction through the database trigger; the five-minute authenticated cron drains `client_sync_queue`, so AI and Google Sheets never delay task saves.
+
+- WhatsApp bot (`src/lib/whatsapp.server.ts`) keeps its own copy of the Telegram task-agent logic instead of a shared helper — avoids regressions in the production Telegram path.

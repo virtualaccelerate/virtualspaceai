@@ -77,6 +77,15 @@ const bundle: GroupResources = {
         disconnect: "Disconnect",
         lastSync: "Last sync",
       },
+      whatsapp: {
+        title: "WhatsApp bot", subtitle: "Create tasks, change statuses and ask the AI assistant right from WhatsApp.",
+        loading: "Loading…", connected: "Connected", disconnect: "Disconnect", unlinked: "WhatsApp disconnected",
+        howto: "Send this code to the Virtual Space number in WhatsApp:", copy: "Copy", open: "Open WhatsApp",
+        hint: "The code is personal — everything the bot does happens inside your account.",
+        notSetUp: "The WhatsApp bot is not set up yet. Your code is ready — the connect button will appear once the bot number is configured.",
+        abilities: "What the bot can do",
+        can: { new: "Create tasks from a plain message: “Call the client tomorrow, urgent”", status: "Update task status: “I finished the report”", ai: "Ask the AI assistant about your tasks and knowledge base" },
+      },
       telegram: {
         activated: "Bot activated",
         activateError: "Could not activate the bot",
@@ -251,6 +260,15 @@ const bundle: GroupResources = {
         save: "Сохранить и синхронизировать",
         disconnect: "Отключить",
         lastSync: "Последняя синхронизация",
+      },
+      whatsapp: {
+        title: "WhatsApp-бот", subtitle: "Создавайте задачи, меняйте статусы и спрашивайте AI-ассистента прямо в WhatsApp.",
+        loading: "Загрузка…", connected: "Подключено", disconnect: "Отключить", unlinked: "WhatsApp отключён",
+        howto: "Отправьте этот код на номер Virtual Space в WhatsApp:", copy: "Копировать", open: "Открыть WhatsApp",
+        hint: "Код личный — всё, что делает бот, происходит внутри вашего аккаунта.",
+        notSetUp: "WhatsApp-бот ещё не настроен. Ваш код готов — кнопка подключения появится, когда номер бота будет настроен.",
+        abilities: "Что умеет бот",
+        can: { new: "Создавать задачи из обычного сообщения: «Позвонить клиенту завтра, срочно»", status: "Менять статус задачи: «Я закончил отчёт»", ai: "Отвечать на вопросы о задачах и базе знаний" },
       },
       telegram: {
         activated: "Бот активирован",
