@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle, Link2, Plus } from "lucide-react";
+import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle, Link2, Plus, GripVertical, Pin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
@@ -14,6 +14,8 @@ import {
   getDocumentSignedUrl,
   extractDocumentText,
   createLinkDocument,
+  reorderDocuments,
+  togglePinDocument,
 } from "@/lib/documents.functions";
 import { listProjects } from "@/lib/projects.functions";
 import { LINK_LABEL, detectLinkKind, normalizeUrl, parseTags, type LinkKind } from "@/lib/links";
@@ -40,6 +42,8 @@ type Doc = {
   link_kind?: string | null;
   project?: string | null;
   tags?: string[] | null;
+  pinned?: boolean | null;
+  position?: number | null;
 };
 
 const TEXT_MIMES = /^(text\/|application\/(json|xml|x-yaml|yaml|javascript|typescript|sql|csv|markdown))/i;
@@ -60,6 +64,8 @@ function KnowledgeBase() {
   const remove = useServerFn(deleteDocument);
   const sign = useServerFn(getDocumentSignedUrl);
   const extract = useServerFn(extractDocumentText);
+  const reorderRemote = useServerFn(reorderDocuments);
+  const togglePinRemote = useServerFn(togglePinDocument);
 
   const [docs, setDocs] = useState<Doc[]>([]);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
@@ -68,6 +74,9 @@ function KnowledgeBase() {
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [indexing, setIndexing] = useState<Record<string, boolean>>({});
+  const [showAdd, setShowAdd] = useState(false);
+  const [armedId, setArmedId] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const createLink = useServerFn(createLinkDocument);
   const loadProjects = useServerFn(listProjects);
@@ -94,6 +103,7 @@ function KnowledgeBase() {
       const row = await createLink({ data: { teamspace_id: teamspaceId, url, name: linkName.trim() || undefined, project: project.trim() || undefined, tags: parseTags(tagsRaw) } });
       setDocs((prev) => [row as Doc, ...prev]);
       setLinkUrl(""); setLinkName("");
+      setShowAdd(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -173,6 +183,7 @@ function KnowledgeBase() {
         }
 
       }
+      setShowAdd(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("integrationsUi.docs.uploadFailed", "Upload failed"));
     } finally {
@@ -244,6 +255,58 @@ function KnowledgeBase() {
     }
   };
 
+  const orderDocs = (list: Doc[]) =>
+    [...list].sort(
+      (a, b) =>
+        (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) ||
+        (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER) ||
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+
+  const handleRowDragOver = (e: React.DragEvent, target: Doc) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    if (!dragId || target.id === dragId) return;
+    setDocs((prev) => {
+      const list = orderDocs(prev);
+      const from = list.findIndex((d) => d.id === dragId);
+      const to = list.findIndex((d) => d.id === target.id);
+      if (from < 0 || to < 0) return list;
+      if ((list[from].pinned ?? false) !== (list[to].pinned ?? false)) return list;
+      const next = [...list];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next.map((d, i) => ({ ...d, position: i + 1 }));
+    });
+  };
+
+  const handleRowDrop = async () => {
+    if (!dragId) return;
+    const ids = orderDocs(docs).map((d) => d.id);
+    setDragId(null);
+    setArmedId(null);
+    try {
+      await reorderRemote({ data: { ids } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.reorderFailed", "Could not save the new order"));
+      await refresh();
+    }
+  };
+
+  const pinDoc = async (id: string) => {
+    const target = docs.find((d) => d.id === id);
+    if (!target) return;
+    const nextPinned = !target.pinned;
+    setDocs((prev) => orderDocs(prev.map((d) => (d.id === id ? { ...d, pinned: nextPinned } : d))));
+    try {
+      await togglePinRemote({ data: { id } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.pinFailed", "Could not update the pin"));
+      await refresh();
+    }
+  };
+
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
@@ -267,6 +330,8 @@ function KnowledgeBase() {
         </div>
       </Link>
 
+      {showAdd && (
+      <>
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
         <div className="grid gap-2 sm:grid-cols-2">
           <label className="text-xs text-white/60 space-y-1">
@@ -336,6 +401,8 @@ function KnowledgeBase() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 text-sm px-3 py-2">
@@ -354,15 +421,26 @@ function KnowledgeBase() {
               </span>
             )}
           </div>
-          {docs.some((d) => (d.text_len ?? 0) === 0) && (
+          <div className="flex items-center gap-2">
+            {docs.some((d) => (d.text_len ?? 0) === 0) && (
+              <button
+                onClick={reindexAllMissing}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/15 hover:bg-primary/25 rounded-lg px-2.5 py-1.5 transition"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                {t("integrationsUi.docs.reindexAll", "Reindex unread files")}
+              </button>
+            )}
             <button
-              onClick={reindexAllMissing}
+              onClick={() => setShowAdd((v) => !v)}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/15 hover:bg-primary/25 rounded-lg px-2.5 py-1.5 transition"
             >
-              <RefreshCw className="h-3.5 w-3.5" />
-              {t("integrationsUi.docs.reindexAll", "Reindex unread files")}
+              <Plus className="h-3.5 w-3.5" />
+              {showAdd
+                ? t("integrationsUi.docs.addClose", "Close")
+                : t("integrationsUi.docs.addOpen", "Add")}
             </button>
-          )}
+          </div>
         </div>
         {loading ? (
           <div className="p-8 flex items-center justify-center text-white/50 text-sm">
@@ -375,8 +453,25 @@ function KnowledgeBase() {
           </div>
         ) : (
           <ul className="divide-y divide-white/5">
-            {docs.map((d) => (
-              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition">
+            {orderDocs(docs).map((d) => (
+              <li
+                key={d.id}
+                draggable={armedId === d.id}
+                onDragStart={(e) => { setDragId(d.id); if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", d.id); } }}
+                onDragOver={(e) => handleRowDragOver(e, d)}
+                onDrop={(e) => { e.preventDefault(); void handleRowDrop(); }}
+                onDragEnd={() => { setDragId(null); setArmedId(null); }}
+                className={`flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition ${dragId === d.id ? "opacity-40" : ""}`}
+              >
+                <span
+                  onMouseDown={() => setArmedId(d.id)}
+                  onMouseUp={() => setArmedId(null)}
+                  className="cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 shrink-0 p-0.5"
+                  aria-label={t("integrationsUi.docs.reorder", "Drag to reorder")}
+                  title={t("integrationsUi.docs.reorder", "Drag to reorder")}
+                >
+                  <GripVertical className="h-4 w-4" />
+                </span>
                 <div className="h-9 w-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
                   {d.url ? <Link2 className="h-4 w-4 text-primary" /> : <FileIcon className="h-4 w-4 text-white/60" />}
                 </div>
@@ -409,6 +504,14 @@ function KnowledgeBase() {
                     {t("integrationsUi.docs.notIndexed", "no text")}
                   </span>
                 )}
+                <button
+                  onClick={() => pinDoc(d.id)}
+                  className={`p-2 rounded-lg transition hover:bg-white/5 ${d.pinned ? "text-primary" : "text-white/50 hover:text-primary"}`}
+                  aria-label={d.pinned ? t("integrationsUi.docs.unpin", "Unpin") : t("integrationsUi.docs.pin", "Pin")}
+                  title={d.pinned ? t("integrationsUi.docs.unpin", "Unpin") : t("integrationsUi.docs.pin", "Pin")}
+                >
+                  <Pin className={`h-4 w-4 ${d.pinned ? "fill-current" : ""}`} />
+                </button>
                 <button
                   onClick={() => reindexDoc(d.id)}
                   disabled={!!indexing[d.id]}
