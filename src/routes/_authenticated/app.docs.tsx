@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle, Link2, Plus } from "lucide-react";
+import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle, Link2, Plus, GripVertical, Pin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
@@ -14,6 +14,8 @@ import {
   getDocumentSignedUrl,
   extractDocumentText,
   createLinkDocument,
+  reorderDocuments,
+  togglePinDocument,
 } from "@/lib/documents.functions";
 import { listProjects } from "@/lib/projects.functions";
 import { LINK_LABEL, detectLinkKind, normalizeUrl, parseTags, type LinkKind } from "@/lib/links";
@@ -40,6 +42,8 @@ type Doc = {
   link_kind?: string | null;
   project?: string | null;
   tags?: string[] | null;
+  pinned?: boolean | null;
+  position?: number | null;
 };
 
 const TEXT_MIMES = /^(text\/|application\/(json|xml|x-yaml|yaml|javascript|typescript|sql|csv|markdown))/i;
