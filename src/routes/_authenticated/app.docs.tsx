@@ -183,6 +183,7 @@ function KnowledgeBase() {
         }
 
       }
+      setShowAdd(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("integrationsUi.docs.uploadFailed", "Upload failed"));
     } finally {
