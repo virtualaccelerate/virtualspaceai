@@ -255,6 +255,69 @@ function KnowledgeBase() {
     }
   };
 
+  const orderDocs = (list: Doc[]) =>
+    [...list].sort(
+      (a, b) =>
+        (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) ||
+        (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER) ||
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+
+  const commitOrder = async (next: Doc[]) => {
+    const ordered = orderDocs(next);
+    setDocs(ordered);
+    try {
+      await reorderRemote({ data: { ids: ordered.map((d) => d.id) } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.reorderFailed", "Could not save the new order"));
+      await refresh();
+    }
+  };
+
+  const handleRowDragOver = (e: React.DragEvent, target: Doc) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    if (!dragId || target.id === dragId) return;
+    setDocs((prev) => {
+      const list = orderDocs(prev);
+      const from = list.findIndex((d) => d.id === dragId);
+      const to = list.findIndex((d) => d.id === target.id);
+      if (from < 0 || to < 0) return list;
+      if ((list[from].pinned ?? false) !== (list[to].pinned ?? false)) return list;
+      const next = [...list];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  const handleRowDrop = async () => {
+    if (!dragId) return;
+    const ids = orderDocs(docs).map((d) => d.id);
+    setDragId(null);
+    setArmedId(null);
+    try {
+      await reorderRemote({ data: { ids } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.reorderFailed", "Could not save the new order"));
+      await refresh();
+    }
+  };
+
+  const pinDoc = async (id: string) => {
+    const target = docs.find((d) => d.id === id);
+    if (!target) return;
+    const nextPinned = !target.pinned;
+    setDocs((prev) => orderDocs(prev.map((d) => (d.id === id ? { ...d, pinned: nextPinned } : d))));
+    try {
+      await togglePinRemote({ data: { id } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("integrationsUi.docs.pinFailed", "Could not update the pin"));
+      await refresh();
+    }
+  };
+
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
