@@ -137,10 +137,6 @@ function dueDate(value: unknown): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }
 
-function cardStatus(card: Record<string, unknown>, columnMap: Record<string, Status>): Status {
-  if (card['dueComplete'] === true) return "done";
-  return columnMap[String(card['idList'] ?? "")] ?? "backlog";
-}
 
 function priority(card: Record<string, unknown>): "low" | "medium" | "high" | "urgent" {
   const labels = Array.isArray(card['labels']) ? (card['labels'] as Record<string, unknown>[]) : [];
@@ -252,12 +248,13 @@ export async function syncTrelloSource(source: Source) {
     const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
     const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
 
-    // Trello lists become workspace columns; missing ones are created.
-    const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
-    const statusByColumn = await ensureStatusesForColumns(
-      source.teamspace_id,
-      "trello",
-      lists.map((row) => ({ id: String(row.id), name: String(row['name'] ?? "Список") })),
+    // Existing workspace columns only — the sync must never create or change statuses.
+    const { listStatuses, defaultStatusId } = await import("./task-statuses.server");
+    const existingStatuses = await listStatuses(source.teamspace_id);
+    const statusByColumn = new Map(
+      existingStatuses
+        .filter((row) => row.external_column_id)
+        .map((row) => [row.external_column_id as string, row]),
     );
     const { emitExternalTaskChange } = await import("./task-changes.server");
 
@@ -279,8 +276,9 @@ export async function syncTrelloSource(source: Source) {
       const workspaceStatus = statusByColumn.get(listId) ?? null;
       const status: Status = card['dueComplete'] === true
         ? "done"
-        : source.column_map?.[listId] ?? workspaceStatus?.base_status ?? cardStatus(card, source.column_map ?? {});
-      const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
+        : source.column_map?.[listId] ?? workspaceStatus?.base_status ?? "backlog";
+      const statusId = (workspaceStatus && workspaceStatus.base_status === status ? workspaceStatus.id : null)
+        ?? (await defaultStatusId(source.teamspace_id, status));
       const patch = {
         user_id: source.created_by,
         teamspace_id: source.teamspace_id,
