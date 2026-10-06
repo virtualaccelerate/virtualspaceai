@@ -177,7 +177,7 @@ function AuthenticatedLayout() {
   ];
 
   const showLabels = expanded || mobileOpen;
-  const railWidth = showLabels ? "w-72" : "w-[68px]";
+  const railWidth = showLabels ? "lg:w-72" : "lg:w-[68px]";
 
   const NavButton = ({ item }: { item: NavItem }) => {
     const active = !item.disabled && isActive(item.to, item.exact);
@@ -240,8 +240,12 @@ function AuthenticatedLayout() {
   return (
     <div className="min-h-screen bg-background text-foreground flex w-full">
       {/* Sidebar */}
+      <div
+        aria-hidden="true"
+        className={`hidden lg:block ${railWidth} shrink-0 transition-[width] duration-200 ${isTg ? "lg:hidden" : ""}`}
+      />
       <aside
-        className={`fixed lg:sticky top-0 z-40 h-screen ${railWidth} shrink-0 border-r border-white/10 bg-[color:var(--card)] transform transition-all duration-200 lg:translate-x-0 flex flex-col ${
+        className={`fixed inset-y-0 left-0 top-0 z-40 h-screen w-72 ${railWidth} shrink-0 border-r border-white/10 bg-[color:var(--card)] transform transition-[width,transform] duration-200 lg:translate-x-0 flex flex-col ${
           isTg ? "lg:hidden" : ""
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
