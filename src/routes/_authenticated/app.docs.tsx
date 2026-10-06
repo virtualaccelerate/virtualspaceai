@@ -64,6 +64,8 @@ function KnowledgeBase() {
   const remove = useServerFn(deleteDocument);
   const sign = useServerFn(getDocumentSignedUrl);
   const extract = useServerFn(extractDocumentText);
+  const reorderRemote = useServerFn(reorderDocuments);
+  const togglePinRemote = useServerFn(togglePinDocument);
 
   const [docs, setDocs] = useState<Doc[]>([]);
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
@@ -72,6 +74,9 @@ function KnowledgeBase() {
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [indexing, setIndexing] = useState<Record<string, boolean>>({});
+  const [showAdd, setShowAdd] = useState(false);
+  const [armedId, setArmedId] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const createLink = useServerFn(createLinkDocument);
   const loadProjects = useServerFn(listProjects);
@@ -98,6 +103,7 @@ function KnowledgeBase() {
       const row = await createLink({ data: { teamspace_id: teamspaceId, url, name: linkName.trim() || undefined, project: project.trim() || undefined, tags: parseTags(tagsRaw) } });
       setDocs((prev) => [row as Doc, ...prev]);
       setLinkUrl(""); setLinkName("");
+      setShowAdd(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
