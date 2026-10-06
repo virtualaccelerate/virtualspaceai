@@ -463,8 +463,25 @@ function KnowledgeBase() {
           </div>
         ) : (
           <ul className="divide-y divide-white/5">
-            {docs.map((d) => (
-              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition">
+            {orderDocs(docs).map((d) => (
+              <li
+                key={d.id}
+                draggable={armedId === d.id}
+                onDragStart={(e) => { setDragId(d.id); if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", d.id); } }}
+                onDragOver={(e) => handleRowDragOver(e, d)}
+                onDrop={(e) => { e.preventDefault(); void handleRowDrop(); }}
+                onDragEnd={() => { setDragId(null); setArmedId(null); }}
+                className={`flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition ${dragId === d.id ? "opacity-40" : ""}`}
+              >
+                <span
+                  onMouseDown={() => setArmedId(d.id)}
+                  onMouseUp={() => setArmedId(null)}
+                  className="cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 shrink-0 p-0.5"
+                  aria-label={t("integrationsUi.docs.reorder", "Drag to reorder")}
+                  title={t("integrationsUi.docs.reorder", "Drag to reorder")}
+                >
+                  <GripVertical className="h-4 w-4" />
+                </span>
                 <div className="h-9 w-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
                   {d.url ? <Link2 className="h-4 w-4 text-primary" /> : <FileIcon className="h-4 w-4 text-white/60" />}
                 </div>
@@ -497,6 +514,14 @@ function KnowledgeBase() {
                     {t("integrationsUi.docs.notIndexed", "no text")}
                   </span>
                 )}
+                <button
+                  onClick={() => pinDoc(d.id)}
+                  className={`p-2 rounded-lg transition hover:bg-white/5 ${d.pinned ? "text-primary" : "text-white/50 hover:text-primary"}`}
+                  aria-label={d.pinned ? t("integrationsUi.docs.unpin", "Unpin") : t("integrationsUi.docs.pin", "Pin")}
+                  title={d.pinned ? t("integrationsUi.docs.unpin", "Unpin") : t("integrationsUi.docs.pin", "Pin")}
+                >
+                  <Pin className={`h-4 w-4 ${d.pinned ? "fill-current" : ""}`} />
+                </button>
                 <button
                   onClick={() => reindexDoc(d.id)}
                   disabled={!!indexing[d.id]}
