@@ -412,6 +412,7 @@ function KnowledgeBase() {
           </div>
         </div>
       </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 text-sm px-3 py-2">
@@ -430,15 +431,26 @@ function KnowledgeBase() {
               </span>
             )}
           </div>
-          {docs.some((d) => (d.text_len ?? 0) === 0) && (
+          <div className="flex items-center gap-2">
+            {docs.some((d) => (d.text_len ?? 0) === 0) && (
+              <button
+                onClick={reindexAllMissing}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/15 hover:bg-primary/25 rounded-lg px-2.5 py-1.5 transition"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                {t("integrationsUi.docs.reindexAll", "Reindex unread files")}
+              </button>
+            )}
             <button
-              onClick={reindexAllMissing}
+              onClick={() => setShowAdd((v) => !v)}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/15 hover:bg-primary/25 rounded-lg px-2.5 py-1.5 transition"
             >
-              <RefreshCw className="h-3.5 w-3.5" />
-              {t("integrationsUi.docs.reindexAll", "Reindex unread files")}
+              <Plus className="h-3.5 w-3.5" />
+              {showAdd
+                ? t("integrationsUi.docs.addClose", "Close")
+                : t("integrationsUi.docs.addOpen", "Add")}
             </button>
-          )}
+          </div>
         </div>
         {loading ? (
           <div className="p-8 flex items-center justify-center text-white/50 text-sm">
