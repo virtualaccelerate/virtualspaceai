@@ -466,8 +466,8 @@ function TasksPage() {
   }
 
   function openEdit(task: Task) {
-    if (task.external_source === "yougile" || task.external_source === "trello") {
-      const tracker = task.external_source === "trello" ? "Trello" : "YouGile";
+    if (task.external_source === "yougile") {
+      const tracker = "YouGile";
       if (task.external_url) window.open(task.external_url, "_blank", "noreferrer");
       else toast.info(t("tasksUi.managedInTracker", "This task is managed in {{tracker}}", { tracker }));
       return;
@@ -771,7 +771,7 @@ function TasksPage() {
                             </h3>
                             {task.external_source === "yougile" && <Badge variant="outline" className="text-[9px]">YouGile</Badge>}
                             {task.external_source === "trello" && <Badge variant="outline" className="text-[9px]">Trello</Badge>}
-                            {!task.external_source && <DropdownMenu>
+                            {task.external_source !== "yougile" && <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <button
                                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition -mr-1"
@@ -1084,6 +1084,7 @@ function TasksPage() {
               <Button
                 variant="ghost"
                 className="text-rose-300 hover:text-rose-200 mr-auto"
+                disabled={editing.external_source === "trello"}
                 onClick={() => {
                   setDeleteTarget(editing);
                 }}

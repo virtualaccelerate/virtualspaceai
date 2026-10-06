@@ -385,6 +385,54 @@ export async function updateTrelloTaskStatus(taskId: string, status: Status, act
   return { ok: true, status };
 }
 
+export async function updateTrelloTask(
+  taskId: string,
+  patch: {
+    title?: string;
+    description?: string | null;
+    status?: Status;
+    assignee_id?: string | null;
+    due_date?: string | null;
+  },
+  actorId: string,
+) {
+  const admin = await db();
+  const { data: task } = await admin
+    .from("tasks")
+    .select("id, teamspace_id, external_id, external_source")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (!task?.teamspace_id || task.external_source !== "trello" || !task.external_id) {
+    throw new Error("Задача Trello не найдена");
+  }
+  await requireMember(actorId, task.teamspace_id);
+  const source = await sourceFor(task.teamspace_id);
+  if (!source) throw new Error("Trello не подключён");
+
+  const query: Record<string, string> = {};
+  if (patch.title !== undefined) query['name'] = patch.title;
+  if (patch.description !== undefined) query['desc'] = patch.description ?? "";
+  if (patch.due_date !== undefined) query['due'] = patch.due_date ? new Date(`${patch.due_date}T12:00:00.000Z`).toISOString() : "null";
+  if (patch.status !== undefined) {
+    const listId = Object.entries(source.column_map ?? {}).find(([, mapped]) => mapped === patch.status)?.[0];
+    if (!listId && patch.status !== "done") throw new Error("Для этого статуса не выбран список Trello");
+    query['dueComplete'] = patch.status === "done" ? "true" : "false";
+    if (listId) query['idList'] = listId;
+  }
+  if (patch.assignee_id !== undefined) {
+    if (!patch.assignee_id) {
+      query['idMembers'] = "";
+    } else {
+      const memberId = Object.entries(source.user_map ?? {}).find(([, mapped]) => mapped === patch.assignee_id)?.[0];
+      if (!memberId) throw new Error("Для этого участника не настроено соответствие Trello");
+      query['idMembers'] = memberId;
+    }
+  }
+  if (Object.keys(query).length) {
+    await api(credentials(source), `/cards/${encodeURIComponent(task.external_id)}`, { method: "PUT", query });
+  }
+}
+
 export async function disconnectTrelloForUser(userId: string, teamspaceId: string) {
   await requireManager(userId, teamspaceId);
   const source = await sourceFor(teamspaceId);

@@ -151,7 +151,9 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   if (!current) throw new Error("Task not found");
   {
     const { isExternalTask, externalLabel } = await import("./external-tasks.server");
-    if (isExternalTask(current.external_source)) throw new Error(`Эта задача управляется в ${externalLabel(current.external_source)}`);
+    if (isExternalTask(current.external_source) && current.external_source !== "trello") {
+      throw new Error(`Эта задача управляется в ${externalLabel(current.external_source)}`);
+    }
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
@@ -200,6 +202,16 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   if (Object.prototype.hasOwnProperty.call(data, "assignee_id")) {
     patch.assignee_name = await assigneeName(current.teamspace_id, data.assignee_id);
   }
+  if (current.external_source === "trello") {
+    const { updateTrelloTask } = await import("./trello.server");
+    await updateTrelloTask(data.id, {
+      title: data.title,
+      description: data.description,
+      status: data.status,
+      assignee_id: data.assignee_id,
+      due_date: data.due_date,
+    }, userId);
+  }
   const { data: row, error } = await db.from("tasks").update(patch).eq("id", data.id).select("*").single();
   if (error) throw new Error(error.message);
   await track(userId, current.teamspace_id, "Задачи: изменение", { taskId: row.id });
@@ -223,8 +235,10 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
       tracker: externalLabel(row.external_source) || null,
     }).catch(() => {});
   }
-  const { syncTaskToGoogleTasks } = await import("./google-calendar.server");
-  await syncTaskToGoogleTasks(row, current.assignee_id ?? current.user_id).catch(() => {});
+  if (!row.external_source) {
+    const { syncTaskToGoogleTasks } = await import("./google-calendar.server");
+    await syncTaskToGoogleTasks(row, current.assignee_id ?? current.user_id).catch(() => {});
+  }
   return row;
 }
 

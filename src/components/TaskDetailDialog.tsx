@@ -157,7 +157,7 @@ export function TaskDetailDialog({
               {t("tasksUi.detail.openTracker", "Open in {{tracker}}", { tracker: tracker ?? "tracker" })}
             </Button>
           )}
-          {task && !tracker && onEdit && (
+          {task && tracker !== "YouGile" && onEdit && (
             <Button onClick={() => onEdit(task.id)}>
               <Pencil className="h-4 w-4" />
               {t("tasksUi.detail.edit", "Edit")}
