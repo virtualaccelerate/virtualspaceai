@@ -466,8 +466,8 @@ function TasksPage() {
   }
 
   function openEdit(task: Task) {
-    if (task.external_source === "yougile" || task.external_source === "trello") {
-      const tracker = task.external_source === "trello" ? "Trello" : "YouGile";
+    if (task.external_source === "yougile") {
+      const tracker = "YouGile";
       if (task.external_url) window.open(task.external_url, "_blank", "noreferrer");
       else toast.info(t("tasksUi.managedInTracker", "This task is managed in {{tracker}}", { tracker }));
       return;
@@ -541,7 +541,7 @@ function TasksPage() {
   async function moveTask(id: string, status: TaskStatus) {
     const task = tasks.find((t) => t.id === id);
     if (!task || task.status === status) return;
-    if (task.external_source === "yougile" || task.external_source === "trello") return toast.info(t("tasksUi.changeStatusElsewhere", "Change the status in {{tracker}} or Telegram", { tracker: task.external_source === "trello" ? "Trello" : "YouGile" }));
+    if (task.external_source === "yougile") return toast.info(t("tasksUi.changeStatusElsewhere", "Change the status in {{tracker}} or Telegram", { tracker: "YouGile" }));
     const position = (grouped[status]?.length ?? 0) * 1000;
     const prev = tasks;
     setTasks((p) => p.map((t) => (t.id === id ? { ...t, status, position } : t)));
@@ -751,7 +751,7 @@ function TasksPage() {
                       return (
                         <article
                           key={task.id}
-                          draggable={!task.external_source}
+                          draggable={task.external_source !== "yougile"}
                           onDragStart={() => setDragId(task.id)}
                           onDragEnd={() => {
                             setDragId(null);
@@ -771,7 +771,7 @@ function TasksPage() {
                             </h3>
                             {task.external_source === "yougile" && <Badge variant="outline" className="text-[9px]">YouGile</Badge>}
                             {task.external_source === "trello" && <Badge variant="outline" className="text-[9px]">Trello</Badge>}
-                            {!task.external_source && <DropdownMenu>
+                            {task.external_source !== "yougile" && <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <button
                                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition -mr-1"
@@ -1009,6 +1009,7 @@ function TasksPage() {
                 <Label>{t("tasksUi.fPriority", "Priority")}</Label>
                 <Select
                   value={draft.priority}
+                  disabled={editing?.external_source === "trello"}
                   onValueChange={(v) => setDraft((d) => ({ ...d, priority: v as TaskPriority }))}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1044,6 +1045,7 @@ function TasksPage() {
                 <Label>{t("tasksUi.fProject", "Project")}</Label>
                 <Select
                   value={draft.project || "none"}
+                  disabled={editing?.external_source === "trello"}
                   onValueChange={(v) => setDraft((d) => {
                     if (v === "none") return { ...d, project: "" };
                     const opt = projectOptions.find((p) => p.name === v);
@@ -1064,8 +1066,8 @@ function TasksPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="task-tags">{t("tasksUi.fTags", "Tags")}</Label>
-                <Input id="task-tags" value={draft.tags} onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))} placeholder="#marketing #osh" />
-                {projectOptions.length > 0 && (
+                <Input id="task-tags" value={draft.tags} disabled={editing?.external_source === "trello"} onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))} placeholder="#marketing #osh" />
+                {editing?.external_source !== "trello" && projectOptions.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {projectOptions.slice(0, 8).map((p) => (
                       <button key={p.tag} type="button" onClick={() => setDraft((d) => {
@@ -1084,6 +1086,7 @@ function TasksPage() {
               <Button
                 variant="ghost"
                 className="text-rose-300 hover:text-rose-200 mr-auto"
+                disabled={editing.external_source === "trello"}
                 onClick={() => {
                   setDeleteTarget(editing);
                 }}
