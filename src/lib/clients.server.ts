@@ -110,10 +110,26 @@ export async function upsertClient(teamspaceId: string, c: Extracted, taskId?: s
 /** Called after a task is created/updated. Cheap regex gate before any AI call. */
 export async function syncClientsFromTask(taskId: string) {
   const db = await admin();
-  const { data: t } = await db.from("tasks").select("id, title, description, teamspace_id, project").eq("id", taskId).maybeSingle();
+  const { data: t } = await db.from("tasks").select("id, title, description, teamspace_id, project, status, status_id").eq("id", taskId).maybeSingle();
   if (!t?.teamspace_id) return { found: 0 };
+  // Mirror the Task Tracker column (incl. Trello/YouGile-mirrored columns) onto linked clients.
+  let statusName: string | null = t.status ?? null;
+  if (t.status_id) {
+    const { data: s } = await db.from("teamspace_statuses").select("name").eq("id", t.status_id).maybeSingle();
+    if (s?.name) statusName = s.name;
+  }
+  let statusChanged = false;
+  if (statusName) {
+    const { data: linked } = await db.from("clients").update({ status: statusName })
+      .eq("teamspace_id", t.teamspace_id).contains("source_task_ids", [t.id])
+      .or(`status.is.null,status.neq.${JSON.stringify(statusName)}`).select("id");
+    statusChanged = (linked?.length ?? 0) > 0;
+  }
   const text = `${t.title}\n${t.description ?? ""}`;
-  if (!hasClientSignals(text)) return { found: 0 };
+  if (!hasClientSignals(text)) {
+    if (statusChanged) await syncSheet(t.teamspace_id).catch(() => {});
+    return { found: 0 };
+  }
   const { data: mem } = await db.from("teamspace_members").select("user_id").eq("teamspace_id", t.teamspace_id);
   const { data: profs } = await db.from("profiles").select("email").in("id", (mem ?? []).map((m) => m.user_id));
   const teamEmails = (profs ?? []).map((p) => (p.email ?? "").toLowerCase()).filter(Boolean);
