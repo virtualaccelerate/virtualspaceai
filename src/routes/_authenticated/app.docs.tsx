@@ -264,6 +264,7 @@ function KnowledgeBase() {
     );
 
   const handleRowDragOver = (e: React.DragEvent, target: Doc) => {
+    console.log("DBG dragover", { dragId, target: target.id });
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     if (!dragId || target.id === dragId) return;
