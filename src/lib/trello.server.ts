@@ -137,10 +137,6 @@ function dueDate(value: unknown): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }
 
-function cardStatus(card: Record<string, unknown>, columnMap: Record<string, Status>): Status {
-  if (card['dueComplete'] === true) return "done";
-  return columnMap[String(card['idList'] ?? "")] ?? "backlog";
-}
 
 function priority(card: Record<string, unknown>): "low" | "medium" | "high" | "urgent" {
   const labels = Array.isArray(card['labels']) ? (card['labels'] as Record<string, unknown>[]) : [];
