@@ -263,17 +263,6 @@ function KnowledgeBase() {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
-  const commitOrder = async (next: Doc[]) => {
-    const ordered = orderDocs(next);
-    setDocs(ordered);
-    try {
-      await reorderRemote({ data: { ids: ordered.map((d) => d.id) } });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("integrationsUi.docs.reorderFailed", "Could not save the new order"));
-      await refresh();
-    }
-  };
-
   const handleRowDragOver = (e: React.DragEvent, target: Doc) => {
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
@@ -287,6 +276,7 @@ function KnowledgeBase() {
       const next = [...list];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
+      next.forEach((d, i) => { d.position = i + 1; });
       return next;
     });
   };
