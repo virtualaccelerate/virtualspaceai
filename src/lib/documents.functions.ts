@@ -93,9 +93,11 @@ export const listDocuments = createServerFn({ method: "GET" })
     const { data: rows, error } = await context.supabase
       .from("documents")
       .select(
-        "id, name, storage_path, mime_type, size_bytes, created_at, user_id, extract_status, extract_error, url, link_kind, project, tags",
+        "id, name, storage_path, mime_type, size_bytes, created_at, user_id, extract_status, extract_error, url, link_kind, project, tags, pinned, position",
       )
       .eq("teamspace_id", data.teamspace_id)
+      .order("pinned", { ascending: false })
+      .order("position", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -106,6 +108,41 @@ export const listDocuments = createServerFn({ method: "GET" })
       ((stats ?? []) as { id: string; text_len: number }[]).map((s) => [s.id, s.text_len]),
     );
     return (rows ?? []).map((r) => ({ ...r, text_len: lenById.get(r.id) ?? 0 }));
+  });
+
+export const reorderDocuments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    for (let i = 0; i < data.ids.length; i++) {
+      const { error } = await context.supabase
+        .from("documents")
+        .update({ position: i + 1 })
+        .eq("id", data.ids[i]);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const togglePinDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const { data: doc, error: fetchErr } = await context.supabase
+      .from("documents")
+      .select("id, pinned")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (fetchErr) throw new Error(fetchErr.message);
+    if (!doc) throw new Error("Document not found");
+    const { error } = await context.supabase
+      .from("documents")
+      .update({ pinned: !doc.pinned })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true, pinned: !doc.pinned };
   });
 
 
