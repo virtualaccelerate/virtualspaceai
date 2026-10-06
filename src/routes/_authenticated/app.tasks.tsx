@@ -541,7 +541,7 @@ function TasksPage() {
   async function moveTask(id: string, status: TaskStatus) {
     const task = tasks.find((t) => t.id === id);
     if (!task || task.status === status) return;
-    if (task.external_source === "yougile" || task.external_source === "trello") return toast.info(t("tasksUi.changeStatusElsewhere", "Change the status in {{tracker}} or Telegram", { tracker: task.external_source === "trello" ? "Trello" : "YouGile" }));
+    if (task.external_source === "yougile") return toast.info(t("tasksUi.changeStatusElsewhere", "Change the status in {{tracker}} or Telegram", { tracker: "YouGile" }));
     const position = (grouped[status]?.length ?? 0) * 1000;
     const prev = tasks;
     setTasks((p) => p.map((t) => (t.id === id ? { ...t, status, position } : t)));
@@ -751,7 +751,7 @@ function TasksPage() {
                       return (
                         <article
                           key={task.id}
-                          draggable={!task.external_source}
+                          draggable={task.external_source !== "yougile"}
                           onDragStart={() => setDragId(task.id)}
                           onDragEnd={() => {
                             setDragId(null);

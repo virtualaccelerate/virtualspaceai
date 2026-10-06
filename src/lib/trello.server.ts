@@ -410,11 +410,25 @@ export async function updateTrelloTask(
   if (!source) throw new Error("Trello не подключён");
 
   const query: Record<string, string> = {};
+  let localStatus: { id: string; name: string; external_column_id: string | null } | null = null;
   if (patch.title !== undefined) query['name'] = patch.title;
   if (patch.description !== undefined) query['desc'] = patch.description ?? "";
   if (patch.due_date !== undefined) query['due'] = patch.due_date ? new Date(`${patch.due_date}T12:00:00.000Z`).toISOString() : "null";
   if (patch.status !== undefined) {
-    const listId = Object.entries(source.column_map ?? {}).find(([, mapped]) => mapped === patch.status)?.[0];
+    const mappedListId = Object.entries(source.column_map ?? {}).find(([, mapped]) => mapped === patch.status)?.[0];
+    const statusQuery = admin
+      .from("teamspace_statuses")
+      .select("id, name, external_column_id")
+      .eq("teamspace_id", task.teamspace_id)
+      .eq("source", "trello")
+      .eq("base_status", patch.status)
+      .order("position")
+      .limit(1);
+    const { data: statusRow } = mappedListId
+      ? await statusQuery.eq("external_column_id", mappedListId).maybeSingle()
+      : await statusQuery.maybeSingle();
+    localStatus = statusRow ?? null;
+    const listId = mappedListId ?? localStatus?.external_column_id ?? undefined;
     if (!listId && patch.status !== "done") throw new Error("Для этого статуса не выбран список Trello");
     query['dueComplete'] = patch.status === "done" ? "true" : "false";
     if (listId) query['idList'] = listId;
@@ -431,6 +445,7 @@ export async function updateTrelloTask(
   if (Object.keys(query).length) {
     await api(credentials(source), `/cards/${encodeURIComponent(task.external_id)}`, { method: "PUT", query });
   }
+  return localStatus;
 }
 
 export async function disconnectTrelloForUser(userId: string, teamspaceId: string) {
