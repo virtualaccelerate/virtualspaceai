@@ -143,8 +143,9 @@ export async function syncClientsFromTask(taskId: string) {
   for (const c of list) {
     const r = await upsertClient(t.teamspace_id, c, t.id);
     if (r?.changed) changed++;
+    if (r?.id && statusName) await db.from("clients").update({ status: statusName }).eq("id", r.id);
   }
-  if (changed) await syncSheet(t.teamspace_id).catch(() => {});
+  if (changed || statusChanged) await syncSheet(t.teamspace_id).catch(() => {});
   return { found: list.length, changed };
 }
 
