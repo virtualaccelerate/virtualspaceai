@@ -272,6 +272,7 @@ function KnowledgeBase() {
       const list = orderDocs(prev);
       const from = list.findIndex((d) => d.id === dragId);
       const to = list.findIndex((d) => d.id === target.id);
+      console.log("DBG inner", { dragId, targetId: target.id, from, to, pinned: [list[from].pinned, list[to].pinned] });
       if (from < 0 || to < 0) return list;
       if ((list[from].pinned ?? false) !== (list[to].pinned ?? false)) return list;
       const next = [...list];
