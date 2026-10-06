@@ -377,7 +377,6 @@ function KnowledgeBase() {
         )}
       </div>
 
-      {showAdd && (
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
