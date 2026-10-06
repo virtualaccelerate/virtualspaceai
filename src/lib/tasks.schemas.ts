@@ -21,8 +21,8 @@ export const CreateTaskSchema = z.object({
 
 export const UpdateTaskSchema = z.object({
   id: z.string().uuid(),
-  title: z.string().trim().min(1).max(300).optional(),
-  description: z.string().max(4000).optional().nullable(),
+  title: z.string().trim().min(1).max(500).optional(),
+  description: z.string().max(10000).optional().nullable(),
   status: TaskStatusSchema.optional(),
   priority: TaskPrioritySchema.optional(),
   assignee_id: z.string().uuid().optional().nullable(),
