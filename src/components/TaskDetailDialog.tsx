@@ -152,7 +152,7 @@ export function TaskDetailDialog({
 
         <DialogFooter className="gap-2">
           {task?.external_url && (
-            <Button variant="outline" onClick={() => window.open(task.external_url!, "_blank", "noreferrer")}>
+            <Button variant="outline" onClick={() => window.open(task.external_url ?? "", "_blank", "noreferrer")}>
               <ExternalLink className="h-4 w-4" />
               {t("tasksUi.detail.openTracker", "Open in {{tracker}}", { tracker: tracker ?? "tracker" })}
             </Button>

@@ -1009,6 +1009,7 @@ function TasksPage() {
                 <Label>{t("tasksUi.fPriority", "Priority")}</Label>
                 <Select
                   value={draft.priority}
+                  disabled={editing?.external_source === "trello"}
                   onValueChange={(v) => setDraft((d) => ({ ...d, priority: v as TaskPriority }))}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1044,6 +1045,7 @@ function TasksPage() {
                 <Label>{t("tasksUi.fProject", "Project")}</Label>
                 <Select
                   value={draft.project || "none"}
+                  disabled={editing?.external_source === "trello"}
                   onValueChange={(v) => setDraft((d) => {
                     if (v === "none") return { ...d, project: "" };
                     const opt = projectOptions.find((p) => p.name === v);
@@ -1064,8 +1066,8 @@ function TasksPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="task-tags">{t("tasksUi.fTags", "Tags")}</Label>
-                <Input id="task-tags" value={draft.tags} onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))} placeholder="#marketing #osh" />
-                {projectOptions.length > 0 && (
+                <Input id="task-tags" value={draft.tags} disabled={editing?.external_source === "trello"} onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))} placeholder="#marketing #osh" />
+                {editing?.external_source !== "trello" && projectOptions.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {projectOptions.slice(0, 8).map((p) => (
                       <button key={p.tag} type="button" onClick={() => setDraft((d) => {
