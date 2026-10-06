@@ -280,8 +280,9 @@ export async function syncTrelloSource(source: Source) {
       const workspaceStatus = statusByColumn.get(listId) ?? null;
       const status: Status = card['dueComplete'] === true
         ? "done"
-        : source.column_map?.[listId] ?? workspaceStatus?.base_status ?? cardStatus(card, source.column_map ?? {});
-      const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
+        : source.column_map?.[listId] ?? workspaceStatus?.base_status ?? "backlog";
+      const statusId = (workspaceStatus && workspaceStatus.base_status === status ? workspaceStatus.id : null)
+        ?? (await defaultStatusId(source.teamspace_id, status));
       const patch = {
         user_id: source.created_by,
         teamspace_id: source.teamspace_id,
