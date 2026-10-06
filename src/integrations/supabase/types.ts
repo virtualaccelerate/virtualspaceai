@@ -561,6 +561,8 @@ export type Database = {
           link_kind: string | null
           mime_type: string | null
           name: string
+          pinned: boolean
+          position: number | null
           project: string | null
           size_bytes: number | null
           storage_path: string
@@ -579,6 +581,8 @@ export type Database = {
           link_kind?: string | null
           mime_type?: string | null
           name: string
+          pinned?: boolean
+          position?: number | null
           project?: string | null
           size_bytes?: number | null
           storage_path: string
@@ -597,6 +601,8 @@ export type Database = {
           link_kind?: string | null
           mime_type?: string | null
           name?: string
+          pinned?: boolean
+          position?: number | null
           project?: string | null
           size_bytes?: number | null
           storage_path?: string
