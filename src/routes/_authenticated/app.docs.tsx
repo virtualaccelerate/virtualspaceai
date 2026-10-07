@@ -14,6 +14,7 @@ import {
   getDocumentSignedUrl,
   extractDocumentText,
   createLinkDocument,
+  getLinkDocumentTitle,
   reorderDocuments,
   togglePinDocument,
 } from "@/lib/documents.functions";
@@ -79,6 +80,7 @@ function KnowledgeBase() {
   const [dragId, setDragId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const createLink = useServerFn(createLinkDocument);
+  const getLinkTitle = useServerFn(getLinkDocumentTitle);
   const loadProjects = useServerFn(listProjects);
   const [projectNames, setProjectNames] = useState<string[]>([]);
   const [project, setProject] = useState("");
@@ -86,6 +88,21 @@ function KnowledgeBase() {
   const [linkUrl, setLinkUrl] = useState("");
   const [linkName, setLinkName] = useState("");
   const [addingLink, setAddingLink] = useState(false);
+  const linkTitleRequest = useRef(0);
+
+  useEffect(() => {
+    const url = normalizeUrl(linkUrl);
+    if (!url || linkName.trim()) return;
+    const request = ++linkTitleRequest.current;
+    const timeout = window.setTimeout(() => {
+      getLinkTitle({ data: { url } })
+        .then(({ title }) => {
+          if (request === linkTitleRequest.current && title) setLinkName((current) => current || title);
+        })
+        .catch(() => {});
+    }, 500);
+    return () => window.clearTimeout(timeout);
+  }, [linkUrl]);
 
   useEffect(() => {
     loadProjects({ data: {} })
