@@ -201,7 +201,12 @@ function ProgramPage() {
                 </button>
               ))}
             </div>
-            <Input value={mTitle} onChange={(e) => setMTitle(e.target.value)} placeholder={t("workspaceUi.onboarding.mTitle", "Название материала")} />
+            <div className="relative">
+              <Input value={mTitle} onChange={(e) => setMTitle(e.target.value)} placeholder={t("workspaceUi.onboarding.mTitle", "Название материала")} className={mTitleLoading ? "pr-9" : undefined} />
+              {mTitleLoading && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[color:var(--muted-foreground)]" />
+              )}
+            </div>
             {kind !== "text" ? (
               <Input
                 value={mUrl}
