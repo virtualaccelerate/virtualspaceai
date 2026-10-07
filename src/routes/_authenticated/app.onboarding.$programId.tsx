@@ -101,6 +101,27 @@ function ProgramPage() {
     void (async () => setTeamspaceId((await getActiveTeamspaceId()) ?? undefined))();
   }, []);
 
+  useEffect(() => {
+    const url = mUrl.trim();
+    if (kind === "text" || !url || mTitle.trim()) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setMTitleLoading(true);
+      try {
+        const title = await fetchLinkTitle({ data: { url } });
+        if (!cancelled && title) setMTitle((cur) => (cur.trim() ? cur : title));
+      } catch {
+        // ignore — title stays manual
+      } finally {
+        if (!cancelled) setMTitleLoading(false);
+      }
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [mUrl, kind, mTitle, fetchLinkTitle]);
+
   const key = ["onboarding", "program", programId];
   const { data, isLoading } = useQuery({ queryKey: key, queryFn: () => load({ data: { program_id: programId } }) });
   const { data: team } = useQuery({
