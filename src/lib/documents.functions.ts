@@ -84,6 +84,14 @@ export const createLinkDocument = createServerFn({ method: "POST" })
     return { ...row, text_len: text.length };
   });
 
+export const getLinkDocumentTitle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ url: z.string().url().max(2000) }).parse(raw))
+  .handler(async ({ data }) => {
+    const { fetchWebpageTitle } = await import("./documents-extract.server");
+    return { title: await fetchWebpageTitle(data.url) };
+  });
+
 export const listDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) =>

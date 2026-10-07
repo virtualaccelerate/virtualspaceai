@@ -160,6 +160,29 @@ export async function fetchWebpageText(url: string): Promise<string | null> {
   }
 }
 
+/** Read the public page title for pre-filling a linked document name. */
+export async function fetchWebpageTitle(url: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; VirtualSpaceBot/1.0; +https://ai-virtualspace.com)" },
+    }).finally(() => clearTimeout(timeout));
+    if (!res.ok) return null;
+
+    const html = (await res.text()).slice(0, 500_000);
+    const metaTitle = html.match(/<meta\s+(?:[^>]*?\s)?property=["']og:title["'][^>]*?content=["']([^"']+)["'][^>]*>/i)?.[1]
+      ?? html.match(/<meta\s+(?:[^>]*?\s)?content=["']([^"']+)["'][^>]*?property=["']og:title["'][^>]*>/i)?.[1];
+    const htmlTitle = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+    const title = decodeXmlEntities(metaTitle ?? htmlTitle ?? "").replace(/\s+/g, " ").trim();
+    return title ? title.slice(0, 300) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Convert every workbook sheet to readable CSV while preserving displayed values. */
 export async function extractSpreadsheetText(bytes: Uint8Array) {
   const XLSX = await import("xlsx");
