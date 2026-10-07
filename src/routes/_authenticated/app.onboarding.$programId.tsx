@@ -25,6 +25,7 @@ import {
   setOnboardingScore,
   unassignOnboarding,
 } from "@/lib/onboarding.functions";
+import { getLinkDocumentTitle } from "@/lib/documents.functions";
 
 export const Route = createFileRoute("/_authenticated/app/onboarding/$programId")({
   component: ProgramPage,
@@ -87,6 +88,8 @@ function ProgramPage() {
   const [kind, setKind] = useState<MaterialKind>("video");
   const [mTitle, setMTitle] = useState("");
   const [mUrl, setMUrl] = useState("");
+  const [mTitleLoading, setMTitleLoading] = useState(false);
+  const fetchLinkTitle = useServerFn(getLinkDocumentTitle);
   const [mText, setMText] = useState("");
   const [stepTitle, setStepTitle] = useState("");
   const [itemDrafts, setItemDrafts] = useState<Record<string, string>>({});
@@ -97,6 +100,28 @@ function ProgramPage() {
   useEffect(() => {
     void (async () => setTeamspaceId((await getActiveTeamspaceId()) ?? undefined))();
   }, []);
+
+  useEffect(() => {
+    const url = mUrl.trim();
+    if (kind === "text" || !url || mTitle.trim()) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setMTitleLoading(true);
+      try {
+        const res = await fetchLinkTitle({ data: { url } });
+        const title = typeof res === "string" ? res : res?.title;
+        if (!cancelled && title) setMTitle((cur) => (cur.trim() ? cur : title));
+      } catch {
+        // ignore — title stays manual
+      } finally {
+        if (!cancelled) setMTitleLoading(false);
+      }
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [mUrl, kind, mTitle, fetchLinkTitle]);
 
   const key = ["onboarding", "program", programId];
   const { data, isLoading } = useQuery({ queryKey: key, queryFn: () => load({ data: { program_id: programId } }) });
@@ -177,7 +202,12 @@ function ProgramPage() {
                 </button>
               ))}
             </div>
-            <Input value={mTitle} onChange={(e) => setMTitle(e.target.value)} placeholder={t("workspaceUi.onboarding.mTitle", "Название материала")} />
+            <div className="relative">
+              <Input value={mTitle} onChange={(e) => setMTitle(e.target.value)} placeholder={t("workspaceUi.onboarding.mTitle", "Название материала")} className={mTitleLoading ? "pr-9" : undefined} />
+              {mTitleLoading && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[color:var(--muted-foreground)]" />
+              )}
+            </div>
             {kind !== "text" ? (
               <Input
                 value={mUrl}
