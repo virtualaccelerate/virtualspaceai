@@ -25,6 +25,7 @@ import {
   setOnboardingScore,
   unassignOnboarding,
 } from "@/lib/onboarding.functions";
+import { getLinkDocumentTitle } from "@/lib/documents.functions";
 
 export const Route = createFileRoute("/_authenticated/app/onboarding/$programId")({
   component: ProgramPage,
@@ -87,6 +88,8 @@ function ProgramPage() {
   const [kind, setKind] = useState<MaterialKind>("video");
   const [mTitle, setMTitle] = useState("");
   const [mUrl, setMUrl] = useState("");
+  const [mTitleLoading, setMTitleLoading] = useState(false);
+  const fetchLinkTitle = useServerFn(getLinkDocumentTitle);
   const [mText, setMText] = useState("");
   const [stepTitle, setStepTitle] = useState("");
   const [itemDrafts, setItemDrafts] = useState<Record<string, string>>({});
