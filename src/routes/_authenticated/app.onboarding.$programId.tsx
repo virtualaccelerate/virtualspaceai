@@ -108,7 +108,8 @@ function ProgramPage() {
     const timer = setTimeout(async () => {
       setMTitleLoading(true);
       try {
-        const title = await fetchLinkTitle({ data: { url } });
+        const res = await fetchLinkTitle({ data: { url } });
+        const title = typeof res === "string" ? res : res?.title;
         if (!cancelled && title) setMTitle((cur) => (cur.trim() ? cur : title));
       } catch {
         // ignore — title stays manual
