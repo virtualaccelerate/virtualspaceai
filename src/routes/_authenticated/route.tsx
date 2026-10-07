@@ -5,7 +5,7 @@ import {
   Bot, Users, Search, Settings,
   ChevronDown, UserPlus, Copy, Check, Sparkles,
   MessageSquare, PanelLeftClose, PanelLeftOpen, Send as SendIcon, MessageCircle,
-  Plus, FileText, KanbanSquare, FolderKanban, History, TrendingUp, Plug, GraduationCap, HelpCircle,
+  Plus, FileText, KanbanSquare, FolderKanban, TrendingUp, Plug, GraduationCap, HelpCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -153,7 +153,6 @@ function AuthenticatedLayout() {
     { to: "/app/clients", label: t("app.nav.clientDb", "Client Database"), icon: Users },
     { to: "/app/tasks", label: t("app.nav.taskBoard", "Task Board"), subtitle: t("app.nav.taskBoardSubtitle", "Team tasks & deadlines"), icon: KanbanSquare },
     { to: "/app/projects", label: t("app.nav.projects", "Projects"), subtitle: t("app.nav.projectsSubtitle", "Sources, progress & sync"), icon: FolderKanban },
-    { to: "/app/activity", label: t("app.nav.activity", "Лента событий"), subtitle: t("app.nav.activitySubtitle", "Что происходит с задачами"), icon: History },
     { to: "/app/onboarding", label: t("app.nav.onboarding", "Onboarding & Training"), subtitle: t("app.nav.onboardingSubtitle", "Programs, checklists & progress"), icon: GraduationCap },
 
     { to: "/app/agents", label: t("app.nav.aiAgents"), subtitle: t("app.nav.aiAgentsSubtitle", "Automated assistants"), icon: Bot },
