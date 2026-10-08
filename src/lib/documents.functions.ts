@@ -77,8 +77,9 @@ export const createLinkDocument = createServerFn({ method: "POST" })
         extracted_text: text,
         extract_status: extractStatus,
         extract_error: extractStatus === "failed" ? "Не удалось прочитать содержимое страницы (сайт недоступен или блокирует автоматический доступ)." : null,
+        position: await topPosition(context.supabase, data.teamspace_id),
       })
-      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id, url, link_kind, project, tags, extract_status")
+      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id, url, link_kind, project, tags, extract_status, pinned, position")
       .single();
     if (error) throw new Error(error.message);
     return { ...row, text_len: text.length };
@@ -154,6 +155,11 @@ export const togglePinDocument = createServerFn({ method: "POST" })
   });
 
 
+async function topPosition(supabase: any, teamspaceId: string) {
+  const { data } = await supabase.from("documents").select("position").eq("teamspace_id", teamspaceId).not("position", "is", null).order("position", { ascending: true }).limit(1).maybeSingle();
+  return typeof data?.position === "number" ? data.position - 1 : 0;
+}
+
 export const createDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => CreateSchema.parse(raw))
@@ -170,8 +176,9 @@ export const createDocument = createServerFn({ method: "POST" })
         extracted_text: data.extracted_text ?? null,
         project: data.project?.trim() || null,
         tags: data.tags ?? [],
+        position: await topPosition(context.supabase, data.teamspace_id),
       })
-      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id, url, link_kind, project, tags")
+      .select("id, name, storage_path, mime_type, size_bytes, created_at, user_id, url, link_kind, project, tags, pinned, position")
       .single();
     if (error) throw new Error(error.message);
     return row;
