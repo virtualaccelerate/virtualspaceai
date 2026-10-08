@@ -397,7 +397,7 @@ export async function updateTrelloTask(
   const admin = await db();
   const { data: task } = await admin
     .from("tasks")
-    .select("id, teamspace_id, external_id, external_source")
+    .select("id, teamspace_id, external_id, external_source, status, assignee_id")
     .eq("id", taskId)
     .maybeSingle();
   if (!task?.teamspace_id || task.external_source !== "trello" || !task.external_id) {
@@ -412,6 +412,8 @@ export async function updateTrelloTask(
   if (patch.title !== undefined) query['name'] = patch.title;
   if (patch.description !== undefined) query['desc'] = patch.description ?? "";
   if (patch.due_date !== undefined) query['due'] = patch.due_date ? new Date(`${patch.due_date}T12:00:00.000Z`).toISOString() : "null";
+  if (patch.status !== undefined && patch.status === task.status) delete patch.status;
+  if (patch.assignee_id !== undefined && (patch.assignee_id ?? null) === (task.assignee_id ?? null)) delete patch.assignee_id;
   if (patch.status !== undefined) {
     const mappedListId = Object.entries(source.column_map ?? {}).find(([, mapped]) => mapped === patch.status)?.[0];
     const statusQuery = admin

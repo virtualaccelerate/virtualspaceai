@@ -119,6 +119,8 @@ function eventBody(task: TaskRow) {
 }
 export async function syncTaskToCalendar(task: TaskRow, previousUserId?: string | null) {
   if (task.external_source) return;
+  // Retire legacy calendar events for this task — it now lives in Google Tasks only.
+  await deleteTaskCalendarEvent(task.id).catch(() => {});
   const targetUserId = task.assignee_id ?? task.user_id;
   const db = await admin();
   if (previousUserId && previousUserId !== targetUserId) await deleteTaskCalendarEvent(task.id, previousUserId).catch(() => {});
@@ -207,6 +209,7 @@ export async function syncTaskToGoogleTasks(task: TaskRow, previousUserId?: stri
   }
 }
 export async function deleteGoogleTask(taskId: string, onlyUserId?: string | null) {
+  await deleteTaskCalendarEvent(taskId, onlyUserId).catch(() => {});
   const db = await admin();
   let query = db.from("google_tasks_links").select("id,user_id,google_task_id").eq("task_id", taskId);
   if (onlyUserId) query = query.eq("user_id", onlyUserId);
