@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated users can read demo requests" ON public.demo_requests;
