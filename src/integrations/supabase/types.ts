@@ -1218,6 +1218,102 @@ export type Database = {
           },
         ]
       }
+      onboarding_quiz_attempts: {
+        Row: {
+          answers: Json
+          assignment_id: string
+          created_at: string
+          id: string
+          score: number
+          teamspace_id: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          assignment_id: string
+          created_at?: string
+          id?: string
+          score?: number
+          teamspace_id: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          score?: number
+          teamspace_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_quiz_attempts_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_quiz_attempts_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_quiz_questions: {
+        Row: {
+          correct_index: number
+          created_at: string
+          explanation: string | null
+          id: string
+          options: Json
+          position: number
+          program_id: string
+          question: string
+          teamspace_id: string
+        }
+        Insert: {
+          correct_index?: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          position?: number
+          program_id: string
+          question: string
+          teamspace_id: string
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          position?: number
+          program_id?: string
+          question?: string
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_quiz_questions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_quiz_questions_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_steps: {
         Row: {
           created_at: string

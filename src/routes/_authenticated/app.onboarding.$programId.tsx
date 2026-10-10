@@ -26,6 +26,7 @@ import {
   unassignOnboarding,
 } from "@/lib/onboarding.functions";
 import { getLinkDocumentTitle } from "@/lib/documents.functions";
+import { OnboardingQuiz } from "@/components/OnboardingQuiz";
 
 export const Route = createFileRoute("/_authenticated/app/onboarding/$programId")({
   component: ProgramPage,
@@ -387,6 +388,8 @@ function ProgramPage() {
           </div>
         ))}
       </section>
+
+      <OnboardingQuiz programId={program.id} onSubmitted={refresh} />
 
       {/* ---------- people ---------- */}
       {isManager && (

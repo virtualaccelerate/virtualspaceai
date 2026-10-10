@@ -202,3 +202,40 @@ export const generateOnboarding = createServerFn({ method: "POST" })
     const m = await import("./onboarding.server");
     return m.generateProgramForUser(context.userId, data);
   });
+
+export const generateQuiz = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ program_id: uuid }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const m = await import("./onboarding.server");
+    return m.generateQuizForUser(context.userId, data.program_id);
+  });
+
+export const getQuiz = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ program_id: uuid }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const m = await import("./onboarding.server");
+    return (await m.getQuizForUser(context.userId, data.program_id)) as any;
+  });
+
+export const submitQuiz = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({
+      assignment_id: uuid,
+      answers: z.array(z.object({ question_id: uuid, answer_index: z.number().int().min(-1).max(10) })).max(20),
+    }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const m = await import("./onboarding.server");
+    return (await m.submitQuizForUser(context.userId, data)) as any;
+  });
+
+export const deleteQuizQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ question_id: uuid }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const m = await import("./onboarding.server");
+    return m.deleteQuizQuestionForUser(context.userId, data.question_id);
+  });
