@@ -412,7 +412,7 @@ function ProgramPage() {
         ))}
       </section>
 
-      <OnboardingQuiz programId={program.id} materials={materials} onSubmitted={refresh} />
+      <OnboardingQuiz programId={program.id} materials={materials.filter((m) => m.kind === "text" || m.kind === "file" || m.kind === "link")} onSubmitted={refresh} />
 
       {/* ---------- people ---------- */}
       {isManager && (
