@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/app/onboarding/$programId"
   }),
 });
 
-type MaterialKind = "video" | "image" | "link" | "text";
+type MaterialKind = "video" | "image" | "link" | "text" | "file";
 
 function MaterialView({ material }: { material: any }) {
   const embed = material.url ? videoEmbedUrl(material.url) : null;
@@ -92,6 +92,7 @@ function ProgramPage() {
   const [mTitleLoading, setMTitleLoading] = useState(false);
   const fetchLinkTitle = useServerFn(getLinkDocumentTitle);
   const [mText, setMText] = useState("");
+  const [mFile, setMFile] = useState<File | null>(null);
   const [stepTitle, setStepTitle] = useState("");
   const [itemDrafts, setItemDrafts] = useState<Record<string, string>>({});
   const [prompt, setPrompt] = useState("");
@@ -104,7 +105,7 @@ function ProgramPage() {
 
   useEffect(() => {
     const url = mUrl.trim();
-    if (kind === "text" || !url || mTitle.trim()) return;
+    if (kind === "text" || kind === "file" || !url || mTitle.trim()) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
       setMTitleLoading(true);
@@ -190,7 +191,7 @@ function ProgramPage() {
         {isManager && (
           <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-4 space-y-3">
             <div className="flex flex-wrap gap-2">
-              {(["video", "image", "link", "text"] as MaterialKind[]).map((k) => (
+              {(["video", "image", "link", "text", "file"] as MaterialKind[]).map((k) => (
                 <button
                   key={k}
                   onClick={() => setKind(k)}
@@ -199,6 +200,7 @@ function ProgramPage() {
                   {k === "video" ? t("workspaceUi.onboarding.kindVideo", "Видео") :
                     k === "image" ? t("workspaceUi.onboarding.kindImage", "Фото") :
                     k === "link" ? t("workspaceUi.onboarding.kindLink", "Ссылка") :
+                    k === "file" ? t("workspaceUi.onboarding.kindFile", "Файл") :
                     t("workspaceUi.onboarding.kindText", "Инструкция")}
                 </button>
               ))}
@@ -209,7 +211,17 @@ function ProgramPage() {
                 <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[color:var(--muted-foreground)]" />
               )}
             </div>
-            {kind !== "text" ? (
+            {kind === "file" ? (
+              <Input
+                type="file"
+                accept=".pdf,.docx,.pptx,.xlsx,.txt"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setMFile(f);
+                  if (f && !mTitle.trim()) setMTitle(f.name.replace(/\.[^.]+$/, ""));
+                }}
+              />
+            ) : kind !== "text" ? (
               <Input
                 value={mUrl}
                 onChange={(e) => setMUrl(e.target.value)}
@@ -220,9 +232,20 @@ function ProgramPage() {
             )}
             <Button
               size="sm"
-              disabled={busy === "material" || !mTitle.trim() || (kind === "text" ? !mText.trim() : !mUrl.trim())}
+              disabled={busy === "material" || !mTitle.trim() || (kind === "text" ? !mText.trim() : kind === "file" ? !mFile : !mUrl.trim())}
               onClick={() =>
                 run("material", async () => {
+                  if (kind === "file") {
+                    if (!mFile) return;
+                    if (mFile.size > 25 * 1024 * 1024) throw new Error(t("workspaceUi.onboarding.fileTooBig", "Файл больше 25 МБ"));
+                    const { supabase } = await import("@/integrations/supabase/client");
+                    const path = `${program.teamspace_id}/onboarding/${crypto.randomUUID()}-${mFile.name.replace(/[^\w.\- ]/g, "_")}`;
+                    const { error: upErr } = await supabase.storage.from("documents").upload(path, mFile, { contentType: mFile.type || undefined, upsert: false });
+                    if (upErr) throw new Error(upErr.message);
+                    await addMaterial({ data: { program_id: programId, kind, title: mTitle.trim(), url: path, content: null, mime_type: mFile.type || null, file_name: mFile.name } });
+                    setMTitle(""); setMFile(null);
+                    return;
+                  }
                   await addMaterial({
                     data: {
                       program_id: programId,
@@ -389,7 +412,7 @@ function ProgramPage() {
         ))}
       </section>
 
-      <OnboardingQuiz programId={program.id} onSubmitted={refresh} />
+      <OnboardingQuiz programId={program.id} materials={materials} onSubmitted={refresh} />
 
       {/* ---------- people ---------- */}
       {isManager && (

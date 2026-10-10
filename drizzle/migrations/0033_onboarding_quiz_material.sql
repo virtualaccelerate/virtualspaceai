@@ -1,0 +1,2 @@
+ALTER TABLE public.onboarding_quiz_questions ADD COLUMN material_id uuid REFERENCES public.onboarding_materials(id) ON DELETE CASCADE;
+CREATE INDEX onboarding_quiz_questions_material_idx ON public.onboarding_quiz_questions(material_id);

@@ -232,6 +232,13 @@
       "when": 1791592612320,
       "tag": "0032_onboarding_quiz",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791594403433,
+      "tag": "0033_onboarding_quiz_material",
+      "breakpoints": true
     }
   ]
 }

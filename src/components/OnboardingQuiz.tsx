@@ -9,7 +9,7 @@ import { deleteQuizQuestion, generateQuiz, getQuiz, submitQuiz } from "@/lib/onb
 
 type Result = { question_id: string; question: string; options: string[]; answer_index: number; correct_index: number; correct: boolean; explanation: string | null };
 
-export function OnboardingQuiz({ programId, onSubmitted }: { programId: string; onSubmitted?: () => void }) {
+export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { programId: string; materials?: { id: string; title: string }[]; onSubmitted?: () => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const load = useServerFn(getQuiz);
@@ -19,6 +19,8 @@ export function OnboardingQuiz({ programId, onSubmitted }: { programId: string; 
   const key = ["onboarding-quiz", programId];
   const { data, isLoading } = useQuery({ queryKey: key, queryFn: () => load({ data: { program_id: programId } }) });
   const [busy, setBusy] = useState<string | null>(null);
+  const [scope, setScope] = useState("");
+  const [count, setCount] = useState(7);
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -37,22 +39,35 @@ export function OnboardingQuiz({ programId, onSubmitted }: { programId: string; 
   if (data.is_manager) {
     return (
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">{t("workspaceUi.quiz.title", "Тест")}</h2>
+          <div className="flex flex-wrap items-center gap-2">
+          <select value={scope} onChange={(e) => setScope(e.target.value)} className="h-9 rounded-md border border-[color:var(--border)] bg-[color:var(--background)] px-2 text-sm">
+            <option value="">{t("workspaceUi.quiz.allProgram", "Вся программа")}</option>
+            {materials.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
+          </select>
+          <label className="flex items-center gap-1 text-sm text-[color:var(--muted-foreground)]">
+            {t("workspaceUi.quiz.count", "Вопросов")}
+            <input type="number" min={3} max={30} value={count} onChange={(e) => setCount(Math.min(30, Math.max(3, Number(e.target.value) || 7)))} className="h-9 w-16 rounded-md border border-[color:var(--border)] bg-[color:var(--background)] px-2 text-sm" />
+          </label>
           <Button size="sm" disabled={busy === "gen"} onClick={() => run("gen", async () => {
-            const r = await gen({ data: { program_id: programId } });
+            const r = await gen({ data: { program_id: programId, material_id: scope || null, count } });
             toast.success(`${t("workspaceUi.quiz.generated", "Вопросов создано")}: ${r.count}`);
             await refresh();
           })}>
             {busy === "gen" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {questions.length ? t("workspaceUi.quiz.regenerate", "Пересоздать тест") : t("workspaceUi.quiz.generate", "Сгенерировать тест")}
+            {t("workspaceUi.quiz.generate", "Сгенерировать тест")}
           </Button>
+          </div>
         </div>
         {!questions.length && <p className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.quiz.empty", "Теста пока нет. AI составит вопросы по материалам и этапам.")}</p>}
         {questions.map((q, i) => (
           <div key={q.id} className={`${card} space-y-2`}>
             <div className="flex items-start gap-2">
-              <div className="flex-1 font-medium">{i + 1}. {q.question}</div>
+              <div className="flex-1 font-medium">
+                {i + 1}. {q.question}
+                {q.material_id && <div className="text-xs font-normal text-[color:var(--muted-foreground)]">{materials.find((m) => m.id === q.material_id)?.title}</div>}
+              </div>
               <Button size="icon" variant="ghost" disabled={busy === q.id} onClick={() => run(q.id, async () => { await drop({ data: { question_id: q.id } }); await refresh(); })}>
                 <Trash2 className="h-4 w-4" />
               </Button>
