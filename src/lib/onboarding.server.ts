@@ -8,8 +8,8 @@
  * Server-only.
  */
 
-export type MaterialKind = "video" | "image" | "link" | "text";
-export const MATERIAL_KINDS: MaterialKind[] = ["video", "image", "link", "text"];
+export type MaterialKind = "video" | "image" | "link" | "text" | "file";
+export const MATERIAL_KINDS: MaterialKind[] = ["video", "image", "link", "text", "file"];
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -263,11 +263,21 @@ export async function deleteProgramForUser(userId: string, programId: string) {
 
 export async function addMaterialForUser(
   userId: string,
-  input: { program_id: string; kind: MaterialKind; title: string; url?: string | null; content?: string | null },
+  input: { program_id: string; kind: MaterialKind; title: string; url?: string | null; content?: string | null; mime_type?: string | null; file_name?: string | null },
 ) {
   const program = await programOf(userId, input.program_id);
   await requireManager(userId, program.teamspace_id);
   const db = await admin();
+  if (input.kind === "file") {
+    const path = input.url ?? "";
+    if (!path.startsWith(`${program.teamspace_id}/`)) throw new Error("Неверный путь файла");
+    const { data: blob, error: dlErr } = await db.storage.from("documents").download(path);
+    if (dlErr || !blob) throw new Error(dlErr?.message || "Не удалось скачать файл");
+    const { extractFileText } = await import("./documents-extract.server");
+    const text = (await extractFileText(new Uint8Array(await blob.arrayBuffer()), input.file_name || path, input.mime_type)).trim();
+    if (!text) throw new Error("В файле нет текста");
+    input = { ...input, content: text.slice(0, 180_000) };
+  }
   const { count } = await db
     .from("onboarding_materials").select("id", { count: "exact", head: true }).eq("program_id", program.id);
   const { data, error } = await db
@@ -614,7 +624,8 @@ function cleanOptions(v: unknown): string[] {
   return Array.isArray(v) ? v.map((o) => String(o ?? "").trim()).filter(Boolean).slice(0, 6) : [];
 }
 
-export async function generateQuizForUser(userId: string, programId: string) {
+export async function generateQuizForUser(userId: string, programId: string, opts: { material_id?: string | null; count?: number } = {}) {
+  const count = Math.min(30, Math.max(3, Math.round(opts.count ?? 7)));
   const program = await programOf(userId, programId);
   await requireManager(userId, program.teamspace_id);
   const db = await admin();
@@ -623,7 +634,7 @@ export async function generateQuizForUser(userId: string, programId: string) {
     db.from("onboarding_steps").select("id, title, description").eq("program_id", programId).order("position"),
     db.from("onboarding_items").select("step_id, title").eq("program_id", programId).order("position"),
   ]);
-  const context = [
+  let context = [
     `Обучение: ${program.title}`,
     program.description ? `Описание: ${program.description}` : "",
     "Материалы:",
@@ -631,11 +642,24 @@ export async function generateQuizForUser(userId: string, programId: string) {
     "Этапы:",
     ...(steps ?? []).map((s) => `- ${s.title}${s.description ? `: ${s.description}` : ""}\n${(items ?? []).filter((i) => i.step_id === s.id).map((i) => `  • ${i.title}`).join("\n")}`),
   ].filter(Boolean).join("\n").slice(0, 20000);
+  const materialId = opts.material_id ?? null;
+  if (materialId) {
+    const { data: mat } = await db.from("onboarding_materials").select("*").eq("id", materialId).eq("program_id", programId).maybeSingle();
+    if (!mat) throw new Error("Материал не найден");
+    let body = "";
+    if (mat.kind === "text" || mat.kind === "file") body = mat.content ?? "";
+    else if (mat.kind === "link" && mat.url) {
+      const { fetchWebpageText } = await import("./documents-extract.server");
+      body = (await fetchWebpageText(mat.url).catch(() => null)) ?? "";
+    } else if (mat.kind === "video") body = mat.content ? `${mat.title}\n${mat.content}` : "";
+    if (!body.trim()) throw new Error("В этом материале нет текста для составления теста");
+    context = `Материал: ${mat.title}\n\n${body}`.slice(0, 40000);
+  }
   const system =
     "Ты методолог по онбордингу. По материалам и этапам составь тест на проверку знаний. " +
     "Ответь ТОЛЬКО валидным JSON без markdown: " +
     '{"questions":[{"question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"почему это верно"}]}. ' +
-    "От 5 до 10 вопросов, у каждого 3-4 варианта и ровно один верный. Вопросы только по содержанию материалов. Пиши на языке материалов.";
+    `Ровно ${count} вопросов, у каждого 3-4 варианта и ровно один верный. Вопросы только по содержанию материалов. Пиши на языке материалов.`;
   const generated = (await askAi(system, context)) as unknown as { questions?: any[] };
   const rows = (generated.questions ?? [])
     .map((q, i) => {
@@ -649,12 +673,17 @@ export async function generateQuizForUser(userId: string, programId: string) {
         correct_index: Number.isInteger(correct) && correct >= 0 && correct < options.length ? correct : -1,
         explanation: q?.explanation ? String(q.explanation).slice(0, 2000) : null,
         position: i,
+        material_id: materialId,
       };
     })
     .filter((q) => q.question && q.options.length >= 2 && q.correct_index >= 0)
-    .slice(0, 10);
+    .slice(0, count);
   if (rows.length < 1) throw new Error("AI не смог составить тест — добавьте больше материалов");
-  await db.from("onboarding_quiz_questions").delete().eq("program_id", programId);
+  const del = db.from("onboarding_quiz_questions").delete().eq("program_id", programId);
+  await (materialId ? del.eq("material_id", materialId) : del.is("material_id", null));
+  const { data: rest } = await db.from("onboarding_quiz_questions").select("position").eq("program_id", programId).order("position", { ascending: false }).limit(1).maybeSingle();
+  const base = (rest?.position ?? -1) + 1;
+  rows.forEach((r, i) => { r.position = base + i; });
   const { error } = await db.from("onboarding_quiz_questions").insert(rows);
   if (error) throw new Error(error.message);
   return { ok: true, count: rows.length };
@@ -669,7 +698,7 @@ export async function getQuizForUser(userId: string, programId: string) {
     id: q.id,
     question: q.question,
     options: cleanOptions(q.options),
-    ...(isManager ? { correct_index: q.correct_index, explanation: q.explanation } : {}),
+    ...(isManager ? { material_id: (q as any).material_id ?? null, correct_index: q.correct_index, explanation: q.explanation } : {}),
   }));
   const { data: assignment } = await db.from("onboarding_assignments").select("id, score").eq("program_id", programId).eq("user_id", userId).maybeSingle();
   let last: { score: number; created_at: string } | null = null;

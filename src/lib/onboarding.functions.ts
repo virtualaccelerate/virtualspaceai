@@ -77,7 +77,9 @@ export const addOnboardingMaterial = createServerFn({ method: "POST" })
     z
       .object({
         program_id: uuid,
-        kind: z.enum(["video", "image", "link", "text"]),
+        kind: z.enum(["video", "image", "link", "text", "file"]),
+        mime_type: z.string().max(200).nullish(),
+        file_name: z.string().max(300).nullish(),
         title: z.string().trim().min(1).max(200),
         url: z.string().max(2000).nullish(),
         content: z.string().max(20000).nullish(),
@@ -205,10 +207,12 @@ export const generateOnboarding = createServerFn({ method: "POST" })
 
 export const generateQuiz = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => z.object({ program_id: uuid }).parse(raw))
+  .inputValidator((raw: unknown) =>
+    z.object({ program_id: uuid, material_id: uuid.nullish(), count: z.number().int().min(3).max(30).default(7) }).parse(raw),
+  )
   .handler(async ({ data, context }) => {
     const m = await import("./onboarding.server");
-    return m.generateQuizForUser(context.userId, data.program_id);
+    return m.generateQuizForUser(context.userId, data.program_id, { material_id: data.material_id ?? null, count: data.count });
   });
 
 export const getQuiz = createServerFn({ method: "POST" })

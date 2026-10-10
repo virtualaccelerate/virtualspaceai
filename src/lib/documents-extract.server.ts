@@ -247,3 +247,41 @@ export async function callGateway(key: string, body: unknown, attempt = 0): Prom
 
 export const EXTRACT_SYSTEM_PROMPT =
   "You are a precise document text extractor. Output ONLY the document's text, verbatim, in its original language. Preserve reading order, headings, lists and table rows (tables as pipe-separated rows). Never summarize, never translate, never add commentary. If a part is unreadable, write [нечитаемо].";
+
+/** Extracts text from an uploaded file (txt / xlsx / pptx / docx / pdf) with the same helpers as the knowledge base. */
+export async function extractFileText(bytes: Uint8Array, name: string, mimeType?: string | null): Promise<string> {
+  const mime = (mimeType || "").toLowerCase();
+  if (TEXT_MIME.test(mime) || TEXT_EXT.test(name)) return new TextDecoder().decode(bytes).slice(0, 180_000);
+  if (SPREADSHEET_MIME.test(mime) || SPREADSHEET_EXT.test(name)) return extractSpreadsheetText(bytes);
+  if (/\.pptx$/i.test(name) || /presentationml/i.test(mime)) return extractPresentationText(bytes);
+  if (/\.docx$/i.test(name) || /wordprocessingml/i.test(mime)) {
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(bytes);
+    const xml = (await zip.file("word/document.xml")?.async("string")) ?? "";
+    return xml
+      .split(/<\/w:p>/)
+      .map((p) => [...p.matchAll(/<w:t[^>]*>([^<]*)<\/w:t>/g)].map((m) => decodeXmlEntities(m[1] ?? "")).join(""))
+      .filter((l) => l.trim())
+      .join("\n")
+      .slice(0, 180_000);
+  }
+  if (mime === "application/pdf" || /\.pdf$/i.test(name)) {
+    if (bytes.byteLength > 15 * 1024 * 1024) throw new Error("Файл больше 15 МБ — разделите его на части.");
+    const key = process.env["LOVABLE_API_KEY"];
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const dataUrl = `data:application/pdf;base64,${toBase64(bytes)}`;
+    return (
+      await callGateway(key, {
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: EXTRACT_SYSTEM_PROMPT },
+          { role: "user", content: [
+            { type: "file", file: { filename: name, file_data: dataUrl } },
+            { type: "text", text: "Extract ALL text from this document from the very beginning to the very end." },
+          ] },
+        ],
+      })
+    ).trim();
+  }
+  throw new Error("Формат не поддерживается (PDF, DOCX, PPTX, XLSX, TXT)");
+}
