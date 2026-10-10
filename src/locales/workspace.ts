@@ -3,7 +3,7 @@ import type { GroupResources } from "./merge";
 const bundle: GroupResources = {
   en: {
     workspaceUi: {
-      quiz: { title: "Quiz", generate: "Generate quiz", regenerate: "Regenerate quiz", generated: "Questions created", empty: "No quiz yet. AI will write questions from the materials and stages.", correct: "Correct answers", rightAnswer: "Correct answer", retry: "Take again", questions: "Questions", lastScore: "Last score", start: "Start quiz", back: "Back", next: "Next", finish: "Finish" },
+      quiz: { title: "Quiz", generate: "Generate quiz", regenerate: "Regenerate quiz", generated: "Questions created", empty: "No quiz yet. AI will write questions from the materials and stages.", correct: "Correct answers", rightAnswer: "Correct answer", retry: "Take again", questions: "Questions", lastScore: "Last score", start: "Start quiz", back: "Back", next: "Next", finish: "Finish", allProgram: "Whole program", count: "Questions" },
       common: { loading: "Loading…", save: "Save" },
       import: { unassigned: "Unassigned" },
       overview: {
@@ -100,7 +100,7 @@ const bundle: GroupResources = {
   },
   ru: {
     workspaceUi: {
-      quiz: { title: "Тест", generate: "Сгенерировать тест", regenerate: "Пересоздать тест", generated: "Вопросов создано", empty: "Теста пока нет. AI составит вопросы по материалам и этапам.", correct: "Верных ответов", rightAnswer: "Правильный ответ", retry: "Пройти ещё раз", questions: "Вопросов", lastScore: "Последний результат", start: "Начать тест", back: "Назад", next: "Далее", finish: "Завершить" },
+      quiz: { title: "Тест", generate: "Сгенерировать тест", regenerate: "Пересоздать тест", generated: "Вопросов создано", empty: "Теста пока нет. AI составит вопросы по материалам и этапам.", correct: "Верных ответов", rightAnswer: "Правильный ответ", retry: "Пройти ещё раз", questions: "Вопросов", lastScore: "Последний результат", start: "Начать тест", back: "Назад", next: "Далее", finish: "Завершить", allProgram: "Вся программа", count: "Вопросов" },
       common: { loading: "Загрузка…", save: "Сохранить" },
       import: { unassigned: "Без исполнителя" },
       overview: {
