@@ -1269,6 +1269,7 @@ export type Database = {
           created_at: string
           explanation: string | null
           id: string
+          material_id: string | null
           options: Json
           position: number
           program_id: string
@@ -1280,6 +1281,7 @@ export type Database = {
           created_at?: string
           explanation?: string | null
           id?: string
+          material_id?: string | null
           options?: Json
           position?: number
           program_id: string
@@ -1291,6 +1293,7 @@ export type Database = {
           created_at?: string
           explanation?: string | null
           id?: string
+          material_id?: string | null
           options?: Json
           position?: number
           program_id?: string
@@ -1298,6 +1301,13 @@ export type Database = {
           teamspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "onboarding_quiz_questions_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_materials"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "onboarding_quiz_questions_program_id_fkey"
             columns: ["program_id"]
