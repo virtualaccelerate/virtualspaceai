@@ -60,7 +60,7 @@ function MaterialView({ material }: { material: any }) {
   if (material.kind === "image" && material.url) {
     return <img src={material.url} alt={material.title} loading="lazy" className="max-h-80 w-full rounded-lg object-contain bg-[color:var(--muted)]" />;
   }
-  if (material.kind === "text") {
+  if (material.kind === "text" || material.kind === "file") {
     return <p className="whitespace-pre-wrap text-sm text-[color:var(--muted-foreground)]">{material.content}</p>;
   }
   return null;
