@@ -17,6 +17,15 @@ export const Route = createFileRoute("/_authenticated/app/whatsapp")({
   }),
 });
 
+function InProgressPill() {
+  const { t } = useTranslation();
+  return (
+    <span className="text-[9px] uppercase tracking-wider text-amber-600 dark:text-amber-300 border border-amber-500/30 rounded-full px-1.5 py-0.5">
+      {t("integrationsUi.whatsapp.inProgress", "On process")}
+    </span>
+  );
+}
+
 function WhatsAppPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -54,9 +63,12 @@ function WhatsAppPage() {
           <MessageCircle className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="font-display text-2xl sm:text-3xl text-white">
-            {t("integrationsUi.whatsapp.title", "WhatsApp bot")}
-          </h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-2xl sm:text-3xl text-white">
+              {t("integrationsUi.whatsapp.title", "WhatsApp bot")}
+            </h1>
+            {!WHATSAPP_BOT_READY && <InProgressPill />}
+          </div>
           <p className="mt-1.5 text-sm text-white/60 max-w-2xl">
             {t("integrationsUi.whatsapp.subtitle", "Create tasks, change statuses and ask the AI assistant right from WhatsApp.")}
           </p>
@@ -89,7 +101,7 @@ function WhatsAppPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {data?.waLink ? (
+            {WHATSAPP_BOT_READY && data?.waLink ? (
               <p className="text-sm text-white/70">
                 {t("integrationsUi.whatsapp.howto", "Send this code to the Virtual Space number in WhatsApp:")}
               </p>
@@ -109,7 +121,7 @@ function WhatsAppPage() {
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 {t("integrationsUi.whatsapp.copy", "Copy")}
               </button>
-              {data?.waLink ? (
+              {WHATSAPP_BOT_READY && data?.waLink ? (
                 <a
                   href={data.waLink}
                   target="_blank"
@@ -119,7 +131,18 @@ function WhatsAppPage() {
                   <MessageCircle className="h-3.5 w-3.5" />
                   {t("integrationsUi.whatsapp.open", "Open WhatsApp")}
                 </a>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  aria-disabled
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-xs font-medium text-white/40 cursor-not-allowed"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  {t("integrationsUi.whatsapp.open", "Open WhatsApp")}
+                  {!WHATSAPP_BOT_READY && <InProgressPill />}
+                </button>
+              )}
             </div>
             <p className="text-xs text-white/40">
               {t("integrationsUi.whatsapp.hint", "The code is personal — everything the bot does happens inside your account.")}
