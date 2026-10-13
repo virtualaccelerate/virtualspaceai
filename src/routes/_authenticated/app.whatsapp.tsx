@@ -7,6 +7,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { getWhatsAppStatus, unlinkWhatsApp } from "@/lib/whatsapp.functions";
 
+/** Flip to true once the bot is tested: the label disappears and the button becomes clickable. */
+const WHATSAPP_BOT_READY = false;
+
 export const Route = createFileRoute("/_authenticated/app/whatsapp")({
   component: WhatsAppPage,
   head: () => ({
