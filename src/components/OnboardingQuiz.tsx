@@ -5,9 +5,10 @@ import { useTranslation } from "react-i18next";
 import { Check, Loader2, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { deleteQuizQuestion, generateQuiz, getQuiz, submitQuiz } from "@/lib/onboarding.functions";
+import { checkQuizAnswer, deleteQuizQuestion, generateQuiz, getQuiz, submitQuiz } from "@/lib/onboarding.functions";
 
-type Result = { question_id: string; question: string; options: string[]; answer_index: number; correct_index: number; correct: boolean; explanation: string | null };
+type Result = { question_id: string; question: string; options: string[]; answer_indexes: number[]; correct_indexes: number[]; correct: boolean; explanation: string | null };
+type Feedback = { correct: boolean; correct_indexes: number[]; explanation: string | null };
 
 export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { programId: string; materials?: { id: string; title: string }[]; onSubmitted?: () => void }) {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
   const gen = useServerFn(generateQuiz);
   const drop = useServerFn(deleteQuizQuestion);
   const submit = useServerFn(submitQuiz);
+  const check = useServerFn(checkQuizAnswer);
   const key = ["onboarding-quiz", programId];
   const { data, isLoading } = useQuery({ queryKey: key, queryFn: () => load({ data: { program_id: programId } }) });
   const [busy, setBusy] = useState<string | null>(null);
@@ -23,7 +25,8 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
   const [count, setCount] = useState(7);
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<string, number[]>>({});
+  const [feedback, setFeedback] = useState<Record<string, Feedback>>({});
   const [result, setResult] = useState<{ score: number; results: Result[] } | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: key });
 
@@ -73,11 +76,14 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
               </Button>
             </div>
             <ul className="space-y-1 text-sm">
-              {q.options.map((o: string, j: number) => (
-                <li key={j} className={j === q.correct_index ? "text-primary font-medium" : "text-[color:var(--muted-foreground)]"}>
-                  {j === q.correct_index ? "✓ " : "• "}{o}
-                </li>
-              ))}
+              {q.options.map((o: string, j: number) => {
+                const ok = (q.correct_indexes?.length ? q.correct_indexes : [q.correct_index]).includes(j);
+                return (
+                  <li key={j} className={ok ? "text-primary font-medium" : "text-[color:var(--muted-foreground)]"}>
+                    {ok ? "✓ " : "• "}{o}
+                  </li>
+                );
+              })}
             </ul>
             {q.explanation && <p className="text-xs text-[color:var(--muted-foreground)]">{q.explanation}</p>}
           </div>
@@ -106,13 +112,13 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
             </div>
             {!r.correct && (
               <div className="text-sm">
-                <span className="text-[color:var(--muted-foreground)]">{t("workspaceUi.quiz.rightAnswer", "Правильный ответ")}: </span>{r.options[r.correct_index]}
+                <span className="text-[color:var(--muted-foreground)]">{t("workspaceUi.quiz.rightAnswer", "Правильный ответ")}: </span>{r.correct_indexes.map((k) => r.options[k]).join("; ")}
               </div>
             )}
             {r.explanation && <p className="text-xs text-[color:var(--muted-foreground)]">{r.explanation}</p>}
           </div>
         ))}
-        <Button variant="outline" onClick={() => { setResult(null); setAnswers({}); setStep(0); setStarted(true); }}>
+        <Button variant="outline" onClick={() => { setResult(null); setAnswers({}); setFeedback({}); setStep(0); setStarted(true); }}>
           {t("workspaceUi.quiz.retry", "Пройти ещё раз")}
         </Button>
       </section>
@@ -136,26 +142,57 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
 
   const q = questions[step];
   const last = step === questions.length - 1;
-  const chosen = answers[q.id];
+  const chosen: number[] = answers[q.id] ?? [];
+  const fb = feedback[q.id];
+  const toggle = (j: number) => setAnswers((p) => {
+    const cur = p[q.id] ?? [];
+    return { ...p, [q.id]: cur.includes(j) ? cur.filter((x) => x !== j) : [...cur, j] };
+  });
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">{t("workspaceUi.quiz.title", "Тест")}</h2>
       <div className={`${card} space-y-3`}>
         <div className="text-xs text-[color:var(--muted-foreground)]">{step + 1} / {questions.length}</div>
         <div className="font-medium">{q.question}</div>
+        {q.multiple && <div className="text-xs text-[color:var(--muted-foreground)]">{t("workspaceUi.quiz.selectAll", "Выберите все верные")}</div>}
         <div className="grid gap-2">
-          {q.options.map((o: string, j: number) => (
-            <button key={j} type="button" onClick={() => setAnswers((p) => ({ ...p, [q.id]: j }))}
-              className={`rounded-lg border px-3 py-2 text-left text-sm ${chosen === j ? "border-primary bg-primary/10 text-primary" : "border-[color:var(--border)]"}`}>
-              {o}
-            </button>
-          ))}
+          {q.options.map((o: string, j: number) => {
+            const on = chosen.includes(j);
+            let cls = on ? "border-primary bg-primary/10 text-primary" : "border-[color:var(--border)]";
+            if (fb) {
+              if (fb.correct_indexes.includes(j)) cls = "border-[color:var(--success,theme(colors.green.600))] bg-[color:var(--success,theme(colors.green.600))]/10 text-[color:var(--success,theme(colors.green.600))]";
+              else if (on) cls = "border-destructive bg-destructive/10 text-destructive";
+              else cls = "border-[color:var(--border)] opacity-60";
+            }
+            return (
+              <label key={j} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${fb ? "" : "cursor-pointer"} ${cls}`}>
+                <input type="checkbox" className="h-4 w-4 accent-[color:var(--primary)]" checked={on} disabled={!!fb} onChange={() => toggle(j)} />
+                <span>{o}</span>
+              </label>
+            );
+          })}
         </div>
+        {fb && (
+          <div className="space-y-1 text-sm">
+            <div className={`flex items-center gap-1 font-medium ${fb.correct ? "text-primary" : "text-destructive"}`}>
+              {fb.correct ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+              {fb.correct ? t("workspaceUi.quiz.isCorrect", "Верно") : t("workspaceUi.quiz.isWrong", "Неверно")}
+            </div>
+            {fb.explanation && <p className="text-xs text-[color:var(--muted-foreground)]">{fb.explanation}</p>}
+          </div>
+        )}
         <div className="flex justify-between gap-2">
           <Button variant="ghost" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>{t("workspaceUi.quiz.back", "Назад")}</Button>
-          {last ? (
-            <Button disabled={chosen === undefined || busy === "submit"} onClick={() => run("submit", async () => {
-              const r = await submit({ data: { assignment_id: data.assignment_id, answers: questions.map((x) => ({ question_id: x.id, answer_index: answers[x.id] ?? -1 })) } });
+          {!fb ? (
+            <Button disabled={!chosen.length || busy === "check"} onClick={() => run("check", async () => {
+              const r = await check({ data: { assignment_id: data.assignment_id, question_id: q.id, answer_indexes: chosen } });
+              setFeedback((p) => ({ ...p, [q.id]: r }));
+            })}>
+              {busy === "check" && <Loader2 className="h-4 w-4 animate-spin" />}{t("workspaceUi.quiz.confirm", "Подтвердить")}
+            </Button>
+          ) : last ? (
+            <Button disabled={busy === "submit"} onClick={() => run("submit", async () => {
+              const r = await submit({ data: { assignment_id: data.assignment_id, answers: questions.map((x) => ({ question_id: x.id, answer_indexes: answers[x.id] ?? [] })) } });
               setResult(r);
               setStarted(false);
               await refresh();
@@ -164,7 +201,7 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
               {busy === "submit" && <Loader2 className="h-4 w-4 animate-spin" />}{t("workspaceUi.quiz.finish", "Завершить")}
             </Button>
           ) : (
-            <Button disabled={chosen === undefined} onClick={() => setStep((s) => s + 1)}>{t("workspaceUi.quiz.next", "Далее")}</Button>
+            <Button onClick={() => setStep((s) => s + 1)}>{t("workspaceUi.quiz.next", "Далее")}</Button>
           )}
         </div>
       </div>
