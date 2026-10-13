@@ -79,7 +79,7 @@ const bundle: GroupResources = {
       },
       whatsapp: {
         title: "WhatsApp bot", subtitle: "Create tasks, change statuses and ask the AI assistant right from WhatsApp.",
-        loading: "Loading…", connected: "Connected", disconnect: "Disconnect", unlinked: "WhatsApp disconnected",
+        loading: "Loading…", connected: "Connected", disconnect: "Disconnect", unlinked: "WhatsApp disconnected", inProgress: "On process",
         howto: "Send this code to the Virtual Space number in WhatsApp:", copy: "Copy", open: "Open WhatsApp",
         hint: "The code is personal — everything the bot does happens inside your account.",
         notSetUp: "The WhatsApp bot is not set up yet. Your code is ready — the connect button will appear once the bot number is configured.",
@@ -263,7 +263,7 @@ const bundle: GroupResources = {
       },
       whatsapp: {
         title: "WhatsApp-бот", subtitle: "Создавайте задачи, меняйте статусы и спрашивайте AI-ассистента прямо в WhatsApp.",
-        loading: "Загрузка…", connected: "Подключено", disconnect: "Отключить", unlinked: "WhatsApp отключён",
+        loading: "Загрузка…", connected: "Подключено", disconnect: "Отключить", unlinked: "WhatsApp отключён", inProgress: "В процессе",
         howto: "Отправьте этот код на номер Virtual Space в WhatsApp:", copy: "Копировать", open: "Открыть WhatsApp",
         hint: "Код личный — всё, что делает бот, происходит внутри вашего аккаунта.",
         notSetUp: "WhatsApp-бот ещё не настроен. Ваш код готов — кнопка подключения появится, когда номер бота будет настроен.",
