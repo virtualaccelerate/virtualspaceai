@@ -160,7 +160,7 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
             const on = chosen.includes(j);
             let cls = on ? "border-primary bg-primary/10 text-primary" : "border-[color:var(--border)]";
             if (fb) {
-              if (fb.correct_indexes.includes(j)) cls = "border-[color:var(--success,theme(colors.green.600))] bg-[color:var(--success,theme(colors.green.600))]/10 text-[color:var(--success,theme(colors.green.600))]";
+              if (fb.correct_indexes.includes(j)) cls = "border-[color:var(--quiz-correct)] bg-[color:var(--quiz-correct)]/10 text-[color:var(--quiz-correct)]";
               else if (on) cls = "border-destructive bg-destructive/10 text-destructive";
               else cls = "border-[color:var(--border)] opacity-60";
             }
