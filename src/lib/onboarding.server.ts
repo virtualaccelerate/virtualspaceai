@@ -675,7 +675,7 @@ export async function generateQuizForUser(userId: string, programId: string, opt
     .map((q, i) => {
       const options = cleanOptions(q?.options);
       const raw = Array.isArray(q?.correct_indexes) ? q.correct_indexes : [q?.correct_index];
-      const set = [...new Set(raw.map(Number).filter((n: number) => Number.isInteger(n) && n >= 0 && n < options.length))].sort((x, y) => x - y) as number[];
+      const set = [...new Set((raw as unknown[]).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < options.length))].sort((x, y) => x - y);
       return {
         program_id: programId,
         teamspace_id: program.teamspace_id,
