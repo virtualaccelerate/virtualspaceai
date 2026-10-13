@@ -1,0 +1,2 @@
+ALTER TABLE public.onboarding_quiz_questions ADD COLUMN IF NOT EXISTS correct_indexes int[] NOT NULL DEFAULT '{}';
+UPDATE public.onboarding_quiz_questions SET correct_indexes = ARRAY[correct_index] WHERE correct_indexes = '{}';

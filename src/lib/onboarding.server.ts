@@ -618,7 +618,17 @@ export async function generateProgramForUser(
 
 // ---------------- auto-graded quiz ----------------
 
-type QuizRow = { id: string; question: string; options: unknown; correct_index: number; explanation: string | null; position: number };
+type QuizRow = { id: string; question: string; options: unknown; correct_index: number; correct_indexes?: number[] | null; explanation: string | null; position: number };
+
+function correctSet(q: QuizRow): number[] {
+  const s = q.correct_indexes?.length ? q.correct_indexes : q.correct_index >= 0 ? [q.correct_index] : [];
+  return [...new Set(s)].sort((a, b) => a - b);
+}
+
+function sameSet(a: number[], b: number[]): boolean {
+  const x = [...new Set(a)].sort((p, q) => p - q);
+  return x.length === b.length && x.every((v, i) => v === b[i]);
+}
 
 function cleanOptions(v: unknown): string[] {
   return Array.isArray(v) ? v.map((o) => String(o ?? "").trim()).filter(Boolean).slice(0, 6) : [];
@@ -658,25 +668,27 @@ export async function generateQuizForUser(userId: string, programId: string, opt
   const system =
     "Ты методолог по онбордингу. По материалам и этапам составь тест на проверку знаний. " +
     "Ответь ТОЛЬКО валидным JSON без markdown: " +
-    '{"questions":[{"question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"почему это верно"}]}. ' +
-    `Ровно ${count} вопросов, у каждого 3-4 варианта и ровно один верный. Вопросы только по содержанию материалов. Пиши на языке материалов.`;
+    '{"questions":[{"question":"...","options":["...","...","...","..."],"correct_indexes":[0,2],"explanation":"почему это верно"}]}. ' +
+    `Ровно ${count} вопросов, у каждого ровно 4 варианта и от 1 до 3 верных (чередуй: часть вопросов с одним верным, часть с несколькими). correct_indexes — индексы верных вариантов с 0. Вопросы только по содержанию материалов. Пиши на языке материалов.`;
   const generated = (await askAi(system, context)) as unknown as { questions?: any[] };
   const rows = (generated.questions ?? [])
     .map((q, i) => {
       const options = cleanOptions(q?.options);
-      const correct = Number(q?.correct_index);
+      const raw = Array.isArray(q?.correct_indexes) ? q.correct_indexes : [q?.correct_index];
+      const set = [...new Set((raw as unknown[]).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < options.length))].sort((x, y) => x - y);
       return {
         program_id: programId,
         teamspace_id: program.teamspace_id,
         question: String(q?.question ?? "").trim().slice(0, 1000),
         options,
-        correct_index: Number.isInteger(correct) && correct >= 0 && correct < options.length ? correct : -1,
+        correct_index: set[0] ?? -1,
+        correct_indexes: set,
         explanation: q?.explanation ? String(q.explanation).slice(0, 2000) : null,
         position: i,
         material_id: materialId,
       };
     })
-    .filter((q) => q.question && q.options.length >= 2 && q.correct_index >= 0)
+    .filter((q) => q.question && q.options.length >= 2 && q.correct_indexes.length >= 1 && q.correct_indexes.length < q.options.length)
     .slice(0, count);
   if (rows.length < 1) throw new Error("AI не смог составить тест — добавьте больше материалов");
   const del = db.from("onboarding_quiz_questions").delete().eq("program_id", programId);
@@ -694,12 +706,17 @@ export async function getQuizForUser(userId: string, programId: string) {
   const isManager = await manager(userId, program.teamspace_id);
   const db = await admin();
   const { data } = await db.from("onboarding_quiz_questions").select("*").eq("program_id", programId).order("position");
-  const questions = ((data ?? []) as QuizRow[]).map((q) => ({
-    id: q.id,
-    question: q.question,
-    options: cleanOptions(q.options),
-    ...(isManager ? { material_id: (q as any).material_id ?? null, correct_index: q.correct_index, explanation: q.explanation } : {}),
-  }));
+  const questions = ((data ?? []) as QuizRow[]).map((q) => {
+    const set = correctSet(q);
+    return {
+      id: q.id,
+      question: q.question,
+      options: cleanOptions(q.options),
+      ...(isManager
+        ? { material_id: (q as any).material_id ?? null, correct_index: q.correct_index, correct_indexes: set, explanation: q.explanation }
+        : { multiple: set.length > 1 }),
+    };
+  });
   const { data: assignment } = await db.from("onboarding_assignments").select("id, score").eq("program_id", programId).eq("user_id", userId).maybeSingle();
   let last: { score: number; created_at: string } | null = null;
   if (assignment) {
@@ -709,7 +726,19 @@ export async function getQuizForUser(userId: string, programId: string) {
   return { is_manager: isManager, assignment_id: assignment?.id ?? null, questions, last_attempt: last };
 }
 
-export async function submitQuizForUser(userId: string, input: { assignment_id: string; answers: { question_id: string; answer_index: number }[] }) {
+export async function checkQuizAnswerForUser(userId: string, input: { assignment_id: string; question_id: string; answer_indexes: number[] }) {
+  const db = await admin();
+  const { data: a } = await db.from("onboarding_assignments").select("*").eq("id", input.assignment_id).maybeSingle();
+  if (!a) throw new Error("Назначение не найдено");
+  await activeTeamspace(userId, a.teamspace_id);
+  if (a.user_id !== userId) throw new Error("Тест проходит только назначенный сотрудник");
+  const { data: q } = await db.from("onboarding_quiz_questions").select("*").eq("id", input.question_id).eq("program_id", a.program_id).maybeSingle();
+  if (!q) throw new Error("Вопрос не найден");
+  const correct_indexes = correctSet(q as QuizRow);
+  return { correct: sameSet(input.answer_indexes, correct_indexes), correct_indexes, explanation: (q as QuizRow).explanation };
+}
+
+export async function submitQuizForUser(userId: string, input: { assignment_id: string; answers: { question_id: string; answer_indexes: number[] }[] }) {
   const db = await admin();
   const { data: a } = await db.from("onboarding_assignments").select("*").eq("id", input.assignment_id).maybeSingle();
   if (!a) throw new Error("Назначение не найдено");
@@ -718,15 +747,16 @@ export async function submitQuizForUser(userId: string, input: { assignment_id: 
   const { data } = await db.from("onboarding_quiz_questions").select("*").eq("program_id", a.program_id).order("position");
   const questions = (data ?? []) as QuizRow[];
   if (!questions.length) throw new Error("Тест ещё не создан");
-  const byId = new Map(input.answers.map((x) => [x.question_id, x.answer_index]));
+  const byId = new Map(input.answers.map((x) => [x.question_id, x.answer_indexes]));
   const results = questions.map((q) => {
-    const answer = byId.has(q.id) ? Number(byId.get(q.id)) : -1;
-    return { question_id: q.id, question: q.question, options: cleanOptions(q.options), answer_index: answer, correct_index: q.correct_index, correct: answer === q.correct_index, explanation: q.explanation };
+    const answer = byId.get(q.id) ?? [];
+    const correct_indexes = correctSet(q);
+    return { question_id: q.id, question: q.question, options: cleanOptions(q.options), answer_indexes: answer, correct_indexes, correct: sameSet(answer, correct_indexes), explanation: q.explanation };
   });
   const score = Math.round((results.filter((r) => r.correct).length / questions.length) * 100);
   const { error } = await db.from("onboarding_quiz_attempts").insert({
     assignment_id: a.id, teamspace_id: a.teamspace_id, user_id: userId,
-    answers: results.map((r) => ({ question_id: r.question_id, answer_index: r.answer_index, correct: r.correct })),
+    answers: results.map((r) => ({ question_id: r.question_id, answer_indexes: r.answer_indexes, correct: r.correct })),
     score,
   });
   if (error) throw new Error(error.message);

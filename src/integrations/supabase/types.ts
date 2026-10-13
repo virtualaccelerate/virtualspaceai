@@ -1266,6 +1266,7 @@ export type Database = {
       onboarding_quiz_questions: {
         Row: {
           correct_index: number
+          correct_indexes: number[]
           created_at: string
           explanation: string | null
           id: string
@@ -1278,6 +1279,7 @@ export type Database = {
         }
         Insert: {
           correct_index?: number
+          correct_indexes?: number[]
           created_at?: string
           explanation?: string | null
           id?: string
@@ -1290,6 +1292,7 @@ export type Database = {
         }
         Update: {
           correct_index?: number
+          correct_indexes?: number[]
           created_at?: string
           explanation?: string | null
           id?: string

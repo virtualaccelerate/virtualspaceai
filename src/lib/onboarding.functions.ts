@@ -228,12 +228,22 @@ export const submitQuiz = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z.object({
       assignment_id: uuid,
-      answers: z.array(z.object({ question_id: uuid, answer_index: z.number().int().min(-1).max(10) })).max(200),
+      answers: z.array(z.object({ question_id: uuid, answer_indexes: z.array(z.number().int().min(0).max(10)).max(10) })).max(200),
     }).parse(raw),
   )
   .handler(async ({ data, context }) => {
     const m = await import("./onboarding.server");
     return (await m.submitQuizForUser(context.userId, data)) as any;
+  });
+
+export const checkQuizAnswer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ assignment_id: uuid, question_id: uuid, answer_indexes: z.array(z.number().int().min(0).max(10)).max(10) }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const m = await import("./onboarding.server");
+    return (await m.checkQuizAnswerForUser(context.userId, data)) as any;
   });
 
 export const deleteQuizQuestion = createServerFn({ method: "POST" })
