@@ -297,7 +297,7 @@ function AuthenticatedLayout() {
           </div>
 
           {menuOpen && showLabels && (
-            <div className="absolute left-2 right-2 top-full mt-1 z-50 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl overflow-hidden">
+            <div className="absolute left-2 right-2 top-full mt-1 z-50 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl max-h-[calc(100dvh-5.5rem)] overflow-y-auto">
               <div className="px-3 py-2.5 border-b border-white/5">
                 <div className="text-[10px] uppercase tracking-wider text-white/40">{t("app.header.signedInAs")}</div>
                 <div className="text-xs text-white/80 truncate mt-0.5">{email}</div>
