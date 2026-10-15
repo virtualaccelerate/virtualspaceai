@@ -1956,34 +1956,43 @@ export type Database = {
       teamspaces: {
         Row: {
           business_type: Database["public"]["Enums"]["business_type"]
+          company_size: string | null
           created_at: string
           id: string
+          industry: string | null
           invite_code: string
           logo_path: string | null
           name: string
           owner_id: string
+          priorities: string[] | null
           team_size: Database["public"]["Enums"]["team_size"]
           updated_at: string
         }
         Insert: {
           business_type: Database["public"]["Enums"]["business_type"]
+          company_size?: string | null
           created_at?: string
           id?: string
+          industry?: string | null
           invite_code?: string
           logo_path?: string | null
           name: string
           owner_id: string
+          priorities?: string[] | null
           team_size: Database["public"]["Enums"]["team_size"]
           updated_at?: string
         }
         Update: {
           business_type?: Database["public"]["Enums"]["business_type"]
+          company_size?: string | null
           created_at?: string
           id?: string
+          industry?: string | null
           invite_code?: string
           logo_path?: string | null
           name?: string
           owner_id?: string
+          priorities?: string[] | null
           team_size?: Database["public"]["Enums"]["team_size"]
           updated_at?: string
         }
