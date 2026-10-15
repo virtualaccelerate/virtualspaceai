@@ -1,10 +1,13 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Loader2, Rocket, Briefcase, Building2, ArrowRight, Users, LogOut } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Loader2, Building2, ArrowRight, ArrowLeft, Users, LogOut, Check, HeartPulse, Plane, Laptop, Megaphone, ShoppingBag, Landmark, HardHat, GraduationCap, Handshake, Ellipsis, ListTodo, Wallet, UserRoundPlus, ChartNoAxesCombined, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { COMPANY_TEAM_SIZES, spaceName, type CompanySize } from "@/lib/teamspace-setup";
 
 function inviteCodeFromUrl(): string | null {
   if (typeof window === "undefined") return null;
@@ -37,20 +40,32 @@ export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
       { title: "Set up your teamspace — Virtual Space" },
+      { name: "description", content: "Set up your Virtual Space company workspace or join your team with an invite code." },
+      { property: "og:title", content: "Set up your teamspace — Virtual Space" },
+      { property: "og:description", content: "Personalize your company workspace and join your team in Virtual Space." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
 });
 
 type Tab = "create" | "join";
-type TeamSize = "1-5" | "5-20" | "20+";
-type BusinessType = "startup" | "agency" | "company";
-
-const SIZES: TeamSize[] = ["1-5", "5-20", "20+"];
-const BUSINESS: { id: BusinessType; icon: typeof Rocket; title: string; desc: string }[] = [
-  { id: "startup", icon: Rocket, title: "Startup", desc: "Fast-moving team, all hands on deck" },
-  { id: "agency", icon: Briefcase, title: "Agency", desc: "Client projects, creative workflows" },
-  { id: "company", icon: Building2, title: "Company", desc: "Established team, structured ops" },
+const SIZES: { id: CompanySize; icon: typeof Users }[] = [
+  { id: "1-10", icon: Users }, { id: "11-30", icon: Users },
+  { id: "31-50", icon: Building2 }, { id: "51-100", icon: Building2 },
+];
+const INDUSTRIES = [
+  { id: "healthcare", icon: HeartPulse }, { id: "travel", icon: Plane },
+  { id: "digital", icon: Laptop }, { id: "marketing", icon: Megaphone },
+  { id: "retail", icon: ShoppingBag }, { id: "finance", icon: Landmark },
+  { id: "construction", icon: HardHat }, { id: "education", icon: GraduationCap },
+  { id: "services", icon: Handshake }, { id: "other", icon: Ellipsis },
+];
+const PRIORITIES = [
+  { id: "projects", icon: ListTodo }, { id: "team", icon: Users },
+  { id: "finances", icon: Wallet }, { id: "hr", icon: UserRoundPlus },
+  { id: "analytics", icon: ChartNoAxesCombined }, { id: "automation", icon: Zap },
 ];
 
 function OnboardingPage() {
@@ -58,10 +73,12 @@ function OnboardingPage() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("create");
 
-  // Create form
-  const [name, setName] = useState("");
-  const [teamSize, setTeamSize] = useState<TeamSize>("1-5");
-  const [businessType, setBusinessType] = useState<BusinessType>("startup");
+  const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+  const [step, setStep] = useState(1);
+  const [companySize, setCompanySize] = useState<CompanySize | null>(null);
+  const [industry, setIndustry] = useState<string | null>(null);
+  const [priorities, setPriorities] = useState<string[]>([]);
 
   // Join form
   const [code, setCode] = useState("");
@@ -100,16 +117,22 @@ function OnboardingPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || step !== 3 || !companySize || !industry || priorities.length === 0) return;
     setLoading(true);
     setError(null);
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("Not signed in");
+      const { data: profile, error: profileError } = await supabase.from("profiles")
+        .select("full_name").eq("id", user.user.id).maybeSingle();
+      if (profileError) throw profileError;
       const { error: err } = await supabase.from("teamspaces").insert({
-        name: name.trim(),
-        team_size: teamSize,
-        business_type: businessType,
+        name: spaceName(profile?.full_name, user.user.email),
+        team_size: COMPANY_TEAM_SIZES[companySize],
+        business_type: "company",
+        company_size: companySize,
+        industry,
+        priorities,
         owner_id: user.user.id,
       });
       if (err) throw err;
@@ -172,12 +195,29 @@ function OnboardingPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="glass-strong w-full max-w-2xl rounded-3xl p-8"
+          className="glass-strong w-full max-w-2xl rounded-3xl p-5 sm:p-8"
         >
-          <h1 className="font-display text-3xl text-white text-center">Set up your teamspace</h1>
-          <p className="mt-2 text-sm text-white/60 text-center">
-            Create a new workspace for your team or join an existing one with an invite code.
-          </p>
+          {tab === "create" ? (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="inline-flex items-center gap-2">
+                  <VirtualSpaceLogo size={28} />
+                  <span className="font-display text-lg font-semibold text-foreground">Virtual Space</span>
+                </div>
+                <span className="text-sm text-foreground/60">{step} / 3</span>
+              </div>
+              <div role="progressbar" aria-label={t("teamspaceSetup.create")} aria-valuemin={0} aria-valuemax={3} aria-valuenow={step} className="h-1 rounded-full bg-foreground/10 overflow-hidden">
+                <div className={`h-full bg-primary transition-all duration-300 motion-reduce:transition-none ${step === 1 ? "w-1/3" : step === 2 ? "w-2/3" : "w-full"}`} />
+              </div>
+            </div>
+          ) : (
+            <>
+              <h1 className="font-display text-3xl text-white text-center">Set up your teamspace</h1>
+              <p className="mt-2 text-sm text-white/60 text-center">
+                Create a new workspace for your team or join an existing one with an invite code.
+              </p>
+            </>
+          )}
 
           <div className="mt-6 grid grid-cols-2 rounded-full bg-white/5 p-1 max-w-sm mx-auto">
             <button
@@ -186,7 +226,7 @@ function OnboardingPage() {
                 tab === "create" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
               }`}
             >
-              Create new
+              {t("teamspaceSetup.create", "Create new")}
             </button>
             <button
               onClick={() => { setTab("join"); setError(null); }}
@@ -199,75 +239,63 @@ function OnboardingPage() {
           </div>
 
           {tab === "create" ? (
-            <form onSubmit={handleCreate} className="mt-8 space-y-6">
-              <div>
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50">Workspace name</label>
-                <input
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Acme Inc."
-                  className="mt-2 glass w-full rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+            <form onSubmit={handleCreate} className="mt-8">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div key={step} initial={{ opacity: 0, x: reducedMotion ? 0 : 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: reducedMotion ? 0 : -12 }} transition={{ duration: reducedMotion ? 0 : 0.18 }} className="space-y-5">
+                  <div>
+                    <h1 className="font-display text-2xl font-semibold text-foreground">{t(`teamspaceSetup.${step === 1 ? "size" : step === 2 ? "industry" : "priorities"}Title`)}</h1>
+                    <p className="mt-2 text-sm text-foreground/60">{t(`teamspaceSetup.${step === 1 ? "size" : step === 2 ? "industry" : "priorities"}Subtitle`)}</p>
+                  </div>
+                  {step === 1 && (
+                    <div role="radiogroup" aria-label={t("teamspaceSetup.sizeTitle")} className="grid gap-3">
+                      {SIZES.map(({ id, icon: Icon }) => (
+                        <label key={id} className={`flex items-center gap-4 rounded-xl border p-4 cursor-pointer transition focus-within:ring-2 focus-within:ring-primary/40 ${companySize === id ? "border-primary bg-primary/10" : "border-foreground/10 bg-foreground/5 hover:bg-foreground/10"}`}>
+                          <Icon className="h-5 w-5 shrink-0 text-primary" />
+                          <div className="min-w-0 flex-1"><div className="text-sm font-semibold text-foreground">{id.replace("-", "–")}</div><div className="mt-1 text-xs text-foreground/55">{t(`teamspaceSetup.sizes.${id}`)}</div></div>
+                          <input type="radio" name="company-size" value={id} checked={companySize === id} onChange={() => setCompanySize(id)} className="sr-only" />
+                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${companySize === id ? "border-primary" : "border-foreground/30"}`}>{companySize === id && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {step === 2 && (
+                    <div role="radiogroup" aria-label={t("teamspaceSetup.industryTitle")} className="grid grid-cols-2 gap-3">
+                      {INDUSTRIES.map(({ id, icon: Icon }) => (
+                        <label key={id} className={`relative flex min-h-28 flex-col items-start gap-3 rounded-xl border p-3 sm:p-4 cursor-pointer transition focus-within:ring-2 focus-within:ring-primary/40 ${industry === id ? "border-primary bg-primary/10" : "border-foreground/10 bg-foreground/5 hover:bg-foreground/10"}`}>
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary"><Icon className="h-5 w-5" /></span>
+                          <span className="text-sm font-medium text-foreground break-words">{t(`teamspaceSetup.industries.${id}`)}</span>
+                          <input type="radio" name="industry" value={id} checked={industry === id} onChange={() => setIndustry(id)} className="sr-only" />
+                          {industry === id && <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"><Check className="h-3 w-3" /></span>}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {step === 3 && (
+                    <div className="grid gap-3">
+                      {PRIORITIES.map(({ id, icon: Icon }) => {
+                        const selected = priorities.includes(id);
+                        return (
+                          <label key={id} className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition focus-within:ring-2 focus-within:ring-primary/40 ${selected ? "border-primary bg-primary/10" : "border-foreground/10 bg-foreground/5 hover:bg-foreground/10"}`}>
+                            <Icon className="h-5 w-5 shrink-0 text-primary" />
+                            <div className="min-w-0 flex-1"><div className="text-sm font-semibold text-foreground">{t(`teamspaceSetup.priorities.${id}.title`)}</div><div className="mt-1 text-xs text-foreground/55">{t(`teamspaceSetup.priorities.${id}.description`)}</div></div>
+                            <input type="checkbox" checked={selected} onChange={() => setPriorities((current) => selected ? current.filter((value) => value !== id) : [...current, id])} className="sr-only" />
+                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${selected ? "border-primary bg-primary text-primary-foreground" : "border-foreground/30"}`}>{selected && <Check className="h-3.5 w-3.5" />}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+              {error && <p role="alert" className="mt-4 text-xs text-destructive">{error}</p>}
+              <div className="mt-6 flex items-center gap-3">
+                {step > 1 && <Button type="button" variant="ghost" disabled={loading} onClick={() => setStep((value) => value - 1)} className="rounded-full text-foreground/60"><ArrowLeft className="h-4 w-4" />{t("teamspaceSetup.back")}</Button>}
+                {step < 3 ? (
+                  <Button type="button" onClick={() => setStep((value) => value + 1)} disabled={step === 1 ? !companySize : !industry} className="ml-auto rounded-full px-5 disabled:cursor-not-allowed">{t("teamspaceSetup.continue")}<ArrowRight className="h-4 w-4" /></Button>
+                ) : (
+                  <Button type="submit" disabled={loading || priorities.length === 0} className="ml-auto rounded-full px-5 disabled:cursor-not-allowed">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t("teamspaceSetup.finish")}<ArrowRight className="h-4 w-4" /></>}</Button>
+                )}
               </div>
-
-              <div>
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50">What best describes your team?</label>
-                <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {BUSINESS.map((b) => {
-                    const active = businessType === b.id;
-                    return (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onClick={() => setBusinessType(b.id)}
-                        className={`text-left rounded-xl p-4 border transition ${
-                          active
-                            ? "border-primary bg-primary/10 ring-2 ring-primary/40"
-                            : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
-                        }`}
-                      >
-                        <b.icon className={`h-5 w-5 mb-3 ${active ? "text-primary" : "text-white/60"}`} />
-                        <div className="font-semibold text-white text-sm">{b.title}</div>
-                        <div className="text-xs text-white/55 mt-1">{b.desc}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50">Team size</label>
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {SIZES.map((s) => {
-                    const active = teamSize === s;
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setTeamSize(s)}
-                        className={`rounded-xl py-3 text-sm font-medium transition border ${
-                          active
-                            ? "border-primary bg-primary/10 text-white ring-2 ring-primary/40"
-                            : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {error && <p className="text-xs text-destructive">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={loading || !name.trim()}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Create teamspace <ArrowRight className="h-4 w-4" /></>}
-              </button>
             </form>
           ) : (
             <form onSubmit={handleJoin} className="mt-8 space-y-5">

@@ -11,6 +11,8 @@
 
 ## Workspace roles and access
 
+- Workspace creation uses browser-safe setup helpers for legacy size mapping and automatic naming, with a dedicated locale bundle, so saved choices and translations stay consistent.
+
 - Owner/admin = manager, everyone else = plain member. Enforce role checks server-side
   (`src/lib/roles.server.ts`) and in RLS (`private.is_teamspace_manager`), never only in the UI —
   hiding a nav item does not protect the data behind it.
