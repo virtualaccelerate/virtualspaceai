@@ -3,6 +3,7 @@ import type { GroupResources } from "./merge";
 const bundle: GroupResources = {
   en: { teamspaceSetup: {
     create: "Create new", continue: "Continue", back: "Back", finish: "Create my Space",
+    haveCode: "I have an invite code", join: "Join",
     sizeTitle: "How many people are in your company?",
     sizeSubtitle: "This will help us tailor Virtual Space to your team.",
     industryTitle: "What industry do you work in?",
@@ -22,6 +23,7 @@ const bundle: GroupResources = {
   } },
   ru: { teamspaceSetup: {
     create: "Создать новое", continue: "Продолжить", back: "Назад", finish: "Создать мой Space",
+    haveCode: "У меня есть код приглашения", join: "Присоединиться",
     sizeTitle: "Сколько человек в вашей компании?",
     sizeSubtitle: "Это поможет нам настроить Virtual Space под вашу команду.",
     industryTitle: "В какой индустрии вы работаете?",

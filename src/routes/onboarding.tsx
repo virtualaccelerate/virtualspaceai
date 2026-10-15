@@ -50,7 +50,6 @@ export const Route = createFileRoute("/onboarding")({
   }),
 });
 
-type Tab = "create" | "join";
 const SIZES: { id: CompanySize; icon: typeof Users }[] = [
   { id: "1-10", icon: Users }, { id: "11-30", icon: Users },
   { id: "31-50", icon: Building2 }, { id: "51-100", icon: Building2 },
@@ -71,7 +70,6 @@ const PRIORITIES = [
 function OnboardingPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<Tab>("create");
 
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -82,6 +80,7 @@ function OnboardingPage() {
 
   // Join form
   const [code, setCode] = useState("");
+  const [showCode, setShowCode] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +91,6 @@ function OnboardingPage() {
     const c = inviteCodeFromUrl();
     if (!c) return;
     setCode(c);
-    setTab("join");
     // Invite links join straight away — no extra step for the new member.
     let cancelled = false;
     (async () => {
@@ -105,6 +103,7 @@ function OnboardingPage() {
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Invalid invite code");
+        setShowCode(true);
         setAutoJoining(false);
       }
     })();
@@ -180,24 +179,20 @@ function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="px-6 py-5 flex items-center justify-between">
-        <div className="inline-flex items-center gap-2">
-          <VirtualSpaceLogo className="text-primary" size={26} />
-          <span className="font-display font-extrabold tracking-tight text-lg text-white">Virtual Space</span>
-        </div>
+      <header className="px-6 py-5 flex items-center justify-end">
         <button onClick={signOut} className="text-xs text-white/50 hover:text-white inline-flex items-center gap-1.5">
-          <LogOut className="h-3.5 w-3.5" /> Sign out
+          <LogOut className="h-3.5 w-3.5" /> {t("app.header.signOut", "Sign out")}
         </button>
       </header>
 
       <main className="flex-1 flex items-start justify-center px-4 py-10">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="glass-strong w-full max-w-2xl rounded-3xl p-5 sm:p-8"
-        >
-          {tab === "create" ? (
+        <div className="w-full max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="glass-strong w-full rounded-3xl p-5 sm:p-8"
+          >
             <div className="space-y-5">
               <div className="flex items-center justify-between gap-3">
                 <div className="inline-flex items-center gap-2">
@@ -210,35 +205,7 @@ function OnboardingPage() {
                 <div className={`h-full bg-primary transition-all duration-300 motion-reduce:transition-none ${step === 1 ? "w-1/3" : step === 2 ? "w-2/3" : "w-full"}`} />
               </div>
             </div>
-          ) : (
-            <>
-              <h1 className="font-display text-3xl text-white text-center">Set up your teamspace</h1>
-              <p className="mt-2 text-sm text-white/60 text-center">
-                Create a new workspace for your team or join an existing one with an invite code.
-              </p>
-            </>
-          )}
 
-          <div className="mt-6 grid grid-cols-2 rounded-full bg-white/5 p-1 max-w-sm mx-auto">
-            <button
-              onClick={() => { setTab("create"); setError(null); }}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                tab === "create" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
-              }`}
-            >
-              {t("teamspaceSetup.create", "Create new")}
-            </button>
-            <button
-              onClick={() => { setTab("join"); setError(null); }}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                tab === "join" ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white"
-              }`}
-            >
-              Join with code
-            </button>
-          </div>
-
-          {tab === "create" ? (
             <form onSubmit={handleCreate} className="mt-8">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={step} initial={{ opacity: 0, x: reducedMotion ? 0 : 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: reducedMotion ? 0 : -12 }} transition={{ duration: reducedMotion ? 0 : 0.18 }} className="space-y-5">
@@ -287,7 +254,7 @@ function OnboardingPage() {
                   )}
                 </motion.div>
               </AnimatePresence>
-              {error && <p role="alert" className="mt-4 text-xs text-destructive">{error}</p>}
+              {!showCode && error && <p role="alert" className="mt-4 text-xs text-destructive">{error}</p>}
               <div className="mt-6 flex items-center gap-3">
                 {step > 1 && <Button type="button" variant="ghost" disabled={loading} onClick={() => setStep((value) => value - 1)} className="rounded-full text-foreground/60"><ArrowLeft className="h-4 w-4" />{t("teamspaceSetup.back")}</Button>}
                 {step < 3 ? (
@@ -297,37 +264,38 @@ function OnboardingPage() {
                 )}
               </div>
             </form>
-          ) : (
-            <form onSubmit={handleJoin} className="mt-8 space-y-5">
-              <div>
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50">Invite code</label>
-                <div className="relative mt-2">
-                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <input
-                    required
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="e.g. 5b91a3f24c8d"
-                    className="glass w-full rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
-                  />
-                </div>
-                <p className="mt-2 text-[11px] text-white/50">
-                  Ask your teamspace owner for the invite code.
-                </p>
+          </motion.div>
+
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={() => { setShowCode((value) => !value); setError(null); }}
+              className="text-xs text-white/50 hover:text-white underline-offset-4 hover:underline"
+            >
+              {t("teamspaceSetup.haveCode", "У меня есть код приглашения")}
+            </button>
+          </div>
+
+          {showCode && (
+            <form onSubmit={handleJoin} className="mt-3 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                <input
+                  required
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="e.g. 5b91a3f24c8d"
+                  aria-label={t("teamspaceSetup.haveCode", "У меня есть код приглашения")}
+                  className="glass w-full rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
+                />
               </div>
-
-              {error && <p className="text-xs text-destructive">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={loading || !code.trim()}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Join teamspace <ArrowRight className="h-4 w-4" /></>}
-              </button>
+              <Button type="submit" disabled={loading || !code.trim()} className="shrink-0 rounded-full px-5 disabled:cursor-not-allowed">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t("teamspaceSetup.join", "Присоединиться")}
+              </Button>
             </form>
           )}
-        </motion.div>
+          {showCode && error && <p role="alert" className="mt-2 text-center text-xs text-destructive">{error}</p>}
+        </div>
       </main>
     </div>
   );
