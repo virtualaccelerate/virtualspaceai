@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +27,8 @@ type Profile = {
 
 function ProfilePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
 
   const [saving, setSaving] = useState(false);
@@ -167,6 +170,22 @@ function ProfilePage() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? (<><Check className="h-4 w-4" /> {t("app.profile.saved")}</>) : t("app.profile.save")}
         </button>
       </form>
+
+      <div className="glass-strong rounded-3xl p-6 sm:p-8">
+        <button
+          type="button"
+          onClick={async () => {
+            await queryClient.cancelQueries();
+            queryClient.clear();
+            await supabase.auth.signOut();
+            navigate({ to: "/auth", replace: true });
+          }}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-destructive/50 px-6 py-2.5 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
+        >
+          <LogOut className="h-4 w-4" />
+          {t("app.header.signOut")}
+        </button>
+      </div>
     </div>
   );
 }
