@@ -254,7 +254,7 @@ function OnboardingPage() {
                   )}
                 </motion.div>
               </AnimatePresence>
-              {error && <p role="alert" className="mt-4 text-xs text-destructive">{error}</p>}
+              {!showCode && error && <p role="alert" className="mt-4 text-xs text-destructive">{error}</p>}
               <div className="mt-6 flex items-center gap-3">
                 {step > 1 && <Button type="button" variant="ghost" disabled={loading} onClick={() => setStep((value) => value - 1)} className="rounded-full text-foreground/60"><ArrowLeft className="h-4 w-4" />{t("teamspaceSetup.back")}</Button>}
                 {step < 3 ? (
