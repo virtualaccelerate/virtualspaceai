@@ -253,6 +253,13 @@
       "when": 1792104947364,
       "tag": "0035_teamspace_company_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792145463057,
+      "tag": "0036_tighten_workspace_membership_task_training_rls",
+      "breakpoints": true
     }
   ]
 }
