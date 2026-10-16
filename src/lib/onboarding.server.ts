@@ -803,22 +803,28 @@ export async function submitQuizForUser(userId: string, input: { assignment_id: 
   for (const item of quizItems ?? []) {
     await setProgressForUser(userId, { assignment_id: a.id, ref_kind: "item", ref_id: item.id, done: true });
   }
-  if (a.assigned_by && a.assigned_by !== userId) {
-    try {
-      const { deliver } = await import("./agent-automation.server");
-      const { data: program } = await db.from("onboarding_programs").select("title").eq("id", a.program_id).maybeSingle();
-      const { data: profile } = await db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle();
-      const right = results.filter((r) => r.correct).length;
-      await deliver({
-        userId: a.assigned_by,
-        teamspaceId: a.teamspace_id,
-        actorId: userId,
-        title: "📝 Результат теста",
-        body: `${profile?.full_name ?? profile?.email ?? "Сотрудник"} прошёл тест «${program?.title ?? "обучение"}»: ${score}% (${right}/${results.length} верных)`,
-      });
-    } catch (e) {
-      console.error("quiz result notify failed", e);
+  try {
+    const { deliver } = await import("./agent-automation.server");
+    const { data: program } = await db.from("onboarding_programs").select("title").eq("id", a.program_id).maybeSingle();
+    const { data: profile } = await db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle();
+    const right = results.filter((r) => r.correct).length;
+    const name = profile?.full_name || profile?.email || "Сотрудник";
+    const body = `${name} прошёл тест «${program?.title ?? "обучение"}» — ${score}% (${right}/${results.length})`;
+    if (a.assigned_by && a.assigned_by !== userId) {
+      await deliver({ userId: a.assigned_by, teamspaceId: a.teamspace_id, actorId: userId, title: "🎓 Тест пройден", body });
+    } else {
+      const { data: managers } = await db
+        .from("teamspace_members")
+        .select("user_id")
+        .eq("teamspace_id", a.teamspace_id)
+        .in("role", ["owner", "admin"])
+        .neq("user_id", userId);
+      for (const m of managers ?? []) {
+        await deliver({ userId: m.user_id, teamspaceId: a.teamspace_id, actorId: userId, title: "🎓 Тест пройден", body });
+      }
     }
+  } catch (e) {
+    console.error("quiz result notify failed", e);
   }
   return { score, results };
 }
