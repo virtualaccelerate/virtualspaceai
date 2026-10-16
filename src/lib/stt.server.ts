@@ -70,7 +70,7 @@ async function checkResponse(res: Response, model: string) {
     : res.status === 402 ? safe ?? 'AI-кредиты закончились. Пополните баланс в настройках.'
     : res.status === 403 ? safe ?? 'Доступ к распознаванию запрещён.'
     : res.status === 404 ? 'Модель распознавания сейчас недоступна.'
-    : 'Не удалось распознать речь. Попробуйте ещё раз.';
+    : safe ?? 'Не удалось распознать речь. Попробуйте ещё раз.';
   if (res.status === 402 || res.status === 403) {
     const { error } = await supabaseAdmin.from('stt_service_state').upsert({ model, reason: message, status: res.status });
     if (error) throw new SttError('Голосовой ввод приостановлен: не удалось сохранить состояние доступа.', true);
