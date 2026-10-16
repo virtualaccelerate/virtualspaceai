@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -38,7 +38,7 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
 
   const card = "rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-4";
   const title = <h2 className="text-lg font-semibold">{t("workspaceUi.quiz.title", "Тест")}</h2>;
-  const notice = (text: string, extra?: React.ReactNode) => (
+  const notice = (text: string, extra?: ReactNode) => (
     <section className="space-y-3">{title}<div className={`${card} flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--muted-foreground)]`}><span>{text}</span>{extra}</div></section>
   );
   if (isLoading) return null;
@@ -108,11 +108,13 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
     );
   }
 
-  if (!questions.length || !data.assignment_id) return null;
+  if (!data.assignment_id) return notice(t("workspaceUi.quiz.notAssigned", "Тест станет доступен после назначения этого обучения"));
+  if (!questions.length) return notice(t("workspaceUi.quiz.notCreated", "Тест ещё не создан"));
 
   if (result) {
     return (
       <section className="space-y-3">
+        {toggleBar}
         <h2 className="text-lg font-semibold">{t("workspaceUi.quiz.title", "Тест")}</h2>
         <div className={`${card} text-center`}>
           <div className="text-3xl font-semibold">{result.score}%</div>
@@ -144,6 +146,7 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
   if (!started) {
     return (
       <section className="space-y-3">
+        {toggleBar}
         <h2 className="text-lg font-semibold">{t("workspaceUi.quiz.title", "Тест")}</h2>
         <div className={`${card} flex flex-wrap items-center justify-between gap-3`}>
           <div className="text-sm text-[color:var(--muted-foreground)]">
