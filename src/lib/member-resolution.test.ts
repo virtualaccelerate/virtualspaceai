@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from "node:test";
+import { deepStrictEqual } from "node:assert";
 import { resolveMember } from "./member-resolution";
 
 const roster = [
@@ -8,19 +9,19 @@ const roster = [
   { id: "d", name: "Данияр Абдыев", email: null },
 ];
 describe("safe member resolution", () => {
-  it.each(["Зухра", "Зухре", "Зухры", "Зухру", "Зухрой", "Zuhra", "zuhra@example.test", "z"])("resolves %s", (name: string) => {
-    expect(resolveMember(name, roster)).toEqual({ match: roster[0] });
+  for (const name of ["Зухра", "Зухре", "Зухры", "Зухру", "Зухрой", "Zuhra", "zuhra@example.test", "z"]) it(`resolves ${name}`, () => {
+    deepStrictEqual(resolveMember(name, roster), { match: roster[0] });
   });
-  it.each(["Айзада", "Айзаде", "Aizada", "Aizade"])("resolves %s", (name: string) => {
-    expect(resolveMember(name, roster)).toEqual({ match: roster[1] });
+  for (const name of ["Айзада", "Айзаде", "Aizada", "Aizade"]) it(`resolves ${name}`, () => {
+    deepStrictEqual(resolveMember(name, roster), { match: roster[1] });
   });
-  it.each(["Бермет", "Бермету", "Bermet", "Берметке"])("resolves %s", (name: string) => {
-    expect(resolveMember(name, roster)).toEqual({ match: roster[2] });
+  for (const name of ["Бермет", "Бермету", "Bermet", "Берметке"]) it(`resolves ${name}`, () => {
+    deepStrictEqual(resolveMember(name, roster), { match: roster[2] });
   });
-  it("never confuses Dana with Daniyar", () => expect(resolveMember("Дана", roster)).toEqual({ none: true }));
-  it("does not guess an unknown name", () => expect(resolveMember("Пете", roster)).toEqual({ none: true }));
+  it("never confuses Dana with Daniyar", () => deepStrictEqual(resolveMember("Дана", roster), { none: true }));
+  it("does not guess an unknown name", () => deepStrictEqual(resolveMember("Пете", roster), { none: true }));
   it("returns every matching first name instead of the first hit", () => {
     const other = { id: "z2", name: "Зухра Иванова", email: null };
-    expect(resolveMember("Зухре", [...roster, other])).toEqual({ candidates: [roster[0], other] });
+    deepStrictEqual(resolveMember("Зухре", [...roster, other]), { candidates: [roster[0], other] });
   });
 });
