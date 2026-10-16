@@ -634,6 +634,36 @@ function cleanOptions(v: unknown): string[] {
   return Array.isArray(v) ? v.map((o) => String(o ?? "").trim()).filter(Boolean).slice(0, 6) : [];
 }
 
+const GOOGLE_READ_ERROR = "Не удалось прочитать документ. Откройте доступ по ссылке или подключите Google Drive в Интеграциях.";
+
+/** Reads text from a link; Google Docs/Sheets/Slides via public export, then the user's Google Drive. */
+async function readLinkText(userId: string, url: string): Promise<string> {
+  const m = url.match(/docs\.google\.com\/(document|spreadsheets|presentation)\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) {
+    const { fetchWebpageText } = await import("./documents-extract.server");
+    return (await fetchWebpageText(url).catch(() => null)) ?? "";
+  }
+  const [, type, id] = m;
+  const base = `https://docs.google.com/${type}/d/${id}`;
+  const exportUrl = type === "document" ? `${base}/export?format=txt` : type === "spreadsheets" ? `${base}/export?format=csv` : `${base}/export/txt`;
+  try {
+    const res = await fetch(exportUrl, { redirect: "follow", signal: AbortSignal.timeout(15000) });
+    const ct = res.headers.get("content-type") ?? "";
+    if (res.ok && !ct.includes("text/html")) {
+      const text = (await res.text()).trim();
+      if (text) return text.slice(0, 200_000);
+    }
+  } catch { /* fall through to Drive */ }
+  try {
+    const drive = await import("./google-drive.server");
+    if (await drive.resolveDriveUserId(userId)) {
+      const file = await drive.readFile(userId, id);
+      if (file.content?.trim()) return file.content;
+    }
+  } catch { /* fall through */ }
+  throw new Error(GOOGLE_READ_ERROR);
+}
+
 export async function generateQuizForUser(userId: string, programId: string, opts: { material_id?: string | null; count?: number } = {}) {
   const count = Math.min(30, Math.max(3, Math.round(opts.count ?? 7)));
   const program = await programOf(userId, programId);
@@ -644,11 +674,17 @@ export async function generateQuizForUser(userId: string, programId: string, opt
     db.from("onboarding_steps").select("id, title, description").eq("program_id", programId).order("position"),
     db.from("onboarding_items").select("step_id, title").eq("program_id", programId).order("position"),
   ]);
+  const linkTexts = await Promise.all(
+    (materials ?? []).map((m) => (m.kind === "link" && m.url ? readLinkText(userId, m.url).catch(() => "") : Promise.resolve(""))),
+  );
   let context = [
     `Обучение: ${program.title}`,
     program.description ? `Описание: ${program.description}` : "",
     "Материалы:",
-    ...(materials ?? []).map((m) => `- [${m.kind}] ${m.title}${m.url ? ` (${m.url})` : ""}${m.content ? `\n${String(m.content).slice(0, 3000)}` : ""}`),
+    ...(materials ?? []).map((m, i) => {
+      const text = [m.content, linkTexts[i]].filter(Boolean).join("\n");
+      return `- [${m.kind}] ${m.title}${m.url ? ` (${m.url})` : ""}${text ? `\n${String(text).slice(0, 3000)}` : ""}`;
+    }),
     "Этапы:",
     ...(steps ?? []).map((s) => `- ${s.title}${s.description ? `: ${s.description}` : ""}\n${(items ?? []).filter((i) => i.step_id === s.id).map((i) => `  • ${i.title}`).join("\n")}`),
   ].filter(Boolean).join("\n").slice(0, 20000);
@@ -659,9 +695,11 @@ export async function generateQuizForUser(userId: string, programId: string, opt
     let body = "";
     if (mat.kind === "text" || mat.kind === "file") body = mat.content ?? "";
     else if (mat.kind === "link" && mat.url) {
-      const { fetchWebpageText } = await import("./documents-extract.server");
-      body = (await fetchWebpageText(mat.url).catch(() => null)) ?? "";
-    } else if (mat.kind === "video") body = mat.content ? `${mat.title}\n${mat.content}` : "";
+      body = await readLinkText(userId, mat.url);
+    } else if (mat.kind === "video") {
+      if (!mat.content?.trim()) throw new Error("У видео нет текста. Добавьте описание или расшифровку в текст материала, чтобы составить тест.");
+      body = `${mat.title}\n${mat.content}`;
+    }
     if (!body.trim()) throw new Error("В этом материале нет текста для составления теста");
     context = `Материал: ${mat.title}\n\n${body}`.slice(0, 40000);
   }
@@ -713,7 +751,7 @@ export async function getQuizForUser(userId: string, programId: string) {
       question: q.question,
       options: cleanOptions(q.options),
       ...(isManager
-        ? { material_id: (q as any).material_id ?? null, correct_index: q.correct_index, correct_indexes: set, explanation: q.explanation }
+        ? { multiple: set.length > 1, material_id: (q as any).material_id ?? null, correct_index: q.correct_index, correct_indexes: set, explanation: q.explanation }
         : { multiple: set.length > 1 }),
     };
   });
