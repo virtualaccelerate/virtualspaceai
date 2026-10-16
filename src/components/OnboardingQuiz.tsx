@@ -19,7 +19,7 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
   const submit = useServerFn(submitQuiz);
   const check = useServerFn(checkQuizAnswer);
   const key = ["onboarding-quiz", programId];
-  const { data, isLoading } = useQuery({ queryKey: key, queryFn: () => load({ data: { program_id: programId } }) });
+  const { data, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => load({ data: { program_id: programId } }) });
   const [busy, setBusy] = useState<string | null>(null);
   const [scope, setScope] = useState("");
   const [count, setCount] = useState(7);
@@ -28,6 +28,7 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
   const [feedback, setFeedback] = useState<Record<string, Feedback>>({});
   const [result, setResult] = useState<{ score: number; results: Result[] } | null>(null);
+  const [mode, setMode] = useState<"edit" | "take">("edit");
   const refresh = () => qc.invalidateQueries({ queryKey: key });
 
   async function run(id: string, fn: () => Promise<unknown>) {
@@ -35,15 +36,30 @@ export function OnboardingQuiz({ programId, materials = [], onSubmitted }: { pro
     try { await fn(); } catch (e) { toast.error(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); }
   }
 
-  if (isLoading || !data) return null;
-  const questions = (data.questions ?? []) as any[];
   const card = "rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-4";
+  const title = <h2 className="text-lg font-semibold">{t("workspaceUi.quiz.title", "Тест")}</h2>;
+  const notice = (text: string, extra?: React.ReactNode) => (
+    <section className="space-y-3">{title}<div className={`${card} flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--muted-foreground)]`}><span>{text}</span>{extra}</div></section>
+  );
+  if (isLoading) return null;
+  if (error || !data) {
+    return notice(error instanceof Error ? error.message : String(error ?? ""), <Button size="sm" variant="outline" onClick={() => refetch()}>{t("workspaceUi.quiz.retryLoad", "Повторить")}</Button>);
+  }
+  const questions = (data.questions ?? []) as any[];
+  const canTake = Boolean(data.assignment_id) && questions.length > 0;
+  const toggleBar = data.is_manager && data.assignment_id ? (
+    <div className="flex gap-1">
+      <Button size="sm" variant={mode === "edit" ? "default" : "outline"} onClick={() => setMode("edit")}>{t("workspaceUi.quiz.edit", "Редактировать тест")}</Button>
+      <Button size="sm" variant={mode === "take" ? "default" : "outline"} disabled={!canTake} onClick={() => setMode("take")}>{t("workspaceUi.quiz.take", "Пройти тест")}</Button>
+    </div>
+  ) : null;
 
-  if (data.is_manager) {
+  if (data.is_manager && (mode === "edit" || !canTake)) {
     return (
       <section className="space-y-3">
+        {toggleBar}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">{t("workspaceUi.quiz.title", "Тест")}</h2>
+          {title}
           <div className="flex flex-wrap items-center gap-2">
           <select value={scope} onChange={(e) => setScope(e.target.value)} className="h-9 rounded-md border border-[color:var(--border)] bg-[color:var(--background)] px-2 text-sm">
             <option value="">{t("workspaceUi.quiz.allProgram", "Вся программа")}</option>
