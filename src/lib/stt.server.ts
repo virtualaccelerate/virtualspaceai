@@ -33,8 +33,9 @@ async function readTranscript(response: Response, chat: boolean) {
     const event = JSON.parse(data);
     if (event.error || event.type === 'error') {
       const code = event.error?.code ?? event.code;
-      const terminal = ['permission_error', 'content_policy_violation', 'refusal'].includes(code);
-      throw new SttError(event.error?.message ?? event.message ?? 'Не удалось распознать речь.', terminal, terminal ? 403 : 0);
+      const denial = code === 'permission_error';
+      const terminal = denial || ['content_policy_violation', 'refusal'].includes(code);
+      throw new SttError(event.error?.message ?? event.message ?? 'Не удалось распознать речь.', terminal, denial ? 403 : 0);
     }
     if (chat) {
       const choice = event.choices?.[0];
