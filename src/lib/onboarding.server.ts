@@ -751,7 +751,7 @@ export async function getQuizForUser(userId: string, programId: string) {
       question: q.question,
       options: cleanOptions(q.options),
       ...(isManager
-        ? { material_id: (q as any).material_id ?? null, correct_index: q.correct_index, correct_indexes: set, explanation: q.explanation }
+        ? { multiple: set.length > 1, material_id: (q as any).material_id ?? null, correct_index: q.correct_index, correct_indexes: set, explanation: q.explanation }
         : { multiple: set.length > 1 }),
     };
   });
