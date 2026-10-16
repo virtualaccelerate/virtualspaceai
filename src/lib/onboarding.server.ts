@@ -803,6 +803,23 @@ export async function submitQuizForUser(userId: string, input: { assignment_id: 
   for (const item of quizItems ?? []) {
     await setProgressForUser(userId, { assignment_id: a.id, ref_kind: "item", ref_id: item.id, done: true });
   }
+  if (a.assigned_by && a.assigned_by !== userId) {
+    try {
+      const { deliver } = await import("./agent-automation.server");
+      const { data: program } = await db.from("onboarding_programs").select("title").eq("id", a.program_id).maybeSingle();
+      const { data: profile } = await db.from("profiles").select("full_name, email").eq("id", userId).maybeSingle();
+      const right = results.filter((r) => r.correct).length;
+      await deliver({
+        userId: a.assigned_by,
+        teamspaceId: a.teamspace_id,
+        actorId: userId,
+        title: "📝 Результат теста",
+        body: `${profile?.full_name ?? profile?.email ?? "Сотрудник"} прошёл тест «${program?.title ?? "обучение"}»: ${score}% (${right}/${results.length} верных)`,
+      });
+    } catch (e) {
+      console.error("quiz result notify failed", e);
+    }
+  }
   return { score, results };
 }
 
