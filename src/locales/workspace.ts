@@ -4,7 +4,7 @@ const bundle: GroupResources = {
   en: {
     workspaceUi: {
       onboarding: { kindFile: "File", fileTooBig: "File is larger than 25 MB" },
-      quiz: { title: "Quiz", generate: "Generate quiz", regenerate: "Regenerate quiz", generated: "Questions created", empty: "No quiz yet. AI will write questions from the materials and stages.", correct: "Correct answers", rightAnswer: "Correct answer", retry: "Take again", questions: "Questions", lastScore: "Last score", start: "Start quiz", back: "Back", next: "Next", finish: "Finish", confirm: "Confirm", selectAll: "Select all correct answers", isCorrect: "Correct", isWrong: "Incorrect", allProgram: "Whole program", count: "Questions" },
+      quiz: { title: "Quiz", generate: "Generate quiz", regenerate: "Regenerate quiz", generated: "Questions created", empty: "No quiz yet. AI will write questions from the materials and stages.", correct: "Correct answers", rightAnswer: "Correct answer", retry: "Take again", questions: "Questions", lastScore: "Last score", start: "Start quiz", back: "Back", next: "Next", finish: "Finish", confirm: "Confirm", selectAll: "Select all correct answers", isCorrect: "Correct", isWrong: "Incorrect", allProgram: "Whole program", count: "Questions", notAssigned: "The quiz will become available once this training is assigned to you", notCreated: "The quiz has not been created yet", retryLoad: "Retry", edit: "Edit quiz", take: "Take quiz" },
       common: { loading: "Loading…", save: "Save" },
       import: { unassigned: "Unassigned" },
       overview: {
@@ -102,7 +102,7 @@ const bundle: GroupResources = {
   ru: {
     workspaceUi: {
       onboarding: { kindFile: "Файл", fileTooBig: "Файл больше 25 МБ" },
-      quiz: { title: "Тест", generate: "Сгенерировать тест", regenerate: "Пересоздать тест", generated: "Вопросов создано", empty: "Теста пока нет. AI составит вопросы по материалам и этапам.", correct: "Верных ответов", rightAnswer: "Правильный ответ", retry: "Пройти ещё раз", questions: "Вопросов", lastScore: "Последний результат", start: "Начать тест", back: "Назад", next: "Далее", finish: "Завершить", confirm: "Подтвердить", selectAll: "Выберите все верные", isCorrect: "Верно", isWrong: "Неверно", allProgram: "Вся программа", count: "Вопросов" },
+      quiz: { title: "Тест", generate: "Сгенерировать тест", regenerate: "Пересоздать тест", generated: "Вопросов создано", empty: "Теста пока нет. AI составит вопросы по материалам и этапам.", correct: "Верных ответов", rightAnswer: "Правильный ответ", retry: "Пройти ещё раз", questions: "Вопросов", lastScore: "Последний результат", start: "Начать тест", back: "Назад", next: "Далее", finish: "Завершить", confirm: "Подтвердить", selectAll: "Выберите все верные", isCorrect: "Верно", isWrong: "Неверно", allProgram: "Вся программа", count: "Вопросов", notAssigned: "Тест станет доступен после назначения этого обучения", notCreated: "Тест ещё не создан", retryLoad: "Повторить", edit: "Редактировать тест", take: "Пройти тест" },
       common: { loading: "Загрузка…", save: "Сохранить" },
       import: { unassigned: "Без исполнителя" },
       overview: {
