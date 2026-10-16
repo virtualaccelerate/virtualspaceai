@@ -83,7 +83,9 @@ async function checkResponse(res: Response, model: string) {
     if (delay > 10000) throw new SttError(message, true, res.status);
     await new Promise(resolve => setTimeout(resolve, Math.max(1000, delay)));
   }
-  throw new SttError(message, terminal, res.status);
+  const failure = new SttError(message, terminal, res.status);
+  failure.name = `STT_HTTP_${res.status}`;
+  throw failure;
 }
 export async function transcribeSpeech(input: Input, transport: typeof fetch = fetch) {
   const meta = { ...input, bytes: input.audio.byteLength };
@@ -121,9 +123,9 @@ export async function transcribeSpeech(input: Input, transport: typeof fetch = f
         form.append('model', model);
         form.append('file', new Blob([new Uint8Array(input.audio)], { type: type.mime }), `recording.${type.ext}`);
         form.append('stream', 'true'); form.append('response_format', 'json');
-        for (const language of ['ru', 'ky', 'en']) form.append('languages[]', language);
-        for (const word of words.filter(Boolean).slice(0, 100)) form.append('keywords[]', word.slice(0, 100));
-        form.append('prompt', `Речь может смешивать русский, кыргызский и English. Сохраняй исходный язык и письменность, без перевода. Возможные слова и имена (не добавляй их, если их нет в записи): ${vocabulary}`);
+        // The gateway currently rejects multipart keywords/languages arrays (HTTP 400).
+        // Keep these optional hints in the supported prompt instead of failing every first attempt.
+        form.append('prompt', `Expected languages: ru, ky, en. Речь может смешивать русский, кыргызский и English. Сохраняй исходный язык и письменность, без перевода. Возможные слова и имена (не добавляй их, если их нет в записи): ${vocabulary}`);
         if (input.single_language && input.language && ['ru', 'ky', 'en'].includes(input.language)) form.append('language', input.language);
         response = await transport('https://ai.gateway.lovable.dev/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`, 'X-Lovable-AIG-SDK': 'fetch' }, body: form });
       } else {
@@ -135,7 +137,7 @@ export async function transcribeSpeech(input: Input, transport: typeof fetch = f
       if (text.length >= 2) return { text, model_used: model };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Не удалось распознать речь.';
-      await logSttAttempt({ ...meta, mime_type: type.mime }, model, 'error', message);
+      await logSttAttempt({ ...meta, mime_type: type.mime }, model, 'error', error instanceof SttError && error.status ? `HTTP ${error.status}: ${message}` : message);
       if (error instanceof SttError && error.terminal) {
         if (error.status === 403) await supabaseAdmin.from('stt_service_state').upsert({ model, reason: message, status: 403 });
         throw error;
