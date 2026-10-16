@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { expect, it } from "bun:test";
 import { assignmentCallback, parseAssignmentCallback } from "./assignment-callback";
 const task = "67b184f9-329e-49b8-a388-2ff53556a011";
 const member = "f77ef039-050d-49db-a0ba-9ccdcc7e8d85";
