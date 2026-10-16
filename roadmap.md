@@ -1,4 +1,7 @@
 ## Задачи
+- [x] Harden workspace membership, task and training RLS without changing existing rows
+- [x] Set documents upload limit to 50 MB
+- [x] Verify security boundaries with temporary users/workspaces and remove test data
 - [x] Безопасное распознавание исполнителя без выбора первого совпадения
 - [x] Выбор реального исполнителя в карточках AI-чата
 - [x] Назначение из Telegram с кнопками и проверкой прав

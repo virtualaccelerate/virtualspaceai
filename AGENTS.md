@@ -11,6 +11,9 @@
 
 ## Workspace roles and access
 
+- Direct membership INSERT is revoked for browser roles; creation adds the owner via the database trigger and invite joins use the authenticated service-role server function, so public-key callers cannot grant themselves membership or elevated roles.
+- Training definition INSERT/UPDATE/DELETE policies require `private.is_teamspace_manager`; member SELECT access stays intact so assigned employees can learn.
+
 - Workspace creation uses browser-safe setup helpers for legacy size mapping and automatic naming, with a dedicated locale bundle, so saved choices and translations stay consistent.
 
 - Owner/admin = manager, everyone else = plain member. Enforce role checks server-side
