@@ -289,6 +289,14 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [sttError, setSttError] = useState<string | null>(null);
+  const retryAudioRef = useRef<{ blob: Blob; duration: number; workspace?: string } | null>(null);
+  const recordingStartedRef = useRef(0);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const heardSoundRef = useRef(false);
+  const analysedRef = useRef(false);
+  const mountedRef = useRef(true);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
@@ -321,8 +329,13 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       audioContextRef.current = audioContext;
       if (audioContext.state === "suspended") void audioContext.resume();
       const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+      const samples = new Float32Array(analyser.fftSize);
+      analysedRef.current = true;
 
       const draw = () => {
+        analyser.getFloatTimeDomainData(samples);
+        const rms = Math.sqrt(samples.reduce((sum, value) => sum + value * value, 0) / samples.length);
+        if (rms > 0.008) heardSoundRef.current = true;
         analyser.getByteFrequencyData(frequencyData);
         const relevant = frequencyData.slice(0, 28);
         const peak = Math.max(24, ...relevant);
@@ -336,76 +349,89 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     }
   };
 
+  const submitRecording = async (saved: { blob: Blob; duration: number; workspace?: string }) => {
+    setSttError(null);
+    setTranscribing(true);
+    try {
+      const bytes = new Uint8Array(await saved.blob.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      const result = await stt({ data: { audio_base64: btoa(bin), mime_type: saved.blob.type, duration_ms: saved.duration, teamspace_id: saved.workspace, language: i18n.language } });
+      if (!mountedRef.current) return;
+      setInput(prev => prev ? `${prev} ${result.text}` : result.text);
+      retryAudioRef.current = null;
+      requestAnimationFrame(() => inputRef.current?.focus());
+    } catch (e) {
+      if (mountedRef.current) setSttError(e instanceof Error ? e.message : "Не удалось распознать речь.");
+    } finally {
+      if (mountedRef.current) setTranscribing(false);
+    }
+  };
+
   const startRecording = async () => {
     if (recording || transcribing) return;
     setError(null);
+    setSttError(null);
+    retryAudioRef.current = null;
+    heardSoundRef.current = false;
+    analysedRef.current = false;
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setError(t("app.chat.micUnsupported", "Microphone is not available in this browser."));
       return;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
       streamRef.current = stream;
-      const mimeCandidates = [
-        "audio/webm;codecs=opus",
-        "audio/webm",
-        "audio/mp4",
-        "audio/mpeg",
-      ];
-      const mimeType = mimeCandidates.find((m) =>
-        typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(m),
-      );
+      const mimeCandidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/mpeg"];
+      const mimeType = mimeCandidates.find(m => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(m));
       const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const workspace = teamspaceId;
       chunksRef.current = [];
-      rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       rec.onstop = async () => {
+        const duration = Math.min(300000, Date.now() - recordingStartedRef.current);
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
         stopWaveform();
-        streamRef.current?.getTracks().forEach((tr) => tr.stop());
+        stream.getTracks().forEach(tr => tr.stop());
         streamRef.current = null;
-        const type = rec.mimeType || mimeType || "audio/webm";
-        const blob = new Blob(chunksRef.current, { type });
+        recorderRef.current = null;
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || mimeType || "audio/webm" });
         chunksRef.current = [];
-        if (blob.size < 1024) {
-          setError(t("app.chat.micTooShort", "Recording too short — hold the mic and speak."));
+        if (!mountedRef.current) return;
+        setRecording(false);
+        if (analysedRef.current && !heardSoundRef.current) {
+          setSttError("Не слышно звука — проверьте микрофон");
           return;
         }
-        setTranscribing(true);
-        try {
-          const buf = await blob.arrayBuffer();
-          let bin = "";
-          const bytes = new Uint8Array(buf);
-          const chunk = 0x8000;
-          for (let i = 0; i < bytes.length; i += chunk) {
-            bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)));
-          }
-          const b64 = btoa(bin);
-          const res = await stt({ data: { audio_base64: b64, mime_type: type } });
-          const txt = res.text?.trim();
-          if (txt) {
-            setInput((prev) => (prev ? `${prev} ${txt}` : txt));
-            requestAnimationFrame(() => inputRef.current?.focus());
-          } else {
-            setError(t("app.chat.micEmpty", "Didn't catch anything — try again."));
-          }
-        } catch (e) {
-          setError(e instanceof Error ? e.message : t("shellUi.chat.transcriptionFailed", "Transcription failed"));
-        } finally {
-          setTranscribing(false);
+        if (blob.size < 1024) {
+          setSttError(t("app.chat.micTooShort", "Recording too short — hold the mic and speak."));
+          return;
         }
+        const saved = { blob, duration, workspace };
+        retryAudioRef.current = saved;
+        await submitRecording(saved);
       };
       rec.start();
       recorderRef.current = rec;
+      recordingStartedRef.current = Date.now();
+      setRecordingSeconds(0);
+      recordingTimerRef.current = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - recordingStartedRef.current) / 1000);
+        setRecordingSeconds(Math.min(elapsed, 300));
+        if (elapsed >= 300 && rec.state !== "inactive") rec.stop();
+      }, 250);
       setRecording(true);
       startWaveform(stream);
     } catch (e) {
       stopWaveform();
-      streamRef.current?.getTracks().forEach((tr) => tr.stop());
+      streamRef.current?.getTracks().forEach(tr => tr.stop());
       streamRef.current = null;
-      setError(
-        e instanceof Error && e.name === "NotAllowedError"
-          ? t("app.chat.micDenied", "Microphone access denied. Enable it in browser settings.")
-          : t("app.chat.micUnsupported", "Microphone is not available in this browser."),
-      );
+      setError(e instanceof Error && e.name === "NotAllowedError"
+        ? t("app.chat.micDenied", "Microphone access denied. Enable it in browser settings.")
+        : t("app.chat.micUnsupported", "Microphone is not available in this browser."));
     }
   };
 
@@ -419,7 +445,12 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   const toggleMic = () => { recording ? stopRecording() : startRecording(); };
 
-  useEffect(() => () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+    mountedRef.current = false;
+    retryAudioRef.current = null;
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     if (waveformFrameRef.current !== null) cancelAnimationFrame(waveformFrameRef.current);
     const audioContext = audioContextRef.current;
     if (audioContext && audioContext.state !== "closed") void audioContext.close();
@@ -427,6 +458,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       try { recorderRef.current.stop(); } catch { /* ignore */ }
     }
+  };
   }, []);
 
   // Agent from active conversation
@@ -1234,6 +1266,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         )}
       </div>
 
+      {sttError && <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-destructive">
+        <span>{sttError}</span>
+        {retryAudioRef.current && <Button type="button" variant="ghost" size="sm" disabled={transcribing} onClick={() => { const saved = retryAudioRef.current; if (saved) void submitRecording(saved); }}>Повторить</Button>}
+      </div>}
       <div className="relative mt-1">
         <div className="pointer-events-none absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,transparent,hsl(var(--primary)/0.6),transparent_40%)] opacity-70 blur-[6px] animate-[spin_6s_linear_infinite]" />
         <div className="relative flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
@@ -1261,6 +1297,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
               aria-label={t("shellUi.chat.ariaRecording", "Recording voice")}
             >
               <span className="mr-2 h-2 w-2 shrink-0 animate-pulse rounded-full bg-destructive" />
+              <span className="shrink-0 font-mono text-xs tabular-nums text-foreground">{Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, "0")}</span>
               {waveform.map((level, index) => {
                 const heights = ["h-1", "h-2", "h-3", "h-5", "h-7"];
                 return (
@@ -1282,7 +1319,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
               className="block flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40"
             />
           )}
-          <button
+          <Button variant="ghost" size="icon"
             type="button"
             onClick={toggleMic}
             disabled={transcribing}
@@ -1295,7 +1332,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             }`}
           >
             {transcribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => send()}

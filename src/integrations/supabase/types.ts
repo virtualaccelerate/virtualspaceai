@@ -1600,6 +1600,69 @@ export type Database = {
         }
         Relationships: []
       }
+      stt_log: {
+        Row: {
+          bytes: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          id: string
+          mime_type: string
+          model_used: string
+          source: string
+          status: string
+          teamspace_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bytes: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          mime_type: string
+          model_used: string
+          source: string
+          status: string
+          teamspace_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bytes?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          mime_type?: string
+          model_used?: string
+          source?: string
+          status?: string
+          teamspace_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stt_service_state: {
+        Row: {
+          created_at: string
+          model: string
+          reason: string
+          status: number
+        }
+        Insert: {
+          created_at?: string
+          model: string
+          reason: string
+          status: number
+        }
+        Update: {
+          created_at?: string
+          model?: string
+          reason?: string
+          status?: number
+        }
+        Relationships: []
+      }
       task_events: {
         Row: {
           actor_id: string | null

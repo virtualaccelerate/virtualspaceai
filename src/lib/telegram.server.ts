@@ -1205,62 +1205,23 @@ async function handleCallback(cb: any) {
 
 // ---------------- voice ----------------
 
-async function transcribeTelegramFile(fileId: string, mime: string): Promise<string> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) return "";
+async function transcribeTelegramFile(fileId: string, mime: string, link: { user_id: string; teamspace_id?: string | null; language?: string | null }, duration?: number): Promise<string> {
+  const { transcribeSpeech, logSttAttempt, STT_MODELS } = await import("./stt.server");
+  let bytes: ArrayBuffer;
   try {
     const info = await tg<any>("getFile", { file_id: fileId });
     const path = info?.result?.file_path;
-    if (!path) return "";
+    if (!path) throw new Error("Не удалось загрузить голосовое сообщение из Telegram.");
     const fileRes = await fetch(`${TELEGRAM_API}/file/bot${botToken()}/${path}`);
-    if (!fileRes.ok) return "";
-    const bytes = await fileRes.arrayBuffer();
-    if (bytes.byteLength < 512) return "";
-    const rawExt = (path.split(".").pop() || "ogg").toLowerCase();
-    // OpenAI transcription rejects "oga"/"opus" — Telegram voice is Ogg/Opus, send it as .ogg
-    const extMap: Record<string, string> = { oga: "ogg", opus: "ogg", oggx: "ogg" };
-    const primary = extMap[rawExt] ?? rawExt;
-    const candidates: Array<[string, string]> = [
-      [primary, primary === "ogg" ? "audio/ogg" : mime],
-      ["ogg", "audio/ogg"],
-      ["mp4", "audio/mp4"],
-      ["wav", "audio/wav"],
-    ];
-
-    const seen = new Set<string>();
-    for (const [ext, type] of candidates) {
-      if (seen.has(ext)) continue;
-      seen.add(ext);
-
-      const form = new FormData();
-      form.append("model", "openai/gpt-4o-mini-transcribe");
-      form.append("file", new Blob([bytes], { type }), `voice.${ext}`);
-
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}` },
-        body: form,
-      });
-      if (!res.ok) {
-        console.error(
-          "[telegram] transcription failed",
-          ext,
-          res.status,
-          await res.text().catch(() => ""),
-        );
-        continue;
-      }
-      const json = (await res.json()) as { text?: string };
-      const text = (json.text ?? "").trim();
-      if (text) return text;
-      return "";
-    }
-    return "";
-
-  } catch (e) {
-    console.error("[telegram] voice error", e);
-    return "";
+    if (!fileRes.ok) throw new Error("Не удалось загрузить голосовое сообщение из Telegram.");
+    bytes = await fileRes.arrayBuffer();
+    if (/\.(oga|opus|ogg)$/i.test(path)) mime = "audio/ogg";
+  } catch {
+    const message = "Не удалось загрузить голосовое сообщение из Telegram. Попробуйте ещё раз.";
+    await logSttAttempt({ user_id: link.user_id, teamspace_id: link.teamspace_id, source: "telegram", mime_type: mime, bytes: 0, duration_ms: duration == null ? undefined : duration * 1000 }, STT_MODELS.primary, "error", message);
+    throw new Error(message);
   }
+  return (await transcribeSpeech({ user_id: link.user_id, teamspace_id: link.teamspace_id, source: "telegram", audio: new Uint8Array(bytes), mime_type: mime, duration_ms: duration == null ? undefined : duration * 1000, language: link.language ?? undefined })).text;
 }
 
 export async function handleUpdate(update: any) {
@@ -1333,19 +1294,12 @@ export async function handleUpdate(update: any) {
       await sendMessage(chatId, t("ru").needLink);
       return;
     }
-    const lang0 = pickLang(link0.language);
     await tg("sendChatAction", { chat_id: chatId, action: "typing" });
-    const spoken = await transcribeTelegramFile(
-      voice.file_id,
-      voice.mime_type ?? "audio/ogg",
-    );
-    if (!spoken) {
-      await sendMessage(
-        chatId,
-        lang0 === "ru"
-          ? "Не удалось распознать голосовое сообщение. Попробуйте ещё раз."
-          : "Could not recognize the voice message. Please try again.",
-      );
+    let spoken: string;
+    try {
+      spoken = await transcribeTelegramFile(voice.file_id, voice.mime_type ?? "audio/ogg", link0, voice.duration);
+    } catch (error) {
+      await sendMessage(chatId, error instanceof Error ? error.message : "Не удалось распознать голосовое сообщение.");
       return;
     }
     await sendMessage(chatId, `🎤 ${spoken}`);

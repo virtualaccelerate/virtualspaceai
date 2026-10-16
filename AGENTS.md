@@ -33,3 +33,5 @@
 - Task writes only enqueue client extraction through the database trigger; the five-minute authenticated cron drains `client_sync_queue`, so AI and Google Sheets never delay task saves.
 
 - WhatsApp bot (`src/lib/whatsapp.server.ts`) keeps its own copy of the Telegram task-agent logic instead of a shared helper — avoids regressions in the production Telegram path.
+
+- Voice recognition uses one server-only STT module with centralized models, per-attempt metadata-only logging, and persistent terminal access pauses; this keeps all channels consistent without retaining audio or transcripts. Clear a confirmed restored model access pause only on explicit owner action.
