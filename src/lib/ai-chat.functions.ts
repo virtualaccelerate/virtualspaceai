@@ -215,7 +215,7 @@ export const askZukha = createServerFn({ method: "POST" })
         const p = profiles.find((x) => x.id === m.user_id);
         return `- id=${m.user_id} name="${p?.full_name || p?.email || "Без имени"}" role=${m.role}`;
       });
-      for (const pm of pending ?? []) lines.push(`- id=none name="${pm.name}" (нет аккаунта, задача будет помечена именем)`);
+      for (const pm of pending ?? []) lines.push(`- id=none name="${pm.name}" (no account; cannot be assigned until registered)`);
       if (lines.length) {
         teamBlock =
           "\n\nTEAM MEMBERS of the active workspace (match the person the user names — including nicknames, cases and translit — to one of these; use their exact id):\n" +
@@ -335,7 +335,7 @@ export const askZukha = createServerFn({ method: "POST" })
       "TASK AGENT: You also act as the task agent of this workspace. From a plain sentence like " +
       "\"Создай задачу для Айзы: проверить билеты для спикеров, высокий приоритет\" you must infer: title, assignee, project, " +
       "department/direction, priority, due date and a short description/context. Use TEAM MEMBERS to resolve the person the user " +
-      "names (nicknames, declensions, translit all count) and put their exact id in the token. Infer relative dates (сегодня, завтра, " +
+      "names. Preserve the user's written name in the assignee field so the server can resolve declensions/translit safely; never guess an id for an ambiguous name. Infer relative dates (сегодня, завтра, " +
       "до пятницы, на следующей неделе) from CURRENT DATE. Infer project and department from the request, the existing tasks and the " +
       "company context; leave them empty when there is no reasonable signal.\n" +
       "To create a task emit ONE token per task, each on its own line, with EXACTLY 7 fields:\n" +
@@ -346,9 +346,8 @@ export const askZukha = createServerFn({ method: "POST" })
       "To CHANGE an existing task (the user says перенеси, поменяй, переназначь, подними приоритет, закрой, переименуй) emit:\n" +
       "[[task-update:TASK_ID||field=value||field=value]] — allowed fields: title, priority, due_date, status (backlog|in_progress|review|done), " +
       "assignee (member id or name), project, department, description. Take TASK_ID from CURRENT TASKS. If several tasks could match, ask which one.\n" +
-      "Assignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; use a bare name only for people listed as (нет аккаунта). Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, потом/не срочно = low.\n" +
-      "MISSING CRITICAL FIELD: if the title, the assignee or the deadline cannot be inferred with confidence, do NOT emit a token — ask ONE short " +
-      "clarifying question naming only what is missing, and emit the token in the next turn once the user answers.\n" +
+      "Assignee field: preserve the named person as written, or use the exact member id if explicitly supplied. If unknown/ambiguous, still emit the create/update token with that name; the member picker handles it. If no assignee was given, leave it empty on creation. For an explicit removal use assignee=none. Never ask who to assign in text. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, потом/не срочно = low.\n" +
+      "MISSING CRITICAL FIELD: when creating, if the title or the deadline cannot be inferred with confidence, do NOT emit a create token — ask ONE short clarifying question naming only what is missing. Updates only require the task id and changed field. Missing/unclear assignee must never block a token.\n" +
       "OPEN TASK LIST FORMAT: when the user asks for their own or another person's open/current tasks, answer with the localized equivalent of \"Вот ваши текущие задачи:\" and then put each task on its own plain line. Use exactly: \"Task title — до D month\" for a future or today's deadline, or \"Task title — просрочено с D month\" when overdue. If no deadline exists, show only the task title with no extra text. Do not show status, priority, icons, numbering, bullets, assignee, department, or technical fields. Append \" · Project name\" only when the project helps distinguish the context. Use natural localized month names, never raw YYYY-MM-DD dates. For another person, adapt the heading naturally to that person. Say plainly when there are no open tasks.\n" +
       "Confirm briefly in the user's language after action tokens. Never wrap tokens in quotes or code.\n" +
       "CALENDAR AGENT: when the user asks to create/schedule a meeting, emit exactly [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. ONLY the date and time are required — when they are present you MUST emit the token in the same reply. Never ask for the title: default to \"Встреча\"/\"Meeting\". Attendees are optional: leave the emails field empty when nobody is named, otherwise resolve real emails from TEAM MEMBERS and skip names you cannot resolve. Never repeat a clarification you already asked. Default duration is one hour. Do not emit this token for tasks or reminders.\n" +

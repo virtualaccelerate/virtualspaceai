@@ -329,6 +329,42 @@ export async function listMembersForUser(userId: string, teamspaceId: string) {
     return { id: m.user_id, role: m.role, full_name: profile?.full_name ?? null, email: profile?.email ?? null, avatar_url: profile?.avatar_url ?? null };
   });
 }
+
+/** Resolve AI assignment input only inside an authorized workspace/task. */
+export async function assignmentPickerForUser(userId: string, input: { teamspace_id?: string; task_id?: string; assignee?: string }) {
+  const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+  const { resolveMember } = await import("./member-resolution");
+  let requested = input.teamspace_id;
+  let currentAssignee: string | null = null;
+  if (input.task_id) {
+    const db = await admin();
+    const { data: task } = await db.from("tasks").select("teamspace_id, assignee_id, assignee_name, user_id").eq("id", input.task_id).maybeSingle();
+    if (!task?.teamspace_id) throw new Error("Task not found");
+    requested = task.teamspace_id;
+    await activeTeamspace(userId, requested);
+    const role = await getWorkspaceRole(userId, requested);
+    if (!isManagerRole(role)) {
+      const { taskBelongsTo, viewerIdentity } = await import("./task-visibility.server");
+      if (!taskBelongsTo(task, await viewerIdentity(userId))) throw new Error("Вы можете менять только свои задачи");
+    }
+    currentAssignee = task.assignee_id;
+  }
+  const teamspaceId = await activeTeamspace(userId, requested);
+  const manager = isManagerRole(await getWorkspaceRole(userId, teamspaceId));
+  const roster = (await listMembersForUser(userId, teamspaceId)).map((m) => ({ id: m.id, name: m.full_name || m.email || "Team member", email: m.email }));
+  const members = manager ? roster : roster.filter((m) => m.id === userId);
+  const raw = input.assignee?.trim();
+  const explicitNone = raw?.toLowerCase() === "none";
+  const resolution = raw && !explicitNone ? resolveMember(raw, roster) : null;
+  const resolvedId = resolution && "match" in resolution ? resolution.match.id : null;
+  const allowedId = resolvedId && members.some((m) => m.id === resolvedId) ? resolvedId : null;
+  return {
+    teamspace_id: teamspaceId,
+    members,
+    assignee_id: raw ? allowedId : members.some((m) => m.id === currentAssignee) ? currentAssignee : null,
+    needs_selection: Boolean(raw && !explicitNone && !allowedId),
+  };
+}
 /** Employee submits proof — the task goes to review and the approver is notified. */
 export async function submitProofForUser(
   userId: string,
