@@ -29,6 +29,7 @@ import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { createGoogleCalendarMeeting } from "@/lib/google-calendar.functions";
 import { Button } from "@/components/ui/button";
+import { TaskAssignmentPicker } from "@/components/TaskAssignmentPicker";
 
 type CreatedTask = { id: string; title: string };
 type ParsedTask = {
@@ -36,8 +37,11 @@ type ParsedTask = {
   priority?: "low" | "medium" | "high" | "urgent";
   due_date?: string;
   description?: string;
-  assignee_id?: string;
+  assignee_id?: string | null;
   assignee_name?: string;
+  assignee_query?: string;
+  assignment_ready?: boolean;
+  teamspace_id?: string;
   project?: string;
   department?: string;
 };
@@ -48,7 +52,10 @@ type ParsedUpdate = {
   status?: "backlog" | "in_progress" | "review" | "done";
   due_date?: string;
   description?: string;
-  assignee_id?: string;
+  assignee_id?: string | null;
+  assignee_name?: string;
+  assignee_query?: string;
+  assignment_ready?: boolean;
   project?: string;
   department?: string;
 };
@@ -137,6 +144,7 @@ function parseTaskTokens(text: string): {
     }
     if (due_date && /^\d{4}-\d{2}-\d{2}$/.test(due_date)) t.due_date = due_date;
     if (description) t.description = description;
+    t.assignee_query = assignee || undefined;
     if (assignee && assignee.toLowerCase() !== "none") {
       if (UUID_ONLY.test(assignee)) t.assignee_id = assignee;
       else t.assignee_name = assignee;
@@ -166,7 +174,12 @@ function parseTaskTokens(text: string): {
       else if (field === "status" && ["backlog", "in_progress", "review", "done"].includes(value))
         u.status = value as ParsedUpdate["status"];
       else if (field === "due_date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) u.due_date = value;
-      else if (field === "assignee" && UUID_ONLY.test(value)) u.assignee_id = value;
+      else if (field === "assignee") {
+        u.assignee_query = value;
+        if (value.toLowerCase() === "none") u.assignee_id = null;
+        else if (UUID_ONLY.test(value)) u.assignee_id = value;
+        else u.assignee_name = value;
+      }
     }
     updates.push(u);
     return "";
@@ -516,14 +529,15 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const acceptTask = async (msgIdx: number, taskIdx: number) => {
     const msg = messages[msgIdx];
     const tk = msg?.proposed?.[taskIdx];
-    if (!tk) return;
+    if (!tk || !tk.assignment_ready) return;
     if (!tk.due_date) {
       setError(t("app.chat.deadlineRequired", "Укажите дедлайн перед созданием задачи"));
       return;
     }
     setAcceptingIdx(`${msgIdx}-${taskIdx}`);
     try {
-      const row = await mkTask({ data: tk });
+      const { assignee_name, assignee_query, assignment_ready, ...data } = tk;
+      const row = await mkTask({ data: { ...data, assignee_id: tk.assignee_id ?? null } });
       setMessages((prev) =>
         prev.map((m, i) =>
           i !== msgIdx
@@ -552,10 +566,11 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   const applyUpdate = async (msgIdx: number, updIdx: number) => {
     const upd = messages[msgIdx]?.updates?.[updIdx];
-    if (!upd) return;
+    if (!upd || !upd.assignment_ready) return;
     setAcceptingIdx(`u${msgIdx}-${updIdx}`);
     try {
-      const row = await editTask({ data: upd });
+      const { assignee_name, assignee_query, assignment_ready, ...data } = upd;
+      const row = await editTask({ data });
       setMessages((prev) =>
         prev.map((m, i) =>
           i !== msgIdx
@@ -1062,12 +1077,12 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                               <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2 mt-0.5">
                                 {tk.priority && <span>{tk.priority}</span>}
                                 {tk.due_date && <span>{tk.due_date}</span>}
-                                {(tk.assignee_name || tk.assignee_id) && (
-                                  <span>{tk.assignee_name ?? t("app.chat.assigned", "assigned member")}</span>
-                                )}
                                 {tk.project && <span>#{tk.project}</span>}
                                 {tk.department && <span>{tk.department}</span>}
                               </div>
+                              <TaskAssignmentPicker teamspaceId={teamspaceId} raw={tk.assignee_query} onChange={(id, ready, workspace) => setMessages((prev) => prev.map((item, index) => index !== i ? item : {
+                                ...item, proposed: (item.proposed ?? []).map((task, taskIndex) => taskIndex === j ? { ...task, assignee_id: id, assignment_ready: ready, teamspace_id: workspace } : task),
+                              }))} />
                               {!tk.due_date && (
                                 <input
                                   type="date"
@@ -1080,19 +1095,19 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                                 />
                               )}
                             </div>
-                            <button
-                              disabled={acceptingIdx === `${i}-${j}` || !tk.due_date}
+                            <Button
+                              disabled={acceptingIdx === `${i}-${j}` || !tk.due_date || !tk.assignment_ready}
                               onClick={() => void acceptTask(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >
                               {acceptingIdx === `${i}-${j}` ? "…" : t("app.chat.acceptTask", "Accept")}
-                            </button>
-                            <button
+                            </Button>
+                            <Button variant="secondary"
                               onClick={() => rejectTask(i, j)}
                               className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
                             >
                               {t("app.chat.rejectTask", "Reject")}
-                            </button>
+                            </Button>
                           </div>
                         ))}
                         {m.proposed.length > 1 && (
@@ -1117,24 +1132,26 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                                 {u.status && <span>{u.status}</span>}
                                 {u.priority && <span>{u.priority}</span>}
                                 {u.due_date && <span>{u.due_date}</span>}
-                                {u.assignee_id && <span>{t("app.chat.assigned", "assigned member")}</span>}
                                 {u.project && <span>#{u.project}</span>}
                                 {u.department && <span>{u.department}</span>}
                               </div>
+                              <TaskAssignmentPicker teamspaceId={teamspaceId} taskId={u.id} raw={u.assignee_query} onChange={(id, ready) => setMessages((prev) => prev.map((item, index) => index !== i ? item : {
+                                ...item, updates: (item.updates ?? []).map((update, updateIndex) => updateIndex === j ? { ...update, assignee_id: id, assignment_ready: ready } : update),
+                              }))} />
                             </div>
-                            <button
-                              disabled={acceptingIdx === `u${i}-${j}`}
+                            <Button
+                              disabled={acceptingIdx === `u${i}-${j}` || !u.assignment_ready}
                               onClick={() => void applyUpdate(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >
                               {acceptingIdx === `u${i}-${j}` ? "…" : t("app.chat.applyChange", "Apply")}
-                            </button>
-                            <button
+                            </Button>
+                            <Button variant="secondary"
                               onClick={() => rejectUpdate(i, j)}
                               className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
                             >
                               {t("app.chat.rejectTask", "Reject")}
-                            </button>
+                            </Button>
                           </div>
                         ))}
                       </div>

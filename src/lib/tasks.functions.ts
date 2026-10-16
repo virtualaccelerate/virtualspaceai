@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
 import { CreateTaskSchema, DecideTaskSchema, DeleteTaskSchema, DeleteTasksBulkSchema, ListMembersSchema, SubmitProofSchema, UpdateTaskSchema, UpdateTasksBulkSchema } from "./tasks.schemas";
 
 export const createTask = createServerFn({ method: "POST" })
@@ -40,6 +41,14 @@ export const listTaskMembers = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { listMembersForUser } = await import("./tasks.server");
     return listMembersForUser(context.userId, data.teamspace_id);
+  });
+
+export const loadAssignmentPicker = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ teamspace_id: z.string().uuid().optional(), task_id: z.string().uuid().optional(), assignee: z.string().max(200).optional() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const { assignmentPickerForUser } = await import("./tasks.server");
+    return assignmentPickerForUser(context.userId, data);
   });
 
 export const submitTaskForReview = createServerFn({ method: "POST" })

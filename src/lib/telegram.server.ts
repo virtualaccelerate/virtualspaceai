@@ -1,5 +1,7 @@
 // Server-only Telegram bot logic. Never import from client code.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { resolveMember, type AssignmentMember } from "./member-resolution";
+import { assignmentCallback, parseAssignmentCallback } from "./assignment-callback";
 
 export const TELEGRAM_API = "https://api.telegram.org";
 
@@ -765,10 +767,10 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
     "\nIf the user asks to create a \"task\", a \"Google Task\" or \"задачу в Google Tasks\" (any phrasing, including when they explicitly name Google Tasks), it is still the SAME action — ALWAYS emit the [[task:...]] token above. A task with a due date already syncs to Google Tasks automatically in the background; this is already set up. Never say you cannot create tasks directly in Google Tasks, never ask whether to create it \"in my system\" instead, and never ask for confirmation — title plus a deadline (even \"today\"/\"сегодня\") is enough information, so create it immediately." +
     "\nWorkspace field (8th): the id or exact name from WORKSPACES. Whenever the message names a workspace (\"для воркспейса X\", \"воркспейс: X\", \"в пространстве X\"), you MUST put that workspace's id there — never fall back to the default. If not mentioned use the default workspace." +
     "\nTitle must contain ONLY the work itself: never include the workspace name or phrases like \"для воркспейса …\", \"воркспейс: …\", and never append the workspace with a dash." +
-    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (member id), project, department, description. Take TASK_ID from OPEN TASKS or NOTIFIED TASKS (each task is labelled with its workspace)." +
+    "\nTo change an existing task, emit [[task-update:TASK_ID||field=value||field=value]] — fields: title, priority, due_date, status (backlog|in_progress|review|done), assignee (written name or member id; none to remove), project, department, description. Take TASK_ID from OPEN TASKS or NOTIFIED TASKS (each task is labelled with its workspace)." +
     "\nSTATUS CHANGES ARE MANDATORY TOKENS: whenever the user says a task is started, in progress, finished, done, closed, ready, sent for review, or should go back to backlog — immediately emit [[task-update:TASK_ID||status=...]] for the matching task from OPEN TASKS or NOTIFIED TASKS. Wording: сделал/готово/выполнил/закрыл/завершил = done; начал/в работе/делаю = in_progress; на проверку/на ревью = review; вернуть/в бэклог = backlog. Never answer that you changed the status without emitting the token. Match the task by title even if worded loosely; only if several open tasks match equally, ask one short question naming them." +
-    "\nAssignee field: ALWAYS the member id from TEAM MEMBERS when the person has an account; make sure the member belongs to the chosen workspace. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
-    "\nWhen CREATING a task, if the title, assignee or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
+    "\nAssignee field: preserve the user's written name for safe server resolution, or use a member id only if explicitly supplied. Never guess between similar names. Unknown/ambiguous names still require a task token; the member keyboard handles assignment. Never ask who to assign in text. Priority wording: срочно/горит/ASAP = urgent, важно/высокий = high, обычная = medium, не срочно = low." +
+    "\nWhen CREATING a task, if the title or deadline cannot be inferred confidently, do NOT emit a create token — ask one short clarifying question instead. This rule never applies to updates: updates only need the task id and the changed field." +
     "\nOPEN TASK LIST FORMAT: when asked for the user's or another person's open/current tasks, start with the localized equivalent of \"Вот ваши текущие задачи:\" and put each task on its own plain line. Format future/today deadlines as \"Task title — до D month\", overdue deadlines as \"Task title — просрочено с D month\", and tasks without a deadline as the title only. Use natural localized month names, not YYYY-MM-DD. Do not include status, priority, icons, bullets, numbering, assignee, department, or workspace. Append \" · Project name\" only when the project helps explain context. Adapt the heading naturally when listing another person's tasks." +
     (await import("./agent-automation.server")).AGENT_AUTOMATION_PROMPT +
     "\nCALENDAR: if the user asks to create or schedule a meeting, emit [[meeting:Title||START_ISO_WITH_+06:00||END_ISO_WITH_+06:00||description||comma-separated-emails]]. ONLY the date and time are required — if they are present, you MUST emit the token immediately in the same reply. Never ask for the meeting title: if it is not given, use a sensible short default (\"Встреча\" / \"Meeting\", or the workspace name). Attendees are optional: leave the emails field empty when nobody is named; when people are named (including \"я\", \"me\"), resolve their emails from TEAM MEMBERS and skip names you cannot resolve. Never ask the same clarification twice — if you already asked once, create the meeting with defaults. Default duration is one hour. Do not use this token for tasks." +
@@ -818,13 +820,14 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
   const updatedTitles: string[] = [];
   const updateErrors: string[] = [];
   const meetingResults: string[] = [];
+  const assignmentPrompts: { id: string; title: string; teamspaceId: string; candidates: AssignmentMember[] }[] = [];
 
   let match: RegExpExecArray | null;
   while ((match = taskRe.exec(reply))) {
     const [title, priority, due, description, assignee, project, department, space] = match[1].split("||");
     if (!title?.trim()) continue;
     const assigneeRaw = (assignee ?? "").trim();
-    let assigneeId = UUID.test(assigneeRaw) ? assigneeRaw : null;
+    let assigneeId: string | null = null;
     // Resolve the workspace named in the 8th field; fall back to the message text, then the default
     const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
     const matchSpaceName = (raw: string): string | null => {
@@ -857,17 +860,11 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       if (fromText) targetSpace = fromText;
     }
     const targetSpaceName = targetSpace ? spaceMap.get(targetSpace) : null;
-    // A written name ("Бермет", "bermet") is matched against the workspace team list,
-    // so the task lands on a real person instead of a plain text label.
-    if (!assigneeId && assigneeRaw) {
-      const { matchMember } = await import("./task-import.server");
-      const pool = roster.filter((m) => !targetSpace || m.teamspace_id === targetSpace);
-      const found = matchMember(assigneeRaw, pool);
-      if (found) assigneeId = found.id;
-    }
-    if (assigneeId && targetSpace && !roster.some((m) => m.id === assigneeId && m.teamspace_id === targetSpace)) {
-      assigneeId = null;
-    }
+    const pool = roster.filter((m) => m.teamspace_id === targetSpace);
+    const resolution = resolveMember(assigneeRaw, pool);
+    if ("match" in resolution) assigneeId = resolution.match.id;
+    const explicitNone = assigneeRaw.toLowerCase() === "none";
+    const needsPicker = !explicitNone && ((Boolean(assigneeRaw) && !assigneeId) || (!assigneeRaw && managerSpaceIds.has(targetSpace)));
     // The model sometimes glues the workspace phrase into the title — strip it
     let cleanTitle = title
       .trim()
@@ -875,48 +872,23 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       .replace(/\s*[—-]\s*$/u, "")
       .trim();
     if (!cleanTitle) cleanTitle = title.trim();
-    const { data } = await supabaseAdmin
-      .from("tasks")
-      .insert({
-        user_id: link.user_id,
-        teamspace_id: targetSpace,
+    try {
+      const { createTaskForUser } = await import("./tasks.server");
+      const data = await createTaskForUser(link.user_id, {
+        teamspace_id: targetSpace ?? undefined,
         title: cleanTitle.slice(0, 300),
         description: description?.trim() || null,
-        status: "backlog",
-        priority: (["low", "medium", "high", "urgent"] as const).includes(
-          (priority?.trim() ?? "") as any,
-        )
-          ? (priority.trim() as "low" | "medium" | "high" | "urgent")
-          : "medium",
+        priority: (["low", "medium", "high", "urgent"] as const).includes((priority?.trim() ?? "") as any)
+          ? priority.trim() as "low" | "medium" | "high" | "urgent" : "medium",
         due_date: /^\d{4}-\d{2}-\d{2}$/.test(due?.trim() ?? "") ? due.trim() : null,
         assignee_id: assigneeId,
-        assignee_name: assigneeId ? null : assigneeRaw || null,
         project: project?.trim() || null,
         department: department?.trim() || null,
-        position: 0,
-      })
-      .select("id, title, status, priority, due_date, assignee_id")
-      .single();
-    if (data) {
-      createdTitles.push(
-        targetSpaceName ? `${(data as any).title} — ${targetSpaceName}` : (data as any).title,
-      );
-      if ((data as any).assignee_id) {
-        const { notifyAssignment } = await import("./tasks.server");
-        await notifyAssignment({
-          assigneeId: (data as any).assignee_id,
-          actorId: link.user_id,
-          teamspaceId: targetSpace,
-          kind: "assigned",
-          taskId: (data as any).id,
-          title: (data as any).title,
-          status: (data as any).status,
-          priority: (data as any).priority,
-          dueDate: (data as any).due_date,
-        }).catch(() => {});
-      }
-      const { syncTaskToGoogleTasks } = await import("./google-calendar.server");
-      await syncTaskToGoogleTasks({ ...(data as any), user_id: link.user_id, description: description?.trim() || null, external_source: null }).catch(() => {});
+      });
+      createdTitles.push(targetSpaceName ? `${data.title} — ${targetSpaceName}` : data.title);
+      if (needsPicker && data.teamspace_id) assignmentPrompts.push({ id: data.id, title: data.title, teamspaceId: data.teamspace_id, candidates: "candidates" in resolution ? resolution.candidates : [] });
+    } catch (error) {
+      updateErrors.push(`${cleanTitle}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   while ((match = updateRe.exec(reply))) {
@@ -936,8 +908,7 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       else if (field === "status" && ["backlog", "in_progress", "review", "done"].includes(value)) patch.status = value;
       else if (field === "due_date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) patch.due_date = value;
       else if (field === "assignee") {
-        if (UUID.test(value)) patch.assignee_id = value;
-        else assigneeName = value;
+        assigneeName = value;
       }
     }
     if (!Object.keys(patch).length && !assigneeName) continue;
@@ -958,29 +929,24 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       continue;
     }
 
-    // "назначь Бермет" — match the spoken name against the task's workspace team list
-    if (assigneeName) {
-      const { matchMember } = await import("./task-import.server");
-      const found = matchMember(assigneeName, roster.filter((m) => m.teamspace_id === taskSpace));
-      if (found) {
-        patch.assignee_id = found.id;
-        patch.assignee_name = null;
-      } else {
-        updateErrors.push(
-          lang === "en"
-            ? `${assigneeName}: not in this workspace`
-            : `${assigneeName}: нет такого участника в этом пространстве`,
-        );
+    if (!managerSpaceIds.has(taskSpace)) {
+      const { taskBelongsTo, viewerIdentity } = await import("./task-visibility.server");
+      if (!taskBelongsTo(existing, await viewerIdentity(link.user_id))) {
+        updateErrors.push("Вы можете менять только свои задачи");
+        continue;
       }
     }
-    if (typeof patch.assignee_id === "string" && !roster.some((m) => m.id === patch.assignee_id && m.teamspace_id === taskSpace)) {
-      delete patch.assignee_id;
+    if (assigneeName) {
+      const resolution = resolveMember(assigneeName, roster.filter((m) => m.teamspace_id === taskSpace));
+      if (assigneeName.toLowerCase() === "none") patch.assignee_id = null;
+      else if ("match" in resolution) patch.assignee_id = resolution.match.id;
+      else assignmentPrompts.push({ id: taskId, title: existing.title, teamspaceId: taskSpace, candidates: "candidates" in resolution ? resolution.candidates : [] });
     }
     if (!Object.keys(patch).length) continue;
 
     // Tasks mirrored from YouGile / Trello are managed there — push the status back
     const { isExternalTask, externalLabel, pushExternalStatus } = await import("./external-tasks.server");
-    if (isExternalTask((existing as any).external_source)) {
+    if (isExternalTask((existing as any).external_source) && existing.external_source !== "trello") {
       const tracker = externalLabel((existing as any).external_source);
       if (typeof patch.status === "string") {
         try {
@@ -999,22 +965,14 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
       continue;
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("tasks")
-      .update(patch as never)
-      .eq("id", taskId)
-      .select("id,user_id,assignee_id,title,description,due_date,status,priority,external_source")
-      .single();
-    if (data) {
-      updatedTitles.push((data as any).title);
-      const { syncTaskToGoogleTasks } = await import("./google-calendar.server");
-      await syncTaskToGoogleTasks(data as any, (existing as any).assignee_id ?? (existing as any).user_id).catch(() => {});
+    try {
+      const { updateTaskForUser } = await import("./tasks.server");
+      const { UpdateTaskSchema } = await import("./tasks.schemas");
+      const data = await updateTaskForUser(link.user_id, UpdateTaskSchema.parse({ id: taskId, ...patch }));
+      updatedTitles.push(data.title);
+    } catch (error) {
+      updateErrors.push(`${existing.title}: ${error instanceof Error ? error.message : String(error)}`);
     }
-    else
-      updateErrors.push(
-        `${(existing as any).title}: ${error?.message?.slice(0, 120) ?? (lang === "en" ? "update failed" : "не удалось обновить")}`,
-      );
-
   }
   while ((match = meetingRe.exec(reply))) {
     const [rawTitle, start, end, description, emails] = match[1].split("||").map((part) => part.trim());
@@ -1069,6 +1027,22 @@ async function handleAiMessage(link: Link, chatId: number, text: string, lang: L
 
   if (!clean.trim()) clean = lang === "en" ? "✅ Done." : "✅ Готово.";
   await sendMessage(chatId, clean.slice(0, 3800), withMenu(lang, openTracker));
+  for (const prompt of assignmentPrompts) {
+    await sendAssignmentPicker(link.user_id, chatId, prompt, lang);
+  }
+}
+
+async function sendAssignmentPicker(userId: string, chatId: number, prompt: { id: string; title: string; teamspaceId: string; candidates: AssignmentMember[] }, lang: Lang) {
+  const { listMembersForUser } = await import("./tasks.server");
+  const members = await listMembersForUser(userId, prompt.teamspaceId);
+  const candidateIds = new Set(prompt.candidates.map((m) => m.id));
+  const sorted = [...members].sort((a, b) => Number(candidateIds.has(b.id)) - Number(candidateIds.has(a.id)));
+  const buttons = sorted.filter((m) => m.id !== userId).slice(0, 10).map((m) => [{ text: m.full_name || m.email || "Team member", callback_data: assignmentCallback(prompt.id, m.id) }]);
+  buttons.push([
+    { text: lang === "en" ? "Myself" : "Себе", callback_data: assignmentCallback(prompt.id, "self") },
+    { text: lang === "en" ? "Unassigned" : "Без исполнителя", callback_data: assignmentCallback(prompt.id, "none") },
+  ]);
+  await sendMessage(chatId, lang === "en" ? `Who should do “${prompt.title}”?` : `Кому назначить «${prompt.title}»?`, { reply_markup: { inline_keyboard: buttons } });
 }
 
 // ---------------- callbacks ----------------
@@ -1152,6 +1126,20 @@ async function handleCallback(cb: any) {
   if (!link) return;
   const lang = pickLang(link.language);
   const [action, taskId] = String(cb.data ?? "").split(":");
+
+  if (action === "asg") {
+    try {
+      const patch = parseAssignmentCallback(String(cb.data), link.user_id);
+      const { updateTaskForUser } = await import("./tasks.server");
+      const row = await updateTaskForUser(link.user_id, patch);
+      const name = row.assignee_name || (lang === "en" ? "Unassigned" : "Без исполнителя");
+      await tg("answerCallbackQuery", { callback_query_id: cb.id });
+      await tg("editMessageText", { chat_id: chatId, message_id: cb.message.message_id, text: `✅ Назначено: ${name}`, reply_markup: { inline_keyboard: [] } });
+    } catch (error) {
+      await tg("answerCallbackQuery", { callback_query_id: cb.id, text: error instanceof Error ? error.message.slice(0, 180) : "Ошибка", show_alert: true });
+    }
+    return;
+  }
 
   if (action === "resched") {
     const days = Number(String(cb.data).split(":")[2] ?? "1") || 1;
