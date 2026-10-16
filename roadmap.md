@@ -1,7 +1,7 @@
 ## Задачи
-- [ ] Improve shared multilingual speech recognition and per-attempt metadata logging
-- [ ] Improve web recording, silence detection, timer and retry; surface Telegram errors
-- [ ] Verify Russian, Kyrgyz, English, fallback and Telegram Ogg transcription
+- [x] Improve shared multilingual speech recognition and per-attempt metadata logging
+- [x] Improve web recording, silence detection, timer and retry; surface Telegram errors
+- [x] Verify Russian, Kyrgyz, English, fallback and Telegram Ogg transcription
 - [x] Harden workspace membership, task and training RLS without changing existing rows
 - [x] Set documents upload limit to 50 MB
 - [x] Verify security boundaries with temporary users/workspaces and remove test data
