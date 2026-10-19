@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles, ArrowUpRight, CheckSquare, Clock, TrendingUp, Users,
@@ -40,6 +40,8 @@ function AppDashboard() {
   const [data, setData] = useState<Data>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
+  const [highlightNotifications, setHighlightNotifications] = useState(false);
+  const notificationsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -59,6 +61,16 @@ function AppDashboard() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!data || window.location.hash !== "#notifications") return;
+    const el = notificationsRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth" });
+    setHighlightNotifications(true);
+    const id = setTimeout(() => setHighlightNotifications(false), 2000);
+    return () => clearTimeout(id);
+  }, [data]);
 
   if (loading) {
     return (
@@ -274,7 +286,11 @@ function AppDashboard() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-5">
+        <section
+          id="notifications"
+          ref={notificationsRef}
+          className={`rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-5 scroll-mt-24 transition-shadow ${highlightNotifications ? "ring-2 ring-primary" : ""}`}
+        >
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-base">{t("workspaceUi.overview.notifications", "Уведомления")}</h2>
             <Bell className="h-4 w-4 text-[color:var(--muted-foreground)]" />

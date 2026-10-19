@@ -2,6 +2,7 @@ import type { GroupResources } from "./merge";
 
 const bundle: GroupResources = {
   en: {
+    app: { notifications: { title: "Notifications", empty: "No notifications yet", open: "Open", viewAll: "All notifications" } },
     shellUi: {
       auth: {
         createAccount: "Create account",
@@ -72,6 +73,7 @@ const bundle: GroupResources = {
     },
   },
   ru: {
+    app: { notifications: { title: "Уведомления", empty: "Пока нет уведомлений", open: "Открыть", viewAll: "Все уведомления" } },
     shellUi: {
       auth: {
         createAccount: "Создать аккаунт",
@@ -142,6 +144,7 @@ const bundle: GroupResources = {
     },
   },
   kk: {
+    app: { notifications: { title: "Хабарландырулар", empty: "Әзірге хабарландыру жоқ", open: "Ашу", viewAll: "Барлық хабарландырулар" } },
     shellUi: {
       auth: {
         createAccount: "Аккаунт құру",
@@ -212,6 +215,7 @@ const bundle: GroupResources = {
     },
   },
   ky: {
+    app: { notifications: { title: "Билдирүүлөр", empty: "Азырынча билдирүү жок", open: "Ачуу", viewAll: "Бардык билдирүүлөр" } },
     shellUi: {
       auth: {
         createAccount: "Аккаунт түзүү",
@@ -282,6 +286,7 @@ const bundle: GroupResources = {
     },
   },
   uz: {
+    app: { notifications: { title: "Bildirishnomalar", empty: "Hozircha bildirishnoma yo‘q", open: "Ochish", viewAll: "Barcha bildirishnomalar" } },
     shellUi: {
       auth: {
         createAccount: "Hisob yaratish",
@@ -352,6 +357,7 @@ const bundle: GroupResources = {
     },
   },
   tg: {
+    app: { notifications: { title: "Огоҳиномаҳо", empty: "Ҳануз огоҳинома нест", open: "Кушодан", viewAll: "Ҳамаи огоҳиномаҳо" } },
     shellUi: {
       auth: {
         createAccount: "Сохтани ҳисоб",
