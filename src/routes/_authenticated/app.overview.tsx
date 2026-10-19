@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles, ArrowUpRight, CheckSquare, Clock, TrendingUp, Users,
@@ -40,6 +40,8 @@ function AppDashboard() {
   const [data, setData] = useState<Data>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
+  const [highlightNotifications, setHighlightNotifications] = useState(false);
+  const notificationsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     (async () => {
