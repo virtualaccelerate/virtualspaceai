@@ -1,10 +1,12 @@
 import { ManagerOnly } from "@/components/ManagerOnly";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Users, Loader2, Plus, Trash2, RefreshCw, ScanSearch, ExternalLink, FileSpreadsheet, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
+import clientLocales from "@/locales/clients";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { listClientsFn, saveClientFn, deleteClientFn, scanClientTasksFn, setupClientDbFn, syncClientSheetFn } from "@/lib/clients.functions";
 
@@ -15,10 +17,10 @@ export const Route = createFileRoute("/_authenticated/app/clients")({
     </ManagerOnly>
   ),
   head: () => ({ meta: [
-    { title: "Client Database — Virtual Space" },
-    { name: "description", content: "Manage your company client database in Virtual Space." },
-    { property: "og:title", content: "Client Database — Virtual Space" },
-    { property: "og:description", content: "Manage your company client database in Virtual Space." },
+    { title: i18next.t("clientsUi.headTitle", { defaultValue: String(clientLocales.en.clientsUi.headTitle) }) },
+    { name: "description", content: i18next.t("clientsUi.headDescription", { defaultValue: String(clientLocales.en.clientsUi.headDescription) }) },
+    { property: "og:title", content: i18next.t("clientsUi.headTitle", { defaultValue: String(clientLocales.en.clientsUi.headTitle) }) },
+    { property: "og:description", content: i18next.t("clientsUi.headDescription", { defaultValue: String(clientLocales.en.clientsUi.headDescription) }) },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
     { name: "robots", content: "noindex" },
@@ -39,6 +41,41 @@ const letter = (i: number) => String.fromCharCode(65 + i);
 
 function ClientsPage() {
   const { t, i18n } = useTranslation();
+  useMemo(() => {
+    for (const [code, resources] of Object.entries(clientLocales)) {
+      i18n.addResourceBundle(code, "translation", resources, true, true);
+    }
+  }, [i18n]);
+  const code = (i18n.resolvedLanguage ?? i18n.language).split(/[-_]/)[0];
+  const language = (["en", "ru", "kk", "ky", "uz", "tg"].includes(code) ? code : "ru") as "en" | "ru" | "kk" | "ky" | "uz" | "tg";
+  const latestT = useRef(t);
+  latestT.current = t;
+  const [notice, setNotice] = useState<{ error?: string; key?: string; params?: Record<string, number> } | null>(null);
+  const toastId = useRef<string | number | undefined>(undefined);
+  const errorText = (message: string) => {
+    const [errorCode, ...param] = message.split(":");
+    if (errorCode === "CLIENTS_DUP_PHONE") {
+      let name = "";
+      try { name = decodeURIComponent(param.join(":")); } catch { /* malformed parameter */ }
+      return latestT.current("clientsUi.dupPhone", { name: name || latestT.current("clientsUi.unnamed") });
+    }
+    const keys: Record<string, string> = {
+      CLIENTS_NO_ACCESS: "noAccess", CLIENTS_MANAGER_ONLY: "managerOnly",
+      SHEET_CREATE_FAILED: "sheetCreateFailed", SHEET_SYNC_FAILED: "sheetSyncFailed",
+    };
+    return latestT.current(`clientsUi.${keys[errorCode] ?? (message.startsWith("Google Sheets") ? "sheetSyncFailed" : "unknownError")}`);
+  };
+  useEffect(() => {
+    document.title = t("clientsUi.headTitle");
+    for (const selector of ['meta[name="description"]', 'meta[property="og:description"]']) {
+      document.querySelector(selector)?.setAttribute("content", t("clientsUi.headDescription"));
+    }
+    document.querySelector('meta[property="og:title"]')?.setAttribute("content", t("clientsUi.headTitle"));
+    if (notice) {
+      const options = { id: toastId.current, onDismiss: () => setNotice(null), onAutoClose: () => setNotice(null) };
+      toastId.current = notice.error ? toast.error(errorText(notice.error), options) : toast.success(t(notice.key ?? "clientsUi.sheetUpdated", notice.params), options);
+    }
+  }, [t, i18n.resolvedLanguage, notice]);
   const list = useServerFn(listClientsFn);
   const save = useServerFn(saveClientFn);
   const del = useServerFn(deleteClientFn);
@@ -63,9 +100,9 @@ function ClientsPage() {
     return (data?.clients ?? []).filter((c) => !s || [c.name, c.phone, c.email, c.company, c.notes].some((v) => (v ?? "").toLowerCase().includes(s)));
   }, [data, q]);
 
-  const act = async (name: string, fn: () => Promise<unknown>, ok?: (r: any) => string) => {
+  const act = async (name: string, fn: () => Promise<unknown>, ok?: (r: any) => { key: string; params?: Record<string, number> }) => {
     setBusy(name);
-    try { const r = await fn(); if (ok) toast.success(ok(r)); await load(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
+    try { const r = await fn(); if (ok) setNotice(ok(r)); await load(); } catch (e) { setNotice({ error: (e as Error).message }); } finally { setBusy(null); }
   };
 
   const commit = async () => {
@@ -73,10 +110,10 @@ function ClientsPage() {
     const row = data?.clients.find((c) => c.id === edit.id);
     setEdit(null);
     if (!row || (row[edit.key] ?? "") === edit.value) return;
-    await act("save", () => save({ data: { teamspace_id: ts, id: row.id, name: row.name, phone: row.phone, email: row.email, company: row.company, notes: row.notes, status: row.status, [edit.key]: edit.value } }));
+    await act("save", () => save({ data: { teamspace_id: ts, language, id: row.id, name: row.name, phone: row.phone, email: row.email, company: row.company, notes: row.notes, status: row.status, [edit.key]: edit.value } }));
   };
 
-  if (err) return <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">{err}</div>;
+  if (err) return <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">{errorText(err)}</div>;
   if (!data || !ts) return <div className="flex justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   const s = data.settings;
   const btn = "inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:border-primary/60 disabled:opacity-50";
@@ -95,16 +132,16 @@ function ClientsPage() {
           {s?.sheet_url ? (
             <>
                <a href={s.sheet_url} target="_blank" rel="noreferrer" className={btn}><FileSpreadsheet className="h-4 w-4 text-primary" />{t("clientsUi.sheet")}<ExternalLink className="h-3 w-3" /></a>
-               <button className={btn} disabled={!!busy} onClick={() => act("sync", () => sync({ data: { teamspace_id: ts } }), () => t("clientsUi.sheetUpdated"))}>
+               <button className={btn} disabled={!!busy} onClick={() => act("sync", () => sync({ data: { teamspace_id: ts, language } }), () => ({ key: "clientsUi.sheetUpdated" }))}>
                  {busy === "sync" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}{t("clientsUi.sync")}
               </button>
             </>
           ) : (
-             <button className={btn} disabled={!!busy} onClick={() => act("setup", () => setup({ data: { teamspace_id: ts } }), () => t("clientsUi.setupDone"))}>
+             <button className={btn} disabled={!!busy} onClick={() => act("setup", () => setup({ data: { teamspace_id: ts, language } }), () => ({ key: "clientsUi.setupDone" }))}>
                {busy === "setup" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}{t("clientsUi.createSheet")}
             </button>
           )}
-           <button className={btn} disabled={!!busy} onClick={() => act("scan", () => scan({ data: { teamspace_id: ts } }), (r) => t("clientsUi.scanDone", { contacts: r.with_contacts, changed: r.changed }))}>
+           <button className={btn} disabled={!!busy} onClick={() => act("scan", () => scan({ data: { teamspace_id: ts, language } }), (r) => ({ key: "clientsUi.scanDone", params: { contacts: r.with_contacts, changed: r.changed } }))}>
              {busy === "scan" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanSearch className="h-4 w-4" />}{t("clientsUi.scan")}
           </button>
         </div>
@@ -115,7 +152,7 @@ function ClientsPage() {
            {t("clientsUi.driveHint")} <Link to="/app/integrations" className="text-primary underline">{t("clientsUi.integrations")}</Link>. {t("clientsUi.knowledgeHint")}
         </div>
       )}
-      {s?.last_error && <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">{s.last_error}</div>}
+      {s?.last_error && <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">{errorText(s.last_error)}</div>}
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
@@ -152,16 +189,16 @@ function ClientsPage() {
                     <td key={c.key} className={`border border-border p-0 align-top ${active ? "outline outline-2 outline-primary" : ""}`}
                       onClick={() => !active && setEdit({ id: r.id, key: c.key, value: String(r[c.key] ?? "") })}>
                       {active ? (
-                        <input autoFocus value={edit.value} onChange={(e) => setEdit({ ...edit, value: e.target.value })} onBlur={commit}
+                        <input autoFocus placeholder={c.key === "name" ? t("clientsUi.newClient") : undefined} value={edit.value} onChange={(e) => setEdit({ ...edit, value: e.target.value })} onBlur={commit}
                           onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEdit(null); }}
                           className="w-full bg-background px-2 py-1.5 outline-none" />
-                      ) : <div className="px-2 py-1.5 whitespace-pre-wrap line-clamp-3 cursor-cell min-h-[32px]">{String(r[c.key] ?? "")}</div>}
+                      ) : <div className="px-2 py-1.5 whitespace-pre-wrap line-clamp-3 cursor-cell min-h-[32px]">{c.key === "name" && !r.name ? <span className="text-muted-foreground">{t("clientsUi.newClient")}</span> : String(r[c.key] ?? "")}</div>}
                     </td>
                   );
                 })}
                 <td className="border border-border px-2 py-1.5 text-xs text-muted-foreground">{r.source_task_ids.length || ""}</td>
                 <td className="border border-border text-center">
-                   <button aria-label={t("clientsUi.deleteClient")} onClick={() => confirm(t("clientsUi.deleteConfirm", { name: r.name || r.phone })) && act("del", () => del({ data: { teamspace_id: ts, id: r.id } }))} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                   <button aria-label={t("clientsUi.deleteClient")} onClick={() => confirm(t("clientsUi.deleteConfirm", { name: r.name || r.phone || t("clientsUi.newClient") })) && act("del", () => del({ data: { teamspace_id: ts, language, id: r.id } }))} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </td>
               </tr>
             ))}
@@ -171,7 +208,7 @@ function ClientsPage() {
           </tbody>
         </table>
       </div>
-       <button className={btn} disabled={!!busy} onClick={() => act("add", () => save({ data: { teamspace_id: ts, name: t("clientsUi.newClient") } }))}><Plus className="h-4 w-4" />{t("clientsUi.addRow")}</button>
+       <button className={btn} disabled={!!busy} onClick={() => act("add", () => save({ data: { teamspace_id: ts, language, name: "" } }))}><Plus className="h-4 w-4" />{t("clientsUi.addRow")}</button>
     </div>
   );
 }
