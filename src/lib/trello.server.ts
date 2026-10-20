@@ -265,6 +265,12 @@ export async function syncTrelloSource(source: Source) {
     for (const card of cards) {
       const externalId = card.id;
       seen.push(externalId);
+      if (card['closed'] === true) {
+        const { error } = await admin.from("tasks").update({ external_archived: true })
+          .eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId);
+        if (error) throw error;
+        continue;
+      }
       const assigned = Array.isArray(card['idMembers']) ? (card['idMembers'] as unknown[]).map(String) : [];
       const mappedId = assigned
         .map((id) => source.user_map?.[id]
@@ -381,6 +387,26 @@ export async function updateTrelloTaskStatus(taskId: string, status: Status, act
   await api(credentials(source), `/cards/${encodeURIComponent(task.external_id)}`, { method: "PUT", query });
   await admin.from("tasks").update({ status }).eq("id", task.id);
   return { ok: true, status };
+}
+
+export async function archiveTrelloTask(taskId: string, actorId: string) {
+  const admin = await db();
+  const { data: task } = await admin.from("tasks")
+    .select("id, teamspace_id, external_id, external_source, user_id").eq("id", taskId).maybeSingle();
+  if (!task?.teamspace_id || task.external_source !== "trello" || !task.external_id) {
+    throw new Error("Задача Trello не найдена");
+  }
+  await requireMember(actorId, task.teamspace_id);
+  const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
+  if (!isManagerRole(await getWorkspaceRole(actorId, task.teamspace_id)) && task.user_id !== actorId) {
+    throw new Error("Удалять чужие задачи может владелец или администратор");
+  }
+  const source = await sourceFor(task.teamspace_id);
+  if (!source) throw new Error("Trello не подключён");
+  await api(credentials(source), `/cards/${encodeURIComponent(task.external_id)}`, {
+    method: "PUT", query: { closed: "true" },
+  });
+  return { ok: true };
 }
 
 export async function updateTrelloTask(

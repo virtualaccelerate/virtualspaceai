@@ -256,7 +256,7 @@ export async function deleteTaskForUser(userId: string, id: string) {
   if (!current) throw new Error("Task not found");
   {
     const { isExternalTask, externalLabel } = await import("./external-tasks.server");
-    if (isExternalTask(current.external_source)) throw new Error(`Эта задача управляется в ${externalLabel(current.external_source)}`);
+    if (isExternalTask(current.external_source) && current.external_source !== "trello") throw new Error(`Эта задача управляется в ${externalLabel(current.external_source)}`);
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
@@ -266,6 +266,10 @@ export async function deleteTaskForUser(userId: string, id: string) {
     if (!isManagerRole(role) && current.user_id !== userId) {
       throw new Error("Удалять чужие задачи может владелец или администратор");
     }
+  }
+  if (current.external_source === "trello") {
+    const { archiveTrelloTask } = await import("./trello.server");
+    await archiveTrelloTask(id, userId);
   }
   const { deleteGoogleTask } = await import("./google-calendar.server");
   await deleteGoogleTask(id).catch(() => {});
@@ -302,9 +306,13 @@ export async function deleteTasksBulkForUser(
   const { data: rows, error } = await query;
   if (error) throw new Error(error.message);
   const { isExternalTask } = await import("./external-tasks.server");
-  const deletable = (rows ?? []).filter((r) => !isExternalTask(r.external_source)).map((r) => r.id);
+  const deletable = (rows ?? []).filter((r) => !isExternalTask(r.external_source) || r.external_source === "trello").map((r) => r.id);
   const skipped = (rows ?? []).length - deletable.length;
   if (!deletable.length) return { ok: true, deleted: 0, skipped };
+  const { archiveTrelloTask } = await import("./trello.server");
+  for (const row of rows ?? []) {
+    if (row.external_source === "trello") await archiveTrelloTask(row.id, userId);
+  }
   const { deleteGoogleTask } = await import("./google-calendar.server");
   for (const id of deletable) await deleteGoogleTask(id).catch(() => {});
   for (let i = 0; i < deletable.length; i += 200) {
