@@ -126,5 +126,5 @@ const tg = {
   empty: "Ҳоло муштарӣ нест. Сатр илова кунед ё «Ёфтани муштариён дар вазифаҳо»-ро пахш кунед.", newClient: "Муштарии нав", deleteClient: "Ҳазфи муштарӣ", deleteConfirm: "«{{name}}» ҳазф шавад?",
 };
 
-const bundle: GroupResources = { en: { clientsUi: en }, ru: { clientsUi: ru }, kk: { clientsUi: kk }, ky: { clientsUi: ky }, uz: { clientsUi: uz }, tg: { clientsUi: tg } };
+const bundle: Record<string, { clientsUi: typeof en }> = { en: { clientsUi: en }, ru: { clientsUi: ru }, kk: { clientsUi: kk }, ky: { clientsUi: ky }, uz: { clientsUi: uz }, tg: { clientsUi: tg } } satisfies GroupResources;
 export default bundle;
