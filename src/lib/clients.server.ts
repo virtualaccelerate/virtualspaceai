@@ -1,3 +1,5 @@
+import clientLocales from "@/locales/clients";
+
 // Client Database: Space table is the source of truth, mirrored to one Google Sheet per workspace.
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -8,9 +10,9 @@ export async function requireClientManager(userId: string, teamspaceId: string) 
   const db = await admin();
   const { data: m } = await db.from("teamspace_members").select("id")
     .eq("teamspace_id", teamspaceId).eq("user_id", userId).maybeSingle();
-  if (!m) throw new Error("Нет доступа к рабочему пространству");
+  if (!m) throw new Error("CLIENTS_NO_ACCESS");
   const { isWorkspaceManager } = await import("./roles.server");
-  if (!(await isWorkspaceManager(userId, teamspaceId))) throw new Error("База клиентов доступна владельцу и администраторам");
+  if (!(await isWorkspaceManager(userId, teamspaceId))) throw new Error("CLIENTS_MANAGER_ONLY");
 }
 
 export function normPhone(raw: string | null | undefined): string | null {
@@ -108,9 +110,9 @@ export async function upsertClient(teamspaceId: string, c: Extracted, taskId?: s
 }
 
 /** Called after a task is created/updated. Cheap regex gate before any AI call. */
-export async function syncClientsFromTask(taskId: string) {
+export async function syncClientsFromTask(taskId: string, userId?: string, language?: string) {
   const db = await admin();
-  const { data: t } = await db.from("tasks").select("id, title, description, teamspace_id, project, status, status_id").eq("id", taskId).maybeSingle();
+  const { data: t } = await db.from("tasks").select("id, title, description, teamspace_id, project, status, status_id, user_id").eq("id", taskId).maybeSingle();
   if (!t?.teamspace_id) return { found: 0 };
   // Mirror the Task Tracker column (incl. Trello/YouGile-mirrored columns) onto linked clients.
   let statusName: string | null = t.status ?? null;
@@ -127,7 +129,7 @@ export async function syncClientsFromTask(taskId: string) {
   }
   const text = `${t.title}\n${t.description ?? ""}`;
   if (!hasClientSignals(text)) {
-    if (statusChanged) await syncSheet(t.teamspace_id).catch(() => {});
+    if (statusChanged) await syncSheet(t.teamspace_id, userId ?? t.user_id, language).catch(() => {});
     return { found: 0 };
   }
   const { data: mem } = await db.from("teamspace_members").select("user_id").eq("teamspace_id", t.teamspace_id);
@@ -145,7 +147,7 @@ export async function syncClientsFromTask(taskId: string) {
     if (r?.changed) changed++;
     if (r?.id && statusName) await db.from("clients").update({ status: statusName }).eq("id", r.id);
   }
-  if (changed || statusChanged) await syncSheet(t.teamspace_id).catch(() => {});
+  if (changed || statusChanged) await syncSheet(t.teamspace_id, userId ?? t.user_id, language).catch(() => {});
   return { found: list.length, changed };
 }
 
@@ -183,47 +185,55 @@ export async function listClients(userId: string, teamspaceId: string) {
   return { clients: clients ?? [], settings: settings ?? null };
 }
 
-export async function saveClient(userId: string, teamspaceId: string, c: { id?: string; name: string; phone?: string | null; email?: string | null; company?: string | null; notes?: string | null; status?: string | null }) {
+export async function saveClient(userId: string, teamspaceId: string, c: { id?: string; name: string; phone?: string | null; email?: string | null; company?: string | null; notes?: string | null; status?: string | null }, language?: string) {
   await requireClientManager(userId, teamspaceId);
   const db = await admin();
   const phone_norm = normPhone(c.phone);
   if (phone_norm) {
     const { data: dup } = await db.from("clients").select("id, name").eq("teamspace_id", teamspaceId).eq("phone_norm", phone_norm).maybeSingle();
-    if (dup && dup.id !== c.id) throw new Error(`Этот номер уже есть у клиента «${dup.name || "без имени"}»`);
+    if (dup && dup.id !== c.id) throw new Error(`CLIENTS_DUP_PHONE:${encodeURIComponent(dup.name ?? "")}`);
   }
   const row = { name: c.name.trim(), phone: c.phone?.trim() || null, phone_norm, email: c.email?.trim() || null,
     company: c.company?.trim() || null, notes: c.notes?.trim() || null, status: c.status?.trim() || null };
   if (c.id) await db.from("clients").update(row).eq("id", c.id).eq("teamspace_id", teamspaceId);
   else await db.from("clients").insert({ ...row, teamspace_id: teamspaceId });
-  await syncSheet(teamspaceId).catch(() => {});
+  await syncSheet(teamspaceId, userId, language).catch(() => {});
   return { ok: true };
 }
 
-export async function deleteClient(userId: string, teamspaceId: string, id: string) {
+export async function deleteClient(userId: string, teamspaceId: string, id: string, language?: string) {
   await requireClientManager(userId, teamspaceId);
   const db = await admin();
   await db.from("clients").delete().eq("id", id).eq("teamspace_id", teamspaceId);
-  await syncSheet(teamspaceId).catch(() => {});
+  await syncSheet(teamspaceId, userId, language).catch(() => {});
   return { ok: true };
 }
 
-export async function scanTasks(userId: string, teamspaceId: string) {
+export async function scanTasks(userId: string, teamspaceId: string, language?: string) {
   await requireClientManager(userId, teamspaceId);
   const db = await admin();
   const { data: tasks } = await db.from("tasks").select("id, title, description").eq("teamspace_id", teamspaceId)
     .order("updated_at", { ascending: false }).limit(500);
   const hits = (tasks ?? []).filter((t) => hasClientSignals(`${t.title}\n${t.description ?? ""}`)).slice(0, 60);
   let changed = 0;
-  for (const t of hits) changed += (await syncClientsFromTask(t.id)).changed ?? 0;
-  await syncSheet(teamspaceId).catch(() => {});
+  for (const t of hits) changed += (await syncClientsFromTask(t.id, userId, language)).changed ?? 0;
+  await syncSheet(teamspaceId, userId, language).catch(() => {});
   return { scanned: tasks?.length ?? 0, with_contacts: hits.length, changed };
 }
 
 // ---------- Google Sheet mirror ----------
-const HEADERS = ["Имя", "Телефон", "Email", "Компания", "Статус", "Заметки", "Задачи-источники", "Обновлено"];
+async function sheetLocale(userId?: string, language?: string) {
+  if (!language && userId) {
+    const db = await admin();
+    const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
+    language = (profile as { language?: string } | null)?.language;
+  }
+  const code = language?.toLowerCase().split(/[-_]/)[0] ?? "ru";
+  return clientLocales[code]?.clientsUi ?? clientLocales.ru.clientsUi;
+}
 const csvCell = (v: unknown) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
-async function buildCsv(teamspaceId: string) {
+async function buildCsv(teamspaceId: string, userId?: string, language?: string) {
   const db = await admin();
   const { data } = await db.from("clients").select("name, phone, email, company, status, notes, source_task_ids, updated_at")
     .eq("teamspace_id", teamspaceId).order("name");
@@ -231,22 +241,25 @@ async function buildCsv(teamspaceId: string) {
   const { data: tasks } = ids.length ? await db.from("tasks").select("id, title").in("id", ids) : { data: [] as { id: string; title: string }[] };
   const rows = (data ?? []).map((c) => [c.name, c.phone, c.email, c.company, c.status, c.notes,
     c.source_task_ids.map((id) => tasks?.find((t) => t.id === id)?.title).filter(Boolean).join("; "), c.updated_at.slice(0, 16).replace("T", " ")]);
-  return [HEADERS, ...rows].map((r) => r.map(csvCell).join(",")).join("\n");
+  const locale = await sheetLocale(userId, language);
+  const columns = locale.columns as Record<string, string>;
+  const headers = [columns.name, columns.phone, columns.email, columns.company, columns.status, columns.notes, locale.sourceTasks, locale.updated];
+  return [headers, ...rows].map((r) => r.map(csvCell).join(",")).join("\n");
 }
 
-export async function syncSheet(teamspaceId: string) {
+export async function syncSheet(teamspaceId: string, userId?: string, language?: string) {
   const db = await admin();
   const { data: s } = await db.from("client_db_settings").select("*").eq("teamspace_id", teamspaceId).maybeSingle();
   if (!s?.sheet_id) return { skipped: true };
   const { driveFetch } = await import("./google-drive.server");
-  const csv = await buildCsv(teamspaceId);
+  const csv = await buildCsv(teamspaceId, userId, language);
   const res = await driveFetch(s.owner_user_id, `/upload/drive/v3/files/${s.sheet_id}?uploadType=media`, {
     method: "PATCH", headers: { "Content-Type": "text/csv; charset=UTF-8" }, body: csv,
   });
   if (!res.ok) {
-    const t = await res.text();
-    await db.from("client_db_settings").update({ last_error: `Google Sheets [${res.status}]: ${t.slice(0, 200)}` }).eq("teamspace_id", teamspaceId);
-    throw new Error(`Google Sheets sync failed [${res.status}]`);
+    await res.text();
+    await db.from("client_db_settings").update({ last_error: "SHEET_SYNC_FAILED" }).eq("teamspace_id", teamspaceId);
+    throw new Error("SHEET_SYNC_FAILED");
   }
   await db.from("client_db_settings").update({ last_sync_at: new Date().toISOString(), last_error: null }).eq("teamspace_id", teamspaceId);
   return { ok: true };
@@ -266,7 +279,7 @@ const GUIDE = (sheetUrl: string) => `База клиентов — методи�
 
 Как добавить клиента: укажите в задаче имя и телефон (например «Позвонить Айбеку +996 555 123 456 по договору») или добавьте строку в разделе «Клиенты».`;
 
-export async function setupClientDatabase(userId: string, teamspaceId: string) {
+export async function setupClientDatabase(userId: string, teamspaceId: string, language?: string) {
   await requireClientManager(userId, teamspaceId);
   const db = await admin();
   const { data: existing } = await db.from("client_db_settings").select("sheet_url").eq("teamspace_id", teamspaceId).maybeSingle();
@@ -278,12 +291,12 @@ export async function setupClientDatabase(userId: string, teamspaceId: string) {
   const boundary = `vsb${Math.random().toString(36).slice(2)}`;
   const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
     JSON.stringify({ name: title, mimeType: "application/vnd.google-apps.spreadsheet" }) +
-    `\r\n--${boundary}\r\nContent-Type: text/csv; charset=UTF-8\r\n\r\n${await buildCsv(teamspaceId)}\r\n--${boundary}--`;
+    `\r\n--${boundary}\r\nContent-Type: text/csv; charset=UTF-8\r\n\r\n${await buildCsv(teamspaceId, userId, language)}\r\n--${boundary}--`;
   const res = await driveFetch(userId, "/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink", {
     method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body,
   });
   const txt = await res.text();
-  if (!res.ok) throw new Error(`Не удалось создать Google Таблицу [${res.status}]: ${txt.slice(0, 200)}`);
+  if (!res.ok) throw new Error("SHEET_CREATE_FAILED");
   const sheet = JSON.parse(txt) as { id: string; webViewLink: string };
 
   let docUrl: string | null = null;

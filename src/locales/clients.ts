@@ -1,6 +1,17 @@
 import type { GroupResources } from "./merge";
 
 const en = {
+  headTitle: "Client Database — Virtual Space",
+  headDescription: "Manage your company client database in Virtual Space.",
+  noAccess: "You do not have access to this workspace.",
+  managerOnly: "The client database is available to owners and administrators only.",
+  dupPhone: "This phone number already belongs to “{{name}}”.",
+  sheetCreateFailed: "Could not create the Google Sheet.",
+  sheetSyncFailed: "Could not sync the Google Sheet.",
+  unknownError: "Something went wrong. Please try again.",
+  unnamed: "Unnamed client",
+  sourceTasks: "Source tasks",
+  updated: "Updated",
   title: "Client Database", description: "Clients from Task Tracker tasks are collected automatically and deduplicated by phone number.",
   columns: { name: "Name", phone: "Phone", email: "Email", company: "Company", status: "Status", notes: "Notes", tasks: "Tasks" },
   sheet: "Google Sheet", sync: "Sync", createSheet: "Create Google Sheet", scan: "Find clients in tasks", addRow: "Add row",
@@ -11,6 +22,17 @@ const en = {
 };
 
 const ru = {
+  headTitle: "База клиентов — Virtual Space",
+  headDescription: "Управляйте базой клиентов компании в Virtual Space.",
+  noAccess: "Нет доступа к рабочему пространству.",
+  managerOnly: "База клиентов доступна только владельцу и администраторам.",
+  dupPhone: "Этот номер уже есть у клиента «{{name}}».",
+  sheetCreateFailed: "Не удалось создать Google Таблицу.",
+  sheetSyncFailed: "Не удалось синхронизировать Google Таблицу.",
+  unknownError: "Произошла ошибка. Попробуйте ещё раз.",
+  unnamed: "Без имени",
+  sourceTasks: "Задачи-источники",
+  updated: "Обновлено",
   title: "База клиентов", description: "Клиенты из задач Task Tracker собираются автоматически, без дубликатов по телефону.",
   columns: { name: "Имя", phone: "Телефон", email: "Email", company: "Компания", status: "Статус", notes: "Заметки", tasks: "Задачи" },
   sheet: "Google Таблица", sync: "Синхронизировать", createSheet: "Создать Google Таблицу", scan: "Найти клиентов в задачах", addRow: "Добавить строку",
@@ -21,6 +43,17 @@ const ru = {
 };
 
 const kk = {
+  headTitle: "Клиенттер базасы — Virtual Space",
+  headDescription: "Virtual Space ішінде компанияның клиенттер базасын басқарыңыз.",
+  noAccess: "Бұл жұмыс кеңістігіне кіруге рұқсат жоқ.",
+  managerOnly: "Клиенттер базасы тек иелер мен әкімшілерге қолжетімді.",
+  dupPhone: "Бұл телефон нөмірі «{{name}}» клиентіне тиесілі.",
+  sheetCreateFailed: "Google кестесін құру мүмкін болмады.",
+  sheetSyncFailed: "Google кестесін синхрондау мүмкін болмады.",
+  unknownError: "Қате пайда болды. Қайта көріңіз.",
+  unnamed: "Аты жоқ",
+  sourceTasks: "Бастапқы тапсырмалар",
+  updated: "Жаңартылды",
   title: "Клиенттер базасы", description: "Task Tracker тапсырмаларындағы клиенттер автоматты түрде жиналып, телефон бойынша қайталанбайды.",
   columns: { name: "Аты", phone: "Телефон", email: "Email", company: "Компания", status: "Күйі", notes: "Ескертпелер", tasks: "Тапсырмалар" },
   sheet: "Google кестесі", sync: "Синхрондау", createSheet: "Google кестесін құру", scan: "Тапсырмалардан клиенттерді табу", addRow: "Жол қосу",
@@ -31,6 +64,17 @@ const kk = {
 };
 
 const ky = {
+  headTitle: "Кардарлар базасы — Virtual Space",
+  headDescription: "Virtual Space ичинде компаниянын кардарлар базасын башкарыңыз.",
+  noAccess: "Бул иш мейкиндигине кирүүгө уруксат жок.",
+  managerOnly: "Кардарлар базасы ээсине жана администраторлорго гана жеткиликтүү.",
+  dupPhone: "Бул телефон номери «{{name}}» кардарына таандык.",
+  sheetCreateFailed: "Google жадыбалын түзүү мүмкүн болгон жок.",
+  sheetSyncFailed: "Google жадыбалын шайкештештирүү мүмкүн болгон жок.",
+  unknownError: "Ката кетти. Кайра аракет кылыңыз.",
+  unnamed: "Аты жок",
+  sourceTasks: "Баштапкы тапшырмалар",
+  updated: "Жаңыртылды",
   title: "Кардарлар базасы", description: "Task Tracker тапшырмаларындагы кардарлар автоматтык түрдө чогултулуп, телефон боюнча кайталанбайт.",
   columns: { name: "Аты", phone: "Телефон", email: "Email", company: "Компания", status: "Статус", notes: "Эскертмелер", tasks: "Тапшырмалар" },
   sheet: "Google жадыбалы", sync: "Шайкештештирүү", createSheet: "Google жадыбалын түзүү", scan: "Тапшырмалардан кардарларды табуу", addRow: "Сап кошуу",
@@ -41,6 +85,17 @@ const ky = {
 };
 
 const uz = {
+  headTitle: "Mijozlar bazasi — Virtual Space",
+  headDescription: "Virtual Space’da kompaniyangiz mijozlar bazasini boshqaring.",
+  noAccess: "Bu ish maydoniga kirish huquqingiz yo‘q.",
+  managerOnly: "Mijozlar bazasi faqat egalar va administratorlar uchun mavjud.",
+  dupPhone: "Bu telefon raqami “{{name}}” mijoziga tegishli.",
+  sheetCreateFailed: "Google jadvalini yaratib bo‘lmadi.",
+  sheetSyncFailed: "Google jadvalini sinxronlab bo‘lmadi.",
+  unknownError: "Xatolik yuz berdi. Qayta urinib ko‘ring.",
+  unnamed: "Nomsiz mijoz",
+  sourceTasks: "Manba vazifalar",
+  updated: "Yangilandi",
   title: "Mijozlar bazasi", description: "Task Tracker vazifalaridagi mijozlar avtomatik yig‘iladi va telefon bo‘yicha takrorlanmaydi.",
   columns: { name: "Ism", phone: "Telefon", email: "Email", company: "Kompaniya", status: "Holat", notes: "Izohlar", tasks: "Vazifalar" },
   sheet: "Google jadvali", sync: "Sinxronlash", createSheet: "Google jadvalini yaratish", scan: "Vazifalardan mijozlarni topish", addRow: "Qator qo‘shish",
@@ -51,6 +106,17 @@ const uz = {
 };
 
 const tg = {
+  headTitle: "Пойгоҳи муштариён — Virtual Space",
+  headDescription: "Пойгоҳи муштариёни ширкатро дар Virtual Space идора кунед.",
+  noAccess: "Шумо ба ин фазои корӣ дастрасӣ надоред.",
+  managerOnly: "Пойгоҳи муштариён танҳо барои соҳибон ва маъмурон дастрас аст.",
+  dupPhone: "Ин рақами телефон ба муштарии «{{name}}» тааллуқ дорад.",
+  sheetCreateFailed: "Сохтани ҷадвали Google муяссар нашуд.",
+  sheetSyncFailed: "Ҳамоҳангсозии ҷадвали Google муяссар нашуд.",
+  unknownError: "Хато рӯй дод. Боз кӯшиш кунед.",
+  unnamed: "Беном",
+  sourceTasks: "Вазифаҳои манбаъ",
+  updated: "Нав карда шуд",
   title: "Пойгоҳи муштариён", description: "Муштариён аз вазифаҳои Task Tracker худкор ҷамъ шуда, аз рӯи телефон такрор намешаванд.",
   columns: { name: "Ном", phone: "Телефон", email: "Email", company: "Ширкат", status: "Ҳолат", notes: "Ёддоштҳо", tasks: "Вазифаҳо" },
   sheet: "Ҷадвали Google", sync: "Ҳамоҳангсозӣ", createSheet: "Сохтани ҷадвали Google", scan: "Ёфтани муштариён дар вазифаҳо", addRow: "Иловаи сатр",
