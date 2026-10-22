@@ -351,6 +351,7 @@ export async function syncSource(source: Source, scope: YouGileRequest = createY
         external_column_id: columnId || null,
         external_updated_at: externalTime(raw.timestamp),
         external_archived: deleted || raw.archived === true,
+        sync_archived_at: null,
       };
 
       const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, sync_archived_at, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_id", externalId).maybeSingle();

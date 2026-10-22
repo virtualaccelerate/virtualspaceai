@@ -89,21 +89,21 @@ export async function emitExternalTaskChange(input: {
       text: after.external_archived ? `Задача удалена/архивирована в ${tracker}` : `Задача восстановлена в ${tracker}`,
     });
   }
-  const restoring = before.external_archived && !after.external_archived;
-  if (restoring && !shouldNotifyRestoration(before.sync_archived_at)) {
-    // Keep history factual, but recent/legacy sync archives must not flood users.
-    for (const change of changes) await recordTaskEvent({ taskId, teamspaceId, source, kind: "external_update", field: change.field, from: change.from, to: change.to });
-    return;
-  }
   if (!changes.length) return;
 
   for (const change of changes) {
     await recordTaskEvent({ taskId, teamspaceId, source, kind: "external_update", field: change.field, from: change.from, to: change.to });
   }
 
+  const restoring = before.external_archived && !after.external_archived;
+  const notifiable = restoring && !shouldNotifyRestoration(before.sync_archived_at)
+    ? changes.filter(change => change.field !== "archived")
+    : changes;
+  if (!notifiable.length) return;
+
   const done = after.status === "done" && before.status !== "done";
   // Short factual report: what is already done, no long lists.
-  const main = changes.find((change) => change.field === "status") ?? changes[0];
+  const main = notifiable.find((change) => change.field === "status") ?? notifiable[0];
   const body = done
     ? `${title} — выполнено (${tracker})`
     : `${title} — ${main.text} (${tracker})`;

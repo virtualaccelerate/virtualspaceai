@@ -409,10 +409,10 @@ export function rescheduleKeyboard(taskId: string) {
  * Once per overdue deadline, the bot asks the assignee whether to move the
  * deadline. Local tasks only — tracker deadlines are managed in YouGile/Trello.
  */
-export async function runOverdueRescheduleOffers(): Promise<{ sent: number }> {
+export async function runOverdueRescheduleOffers(onlyTeamspaceId?: string): Promise<{ sent: number }> {
   const db = await admin();
   const today = localDateString();
-  const { data } = await db
+  let query = db
     .from("tasks")
     .select("id, title, status, priority, due_date, assignee_id, assignee_name, user_id, teamspace_id, external_source")
     .neq("status", "done")
@@ -421,6 +421,8 @@ export async function runOverdueRescheduleOffers(): Promise<{ sent: number }> {
     .not("assignee_id", "is", null)
     .lt("due_date", today)
     .limit(500);
+  if (onlyTeamspaceId) query = query.eq("teamspace_id", onlyTeamspaceId);
+  const { data } = await query;
   const { sendMessage } = await tgApi();
   let sent = 0;
   for (const task of (data ?? []) as (TaskRow & { external_source: string | null })[]) {

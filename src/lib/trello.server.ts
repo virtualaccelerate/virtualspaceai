@@ -307,6 +307,7 @@ export async function syncTrelloSource(source: Source) {
         external_column_id: String(card['idList'] ?? "") || null,
         external_updated_at: typeof card['dateLastActivity'] === "string" ? card['dateLastActivity'] : null,
         external_archived: card['closed'] === true,
+        sync_archived_at: null,
       };
       const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, sync_archived_at, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId).maybeSingle();
       const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();

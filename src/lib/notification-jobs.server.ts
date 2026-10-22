@@ -24,6 +24,10 @@ export async function processNotificationJob(id: string) {
   if (!job) return;
   try {
     await runAiNotifications(job.pass as NotifyPass, job.teamspace_id, { ignoreDedupe: job.force });
+    if (job.pass === 'morning') {
+      const { runOverdueRescheduleOffers } = await import('./task-flow.server');
+      await runOverdueRescheduleOffers(job.teamspace_id).catch(e => console.error('[daily-reschedule]', e));
+    }
     await db.from('notification_jobs').update({ status: 'done', finished_at: new Date().toISOString(), lease_until: null }).eq('id', id).eq('lease_token', token);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

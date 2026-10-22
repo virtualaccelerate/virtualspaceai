@@ -29,6 +29,8 @@
   people's onboarding/quiz results are manager-only in both the server functions and RLS.
 
 ## Background client extraction
+- Daily briefs enqueue bounded workspace jobs with durable leases and terminal AI pause state; request-scoped waitUntil handles delivery while wake-on-enqueue retries unschedule after drain.
+- Tracker syncs collect notification intents per invocation and flush through an atomic database dedupe/summary function; real task events, not sync write timestamps, define daily completion facts.
 - YouGile operations share an invocation-local bounded request budget (including body reads and retries), never a cross-request promise queue; complete external snapshots are required before reconciliation so unavailable columns cannot archive cached tasks.
 
 - AI task assignment uses the shared exact/case-form member resolver and explicit account-id pickers; ambiguous names must never select the first member or become assignment labels.
