@@ -121,8 +121,9 @@ test("extractFileText: .rtf with mime text/rtf is decoded, not saved as raw RTF"
 test("extractFileText: zip with only images throws the no-text-files message", async () => {
   const zip = new JSZip();
   zip.file("photo.jpg", new Uint8Array([0xff, 0xd8, 0xff, 0xd9]));
+  const bytes = await zip.generateAsync({ type: "uint8array" });
   await assert.rejects(
-    () => extractFileText(await zip.generateAsync({ type: "uint8array" }), "export.zip", "application/zip"),
+    () => extractFileText(bytes, "export.zip", "application/zip"),
     /В архиве нет текстовых файлов/,
   );
 });
