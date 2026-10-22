@@ -22,7 +22,6 @@ type Source = {
 };
 
 type YouGileItem = Record<string, unknown> & { id: string; title?: string };
-const BASE = "https://yougile.com/api-v2";
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -58,9 +57,9 @@ async function pages(key: string, path: string, scope = createYouGileRequest()) 
     const result = await api<unknown>(key, `${path}${separator}limit=100&offset=${offset}`, undefined, scope);
     const batch = content(result);
     rows.push(...batch);
-    if (batch.length < 100) break;
+    if (batch.length < 100) return rows;
   }
-  return rows;
+  throw new YouGileRequestError("YouGile вернул слишком много данных. Сохранённые задачи оставлены без изменений");
 }
 
 function dueDate(value: unknown): string | null {
