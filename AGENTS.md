@@ -10,6 +10,8 @@
 <!-- LOVABLE:END -->
 
 ## Workspace roles and access
+- Global Telegram setup requires the encrypted application-admin session, not workspace ownership; employees' done requests become review server-side, while a database trigger blocks direct approval/review forgery.
+- Shared demo sign-in is removed; never reintroduce a public account password.
 - Pending invitation email edits/deletes require workspace managers; reconciliation uses only a service-only fixed-search-path lookup of confirmed Auth email, never user-editable profile email, to prevent mailbox impersonation.
 
 - Direct membership INSERT is revoked for browser roles; creation adds the owner via the database trigger and invite joins use the authenticated service-role server function, so public-key callers cannot grant themselves membership or elevated roles.

@@ -14,6 +14,10 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { title: "Sign in — Virtual Space" },
       { name: "description", content: "Sign in or create your Virtual Space account." },
+      { property: "og:title", content: "Sign in — Virtual Space" },
+      { property: "og:description", content: "Sign in or create your Virtual Space account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -138,24 +142,6 @@ function AuthPage() {
     });
     if (err) setError(friendlyAuthError(err));
     else setInfo(t("shellUi.auth.resendSent", "Email resent."));
-  };
-
-  const handleDemo = async () => {
-    if (loading) return;
-    setLoading(true);
-    setError(null);
-    setInfo(null);
-    try {
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email: "demo@ai-virtualspace.com",
-        password: "demoap",
-      });
-      if (err) throw err;
-    } catch (err) {
-      console.error(err);
-      setError(friendlyAuthError(err));
-      setLoading(false);
-    }
   };
 
   const handleGoogle = async () => {
@@ -358,21 +344,6 @@ function AuthPage() {
                   )}
                 </div>
               </form>
-
-              <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
-                <p className="text-[11px] uppercase tracking-widest text-white/40">{t("shellUi.auth.demoLabel", "Demo")}</p>
-                <p className="mt-1 text-xs text-white/60">
-                  {t("shellUi.auth.demoDesc", "Try the platform without registering — demo access.")}
-                </p>
-                <button
-                  type="button"
-                  onClick={handleDemo}
-                  disabled={loading}
-                  className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition disabled:opacity-60"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t("shellUi.auth.demoButton", "Sign in as demo")} <ArrowRight className="h-4 w-4" /></>}
-                </button>
-              </div>
 
             </>
           )}

@@ -432,6 +432,8 @@ export async function updateTrelloTask(
     throw new Error("Задача Trello не найдена");
   }
   await requireMember(actorId, task.teamspace_id);
+  const { completionStatusForUser } = await import("./roles.server");
+  patch = { ...patch, status: await completionStatusForUser(actorId, task.teamspace_id, patch.status) };
   const source = await sourceFor(task.teamspace_id);
   if (!source) throw new Error("Trello не подключён");
 
