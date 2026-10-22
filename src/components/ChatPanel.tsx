@@ -598,7 +598,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   const applyUpdate = async (msgIdx: number, updIdx: number) => {
     const upd = messages[msgIdx]?.updates?.[updIdx];
-    if (!upd || !upd.assignment_ready) return;
+    if (!upd || (upd.assignee_query && !upd.assignment_ready)) return;
     setAcceptingIdx(`u${msgIdx}-${updIdx}`);
     try {
       const { assignee_name, assignee_query, assignment_ready, ...data } = upd;
@@ -1167,12 +1167,12 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
                                 {u.project && <span>#{u.project}</span>}
                                 {u.department && <span>{u.department}</span>}
                               </div>
-                              <TaskAssignmentPicker teamspaceId={teamspaceId} taskId={u.id} raw={u.assignee_query} onChange={(id, ready) => setMessages((prev) => prev.map((item, index) => index !== i ? item : {
+                              {u.assignee_query && <TaskAssignmentPicker teamspaceId={teamspaceId} taskId={u.id} raw={u.assignee_query} onChange={(id, ready) => setMessages((prev) => prev.map((item, index) => index !== i ? item : {
                                 ...item, updates: (item.updates ?? []).map((update, updateIndex) => updateIndex === j ? { ...update, assignee_id: id, assignment_ready: ready } : update),
-                              }))} />
+                              }))} />}
                             </div>
                             <Button
-                              disabled={acceptingIdx === `u${i}-${j}` || !u.assignment_ready}
+                              disabled={acceptingIdx === `u${i}-${j}` || Boolean(u.assignee_query && !u.assignment_ready)}
                               onClick={() => void applyUpdate(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >

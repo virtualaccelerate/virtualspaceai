@@ -28,6 +28,8 @@
 ## Background client extraction
 
 - AI task assignment uses the shared exact/case-form member resolver and explicit account-id pickers; ambiguous names must never select the first member or become assignment labels.
+- AI-chat update cards resolve assignment only for explicit assignee tokens; unrelated edits omit assignment fields to preserve imported labels and non-visible assignees.
+- Mount the shared Sonner Toaster once in the root provider so notification and action popups render across routes.
 - Telegram assignment callbacks encode UUIDs compactly and call the common task update service, so callbacks enforce membership, roles, notifications and tracker sync without transient server memory.
 
 - Task writes only enqueue client extraction through the database trigger; the five-minute authenticated cron drains `client_sync_queue`, so AI and Google Sheets never delay task saves.
