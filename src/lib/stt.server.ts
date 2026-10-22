@@ -1,10 +1,15 @@
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
+import { classifySttPause } from './stt-recovery';
 
 // Keep both selections together: callers must never choose or replace a model.
 export const STT_MODELS = { primary: 'openai/gpt-transcribe', fallback: 'google/gemini-3.8-flash' } as const;
 type Input = { user_id: string; teamspace_id?: string | null; source: 'web' | 'telegram' | 'whatsapp'; audio: Uint8Array; mime_type: string; duration_ms?: number; language?: string; single_language?: boolean };
 class SttError extends Error {
-  constructor(message: string, public terminal = false, public status = 0) { super(message); }
+  constructor(message: string, public terminal = false, public status = 0, public pauseSaved = false) { super(message); }
+}
+async function savePause(model: string, reason: string, status: number, type?: string) {
+  const { error } = await supabaseAdmin.from('stt_service_state').upsert({ model, reason, status, pause_kind: classifySttPause(status, type), pause_token: crypto.randomUUID(), created_at: new Date().toISOString() });
+  if (error) throw new SttError('Голосовой ввод приостановлен: не удалось сохранить состояние доступа.', true);
 }
 export function normalizeSttMime(raw: string) {
   const base = raw.toLowerCase().split(';')[0].trim();
@@ -63,7 +68,7 @@ async function readTranscript(response: Response, chat: boolean) {
 }
 async function checkResponse(res: Response, model: string) {
   if (res.ok) return;
-  const body = await res.json().catch(() => ({})) as { message?: string; error?: { message?: string; type?: string }; type?: string };
+  const body = await res.json().catch(() => ({})) as { message?: string; error?: { message?: string; type?: string; code?: string }; type?: string };
   const safe = body.message ?? body.error?.message;
   const message = res.status === 401 ? 'Голосовой ввод не настроен: отсутствует или недействителен ключ AI.'
     : res.status === 429 ? 'Слишком много запросов. Подождите немного и повторите.'
@@ -72,8 +77,7 @@ async function checkResponse(res: Response, model: string) {
     : res.status === 404 ? 'Модель распознавания сейчас недоступна.'
     : safe ?? 'Не удалось распознать речь. Попробуйте ещё раз.';
   if (res.status === 402 || res.status === 403) {
-    const { error } = await supabaseAdmin.from('stt_service_state').upsert({ model, reason: message, status: res.status });
-    if (error) throw new SttError('Голосовой ввод приостановлен: не удалось сохранить состояние доступа.', true);
+    await savePause(model, message, res.status, body.type ?? body.error?.type ?? body.error?.code);
   }
   const terminal = [401, 402, 403, 404].includes(res.status) || (res.status >= 400 && res.status < 500 && ![400, 415, 429].includes(res.status));
   // Switching after a rejected audio format is a new, model-specific request, not a retry.
@@ -84,7 +88,7 @@ async function checkResponse(res: Response, model: string) {
     if (delay > 10000) throw new SttError(message, true, res.status);
     await new Promise(resolve => setTimeout(resolve, Math.max(1000, delay)));
   }
-  const failure = new SttError(message, terminal, res.status);
+  const failure = new SttError(message, terminal, res.status, res.status === 402 || res.status === 403);
   failure.name = `STT_HTTP_${res.status}`;
   throw failure;
 }
@@ -140,11 +144,41 @@ export async function transcribeSpeech(input: Input, transport: typeof fetch = f
       const message = error instanceof Error ? error.message : 'Не удалось распознать речь.';
       await logSttAttempt({ ...meta, mime_type: type.mime }, model, 'error', error instanceof SttError && error.status ? `HTTP ${error.status}: ${message}` : message);
       if (error instanceof SttError && error.terminal) {
-        if (error.status === 403) await supabaseAdmin.from('stt_service_state').upsert({ model, reason: message, status: 403 });
+        if (error.status === 403 && !error.pauseSaved) await savePause(model, message, 403);
         throw error;
       }
       if (index === 1) throw new SttError(message);
     }
   }
   throw new SttError('Не удалось распознать речь. Попробуйте говорить ближе к микрофону.');
+}
+
+// One explicit admin-requested check, only for a classified workspace credit/policy pause.
+// Synthetic silence contains no customer audio. Provider/unknown pauses never call this.
+export async function probeSttAccess(model: string, transport: typeof fetch = fetch) {
+  if (!Object.values(STT_MODELS).some(value => value === model)) throw new Error('Unknown voice model');
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) throw new Error('Голосовой ввод не настроен: отсутствует ключ AI.');
+  const wav = new Uint8Array(44 + 32000);
+  const view = new DataView(wav.buffer);
+  const label = (offset: number, text: string) => wav.set(new TextEncoder().encode(text), offset);
+  label(0, 'RIFF'); view.setUint32(4, wav.length - 8, true); label(8, 'WAVE'); label(12, 'fmt ');
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, 16000, true); view.setUint32(28, 32000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  label(36, 'data'); view.setUint32(40, 32000, true);
+  let response: Response;
+  if (model === STT_MODELS.primary) {
+    const form = new FormData();
+    form.append('model', model); form.append('file', new Blob([wav], { type: 'audio/wav' }), 'access-check.wav');
+    form.append('stream', 'true'); form.append('response_format', 'json');
+    response = await transport('https://ai.gateway.lovable.dev/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'X-Lovable-AIG-SDK': 'fetch' }, body: form });
+  } else {
+    response = await transport('https://ai.gateway.lovable.dev/v1/chat/completions', { method: 'POST', headers: { 'Lovable-API-Key': key, 'X-Lovable-AIG-SDK': 'fetch', 'Content-Type': 'application/json' }, body: JSON.stringify({ model, stream: true, messages: [{ role: 'user', content: [{ type: 'text', text: 'Transcribe exactly as spoken. Return empty if there is no speech.' }, { type: 'input_audio', input_audio: { data: Buffer.from(wav).toString('base64'), format: 'wav' } }] }] }) });
+  }
+  await checkResponse(response, model);
+  try { await readTranscript(response, model === STT_MODELS.fallback); }
+  catch (error) {
+    if (error instanceof SttError && error.status === 403 && !error.pauseSaved) await savePause(model, error.message, 403);
+    throw error;
+  }
 }

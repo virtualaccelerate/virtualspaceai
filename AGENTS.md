@@ -36,4 +36,4 @@
 
 - WhatsApp bot (`src/lib/whatsapp.server.ts`) keeps its own copy of the Telegram task-agent logic instead of a shared helper — avoids regressions in the production Telegram path.
 
-- Voice recognition uses one server-only STT module with centralized models, per-attempt metadata-only logging, and persistent terminal access pauses; this keeps all channels consistent without retaining audio or transcripts. Clear a confirmed restored model access pause only on explicit owner action.
+- Voice recognition uses one server-only STT module with centralized models, per-attempt metadata-only logging, and persistent terminal access pauses. Global recovery uses the protected application-admin session, never workspace ownership: classified workspace blocks allow one explicit access check, provider/unknown pauses require restored-access confirmation without probing. Compare pause tokens when clearing so concurrent denials remain blocked; resume only on a fresh user recording.
