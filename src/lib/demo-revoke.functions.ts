@@ -13,7 +13,10 @@ export const revokeExposedDemo = createServerFn({ method: "POST" }).handler(asyn
     if (demo) {
       const password = crypto.randomUUID() + crypto.randomUUID() + "Aa1!";
       const { error: failure } = await supabaseAdmin.auth.admin.updateUserById(demo.id, { password, ban_duration: "876000h" });
-      if (failure) throw new Error("Could not disable demo account");
+      if (failure) {
+        console.error("Demo disable failed", failure.code, failure.status, failure.message);
+        throw new Error("Could not disable demo account");
+      }
       return { ok: true };
     }
     if (data.users.length < 1000) return { ok: true, absent: true };
