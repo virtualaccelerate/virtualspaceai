@@ -430,12 +430,13 @@ async function extractEmbeddedText(data: Uint8Array, path: string): Promise<stri
  * PDFs/images are listed by name only. Limits: 50 files, 10 MB per file,
  * 180 000 chars total.
  */
-export async function extractZipText(bytes: Uint8Array): Promise<string> {
+export async function extractZipText(bytes: Uint8Array): Promise<{ text: string; readableFiles: number }> {
   const JSZip = (await import("jszip")).default;
   const zip = await JSZip.loadAsync(bytes);
   const sections: string[] = [];
   let total = 0;
   let count = 0;
+  let readableFiles = 0;
   for (const path of Object.keys(zip.files).sort()) {
     const entry = zip.files[path];
     if (entry.dir) continue;
@@ -455,13 +456,14 @@ export async function extractZipText(bytes: Uint8Array): Promise<string> {
     if (data.byteLength > 10 * 1024 * 1024) continue;
     const text = await extractEmbeddedText(data, path).catch(() => null);
     if (text === null) continue;
+    if (text.trim()) readableFiles++;
     const section = `## FILE: ${path}\n${text.trim() || "[пустой файл]"}`;
     sections.push(section.slice(0, Math.max(0, 180_000 - total)));
     total += section.length;
     count++;
     if (total >= 180_000) break;
   }
-  return sections.join("\n\n").slice(0, 180_000);
+  return { text: sections.join("\n\n").slice(0, 180_000), readableFiles };
 }
 
 export function toBase64(bytes: Uint8Array) {
