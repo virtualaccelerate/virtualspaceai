@@ -333,7 +333,7 @@ export function extractRtfText(bytes: Uint8Array): string {
   while (i < raw.length) {
     const ch = raw[i];
     if (ch === "{") {
-      const m = raw.slice(i + 1, i + 40).match(/^\\\*?\\([a-z]+)/i);
+      const m = raw.slice(i + 1, i + 40).match(/^\\(?:\*\\)?([a-z]+)/i);
       if (m && SKIP_GROUPS.has(m[1].toLowerCase())) skipDepth = depth + 1;
       depth++;
       i++;
