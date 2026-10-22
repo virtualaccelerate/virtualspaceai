@@ -227,13 +227,13 @@ export async function extractWordText(bytes: Uint8Array): Promise<string> {
   const blockText = (xml: string) =>
     decodeXmlEntities(
       xml
-        .replace(/<w:tab\s*\/>/g, "")
-        .replace(/<w:br\b[^>]*\/?>/g, "")
-        .replace(/<w:cr\s*\/?>/g, "")
+        .replace(/<w:tab\s*\/>/g, "\u0001")
+        .replace(/<w:br\b[^>]*\/?>/g, "\u0002")
+        .replace(/<w:cr\s*\/?>/g, "\u0002")
         .replace(/<[^>]+>/g, ""),
     )
-      .replace(//g, "\t")
-      .replace(//g, "\n");
+      .replace(/\u0001/g, "\t")
+      .replace(/\u0002/g, "\n");
 
   const renderBlocks = (xml: string) => {
     const body = xml.match(/<w:body[\s>]([\s\S]*)<\/w:body>/)?.[1] ?? xml;
@@ -281,8 +281,8 @@ export async function extractOdtText(bytes: Uint8Array): Promise<string> {
   const zip = await JSZip.loadAsync(bytes);
   const xml = (await zip.file("content.xml")?.async("string")) ?? "";
   const marked = xml
-    .replace(/<text:line-break\s*\/>/g, "")
-    .replace(/<text:tab\s*\/>/g, "")
+    .replace(/<text:line-break\s*\/>/g, "\u0002")
+    .replace(/<text:tab\s*\/>/g, "\u0001")
     .replace(/<text:s\b[^>]*\/>/g, " ");
   const blocks =
     marked.match(/<text:(?:p|h)\b[\s\S]*?<\/text:(?:p|h)>|<table:table-row\b[\s\S]*?<\/table:table-row>/g) ?? [];
@@ -295,8 +295,8 @@ export async function extractOdtText(bytes: Uint8Array): Promise<string> {
       if (cells.some(Boolean)) lines.push(cells.join(" | "));
     } else {
       const line = decodeXmlEntities(block.replace(/<[^>]+>/g, ""))
-        .replace(//g, "\t")
-        .replace(//g, "\n")
+        .replace(/\u0001/g, "\t")
+        .replace(/\u0002/g, "\n")
         .trimEnd();
       if (line.trim()) lines.push(line);
     }
