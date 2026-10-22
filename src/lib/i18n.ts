@@ -207,11 +207,6 @@ const resources = {
           tabProjects: "Projects",
           tabDocuments: "Documents",
           tabOnboarding: "Onboarding & Training",
-          clientDb: "Пойгоҳи мизоҷон",
-          tabTasks: "Вазифаҳо",
-          tabProjects: "Лоиҳаҳо",
-          tabDocuments: "Ҳуҷҷатҳо",
-          tabOnboarding: "Онбординг ва омӯзиш",
           chat: "Chats", chatSubtitle: "Team conversations",
           mobileChat: "Chat", mobileOverview: "Overview", mobileTasks: "Tasks", mobileKnowledge: "Docs", mobileAgents: "Agents",
           communication: "Communication",
@@ -1853,6 +1848,11 @@ const resources = {
       },
       app: {
         nav: {
+          clientDb: "Пойгоҳи мизоҷон",
+          tabTasks: "Вазифаҳо",
+          tabProjects: "Лоиҳаҳо",
+          tabDocuments: "Ҳуҷҷатҳо",
+          tabOnboarding: "Онбординг ва омӯзиш",
           chat: "Чатҳо", chatSubtitle: "Гуфтугӯҳои даста",
           mobileChat: "Чат", mobileOverview: "Шарҳ", mobileTasks: "Корҳо", mobileKnowledge: "Дониш", mobileAgents: "Агентҳо",
           communication: "Пайвастшавӣ",

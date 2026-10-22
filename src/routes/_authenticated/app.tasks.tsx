@@ -53,7 +53,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "projects" } => ({
     ...search,
     tab: search.tab === "projects" ? "projects" as const : undefined,
   }),

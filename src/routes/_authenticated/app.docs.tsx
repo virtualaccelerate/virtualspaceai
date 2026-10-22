@@ -23,7 +23,7 @@ import { listProjects } from "@/lib/projects.functions";
 import { LINK_LABEL, detectLinkKind, normalizeUrl, parseTags, type LinkKind } from "@/lib/links";
 
 export const Route = createFileRoute("/_authenticated/app/docs")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "onboarding" } => ({
     ...search,
     tab: search.tab === "onboarding" ? "onboarding" as const : undefined,
   }),
