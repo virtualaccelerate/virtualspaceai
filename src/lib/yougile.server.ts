@@ -1,5 +1,6 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { decryptConnectionKey, encryptConnectionKey } from "./app-user-connections.server";
+import { createYouGileRequest, YouGileRequestError, type YouGileRequest } from "./yougile-request.server";
 
 type Status = "backlog" | "in_progress" | "review" | "done";
 type Source = {
@@ -21,7 +22,6 @@ type Source = {
 };
 
 type YouGileItem = Record<string, unknown> & { id: string; title?: string };
-const BASE = "https://yougile.com/api-v2";
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -40,50 +40,8 @@ async function requireMember(userId: string, teamspaceId: string) {
   if (!data) throw new Error("Нет доступа к рабочему пространству");
 }
 
-/**
- * YouGile throttles per API key: parallel bursts (one request per column) come
- * back as HTML 503 pages. Every call goes through a single serial queue with a
- * minimum gap, and 429/5xx answers are retried with backoff.
- */
-const MIN_GAP_MS = 150;
-let queue: Promise<unknown> = Promise.resolve();
-let lastCall = 0;
-
-function slot(): Promise<void> {
-  const next = queue.then(async () => {
-    const wait = lastCall + MIN_GAP_MS - Date.now();
-    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
-    lastCall = Date.now();
-  });
-  queue = next.catch(() => {});
-  return next;
-}
-
-async function api<T>(key: string, path: string, init?: RequestInit): Promise<T> {
-  let lastStatus = 0;
-  for (let attempt = 0; attempt < 4; attempt++) {
-    await slot();
-    const response = await fetch(`${BASE}${path}`, {
-      ...init,
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...init?.headers },
-    });
-    if (response.ok) {
-      const text = await response.text();
-      return (text ? JSON.parse(text) : null) as T;
-    }
-    lastStatus = response.status;
-    const detail = await response.text().catch(() => "");
-    console.error(`[yougile] ${path} failed [${response.status}]: ${detail.slice(0, 200)}`);
-    if (response.status === 401 || response.status === 403) throw new Error("YouGile отклонил API-ключ");
-    if (response.status === 404) throw new Error("Объект YouGile не найден");
-    if (response.status === 429 || response.status >= 500) {
-      await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)));
-      continue;
-    }
-    throw new Error(`YouGile недоступен (${response.status})`);
-  }
-  if (lastStatus === 429) throw new Error("YouGile временно ограничил запросы. Повторите позже");
-  throw new Error(`YouGile перегружен (${lastStatus}). Повторите синхронизацию через минуту`);
+async function api<T>(key: string, path: string, init?: RequestInit, scope = createYouGileRequest()): Promise<T> {
+  return scope.request<T>(key, path, init);
 }
 
 function content(value: unknown): YouGileItem[] {
@@ -92,16 +50,16 @@ function content(value: unknown): YouGileItem[] {
   return [];
 }
 
-async function pages(key: string, path: string) {
+async function pages(key: string, path: string, scope = createYouGileRequest()) {
   const rows: YouGileItem[] = [];
   for (let offset = 0; offset < 10000; offset += 100) {
     const separator = path.includes("?") ? "&" : "?";
-    const result = await api<unknown>(key, `${path}${separator}limit=100&offset=${offset}`);
+    const result = await api<unknown>(key, `${path}${separator}limit=100&offset=${offset}`, undefined, scope);
     const batch = content(result);
     rows.push(...batch);
-    if (batch.length < 100) break;
+    if (batch.length < 100) return rows;
   }
-  return rows;
+  throw new YouGileRequestError("YouGile вернул слишком много данных. Сохранённые задачи оставлены без изменений");
 }
 
 function dueDate(value: unknown): string | null {
@@ -152,23 +110,29 @@ function priority(task: Record<string, unknown>): "low" | "medium" | "high" | "u
   return "medium";
 }
 
-async function loadStructure(key: string, projectIds?: string[] | null) {
-  const projects = await pages(key, "/projects");
+async function loadStructure(key: string, projectIds?: string[] | null, scope = createYouGileRequest()) {
+  const projects = await pages(key, "/projects", scope);
   const selected = (projectIds ?? []).filter(Boolean);
   if (!selected.length) return { projects, boards: [], columns: [], users: [] };
   const boards: YouGileItem[] = [];
   for (const projectId of selected) {
     // A project or board removed in YouGile must not break the whole sync.
-    const list = await pages(key, `/boards?projectId=${encodeURIComponent(projectId)}`).catch(() => [] as YouGileItem[]);
+    const list = await pages(key, `/boards?projectId=${encodeURIComponent(projectId)}`, scope).catch((error: unknown) => {
+      if (error instanceof YouGileRequestError && error.status === 404) return [] as YouGileItem[];
+      throw error;
+    });
     boards.push(...list.map((board) => ({ ...board, projectId })));
   }
   const columns: YouGileItem[] = [];
   for (const board of boards) {
-    const list = await pages(key, `/columns?boardId=${encodeURIComponent(board.id)}`).catch(() => [] as YouGileItem[]);
+    const list = await pages(key, `/columns?boardId=${encodeURIComponent(board.id)}`, scope).catch((error: unknown) => {
+      if (error instanceof YouGileRequestError && error.status === 404) return [] as YouGileItem[];
+      throw error;
+    });
     columns.push(...list.map((column) => ({ ...column, boardId: board.id, projectId: (board as { projectId?: string }).projectId })));
   }
 
-  const users = await pages(key, "/users");
+  const users = await pages(key, "/users", scope);
   return { projects, boards, columns, users };
 }
 
@@ -192,7 +156,11 @@ export async function getYouGileStatusForUser(userId: string, teamspaceId: strin
   const source = await sourceFor(teamspaceId);
   if (!source) return { connected: false, projects: [], boards: [], columns: [], users: [], members: [], selected_projects: [] };
   const selected = selectedProjects(source);
-  const structure = await loadStructure(decryptConnectionKey(source.api_key_ciphertext), selected.map((row) => row.id)).catch(() => ({ projects: [], boards: [], columns: [], users: [] }));
+  let loadError: string | null = null;
+  const structure = await loadStructure(decryptConnectionKey(source.api_key_ciphertext), selected.map((row) => row.id)).catch((error: unknown) => {
+    loadError = error instanceof Error ? error.message : "YouGile временно недоступен";
+    return { projects: selected.map((row) => ({ id: row.id, title: row.name })), boards: [], columns: [], users: [] };
+  });
   const admin = await db();
   const { data: memberships } = await admin.from("teamspace_members").select("user_id").eq("teamspace_id", teamspaceId);
   const ids = (memberships ?? []).map((row) => row.user_id);
@@ -205,7 +173,7 @@ export async function getYouGileStatusForUser(userId: string, teamspaceId: strin
     column_map: source.column_map ?? {},
     user_map: source.user_map ?? {},
     last_sync_at: source.last_sync_at,
-    last_error: source.last_error,
+    last_error: loadError ?? source.last_error,
     ...structure,
     members: profiles ?? [],
   };
@@ -249,7 +217,8 @@ export async function configureYouGileForUser(userId: string, input: { teamspace
   if (!source) throw new Error("Сначала подключите YouGile");
   if (!input.projects.length) throw new Error("Выберите хотя бы один проект YouGile");
   const admin = await db();
-  const first = input.projects[0]!;
+  const first = input.projects[0];
+  if (!first) throw new Error("Выберите хотя бы один проект YouGile");
   const patch = {
     project_id: first.id,
     project_name: first.name,
@@ -261,11 +230,12 @@ export async function configureYouGileForUser(userId: string, input: { teamspace
   const { error } = await admin.from("task_sync_sources").update(patch).eq("id", source.id);
   if (error) throw new Error(error.message);
   const next: Source = { ...source, ...patch };
-  const webhookError = await registerWebhook(next).catch(() => null);
+  const scope = createYouGileRequest();
+  const webhookError = await registerWebhook(next, scope).catch(() => null);
   let result: { synced: number; archived: number } = { synced: 0, archived: 0 };
   let syncError: string | null = null;
   try {
-    result = await syncSource(next);
+    result = await syncSource(next, scope);
   } catch (error) {
     syncError = error instanceof Error ? error.message : String(error);
   }
@@ -278,13 +248,13 @@ export async function configureYouGileForUser(userId: string, input: { teamspace
 
 
 /** Returns null on success, or a human-readable message the admin should see. */
-async function registerWebhook(source: Source): Promise<string | null> {
+async function registerWebhook(source: Source, scope = createYouGileRequest()): Promise<string | null> {
   if (!source.project_id) return null;
   try {
     const key = decryptConnectionKey(source.api_key_ciphertext);
     const url = `https://ai-virtualspace.com/api/public/yougile-webhook?id=${encodeURIComponent(source.id)}&secret=${encodeURIComponent(source.webhook_secret)}`;
     // YouGile's /webhooks endpoint accepts only { url, event } — sending projectId is rejected with 400.
-    const result = await api<Record<string, unknown>>(key, "/webhooks", { method: "POST", body: JSON.stringify({ url, event: "*" }) });
+    const result = await api<Record<string, unknown>>(key, "/webhooks", { method: "POST", body: JSON.stringify({ url, event: "*" }) }, scope);
     const webhookId = typeof result?.id === "string" ? result.id : null;
     if (webhookId) {
       const admin = await db();
@@ -298,13 +268,13 @@ async function registerWebhook(source: Source): Promise<string | null> {
   }
 }
 
-export async function syncSource(source: Source) {
+export async function syncSource(source: Source, scope: YouGileRequest = createYouGileRequest()) {
   const projectList = selectedProjects(source);
   if (!source.enabled || !projectList.length) return { synced: 0, archived: 0 };
   const admin = await db();
   try {
     const key = decryptConnectionKey(source.api_key_ciphertext);
-    const { boards, columns, users } = await loadStructure(key, projectList.map((row) => row.id));
+    const { boards, columns, users } = await loadStructure(key, projectList.map((row) => row.id), scope);
     const columnIds = new Set(columns.map((row) => row.id));
     // A structure read that returns nothing means YouGile is unreachable or the
     // project was removed — never treat that as "everything is archived".
@@ -322,6 +292,12 @@ export async function syncSource(source: Source) {
     const memberIds = (memberships ?? []).map((row) => row.user_id);
     const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
     const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
+    // Fetch the complete snapshot before any writes; failed columns must not archive saved tasks.
+    const tasks: YouGileItem[] = [];
+    for (const columnId of columnIds) {
+      tasks.push(...await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`, scope));
+    }
+    scope.check();
     // YouGile columns become workspace columns; unknown ones are created.
     const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
     const statusByColumn = await ensureStatusesForColumns(
@@ -330,13 +306,10 @@ export async function syncSource(source: Source) {
       columns.map((row) => ({ id: String(row.id), name: String(row.title ?? row['name'] ?? "Колонка") })),
     );
     const { emitExternalTaskChange } = await import("./task-changes.server");
-    const tasks: YouGileItem[] = [];
-    for (const columnId of columnIds) {
-      tasks.push(...(await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`).catch(() => [] as YouGileItem[])));
-    }
     const seen: string[] = [];
     let synced = 0;
     for (const raw of tasks) {
+      scope.check();
       const externalId = raw.id;
       seen.push(externalId);
       const assigned = Array.isArray(raw.assigned) ? raw.assigned.map(String) : [];
@@ -398,6 +371,7 @@ export async function syncSource(source: Source) {
       synced++;
     }
     let archived = 0;
+    scope.check();
     if (seen.length) {
       const { data } = await admin.from("tasks").update({ external_archived: true }).eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").not("external_id", "in", `(${seen.join(",")})`).select("id");
       archived = data?.length ?? 0;
@@ -424,8 +398,9 @@ export async function syncAllYouGileSources() {
   const { data } = await admin.from("task_sync_sources").select("*").eq("provider", "yougile").eq("enabled", true);
   let synced = 0;
   let failed = 0;
+  const scope = createYouGileRequest();
   for (const source of (data ?? []) as Source[]) {
-    try { await syncSource(source); synced++; } catch { failed++; }
+    try { await syncSource(source, scope); synced++; } catch { failed++; }
   }
   return { synced, failed };
 }
@@ -456,13 +431,17 @@ export async function updateYouGileTaskStatus(taskId: string, status: Status, ac
   if (!source) throw new Error("YouGile не подключён");
   const key = decryptConnectionKey(source.api_key_ciphertext);
   const { guessBaseStatus } = await import("./task-statuses.server");
+  const scope = createYouGileRequest();
 
   let columnId: string | undefined;
   if (task.external_column_id) {
-    const current = await api<Record<string, unknown>>(key, `/columns/${encodeURIComponent(task.external_column_id)}`).catch(() => null);
+    const current = await api<Record<string, unknown>>(key, `/columns/${encodeURIComponent(task.external_column_id)}`, undefined, scope).catch((error: unknown) => {
+      if (error instanceof YouGileRequestError && error.status === 404) return null;
+      throw error;
+    });
     const boardId = current && typeof current['boardId'] === "string" ? current['boardId'] : null;
     if (boardId) {
-      const columns = await pages(key, `/columns?boardId=${encodeURIComponent(boardId)}`);
+      const columns = await pages(key, `/columns?boardId=${encodeURIComponent(boardId)}`, scope);
       const mapped = columns.find((column) => source.column_map?.[String(column.id)] === status);
       const guessed = columns.find((column) => guessBaseStatus(String(column.title ?? column['name'] ?? "")) === status);
       columnId = String((mapped ?? guessed)?.id ?? "") || undefined;
@@ -472,7 +451,7 @@ export async function updateYouGileTaskStatus(taskId: string, status: Status, ac
   if (!columnId && status !== "done") throw new Error("В YouGile нет колонки для этого статуса");
 
   const body = columnId ? { columnId, completed: status === "done" } : { completed: true };
-  await api(key, `/tasks/${encodeURIComponent(task.external_id)}`, { method: "PUT", body: JSON.stringify(body) });
+  await api(key, `/tasks/${encodeURIComponent(task.external_id)}`, { method: "PUT", body: JSON.stringify(body) }, scope);
 
   let statusId: string | null = null;
   if (columnId) {
@@ -488,8 +467,9 @@ export async function listYouGileTaskChat(teamspaceId: string, externalId: strin
   const source = await sourceFor(teamspaceId);
   if (!source) return [];
   const key = decryptConnectionKey(source.api_key_ciphertext);
-  const rows = await pages(key, `/chats/${encodeURIComponent(externalId)}/messages`).catch(() => [] as YouGileItem[]);
-  const users = await pages(key, "/users").catch(() => [] as YouGileItem[]);
+  const scope = createYouGileRequest();
+  const rows = await pages(key, `/chats/${encodeURIComponent(externalId)}/messages`, scope).catch(() => [] as YouGileItem[]);
+  const users = await pages(key, "/users", scope).catch(() => [] as YouGileItem[]);
   const names = new Map(
     users.map((row) => [String(row.id), String(row['realName'] ?? row['name'] ?? row.email ?? "").trim()]),
   );

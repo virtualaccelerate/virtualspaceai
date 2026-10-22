@@ -1,4 +1,5 @@
 ## Задачи
+- [x] Bound YouGile request and sync waits; preserve saved data on unavailable or incomplete reads; run isolated regression tests
 - [x] Voice pause recovery — protected app-admin action, classified pauses, safe recovery checks and regression tests
 - [x] Restore notification popups and verify rendering
 - [x] Preserve unchanged AI-chat task assignments and test regression
