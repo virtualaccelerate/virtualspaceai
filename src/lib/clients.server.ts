@@ -231,7 +231,11 @@ async function sheetLocale(userId?: string, language?: string) {
   const code = language?.toLowerCase().split(/[-_]/)[0] ?? "ru";
   return clientLocales[code]?.clientsUi ?? clientLocales.ru.clientsUi;
 }
-const csvCell = (v: unknown) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const csvCell = (v: unknown) => {
+  const raw = String(v ?? "");
+  const s = /^[\s\u0000-\u001f]*[=+@-]/.test(raw) || /^[\t\r\n]/.test(raw) ? `'${raw}` : raw;
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
 
 async function buildCsv(teamspaceId: string, userId?: string, language?: string) {
   const db = await admin();

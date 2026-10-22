@@ -290,7 +290,7 @@ export const analyzeFinancials = createServerFn({ method: "POST" })
 
 // ---------- Q&A over the finance tables ----------
 const MessageSchema = z.object({
-  role: z.enum(["user", "assistant", "system"]),
+  role: z.enum(["user", "assistant"]),
   content: z.string().min(1).max(8000),
 });
 
