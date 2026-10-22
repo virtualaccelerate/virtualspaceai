@@ -10,6 +10,10 @@ import {
   PRESENTATION_EXT,
   extractSpreadsheetText,
   extractPresentationText,
+  extractWordText,
+  extractOdtText,
+  extractRtfText,
+  extractZipText,
   fetchWebpageText,
   toBase64,
   callGateway,
@@ -270,6 +274,11 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       const isSpreadsheet = SPREADSHEET_MIME.test(mime) || SPREADSHEET_EXT.test(doc.name);
       const isLegacyPresentation = /\.(ppt|odp)$/i.test(doc.name) || /vnd\.ms-powerpoint|vnd\.oasis\.opendocument\.presentation/i.test(mime);
       const isPresentation = (PRESENTATION_MIME.test(mime) || PRESENTATION_EXT.test(doc.name)) && !isLegacyPresentation;
+      const isWord = /\.docx$/i.test(doc.name) || /wordprocessingml/i.test(mime);
+      const isOdt = /\.odt$/i.test(doc.name) || /opendocument\.text/i.test(mime);
+      const isRtf = /\.rtf$/i.test(doc.name) || /^(application|text)\/rtf$/i.test(mime);
+      const isZip = /\.zip$/i.test(doc.name) || /application\/(zip|x-zip-compressed)/i.test(mime);
+      const isLegacyWord = /\.doc$/i.test(doc.name) || mime === "application/msword";
 
       if (isLegacyPresentation) {
         await setStatus(
@@ -279,10 +288,18 @@ export const extractDocumentText = createServerFn({ method: "POST" })
         return { ok: false, unsupported: true as const };
       }
 
-      if (!isPdf && !isImage && !isText && !isSpreadsheet && !isPresentation) {
+      if (isLegacyWord && !isWord) {
         await setStatus(
           "unsupported",
-          "Формат не поддерживается для автоматического чтения (поддерживаются PDF, изображения, таблицы, презентации .pptx и текстовые файлы).",
+          "Старый формат .doc не поддерживается — пересохраните документ в .docx.",
+        );
+        return { ok: false, unsupported: true as const };
+      }
+
+      if (!isPdf && !isImage && !isText && !isSpreadsheet && !isPresentation && !isWord && !isOdt && !isRtf && !isZip) {
+        await setStatus(
+          "unsupported",
+          "Формат не поддерживается для автоматического чтения (поддерживаются PDF, изображения, Word (.docx, .odt, .rtf), таблицы, презентации .pptx, текстовые файлы и ZIP-архивы с ними).",
         );
         return { ok: false, unsupported: true as const };
       }
@@ -309,6 +326,22 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       if (isPresentation) {
         const text = await extractPresentationText(bytes);
         await setStatus(text.trim() ? "ready" : "empty", text.trim() ? null : "В презентации нет текста", text);
+        return { ok: true, length: text.length };
+      }
+
+      if (isWord || isOdt || isRtf || isZip) {
+        const text = isWord
+          ? await extractWordText(bytes)
+          : isOdt
+            ? await extractOdtText(bytes)
+            : isRtf
+              ? extractRtfText(bytes)
+              : await extractZipText(bytes);
+        await setStatus(
+          text.trim() ? "ready" : "empty",
+          text.trim() ? null : "В файле не нашлось читаемого текста",
+          text,
+        );
         return { ok: true, length: text.length };
       }
 
