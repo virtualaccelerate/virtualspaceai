@@ -257,6 +257,8 @@ export async function syncTrelloSource(source: Source) {
         .map((row) => [row.external_column_id as string, row]),
     );
     const { emitExternalTaskChange } = await import("./task-changes.server");
+    const { flushTrackerNotifications } = await import("./tracker-notifications.server");
+    const notificationBatch: import("./tracker-notifications.server").TrackerBatch = [];
 
     const cards = await allCards(creds, source.project_id);
     const seen: string[] = [];
@@ -305,8 +307,9 @@ export async function syncTrelloSource(source: Source) {
         external_column_id: String(card['idList'] ?? "") || null,
         external_updated_at: typeof card['dateLastActivity'] === "string" ? card['dateLastActivity'] : null,
         external_archived: card['closed'] === true,
+        sync_archived_at: null,
       };
-      const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId).maybeSingle();
+      const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, sync_archived_at, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_id", externalId).maybeSingle();
       const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();
       if (error) throw error;
       await emitExternalTaskChange({
@@ -318,23 +321,24 @@ export async function syncTrelloSource(source: Source) {
           ? { ...before, status_name: statusByColumn.get(before.external_column_id ?? "")?.name ?? before.status }
           : null,
         after: { ...patch, status_name: workspaceStatus?.name ?? patch.status },
+        batch: notificationBatch,
       }).catch(() => {});
-      if (saved.assignee_id && saved.assignee_id !== before?.assignee_id) {
-        const { notifyAssignment } = await import("./tasks.server");
-        await notifyAssignment({ assigneeId: saved.assignee_id, actorId: source.created_by, teamspaceId: source.teamspace_id, kind: "assigned", taskId: saved.id, title: saved.title, status: saved.status, priority: saved.priority, dueDate: saved.due_date });
+      if (saved.assignee_id && saved.assignee_id !== before?.assignee_id && saved.assignee_id !== source.created_by) {
+        notificationBatch.push({ userId: saved.assignee_id, teamspaceId: source.teamspace_id, taskId: saved.id, tracker: "Trello", title: "Вам назначена задача", body: saved.title, kind: "task_assigned", actorId: source.created_by });
       }
       synced++;
     }
 
     // Cards deleted in Trello never come back in the listing — archive the rest.
     let archived = 0;
-    const query = admin.from("tasks").update({ external_archived: true }).eq("teamspace_id", source.teamspace_id).eq("external_source", "trello");
+    const query = admin.from("tasks").update({ external_archived: true, sync_archived_at: new Date().toISOString() }).eq("teamspace_id", source.teamspace_id).eq("external_source", "trello").eq("external_archived", false);
     const { data: gone } = seen.length
       ? await query.not("external_id", "in", `(${seen.map((id) => `"${id}"`).join(",")})`).select("id")
       : await query.select("id");
     archived = gone?.length ?? 0;
 
     await admin.from("task_sync_sources").update({ last_sync_at: new Date().toISOString(), last_error: null }).eq("id", source.id);
+    await flushTrackerNotifications(notificationBatch);
     return { synced, archived };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

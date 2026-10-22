@@ -10,6 +10,8 @@
  * Server-only.
  */
 
+import { completionFacts, meaningfulUpdate } from "./notification-facts";
+
 const BISHKEK_OFFSET_HOURS = 6;
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -75,6 +77,8 @@ const PASS_RULES: Record<NotifyPass, string> = {
   evening: [
     "Это вечерний проход (18:00).",
     "evening_brief — подведи итоги дня и скажи, что требует внимания завтра. Только людям, у которых день был содержательным или завтра есть риск.",
+    "Числа итогов дня бери ТОЛЬКО из done_today и created_today: считай уникальные id; для member фильтруй по assignee_id. closed_last_24h — скользящие 24 часа, НЕ сегодня.",
+    "Не утверждай, что задачи сегодня обновлены или все выполнены: синхронизация не является работой сотрудника. Пустой done_today означает ноль подтверждённых закрытий сегодня. Никогда не выдумывай количество.",
   ].join("\n"),
 };
 
@@ -105,11 +109,13 @@ const SYSTEM = [
   "dedupe_key — стабильный ключ смысла уведомления (тип + объект), чтобы не повторяться.",
 ].join("\n");
 
-async function snapshot(teamspaceId: string) {
+export async function snapshot(teamspaceId: string, now = new Date()) {
   const db = await admin();
-  const today = bishkekDate();
-  const since48 = new Date(Date.now() - 48 * 3600_000).toISOString();
-  const since24 = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const today = bishkekDate(now);
+  const dayStart = new Date(`${today}T00:00:00+06:00`).toISOString();
+  const until = now.toISOString();
+  const since48 = new Date(now.getTime() - 48 * 3600_000).toISOString();
+  const since24 = new Date(now.getTime() - 24 * 3600_000).toISOString();
 
   const [tsRes, memberRes, taskRes, actRes] = await Promise.all([
     db.from("teamspaces").select("id, name, owner_id, business_type").eq("id", teamspaceId).maybeSingle(),
@@ -117,10 +123,11 @@ async function snapshot(teamspaceId: string) {
     db
       .from("tasks")
       .select(
-        "id, title, description, status, priority, due_date, assignee_id, assignee_name, user_id, created_at, updated_at, submitted_at",
+        "id, title, description, status, priority, due_date, assignee_id, assignee_name, user_id, created_at, updated_at, submitted_at, reviewed_at, external_source, external_updated_at",
       )
       .eq("teamspace_id", teamspaceId)
       .eq("external_archived", false)
+      .neq("status", "done")
       .order("due_date", { ascending: true })
       .limit(180),
     db
@@ -170,7 +177,7 @@ async function snapshot(teamspaceId: string) {
     assignee_id: t.assignee_id,
     assignee: t.assignee_name || nameOf(t.assignee_id) || "не назначен",
     creator_id: t.user_id,
-    days_since_update: t.updated_at ? daysBetween(today, bishkekDate(new Date(t.updated_at))) : null,
+    days_since_update: meaningfulUpdate(t) ? daysBetween(today, bishkekDate(new Date(meaningfulUpdate(t) ?? until))) : null,
     waiting_review_since: t.submitted_at ?? null,
   }));
 
@@ -180,9 +187,29 @@ async function snapshot(teamspaceId: string) {
     activity.set(a.user_id, (activity.get(a.user_id) ?? 0) + 1);
   }
 
-  const closedRecently = all.filter(
-    (t) => t.status === "done" && t.updated_at && t.updated_at >= since24,
-  ).length;
+  const factsSince = since24 < dayStart ? since24 : dayStart;
+  const [{ data: statuses, error: statusError }, eventResult, reviewedResult, createdResult, openCount, overdueCount, reviewCount] = await Promise.all([
+    db.from("teamspace_statuses").select("id, name").eq("teamspace_id", teamspaceId).eq("base_status", "done"),
+    db.from("task_events").select("task_id, from_value, to_value, created_at, kind").eq("teamspace_id", teamspaceId).eq("field", "status").gte("created_at", factsSince).lte("created_at", until).limit(10000),
+    db.from("tasks").select("id, title, assignee_id, assignee_name, user_id, external_source, external_updated_at, updated_at, created_at, reviewed_at, status").eq("teamspace_id", teamspaceId).is("external_source", null).eq("status", "done").gte("reviewed_at", factsSince).lte("reviewed_at", until).limit(10000),
+    db.from("tasks").select("id, title, assignee_id, assignee_name, user_id, created_at").eq("teamspace_id", teamspaceId).is("external_source", null).gte("created_at", dayStart).lte("created_at", until).limit(10000),
+    db.from("tasks").select("id", { count: "exact", head: true }).eq("teamspace_id", teamspaceId).eq("external_archived", false).neq("status", "done"),
+    db.from("tasks").select("id", { count: "exact", head: true }).eq("teamspace_id", teamspaceId).eq("external_archived", false).neq("status", "done").lt("due_date", today),
+    db.from("tasks").select("id", { count: "exact", head: true }).eq("teamspace_id", teamspaceId).eq("external_archived", false).eq("status", "review"),
+  ]);
+  for (const error of [statusError, eventResult.error, reviewedResult.error, createdResult.error, openCount.error, overdueCount.error, reviewCount.error, taskRes.error]) if (error) throw new Error(error.message);
+  const doneValues = new Set(["done", ...(statuses ?? []).flatMap(s => [s.id, s.name])]);
+  const eventIds = [...new Set((eventResult.data ?? []).filter(e => doneValues.has(e.to_value ?? "") && !doneValues.has(e.from_value ?? "")).map(e => e.task_id))];
+  const { data: eventTasks, error: factError } = eventIds.length
+    ? await db.from("tasks").select("id, title, assignee_id, assignee_name, user_id, external_source, external_updated_at, updated_at, created_at, reviewed_at, status").eq("teamspace_id", teamspaceId).in("id", eventIds)
+    : { data: [], error: null };
+  if (factError) throw new Error(factError.message);
+  const factTasks = [...new Map([...(eventTasks ?? []), ...(reviewedResult.data ?? [])].map(t => [t.id, t])).values()];
+  const completed = completionFacts(factTasks, eventResult.data ?? [], doneValues, factsSince, until);
+  const fact = (t: { id: string; title: string; assignee_id: string | null; assignee_name: string | null; user_id: string }) => ({ id: t.id, title: t.title, assignee_id: t.assignee_id, assignee: t.assignee_name || nameOf(t.assignee_id) || "не назначен", creator_id: t.user_id });
+  const doneToday = completed.filter(t => t.completed_at >= dayStart).map(fact);
+  const createdToday = (createdResult.data ?? []).map(fact);
+  const closedRecently = completed.filter(t => t.completed_at >= since24).length;
 
   return {
     ts,
@@ -198,22 +225,25 @@ async function snapshot(teamspaceId: string) {
         open_tasks: tasks.filter((t) => t.assignee_id === m.user_id).length,
       })),
       totals: {
-        open: open.length,
-        overdue: tasks.filter((t) => t.days_to_due !== null && t.days_to_due < 0).length,
-        in_review: open.filter((t) => t.status === "review").length,
+        open: openCount.count ?? 0,
+        overdue: overdueCount.count ?? 0,
+        in_review: reviewCount.count ?? 0,
         closed_last_24h: closedRecently,
       },
+      done_today: doneToday,
+      created_today: createdToday,
       tasks,
     },
   };
 }
 
-async function askModel(payload: unknown, pass: NotifyPass): Promise<AiNotification[]> {
+export async function askModel(payload: unknown, pass: NotifyPass): Promise<AiNotification[]> {
   const key = process.env["LOVABLE_API_KEY"];
-  if (!key) return [];
+  if (!key) throw new Error("AI_CONFIGURATION: Отсутствует ключ AI");
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
+    signal: AbortSignal.timeout(18000),
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: MODEL,
@@ -234,16 +264,26 @@ async function askModel(payload: unknown, pass: NotifyPass): Promise<AiNotificat
     }),
   });
 
-  if (!res.ok) return [];
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  if (!res.ok) {
+    const safe = await res.json().catch(() => ({})) as { message?: string; error?: { message?: string }; type?: string };
+    const message = safe.message || safe.error?.message || `AI: HTTP ${res.status}`;
+    if ([402, 403, 404, 401].includes(res.status)) {
+      const db = await admin();
+      await db.from("notification_service_state").upsert({ key: "ai-notifications", reason: message, requires_owner: true });
+    }
+    throw new Error(`${res.status}: ${message}`);
+  }
+  const json = (await res.json()) as { choices?: { message?: { content?: string; refusal?: string } }[] };
+  if (json.choices?.[0]?.message?.refusal) throw new Error(`AI_REFUSAL: ${json.choices[0].message.refusal}`);
   const raw = json.choices?.[0]?.message?.content ?? "";
+  if (!raw.trim()) throw new Error("AI_REFUSAL: AI вернул пустой ответ");
   try {
     const parsed = JSON.parse(raw.replace(/^```json\s*|\s*```$/g, "")) as {
       notifications?: AiNotification[];
     };
     return Array.isArray(parsed.notifications) ? parsed.notifications : [];
   } catch {
-    return [];
+    throw new Error("400: AI вернул некорректный формат сводки");
   }
 }
 
@@ -292,9 +332,11 @@ const TYPE_ICON: Record<string, string> = {
 export async function runAiNotifications(
   pass: NotifyPass,
   onlyTeamspaceId?: string,
-  opts?: { onlyUserId?: string; forceChatId?: number; ignoreDedupe?: boolean },
+  opts?: { onlyUserId?: string; forceChatId?: number; ignoreDedupe?: boolean; skipDelivery?: boolean; onGenerated?: (data: { snapshot: Awaited<ReturnType<typeof snapshot>>; items: AiNotification[] }) => void },
 ): Promise<{ sent: number; spaces: number }> {
   const db = await admin();
+  const { data: pause } = await db.from("notification_service_state").select("reason").limit(1);
+  if (pause?.length) throw new Error(pause[0].reason);
   const spacesQuery = db.from("teamspaces").select("id").limit(200);
   const { data: spaces } = onlyTeamspaceId
     ? await spacesQuery.eq("id", onlyTeamspaceId)
@@ -304,11 +346,12 @@ export async function runAiNotifications(
   let scanned = 0;
 
   for (const space of spaces ?? []) {
-    const snap = await snapshot(space.id).catch(() => null);
-    if (!snap || !snap.payload.tasks.length || !snap.members.length) continue;
+    const snap = await snapshot(space.id);
+    if (!snap || (!snap.payload.tasks.length && !snap.payload.done_today.length && !snap.payload.created_today.length) || !snap.members.length) continue;
     scanned++;
 
-    const items = await askModel(snap.payload, pass).catch(() => [] as AiNotification[]);
+    const items = await askModel(snap.payload, pass);
+    opts?.onGenerated?.({ snapshot: snap, items });
     const perUser = new Map<string, number>();
 
     for (const item of items) {
@@ -322,7 +365,7 @@ export async function runAiNotifications(
       if (item.type === "owner_brief" && member.role !== "owner") continue;
       if (!isManager) {
         const referenced = (item.task_ids ?? [])
-          .map((id) => snap.payload.tasks.find((task) => task.id === id))
+          .map((id) => [...snap.payload.tasks, ...snap.payload.done_today, ...snap.payload.created_today].find((task) => task.id === id))
           .filter(Boolean) as { assignee_id: string | null }[];
         if (referenced.length && !referenced.some((task) => task.assignee_id === member.user_id)) continue;
       }
@@ -333,6 +376,7 @@ export async function runAiNotifications(
       const importance: AiNotification["importance"] =
         item.importance === "high" || item.importance === "low" ? item.importance : "medium";
       const key = `${today}:${pass}:${item.dedupe_key || `${item.type}:${item.title}`}`.slice(0, 200);
+      if (opts?.skipDelivery) { perUser.set(member.user_id, count + 1); sent++; continue; }
       const ok = opts?.ignoreDedupe
         ? true
         : await claim({
