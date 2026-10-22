@@ -46,3 +46,9 @@ export async function requireManager(userId: string, teamspaceId: string, action
     throw new Error(`Только владелец или администратор может ${action}`);
   }
 }
+
+/** Employees submit completion for review; only managers approve done. */
+export async function completionStatusForUser<T extends string | undefined>(userId: string, teamspaceId: string, status: T): Promise<T | "review"> {
+  if (status === "done" && !(await isWorkspaceManager(userId, teamspaceId))) return "review";
+  return status;
+}

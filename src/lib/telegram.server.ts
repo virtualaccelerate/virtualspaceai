@@ -426,9 +426,12 @@ async function handleDone(link: Link, chatId: number, query: string, lang: Lang)
     await sendMessage(chatId, t(lang).notFound);
     return;
   }
-  await supabaseAdmin.from("tasks").update({ status: "done" }).eq("id", task.id);
+  const { completionStatusForUser } = await import("./roles.server");
+  const status = await completionStatusForUser(link.user_id, task.teamspace_id, "done");
+  const { error } = await supabaseAdmin.from("tasks").update({ status }).eq("id", task.id);
+  if (error) throw new Error(error.message);
   const space = await spaceNameOf(task.teamspace_id).catch(() => null);
-  await sendMessage(chatId, `${t(lang).doneOk(task.title)}${space ? `\n🏢 ${space}` : ""}`, withMenu(lang));
+  await sendMessage(chatId, `${status === "done" ? t(lang).doneOk(task.title) : t(lang).statusSet(task.title, statusTag(status, lang))}${space ? `\n🏢 ${space}` : ""}`, withMenu(lang));
 }
 
 async function handleToday(link: Link, chatId: number, lang: Lang) {
@@ -1170,7 +1173,7 @@ async function handleCallback(cb: any) {
 
   const { data: task } = await supabaseAdmin
     .from("tasks")
-    .select("id, title, status, external_source")
+    .select("id, title, status, external_source, teamspace_id")
     .eq("id", taskId)
     .or(`user_id.eq.${link.user_id},assignee_id.eq.${link.user_id}`)
     .maybeSingle();
@@ -1178,11 +1181,13 @@ async function handleCallback(cb: any) {
     await tg("answerCallbackQuery", { callback_query_id: cb.id, text: t(lang).notFound });
     return;
   }
-  const next = (action === "done" ? "done" : CYCLE[(task as any).status] ?? "in_progress") as
+  let next = (action === "done" ? "done" : CYCLE[(task as any).status] ?? "in_progress") as
     | "backlog"
     | "in_progress"
     | "review"
     | "done";
+  const { completionStatusForUser } = await import("./roles.server");
+  next = await completionStatusForUser(link.user_id, (task as any).teamspace_id, next);
   const external = await import("./external-tasks.server");
   if (external.isExternalTask((task as any).external_source)) {
     try {

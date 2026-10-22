@@ -427,6 +427,8 @@ export async function updateYouGileTaskStatus(taskId: string, status: Status, ac
   const { data: task } = await admin.from("tasks").select("id, teamspace_id, external_id, external_source, external_column_id").eq("id", taskId).maybeSingle();
   if (!task?.teamspace_id || task.external_source !== "yougile" || !task.external_id) throw new Error("Задача YouGile не найдена");
   await requireMember(actorId, task.teamspace_id);
+  const { completionStatusForUser } = await import("./roles.server");
+  status = await completionStatusForUser(actorId, task.teamspace_id, status);
   const source = await sourceFor(task.teamspace_id);
   if (!source) throw new Error("YouGile не подключён");
   const key = decryptConnectionKey(source.api_key_ciphertext);

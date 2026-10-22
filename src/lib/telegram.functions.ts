@@ -72,6 +72,8 @@ export const getTelegramStatus = createServerFn({ method: "GET" })
 export const setupTelegramWebhook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
+    const { requireApplicationAdmin } = await import("./application-admin.server");
+    await requireApplicationAdmin();
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) return { ok: false, error: "TELEGRAM_BOT_TOKEN is not configured" };
     const { tg, webhookSecret } = await import("@/lib/telegram.server");
