@@ -269,10 +269,7 @@ export async function submitTaskProof(input: {
   proofNote?: string | null;
 }): Promise<TaskRow | null> {
   const db = await admin();
-  const { data: sourceTask } = await db.from("tasks").select("external_source, teamspace_id").eq("id", input.taskId).maybeSingle();
-  if (!sourceTask?.teamspace_id) throw new Error("Task not found");
-  const { requireManager } = await import("./roles.server");
-  await requireManager(input.reviewerId, sourceTask.teamspace_id, "принимать задачи");
+  const { data: sourceTask } = await db.from("tasks").select("external_source").eq("id", input.taskId).maybeSingle();
   {
     const { pushExternalStatus } = await import("./external-tasks.server");
     await pushExternalStatus(sourceTask?.external_source, input.taskId, "review", input.assigneeId);
@@ -336,7 +333,10 @@ export async function decideTask(input: {
   comment?: string | null;
 }): Promise<TaskRow | null> {
   const db = await admin();
-  const { data: sourceTask } = await db.from("tasks").select("external_source").eq("id", input.taskId).maybeSingle();
+  const { data: sourceTask } = await db.from("tasks").select("external_source, teamspace_id").eq("id", input.taskId).maybeSingle();
+  if (!sourceTask?.teamspace_id) throw new Error("Task not found");
+  const { requireManager } = await import("./roles.server");
+  await requireManager(input.reviewerId, sourceTask.teamspace_id, "принимать задачи");
   {
     const { pushExternalStatus } = await import("./external-tasks.server");
     await pushExternalStatus(sourceTask?.external_source, input.taskId, input.decision === "approve" ? "done" : "in_progress", input.reviewerId);
