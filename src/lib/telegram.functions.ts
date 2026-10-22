@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
 
 function appBase(): string {
   return (
@@ -71,7 +72,12 @@ export const getTelegramStatus = createServerFn({ method: "GET" })
 /** Registers the Telegram webhook + mini app menu button for this deployment. */
 export const setupTelegramWebhook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .inputValidator((raw: unknown) => z.object({ teamspaceId: z.string().uuid() }).parse(raw))
+  .handler(async ({ context, data }) => {
+    const { data: membership, error } = await context.supabase.from("teamspace_members")
+      .select("role").eq("teamspace_id", data.teamspaceId).eq("user_id", context.userId).maybeSingle();
+    const { canSetupWorkspaceBot } = await import("./reminder-rules");
+    if (error || !canSetupWorkspaceBot(membership?.role)) throw new Error("Только владелец пространства может настроить бота");
     const { requireApplicationAdmin } = await import("./application-admin.server");
     await requireApplicationAdmin();
     const token = process.env.TELEGRAM_BOT_TOKEN;

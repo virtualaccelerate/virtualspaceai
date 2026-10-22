@@ -6,6 +6,9 @@ import { Send, Copy, Check, Loader2, Unplug, RefreshCw, CalendarClock } from "lu
 import { getDigestSettings, setDigestSettings, getCalendarFeedUrl } from "@/lib/calendar.functions";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useWorkspaceRole } from "@/hooks/useWorkspaceRole";
+import { getActiveTeamspaceId } from "@/lib/active-teamspace";
+import { canSetupWorkspaceBot } from "@/lib/reminder-rules";
 import {
   getTelegramStatus,
   setupTelegramWebhook,
@@ -15,13 +18,18 @@ import {
 export const Route = createFileRoute("/_authenticated/app/telegram")({
   component: TelegramPage,
   head: () => ({
-    meta: [{ title: "Telegram — Virtual Space" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Telegram — Virtual Space" }, { name: "robots", content: "noindex" },
+      { name: "description", content: "Connect your Virtual Space Telegram task assistant." },
+      { property: "og:title", content: "Telegram — Virtual Space" },
+      { property: "og:description", content: "Connect your Virtual Space Telegram task assistant." },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }],
   }),
 });
 
 function TelegramPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const { role } = useWorkspaceRole();
   const status = useServerFn(getTelegramStatus);
   const setup = useServerFn(setupTelegramWebhook);
   const unlink = useServerFn(unlinkTelegram);
@@ -33,7 +41,12 @@ function TelegramPage() {
   });
 
   const setupMut = useMutation({
-    mutationFn: () => setup(),
+    mutationFn: async () => {
+      const teamspaceId = await getActiveTeamspaceId();
+      if (!teamspaceId) throw new Error("Выберите пространство");
+      return setup({ data: { teamspaceId } });
+    },
+    onError: (error: Error) => toast.error(error.message),
     onSuccess: (res: any) => {
       if (res?.ok) toast.success(t("integrationsUi.telegram.activated", "Bot activated"));
       else toast.error(res?.error ?? t("integrationsUi.telegram.activateError", "Could not activate the bot"));
@@ -193,7 +206,7 @@ function TelegramPage() {
         </ul>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6">
+      {canSetupWorkspaceBot(role) && <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6">
         <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">
           {t("integrationsUi.telegram.admin", "Bot setup")}
         </h2>
@@ -215,7 +228,7 @@ function TelegramPage() {
           )}
           {t("integrationsUi.telegram.activate", "Activate bot")}
         </button>
-      </section>
+      </section>}
     </div>
   );
 }

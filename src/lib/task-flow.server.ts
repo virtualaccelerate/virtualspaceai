@@ -4,6 +4,8 @@
  * Server-only. Telegram + in-app notifications are kept in sync here.
  */
 
+import { deadlineReminderWindow } from "./reminder-rules";
+
 const BISHKEK_OFFSET_HOURS = 6;
 /** Tasks are due at the end of the working day (18:00 Bishkek) of their due_date. */
 const DEADLINE_HOUR_LOCAL = 18;
@@ -123,48 +125,40 @@ export function assigneeKeyboard(taskId: string, status: string) {
 async function alreadySent(taskId: string, kind: string): Promise<boolean> {
   const db = await admin();
   const { error } = await db.from("task_reminders").insert({ task_id: taskId, kind });
+  if (error && error.code !== "23505") throw new Error(error.message);
   return Boolean(error); // unique violation => reminder already delivered
 }
 
 /** Hourly sweep: 3h / 1h before the deadline, at the deadline, then once a day while overdue. */
-export async function runDeadlineReminders(): Promise<{ sent: number }> {
+export async function runDeadlineReminders(opts?: { onlyUserId?: string; now?: number; skipTelegram?: boolean }): Promise<{ sent: number }> {
   const db = await admin();
-  const { data } = await db
+  let query = db
     .from("tasks")
     .select("id, title, status, priority, due_date, assignee_id, assignee_name, user_id, teamspace_id")
     .neq("status", "done")
+    .neq("status", "review")
+    .is("external_source", null)
     .eq("external_archived", false)
     .not("assignee_id", "is", null)
     .not("due_date", "is", null)
     .limit(500);
+  if (opts?.onlyUserId) query = query.eq("assignee_id", opts.onlyUserId);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
 
   const tasks = (data ?? []) as TaskRow[];
   const { sendMessage } = await tgApi();
-  const now = Date.now();
-  const today = localDateString();
+  const now = opts?.now ?? Date.now();
   let sent = 0;
 
   for (const task of tasks) {
     if (!task.due_date) continue;
-    const leftMs = msUntilDeadline(task.due_date, now);
-    const leftH = leftMs / 3600_000;
-
-    let kind: string | null = null;
-    let heading: string | null = null;
-    if (leftH > 2 && leftH <= 3) {
-      kind = "h3";
-      heading = "⏰ До дедлайна 3 часа";
-    } else if (leftH > 0 && leftH <= 1) {
-      kind = "h1";
-      heading = "⏰ До дедлайна 1 час";
-    } else if (leftH <= 0) {
-      kind = `overdue:${today}`;
-      heading = "🔴 Задача просрочена";
-    }
-    if (!kind || !heading) continue;
+    const window = deadlineReminderWindow(task.due_date, now);
+    if (!window) continue;
+    const { kind, heading } = window;
     if (await alreadySent(task.id, kind)) continue;
 
-    const chatId = await chatIdFor(task.assignee_id);
+    const chatId = opts?.skipTelegram ? null : await chatIdFor(task.assignee_id);
     if (chatId) {
       await sendMessage(chatId, `${heading}\n\n${taskCard(task, await spaceName(task.teamspace_id))}`, {
         reply_markup: assigneeKeyboard(task.id, task.status),

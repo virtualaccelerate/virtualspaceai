@@ -27,6 +27,12 @@ export const Route = createFileRoute('/api/public/hooks/tasks-daily')({
           else await work; // Development/non-Worker fallback is awaited, never untracked.
           return Response.json({ ok: true, accepted: true }, { status: 202 });
         }
+        // Independent of AI access pauses; every hourly callback runs local reminders.
+        const reminders = import('@/lib/task-flow.server')
+          .then(m => m.runDeadlineReminders())
+          .catch(error => console.error('[deadline-reminders]', error));
+        if (waitUntil) waitUntil.call(request, reminders);
+        else await reminders;
         const now = new Date();
         const day = new Date(now.getTime() + 6 * 3600_000).getUTCDay();
         const scheduled = now.getUTCHours() === 4 ? 'morning' : now.getUTCHours() === 12 ? 'evening' : null;
