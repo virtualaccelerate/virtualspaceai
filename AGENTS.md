@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Workspace roles and access
+- Pending invitation email edits/deletes require workspace managers; reconciliation uses only a service-only fixed-search-path lookup of confirmed Auth email, never user-editable profile email, to prevent mailbox impersonation.
 
 - Direct membership INSERT is revoked for browser roles; creation adds the owner via the database trigger and invite joins use the authenticated service-role server function, so public-key callers cannot grant themselves membership or elevated roles.
 - Training definition INSERT/UPDATE/DELETE policies require `private.is_teamspace_manager`; member SELECT access stays intact so assigned employees can learn.
