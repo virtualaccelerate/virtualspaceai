@@ -274,6 +274,13 @@
       "when": 1792630518403,
       "tag": "0038_stt_explicit_admin_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792631615276,
+      "tag": "0039_verified_pending_member_identity",
+      "breakpoints": true
     }
   ]
 }

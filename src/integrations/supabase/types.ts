@@ -2217,6 +2217,13 @@ export type Database = {
       join_teamspace_by_code: { Args: { _code: string }; Returns: string }
       send_daily_task_digest: { Args: never; Returns: undefined }
       sync_task_trackers: { Args: never; Returns: undefined }
+      verified_pending_member_account: {
+        Args: { requested_email: string }
+        Returns: {
+          email: string
+          id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
