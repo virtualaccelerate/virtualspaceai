@@ -2,6 +2,8 @@ import { describe, it } from "node:test";
 import { strictEqual } from "node:assert";
 import { readFileSync } from "node:fs";
 
+declare const Bun: { Transpiler: new (options: { loader: string }) => { transformSync(source: string): string } };
+
 // Exercise the actual token parser without importing the browser and server UI graph.
 const source = readFileSync(new URL("../components/ChatPanel.tsx", import.meta.url), "utf8");
 const start = source.indexOf("function parseTaskTokens(");
