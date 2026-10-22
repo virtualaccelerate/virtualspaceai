@@ -270,7 +270,16 @@ export async function extractWordText(bytes: Uint8Array): Promise<string> {
     }
   }
 
-  const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
+  // The main document part is usually word/document.xml, but the package
+  // relationships (_rels/.rels) are the source of truth — some producers
+  // name it differently (e.g. word/document2.xml).
+  let mainPath = "word/document.xml";
+  const rootRels = await zip.file("_rels/.rels")?.async("string");
+  if (rootRels) {
+    const target = relsTargets(rootRels).find((r) => /\/officeDocument$/.test(r.type))?.target;
+    if (target) mainPath = resolveOoxmlPath("", target);
+  }
+  const docXml = (await zip.file(mainPath)?.async("string")) ?? (await zip.file("word/document.xml")?.async("string")) ?? "";
   const parts = [...headers, renderBlocks(docXml), ...footers, footnotes].filter((p) => p.trim());
   return parts.join("\n\n").slice(0, 180_000);
 }
