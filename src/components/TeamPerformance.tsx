@@ -105,7 +105,7 @@ function MemberCard({ m }: { m: Member }) {
             {t("workspaceUi.perf.projects", "По проектам")}
           </div>
           {m.projects.map((p) => (
-            <div key={p.teamspace_id} className="flex items-center gap-2 text-xs">
+            <div key={p.project} className="flex items-center gap-2 text-xs">
               <Folder className="h-3 w-3 shrink-0 text-[color:var(--muted-foreground)]" />
               <span className="truncate flex-1">{p.project}</span>
               <span className="text-[color:var(--muted-foreground)] shrink-0">

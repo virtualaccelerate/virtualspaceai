@@ -189,7 +189,7 @@ const DAY = 86400000;
 
 /**
  * Per-employee performance cards: pace, closed work and which project it belongs to.
- * Scope = every workspace the viewer shares with the member, so cross-project work is visible.
+ * Scope = the current workspace only, so no task from another workspace is counted or shown.
  */
 export async function getTeamPerformance(userId: string, requested?: string) {
   const db = await admin();
@@ -210,19 +210,10 @@ export async function getTeamPerformance(userId: string, requested?: string) {
     .maybeSingle();
   if (!me) return null;
 
-  // workspaces the viewer belongs to = the projects we may report on
-  const { data: mySpaces } = await db
+  const { data: memberships } = await db
     .from("teamspace_members")
-    .select("teamspace_id")
-    .eq("user_id", userId);
-  const spaceIds = Array.from(new Set((mySpaces ?? []).map((r) => r.teamspace_id)));
-  if (!spaceIds.length) return null;
-
-  const [{ data: spaces }, { data: memberships }] = await Promise.all([
-    db.from("teamspaces").select("id, name").in("id", spaceIds),
-    db.from("teamspace_members").select("user_id, role").eq("teamspace_id", teamspaceId),
-  ]);
-  const projectName = new Map((spaces ?? []).map((s) => [s.id, s.name as string]));
+    .select("user_id, role")
+    .eq("teamspace_id", teamspaceId);
 
   const { isWorkspaceManager } = await import("./roles.server");
   const isManager = await isWorkspaceManager(userId, teamspaceId);
@@ -237,8 +228,8 @@ export async function getTeamPerformance(userId: string, requested?: string) {
     db.from("profiles").select("id, full_name, email, avatar_url").in("id", ids),
     db
       .from("tasks")
-      .select("id, title, status, priority, due_date, created_at, updated_at, reviewed_at, assignee_id, teamspace_id")
-      .in("teamspace_id", spaceIds)
+      .select("id, title, status, priority, due_date, created_at, updated_at, reviewed_at, assignee_id, teamspace_id, project")
+      .eq("teamspace_id", teamspaceId)
       .in("assignee_id", ids),
   ]);
 
@@ -281,22 +272,25 @@ export async function getTeamPerformance(userId: string, requested?: string) {
       })
       .filter((d): d is number => d !== null);
 
-    const projects: MemberProjectStat[] = spaceIds
-      .map((sid) => {
-        const inProject = mine.filter((task) => task.teamspace_id === sid);
-        return {
-          teamspace_id: sid,
-          project: projectName.get(sid) ?? "—",
-          done: inProject.filter((task) => task.status === "done").length,
-          open: inProject.filter((task) => task.status !== "done").length,
-          overdue: inProject.filter(
-            (task) =>
-              task.status !== "done" &&
-              task.due_date &&
-              new Date(`${task.due_date}T18:00:00+06:00`).getTime() < now,
-          ).length,
-        };
-      })
+    const NO_PROJECT = "Без проекта";
+
+    // Projects are the task's own project field inside this workspace, not other workspaces.
+    const projectNames = Array.from(new Set(mine.map((task) => (task.project ?? "").trim() || NO_PROJECT)));
+    const projects: MemberProjectStat[] = projectNames.map((name) => {
+      const inProject = mine.filter((task) => ((task.project ?? "").trim() || NO_PROJECT) === name);
+      return {
+        teamspace_id: teamspaceId as string,
+        project: name,
+        done: inProject.filter((task) => task.status === "done").length,
+        open: inProject.filter((task) => task.status !== "done").length,
+        overdue: inProject.filter(
+          (task) =>
+            task.status !== "done" &&
+            task.due_date &&
+            new Date(`${task.due_date}T18:00:00+06:00`).getTime() < now,
+        ).length,
+      };
+    })
       .filter((p) => p.done + p.open > 0)
       .sort((a, b) => b.done + b.open - (a.done + a.open));
 
@@ -306,7 +300,7 @@ export async function getTeamPerformance(userId: string, requested?: string) {
       .map((task) => ({
         id: task.id as string,
         title: task.title as string,
-        project: projectName.get(task.teamspace_id) ?? "—",
+        project: (task.project ?? "").trim() || NO_PROJECT,
         closed_at: task.reviewed_at ?? task.updated_at ?? null,
       }));
 
