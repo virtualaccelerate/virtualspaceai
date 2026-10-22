@@ -378,6 +378,8 @@ export async function updateTrelloTaskStatus(taskId: string, status: Status, act
   const { data: task } = await admin.from("tasks").select("id, teamspace_id, external_id, external_source").eq("id", taskId).maybeSingle();
   if (!task?.teamspace_id || task.external_source !== "trello" || !task.external_id) throw new Error("Задача Trello не найдена");
   await requireMember(actorId, task.teamspace_id);
+  const { completionStatusForUser } = await import("./roles.server");
+  status = await completionStatusForUser(actorId, task.teamspace_id, status);
   const source = await sourceFor(task.teamspace_id);
   if (!source) throw new Error("Trello не подключён");
   const listId = Object.entries(source.column_map ?? {}).find(([, mapped]) => mapped === status)?.[0];

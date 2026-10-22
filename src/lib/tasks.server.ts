@@ -117,7 +117,8 @@ export async function createTaskForUser(
       throw new Error("Назначать задачи другим может владелец или администратор");
     }
   }
-  const status = data.status ?? "backlog";
+  const { completionStatusForUser } = await import("./roles.server");
+  const status = await completionStatusForUser(userId, teamspaceId, data.status ?? "backlog");
   // A name without an account (pending member from an import) is kept as a label.
   const name = (await assigneeName(teamspaceId, data.assignee_id)) ?? data.assignee_name ?? null;
   const { count } = await db.from("tasks").select("id", { count: "exact", head: true }).eq("teamspace_id", teamspaceId).eq("status", status);
@@ -157,6 +158,8 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   }
   if (!current.teamspace_id) throw new Error("Task has no workspace");
   await activeTeamspace(userId, current.teamspace_id);
+  const { completionStatusForUser } = await import("./roles.server");
+  data = { ...data, status: await completionStatusForUser(userId, current.teamspace_id, data.status) };
   {
     const { getWorkspaceRole, isManagerRole } = await import("./roles.server");
     const role = await getWorkspaceRole(userId, current.teamspace_id);
