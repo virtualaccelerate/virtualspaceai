@@ -305,3 +305,38 @@ export const adminGetAnalytics = createServerFn({ method: "GET" }).handler(async
   return getAdminAnalytics(90);
 });
 
+// Global voice access belongs to the protected application admin session, not workspace roles.
+export const adminListVoicePauses = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { STT_MODELS } = await import("./stt.server");
+  const { data, error } = await supabaseAdmin.from("stt_service_state")
+    .select("model, reason, status, pause_kind, pause_token, created_at").in("model", Object.values(STT_MODELS));
+  if (error) throw new Error(error.message);
+  return data ?? [];
+});
+
+export const adminResumeVoice = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ model: z.string().min(1), pause_token: z.string().uuid(), confirmed: z.boolean() }).parse(input))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { STT_MODELS, probeSttAccess } = await import("./stt.server");
+    const { recoverSttPause } = await import("./stt-recovery");
+    if (!Object.values(STT_MODELS).some(model => model === data.model)) throw new Error("Unknown voice model");
+    const { data: pause, error } = await supabaseAdmin.from("stt_service_state").select("pause_kind, pause_token")
+      .eq("model", data.model).eq("pause_token", data.pause_token).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!pause) throw new Error("Voice access state changed. Refresh and try again.");
+    await recoverSttPause({ authorized: true, kind: pause.pause_kind === "workspace" ? "workspace" : pause.pause_kind === "provider" ? "provider" : "unknown", confirmed: data.confirmed,
+      probe: () => probeSttAccess(data.model),
+      clear: async () => {
+        const { data: removed, error: failure } = await supabaseAdmin.from("stt_service_state").delete()
+          .eq("model", data.model).eq("pause_token", data.pause_token).select("model");
+        if (failure) throw new Error(failure.message);
+        if (!removed?.length) throw new Error("Voice access state changed. Refresh and try again.");
+      },
+    });
+    return { ok: true };
+  });
+
