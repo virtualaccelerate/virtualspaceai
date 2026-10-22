@@ -11,13 +11,14 @@ const end = source.indexOf("\nfunction MessageContent(", start);
 const parser = new Bun.Transpiler({ loader: "tsx" }).transformSync(
   source.slice(start, end).replace("function parseTaskTokens", "export function parseTaskTokens"),
 );
-const { parseTaskTokens } = await import(`data:text/javascript,${encodeURIComponent(
+const parseTaskTokens = new Function(
   `const TASK_TOKEN = /\\[\\[task:([^\\]]+?)\\]\\]/gi;
    const TASK_UPDATE_TOKEN = /\\[\\[task-update:([^\\]]+?)\\]\\]/gi;
    const MEETING_TOKEN = /\\[\\[meeting:([^\\]]+?)\\]\\]/gi;
    const UUID_ONLY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-   ${parser}`,
-)}`);
+   ${parser.replace("export {", "// export {").replace("export function", "function")}
+   return parseTaskTokens;`,
+)();
 const id = "00000000-0000-4000-8000-000000000001";
 describe("AI task edit assignment intent", () => {
   for (const edit of ["status=done", "due_date=2026-10-30"]) {
