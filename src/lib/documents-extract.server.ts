@@ -430,12 +430,13 @@ async function extractEmbeddedText(data: Uint8Array, path: string): Promise<stri
  * PDFs/images are listed by name only. Limits: 50 files, 10 MB per file,
  * 180 000 chars total.
  */
-export async function extractZipText(bytes: Uint8Array): Promise<string> {
+export async function extractZipText(bytes: Uint8Array): Promise<{ text: string; readableFiles: number }> {
   const JSZip = (await import("jszip")).default;
   const zip = await JSZip.loadAsync(bytes);
   const sections: string[] = [];
   let total = 0;
   let count = 0;
+  let readableFiles = 0;
   for (const path of Object.keys(zip.files).sort()) {
     const entry = zip.files[path];
     if (entry.dir) continue;
@@ -455,13 +456,14 @@ export async function extractZipText(bytes: Uint8Array): Promise<string> {
     if (data.byteLength > 10 * 1024 * 1024) continue;
     const text = await extractEmbeddedText(data, path).catch(() => null);
     if (text === null) continue;
+    if (text.trim()) readableFiles++;
     const section = `## FILE: ${path}\n${text.trim() || "[пустой файл]"}`;
     sections.push(section.slice(0, Math.max(0, 180_000 - total)));
     total += section.length;
     count++;
     if (total >= 180_000) break;
   }
-  return sections.join("\n\n").slice(0, 180_000);
+  return { text: sections.join("\n\n").slice(0, 180_000), readableFiles };
 }
 
 export function toBase64(bytes: Uint8Array) {
@@ -502,13 +504,20 @@ export const EXTRACT_SYSTEM_PROMPT =
 /** Extracts text from an uploaded file (txt / xlsx / pptx / docx / pdf) with the same helpers as the knowledge base. */
 export async function extractFileText(bytes: Uint8Array, name: string, mimeType?: string | null): Promise<string> {
   const mime = (mimeType || "").toLowerCase();
+  // RTF before the generic text check: text/rtf would otherwise be saved as raw RTF code.
+  if (/\.rtf$/i.test(name) || /^(application|text)\/rtf$/i.test(mime)) return extractRtfText(bytes);
   if (TEXT_MIME.test(mime) || TEXT_EXT.test(name)) return new TextDecoder().decode(bytes).slice(0, 180_000);
   if (SPREADSHEET_MIME.test(mime) || SPREADSHEET_EXT.test(name)) return extractSpreadsheetText(bytes);
   if (/\.pptx$/i.test(name) || /presentationml/i.test(mime)) return extractPresentationText(bytes);
   if (/\.docx$/i.test(name) || /wordprocessingml/i.test(mime)) return extractWordText(bytes);
   if (/\.odt$/i.test(name) || /opendocument\.text/i.test(mime)) return extractOdtText(bytes);
-  if (/\.rtf$/i.test(name) || /^(application|text)\/rtf$/i.test(mime)) return extractRtfText(bytes);
-  if (/\.zip$/i.test(name) || /application\/(zip|x-zip-compressed)/i.test(mime)) return extractZipText(bytes);
+  if (/\.zip$/i.test(name) || /application\/(zip|x-zip-compressed)/i.test(mime)) {
+    const result = await extractZipText(bytes);
+    if (!result.readableFiles) {
+      throw new Error("В архиве нет текстовых файлов — только фото/PDF. Загрузите их отдельно, чтобы ИИ их прочитал.");
+    }
+    return result.text;
+  }
   if (mime === "application/pdf" || /\.pdf$/i.test(name)) {
     if (bytes.byteLength > 15 * 1024 * 1024) throw new Error("Файл больше 15 МБ — разделите его на части.");
     const key = process.env["LOVABLE_API_KEY"];
