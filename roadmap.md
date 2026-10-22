@@ -1,4 +1,6 @@
 ## Задачи
+- [ ] Restore hourly deadline reminders and prevent AI reminder duplicates; verify with temporary test user/tasks
+- [ ] Restrict Telegram setup to workspace owners while retaining global admin protection
 - [x] Исправить фоновую доставку сводок и таймаут cron
 - [x] Устранить дубли и шум синхронизации трекеров
 - [x] Проверить реальные итоги Korica/Kulikov без доставки Telegram
