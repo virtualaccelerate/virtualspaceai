@@ -3,6 +3,7 @@ export type StatusEvent = { task_id: string; from_value: string | null; to_value
 export function completionFacts(tasks: FactTask[], events: StatusEvent[], doneValues: Set<string>, since: string, until: string) {
   const closed = new Map<string, string>();
   for (const event of events) {
+    if (event.created_at < since || event.created_at > until) continue;
     if (event.kind !== 'imported' && doneValues.has(event.to_value ?? '') && !doneValues.has(event.from_value ?? '')) {
       const old = closed.get(event.task_id);
       if (!old || old < event.created_at) closed.set(event.task_id, event.created_at);

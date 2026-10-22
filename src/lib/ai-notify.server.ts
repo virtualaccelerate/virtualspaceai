@@ -283,7 +283,7 @@ export async function askModel(payload: unknown, pass: NotifyPass): Promise<AiNo
     };
     return Array.isArray(parsed.notifications) ? parsed.notifications : [];
   } catch {
-    return [];
+    throw new Error("400: AI вернул некорректный формат сводки");
   }
 }
 
