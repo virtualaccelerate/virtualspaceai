@@ -270,13 +270,14 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       const isPdf = mime === "application/pdf" || /\.pdf$/i.test(doc.name);
       const isImage =
         mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(doc.name);
-      const isText = TEXT_MIME.test(mime) || TEXT_EXT.test(doc.name);
+      const isRtf = /\.rtf$/i.test(doc.name) || /^(application|text)\/rtf$/i.test(mime);
+      // RTF takes priority over the generic text check: text/rtf would otherwise be saved as raw RTF code.
+      const isText = (TEXT_MIME.test(mime) || TEXT_EXT.test(doc.name)) && !isRtf;
       const isSpreadsheet = SPREADSHEET_MIME.test(mime) || SPREADSHEET_EXT.test(doc.name);
       const isLegacyPresentation = /\.(ppt|odp)$/i.test(doc.name) || /vnd\.ms-powerpoint|vnd\.oasis\.opendocument\.presentation/i.test(mime);
       const isPresentation = (PRESENTATION_MIME.test(mime) || PRESENTATION_EXT.test(doc.name)) && !isLegacyPresentation;
       const isWord = /\.docx$/i.test(doc.name) || /wordprocessingml/i.test(mime);
       const isOdt = /\.odt$/i.test(doc.name) || /opendocument\.text/i.test(mime);
-      const isRtf = /\.rtf$/i.test(doc.name) || /^(application|text)\/rtf$/i.test(mime);
       const isZip = /\.zip$/i.test(doc.name) || /application\/(zip|x-zip-compressed)/i.test(mime);
       const isLegacyWord = /\.doc$/i.test(doc.name) || mime === "application/msword";
 
@@ -336,7 +337,17 @@ export const extractDocumentText = createServerFn({ method: "POST" })
             ? await extractOdtText(bytes)
             : isRtf
               ? extractRtfText(bytes)
-              : await extractZipText(bytes);
+              : (await extractZipText(bytes)).text;
+        const readableFiles = isZip ? (await Promise.resolve(text), (await extractZipText(bytes)).readableFiles) : 0;
+        if (isZip && readableFiles === 0) {
+          // Only photos/PDFs inside — the AI has no real content, but keep the file list.
+          await setStatus(
+            "empty",
+            "В архиве нет текстовых файлов — только фото/PDF. Загрузите их отдельно, чтобы ИИ их прочитал.",
+            text,
+          );
+          return { ok: false, empty: true as const };
+        }
         await setStatus(
           text.trim() ? "ready" : "empty",
           text.trim() ? null : "В файле не нашлось читаемого текста",
