@@ -1,4 +1,7 @@
 ## Задачи
+- [ ] Review voice pause recovery and preserve terminal-access safeguards
+- [ ] Restore notification popups and verify rendering
+- [ ] Preserve unchanged AI-chat task assignments and test regression
 - [x] Improve shared multilingual speech recognition and per-attempt metadata logging
 - [x] Improve web recording, silence detection, timer and retry; surface Telegram errors
 - [x] Verify Russian, Kyrgyz, English, fallback and Telegram Ogg transcription
