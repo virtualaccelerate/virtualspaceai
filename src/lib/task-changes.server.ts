@@ -4,6 +4,8 @@
  * change concerns: the assignee and the workspace owner/admins.
  */
 import { recordTaskEvent } from "./task-events.server";
+import { shouldNotifyRestoration } from "./notification-facts";
+import { flushTrackerNotifications, type TrackerBatch } from "./tracker-notifications.server";
 
 type Snapshot = {
   status?: string | null;
@@ -14,6 +16,7 @@ type Snapshot = {
   priority?: string | null;
   title?: string | null;
   external_archived?: boolean | null;
+  sync_archived_at?: string | null;
 };
 
 async function db() {
@@ -50,6 +53,7 @@ export async function emitExternalTaskChange(input: {
   title: string;
   before: Snapshot | null;
   after: Snapshot;
+  batch?: TrackerBatch;
 }) {
   const { source, teamspaceId, taskId, title, before, after } = input;
   const tracker = label(source);
@@ -62,8 +66,8 @@ export async function emitExternalTaskChange(input: {
   const changes: { field: string; from: string | null; to: string | null; text: string }[] = [];
   const columnBefore = before.status_name ?? before.status ?? null;
   const columnAfter = after.status_name ?? after.status ?? null;
-  if (columnBefore !== columnAfter) {
-    changes.push({ field: "status", from: columnBefore, to: columnAfter, text: `Статус: ${columnBefore ?? "—"} → ${columnAfter ?? "—"}` });
+  if (columnBefore !== columnAfter || before.status !== after.status) {
+    changes.push({ field: "status", from: before.status !== after.status ? before.status ?? null : columnBefore, to: before.status !== after.status ? after.status ?? null : columnAfter, text: `Статус: ${columnBefore ?? "—"} → ${columnAfter ?? "—"}` });
   }
   if ((before.assignee_name ?? null) !== (after.assignee_name ?? null)) {
     changes.push({ field: "assignee", from: before.assignee_name ?? null, to: after.assignee_name ?? null, text: `Исполнитель: ${after.assignee_name ?? "не назначен"}` });
@@ -74,7 +78,7 @@ export async function emitExternalTaskChange(input: {
   if ((before.priority ?? null) !== (after.priority ?? null)) {
     changes.push({ field: "priority", from: before.priority ?? null, to: after.priority ?? null, text: `Приоритет: ${after.priority ?? "—"}` });
   }
-  if ((before.title ?? null) !== (after.title ?? null)) {
+  if ((before.title ?? "").trim() !== (after.title ?? "").trim()) {
     changes.push({ field: "title", from: before.title ?? null, to: after.title ?? null, text: `Новое название: ${after.title ?? ""}` });
   }
   if (Boolean(before.external_archived) !== Boolean(after.external_archived)) {
@@ -84,6 +88,12 @@ export async function emitExternalTaskChange(input: {
       to: String(Boolean(after.external_archived)),
       text: after.external_archived ? `Задача удалена/архивирована в ${tracker}` : `Задача восстановлена в ${tracker}`,
     });
+  }
+  const restoring = before.external_archived && !after.external_archived;
+  if (restoring && !shouldNotifyRestoration(before.sync_archived_at)) {
+    // Keep history factual, but recent/legacy sync archives must not flood users.
+    for (const change of changes) await recordTaskEvent({ taskId, teamspaceId, source, kind: "external_update", field: change.field, from: change.from, to: change.to });
+    return;
   }
   if (!changes.length) return;
 
@@ -103,9 +113,9 @@ export async function emitExternalTaskChange(input: {
   if (after.assignee_id) recipients.add(after.assignee_id);
   if (before.assignee_id) recipients.add(before.assignee_id);
 
-  for (const userId of recipients) {
-    await tell(userId, teamspaceId, taskId, heading, body, done ? "task_external_done" : "task_external_update");
-  }
+  const notices = [...recipients].map(userId => ({ userId, teamspaceId, taskId, tracker, title: heading, body, kind: done ? "task_external_done" : "task_external_update" }));
+  if (input.batch) input.batch.push(...notices);
+  else await flushTrackerNotifications(notices);
 }
 
 /** History + manager ping for a status change made inside Virtual Space or Telegram. */

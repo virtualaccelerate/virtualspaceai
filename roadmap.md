@@ -1,4 +1,7 @@
 ## Задачи
+- [ ] Исправить фоновую доставку сводок и таймаут cron
+- [ ] Устранить дубли и шум синхронизации трекеров
+- [ ] Проверить реальные итоги Korica/Kulikov без доставки Telegram
 - [x] Bound YouGile request and sync waits; preserve saved data on unavailable or incomplete reads; run isolated regression tests
 - [x] Voice pause recovery — protected app-admin action, classified pauses, safe recovery checks and regression tests
 - [x] Restore notification popups and verify rendering

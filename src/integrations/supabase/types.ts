@@ -903,6 +903,72 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          day: string
+          error: string | null
+          finished_at: string | null
+          force: boolean
+          id: string
+          lease_token: string | null
+          lease_until: string | null
+          pass: string
+          status: string
+          teamspace_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          day: string
+          error?: string | null
+          finished_at?: string | null
+          force?: boolean
+          id?: string
+          lease_token?: string | null
+          lease_until?: string | null
+          pass: string
+          status?: string
+          teamspace_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          day?: string
+          error?: string | null
+          finished_at?: string | null
+          force?: boolean
+          id?: string
+          lease_token?: string | null
+          lease_until?: string | null
+          pass?: string
+          status?: string
+          teamspace_id?: string
+        }
+        Relationships: []
+      }
+      notification_service_state: {
+        Row: {
+          created_at: string
+          key: string
+          reason: string
+          requires_owner: boolean
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          reason: string
+          requires_owner?: boolean
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          reason?: string
+          requires_owner?: boolean
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null
@@ -1857,6 +1923,7 @@ export type Database = {
           status: Database["public"]["Enums"]["task_status"]
           status_id: string | null
           submitted_at: string | null
+          sync_archived_at: string | null
           tags: string[]
           teamspace_id: string | null
           title: string
@@ -1890,6 +1957,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["task_status"]
           status_id?: string | null
           submitted_at?: string | null
+          sync_archived_at?: string | null
           tags?: string[]
           teamspace_id?: string | null
           title: string
@@ -1923,6 +1991,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["task_status"]
           status_id?: string | null
           submitted_at?: string | null
+          sync_archived_at?: string | null
           tags?: string[]
           teamspace_id?: string | null
           title?: string
@@ -2135,6 +2204,21 @@ export type Database = {
         }
         Relationships: []
       }
+      tracker_notification_claims: {
+        Row: {
+          claimed_at: string
+          key: string
+        }
+        Insert: {
+          claimed_at?: string
+          key: string
+        }
+        Update: {
+          claimed_at?: string
+          key?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2205,6 +2289,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_notification_job: {
+        Args: { _id: string; _token: string }
+        Returns: {
+          attempts: number
+          created_at: string
+          day: string
+          error: string | null
+          finished_at: string | null
+          force: boolean
+          id: string
+          lease_token: string | null
+          lease_until: string | null
+          pass: string
+          status: string
+          teamspace_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "notification_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      deliver_tracker_notifications: { Args: { _items: Json }; Returns: Json }
+      dispatch_notification_jobs: { Args: never; Returns: undefined }
       documents_index_status: {
         Args: { p_teamspace: string }
         Returns: {
