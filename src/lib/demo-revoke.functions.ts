@@ -11,7 +11,7 @@ export const revokeExposedDemo = createServerFn({ method: "POST" }).handler(asyn
     if (error) throw new Error("Could not locate demo account");
     const demo = data.users.find(u => u.email?.toLowerCase() === "demo@ai-virtualspace.com");
     if (demo) {
-      const password = crypto.randomUUID() + crypto.randomUUID() + "Aa1!";
+      const password = (crypto.randomUUID() + crypto.randomUUID()).replaceAll("-", "") + "Aa1!";
       const { error: failure } = await supabaseAdmin.auth.admin.updateUserById(demo.id, { password, ban_duration: "876000h" });
       if (failure) {
         console.error("Demo disable failed", failure.code, failure.status, failure.message);
