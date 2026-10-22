@@ -1,5 +1,5 @@
 ## Задачи
-- [ ] Voice pause recovery — confirmed; awaiting approval of safe owner-authorized recovery plan
+- [x] Voice pause recovery — protected app-admin action, classified pauses, safe recovery checks and regression tests
 - [x] Restore notification popups and verify rendering
 - [x] Preserve unchanged AI-chat task assignments and test regression
 - [x] Improve shared multilingual speech recognition and per-attempt metadata logging
