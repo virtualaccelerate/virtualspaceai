@@ -6,6 +6,7 @@ import {
   extractOdtText,
   extractRtfText,
   extractZipText,
+  extractFileText,
 } from "./documents-extract.server";
 
 const W_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
@@ -87,7 +88,8 @@ test("extractZipText: WhatsApp _chat.txt, embedded docx, image listed by name, h
   inner.file("__MACOSX/._chat.txt", "junk");
   inner.file("inner.zip", new Uint8Array([0x50, 0x4b, 0x05, 0x06]));
 
-  const text = await extractZipText(await inner.generateAsync({ type: "uint8array" }));
+  const { text, readableFiles } = await extractZipText(await inner.generateAsync({ type: "uint8array" }));
+  assert.equal(readableFiles, 2);
   assert.match(text, /## FILE: _chat\.txt/);
   assert.match(text, /Салам, как дела\?/);
   assert.match(text, /## FILE: doc\.docx/);
@@ -96,4 +98,31 @@ test("extractZipText: WhatsApp _chat.txt, embedded docx, image listed by name, h
   assert.ok(!text.includes("secret"), "hidden files must be skipped");
   assert.ok(!text.includes("junk"), "__MACOSX must be skipped");
   assert.ok(!text.includes("inner.zip"), "nested zips must be skipped");
+});
+
+test("extractZipText: zip with only images has readableFiles = 0 but keeps the file list", async () => {
+  const zip = new JSZip();
+  zip.file("IMG-001.jpg", new Uint8Array([0xff, 0xd8, 0xff, 0xd9]));
+  zip.file("scan.pdf", new Uint8Array([0x25, 0x50, 0x44, 0x46]));
+  const { text, readableFiles } = await extractZipText(await zip.generateAsync({ type: "uint8array" }));
+  assert.equal(readableFiles, 0);
+  assert.match(text, /## FILE: IMG-001\.jpg/);
+  assert.match(text, /## FILE: scan\.pdf/);
+});
+
+test("extractFileText: .rtf with mime text/rtf is decoded, not saved as raw RTF", async () => {
+  const rtf = `{\\rtf1\\ansi\\uc1\\u1055?\\u1088?\\u1080?\\u1074?\\u1077?\\u1090?\\par Hello}`;
+  const bytes = new TextEncoder().encode(rtf);
+  const text = await extractFileText(bytes, "notes.rtf", "text/rtf");
+  assert.match(text, /^Привет\nHello$/);
+  assert.ok(!text.includes("rtf1"), "must not contain raw RTF code");
+});
+
+test("extractFileText: zip with only images throws the no-text-files message", async () => {
+  const zip = new JSZip();
+  zip.file("photo.jpg", new Uint8Array([0xff, 0xd8, 0xff, 0xd9]));
+  await assert.rejects(
+    () => extractFileText(await zip.generateAsync({ type: "uint8array" }), "export.zip", "application/zip"),
+    /В архиве нет текстовых файлов/,
+  );
 });
