@@ -1086,7 +1086,6 @@ function TasksPage() {
               <Button
                 variant="ghost"
                 className="text-rose-300 hover:text-rose-200 mr-auto"
-                disabled={editing.external_source === "trello"}
                 onClick={() => {
                   setDeleteTarget(editing);
                 }}

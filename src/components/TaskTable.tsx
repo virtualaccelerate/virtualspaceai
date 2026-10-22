@@ -98,7 +98,7 @@ function TaskTableBase({
   const selectable = !!onToggleSelect;
   const selected = useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
   const selectableIds = useMemo(
-    () => tasks.filter((t) => t.external_source !== "yougile" && t.external_source !== "trello").map((t) => t.id),
+    () => tasks.filter((t) => t.external_source !== "yougile").map((t) => t.id),
     [tasks],
   );
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
@@ -202,7 +202,7 @@ function TaskTableBase({
                     type="checkbox"
                     aria-label={t("tasksUi.selectTask", "Select task")}
                     className="h-4 w-4 accent-primary align-middle"
-                    disabled={task.external_source === "yougile" || task.external_source === "trello"}
+                    disabled={task.external_source === "yougile"}
                     checked={selected.has(task.id)}
                     onChange={() => onToggleSelect?.(task.id)}
                   />
@@ -249,7 +249,7 @@ function TaskTableBase({
               <td className="px-3 py-2.5 text-foreground/80">{fmt(task.due_date, locale)}</td>
               <td className="px-3 py-2.5 text-muted-foreground">{fmt(task.created_at, locale)}</td>
               <td className="px-2 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
-                {!task.external_source && <DropdownMenu>
+                {task.external_source !== "yougile" && <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="rounded-md px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-accent/50">
                       •••
