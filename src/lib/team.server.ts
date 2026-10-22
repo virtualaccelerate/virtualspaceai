@@ -210,11 +210,10 @@ export async function getTeamPerformance(userId: string, requested?: string) {
     .maybeSingle();
   if (!me) return null;
 
-  const [{ data: spaces }, { data: memberships }] = await Promise.all([
-    db.from("teamspaces").select("id, name").in("id", [teamspaceId]),
-    db.from("teamspace_members").select("user_id, role").eq("teamspace_id", teamspaceId),
-  ]);
-  void spaces;
+  const { data: memberships } = await db
+    .from("teamspace_members")
+    .select("user_id, role")
+    .eq("teamspace_id", teamspaceId);
 
   const { isWorkspaceManager } = await import("./roles.server");
   const isManager = await isWorkspaceManager(userId, teamspaceId);
