@@ -26,6 +26,7 @@
   people's onboarding/quiz results are manager-only in both the server functions and RLS.
 
 ## Background client extraction
+- YouGile operations share an invocation-local bounded request budget (including body reads and retries), never a cross-request promise queue; complete external snapshots are required before reconciliation so unavailable columns cannot archive cached tasks.
 
 - AI task assignment uses the shared exact/case-form member resolver and explicit account-id pickers; ambiguous names must never select the first member or become assignment labels.
 - AI-chat update cards resolve assignment only for explicit assignee tokens; unrelated edits omit assignment fields to preserve imported labels and non-visible assignees.
