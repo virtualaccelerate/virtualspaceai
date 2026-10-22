@@ -189,7 +189,7 @@ const DAY = 86400000;
 
 /**
  * Per-employee performance cards: pace, closed work and which project it belongs to.
- * Scope = every workspace the viewer shares with the member, so cross-project work is visible.
+ * Scope = the current workspace only, so no task from another workspace is counted or shown.
  */
 export async function getTeamPerformance(userId: string, requested?: string) {
   const db = await admin();
