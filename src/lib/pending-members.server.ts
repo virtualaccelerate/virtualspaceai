@@ -65,28 +65,28 @@ export async function reconcilePendingMembers(teamspaceId: string) {
   for (const row of pending) {
     const email = (row.email ?? "").trim().toLowerCase();
     if (!email) continue;
-    const { data: profile } = await db
-      .from("profiles")
-      .select("id, full_name, email")
-      .ilike("email", email)
-      .maybeSingle();
-    if (!profile) continue;
+    const { data: accounts, error: accountError } = await db.rpc("verified_pending_member_account", { requested_email: email });
+    if (accountError) throw new Error("Could not verify invitation email");
+    const account = accounts?.[0];
+    if (!account) continue;
+    const { data: profile } = await db.from("profiles").select("id, full_name").eq("id", account.id).maybeSingle();
 
-    await db
+    const { error: membershipError } = await db
       .from("teamspace_members")
       .upsert(
-        { teamspace_id: teamspaceId, user_id: profile.id, role: "member" },
+        { teamspace_id: teamspaceId, user_id: account.id, role: "member" },
         { onConflict: "teamspace_id,user_id", ignoreDuplicates: true },
       );
+    if (membershipError) throw new Error("Could not add invited member");
 
     await db
       .from("tasks")
-      .update({ assignee_id: profile.id, assignee_name: profile.full_name || profile.email })
+      .update({ assignee_id: account.id, assignee_name: profile?.full_name || account.email })
       .eq("teamspace_id", teamspaceId)
       .is("assignee_id", null)
       .ilike("assignee_name", row.name);
 
-    await db.from("pending_members").update({ linked_user_id: profile.id }).eq("id", row.id);
+    await db.from("pending_members").update({ linked_user_id: account.id }).eq("id", row.id);
   }
 }
 
@@ -122,6 +122,8 @@ export async function setPendingMemberEmail(userId: string, id: string, email: s
   const { data: row } = await db.from("pending_members").select("teamspace_id").eq("id", id).maybeSingle();
   if (!row) throw new Error("Запись не найдена");
   await assertMember(userId, row.teamspace_id);
+  const { requireManager } = await import("./roles.server");
+  await requireManager(userId, row.teamspace_id, "изменять приглашения");
   const clean = email?.trim().toLowerCase() || null;
   if (clean && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) throw new Error("Некорректная почта");
   const { error } = await db.from("pending_members").update({ email: clean }).eq("id", id);
@@ -135,6 +137,8 @@ export async function deletePendingMember(userId: string, id: string) {
   const { data: row } = await db.from("pending_members").select("teamspace_id").eq("id", id).maybeSingle();
   if (!row) return { ok: true };
   await assertMember(userId, row.teamspace_id);
+  const { requireManager } = await import("./roles.server");
+  await requireManager(userId, row.teamspace_id, "удалять приглашения");
   const { error } = await db.from("pending_members").delete().eq("id", id);
   if (error) throw new Error(error.message);
   return { ok: true };

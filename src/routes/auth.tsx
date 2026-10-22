@@ -40,8 +40,11 @@ function getNextPath(): string | null {
   if (typeof window === "undefined") return null;
   const raw = new URLSearchParams(window.location.search).get("next");
   if (!raw) return null;
-  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
-  return raw;
+  if (!raw.startsWith("/") || raw.startsWith("//") || /[\\\u0000-\u001f\u007f]/.test(raw)) return null;
+  try {
+    const target = new URL(raw, window.location.origin);
+    return target.origin === window.location.origin ? target.pathname + target.search + target.hash : null;
+  } catch { return null; }
 }
 
 
