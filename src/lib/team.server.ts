@@ -210,19 +210,11 @@ export async function getTeamPerformance(userId: string, requested?: string) {
     .maybeSingle();
   if (!me) return null;
 
-  // workspaces the viewer belongs to = the projects we may report on
-  const { data: mySpaces } = await db
-    .from("teamspace_members")
-    .select("teamspace_id")
-    .eq("user_id", userId);
-  const spaceIds = Array.from(new Set((mySpaces ?? []).map((r) => r.teamspace_id)));
-  if (!spaceIds.length) return null;
-
   const [{ data: spaces }, { data: memberships }] = await Promise.all([
-    db.from("teamspaces").select("id, name").in("id", spaceIds),
+    db.from("teamspaces").select("id, name").in("id", [teamspaceId]),
     db.from("teamspace_members").select("user_id, role").eq("teamspace_id", teamspaceId),
   ]);
-  const projectName = new Map((spaces ?? []).map((s) => [s.id, s.name as string]));
+  void spaces;
 
   const { isWorkspaceManager } = await import("./roles.server");
   const isManager = await isWorkspaceManager(userId, teamspaceId);
@@ -237,8 +229,8 @@ export async function getTeamPerformance(userId: string, requested?: string) {
     db.from("profiles").select("id, full_name, email, avatar_url").in("id", ids),
     db
       .from("tasks")
-      .select("id, title, status, priority, due_date, created_at, updated_at, reviewed_at, assignee_id, teamspace_id")
-      .in("teamspace_id", spaceIds)
+      .select("id, title, status, priority, due_date, created_at, updated_at, reviewed_at, assignee_id, teamspace_id, project")
+      .eq("teamspace_id", teamspaceId)
       .in("assignee_id", ids),
   ]);
 
