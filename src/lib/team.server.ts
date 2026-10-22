@@ -272,22 +272,25 @@ export async function getTeamPerformance(userId: string, requested?: string) {
       })
       .filter((d): d is number => d !== null);
 
-    const projects: MemberProjectStat[] = spaceIds
-      .map((sid) => {
-        const inProject = mine.filter((task) => task.teamspace_id === sid);
-        return {
-          teamspace_id: sid,
-          project: projectName.get(sid) ?? "—",
-          done: inProject.filter((task) => task.status === "done").length,
-          open: inProject.filter((task) => task.status !== "done").length,
-          overdue: inProject.filter(
-            (task) =>
-              task.status !== "done" &&
-              task.due_date &&
-              new Date(`${task.due_date}T18:00:00+06:00`).getTime() < now,
-          ).length,
-        };
-      })
+    const NO_PROJECT = "Без проекта";
+
+    // Projects are the task's own project field inside this workspace, not other workspaces.
+    const projectNames = Array.from(new Set(mine.map((task) => (task.project ?? "").trim() || NO_PROJECT)));
+    const projects: MemberProjectStat[] = projectNames.map((name) => {
+      const inProject = mine.filter((task) => ((task.project ?? "").trim() || NO_PROJECT) === name);
+      return {
+        teamspace_id: teamspaceId as string,
+        project: name,
+        done: inProject.filter((task) => task.status === "done").length,
+        open: inProject.filter((task) => task.status !== "done").length,
+        overdue: inProject.filter(
+          (task) =>
+            task.status !== "done" &&
+            task.due_date &&
+            new Date(`${task.due_date}T18:00:00+06:00`).getTime() < now,
+        ).length,
+      };
+    })
       .filter((p) => p.done + p.open > 0)
       .sort((a, b) => b.done + b.open - (a.done + a.open));
 
@@ -297,7 +300,7 @@ export async function getTeamPerformance(userId: string, requested?: string) {
       .map((task) => ({
         id: task.id as string,
         title: task.title as string,
-        project: projectName.get(task.teamspace_id) ?? "—",
+        project: (task.project ?? "").trim() || NO_PROJECT,
         closed_at: task.reviewed_at ?? task.updated_at ?? null,
       }));
 
