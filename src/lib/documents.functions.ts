@@ -331,15 +331,15 @@ export const extractDocumentText = createServerFn({ method: "POST" })
       }
 
       if (isWord || isOdt || isRtf || isZip) {
-        const text = isWord
-          ? await extractWordText(bytes)
-          : isOdt
-            ? await extractOdtText(bytes)
-            : isRtf
-              ? extractRtfText(bytes)
-              : (await extractZipText(bytes)).text;
-        const readableFiles = isZip ? (await Promise.resolve(text), (await extractZipText(bytes)).readableFiles) : 0;
-        if (isZip && readableFiles === 0) {
+        const zipResult = isZip ? await extractZipText(bytes) : null;
+        const text = zipResult
+          ? zipResult.text
+          : isWord
+            ? await extractWordText(bytes)
+            : isOdt
+              ? await extractOdtText(bytes)
+              : extractRtfText(bytes);
+        if (zipResult && zipResult.readableFiles === 0) {
           // Only photos/PDFs inside — the AI has no real content, but keep the file list.
           await setStatus(
             "empty",
