@@ -496,17 +496,10 @@ export async function extractFileText(bytes: Uint8Array, name: string, mimeType?
   if (TEXT_MIME.test(mime) || TEXT_EXT.test(name)) return new TextDecoder().decode(bytes).slice(0, 180_000);
   if (SPREADSHEET_MIME.test(mime) || SPREADSHEET_EXT.test(name)) return extractSpreadsheetText(bytes);
   if (/\.pptx$/i.test(name) || /presentationml/i.test(mime)) return extractPresentationText(bytes);
-  if (/\.docx$/i.test(name) || /wordprocessingml/i.test(mime)) {
-    const JSZip = (await import("jszip")).default;
-    const zip = await JSZip.loadAsync(bytes);
-    const xml = (await zip.file("word/document.xml")?.async("string")) ?? "";
-    return xml
-      .split(/<\/w:p>/)
-      .map((p) => [...p.matchAll(/<w:t[^>]*>([^<]*)<\/w:t>/g)].map((m) => decodeXmlEntities(m[1] ?? "")).join(""))
-      .filter((l) => l.trim())
-      .join("\n")
-      .slice(0, 180_000);
-  }
+  if (/\.docx$/i.test(name) || /wordprocessingml/i.test(mime)) return extractWordText(bytes);
+  if (/\.odt$/i.test(name) || /opendocument\.text/i.test(mime)) return extractOdtText(bytes);
+  if (/\.rtf$/i.test(name) || /^(application|text)\/rtf$/i.test(mime)) return extractRtfText(bytes);
+  if (/\.zip$/i.test(name) || /application\/(zip|x-zip-compressed)/i.test(mime)) return extractZipText(bytes);
   if (mime === "application/pdf" || /\.pdf$/i.test(name)) {
     if (bytes.byteLength > 15 * 1024 * 1024) throw new Error("Файл больше 15 МБ — разделите его на части.");
     const key = process.env["LOVABLE_API_KEY"];
@@ -525,5 +518,5 @@ export async function extractFileText(bytes: Uint8Array, name: string, mimeType?
       })
     ).trim();
   }
-  throw new Error("Формат не поддерживается (PDF, DOCX, PPTX, XLSX, TXT)");
+  throw new Error("Формат не поддерживается (PDF, Word .docx/.odt/.rtf, таблицы, презентации .pptx, текстовые файлы и ZIP-архивы)");
 }
