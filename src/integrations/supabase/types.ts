@@ -1646,18 +1646,24 @@ export type Database = {
         Row: {
           created_at: string
           model: string
+          pause_kind: string
+          pause_token: string
           reason: string
           status: number
         }
         Insert: {
           created_at?: string
           model: string
+          pause_kind?: string
+          pause_token?: string
           reason: string
           status: number
         }
         Update: {
           created_at?: string
           model?: string
+          pause_kind?: string
+          pause_token?: string
           reason?: string
           status?: number
         }

@@ -267,6 +267,13 @@
       "when": 1792147022432,
       "tag": "0037_stt_attempt_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792630518403,
+      "tag": "0038_stt_explicit_admin_recovery",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,3 @@
+ALTER TABLE public.stt_service_state ADD COLUMN pause_kind text NOT NULL DEFAULT 'unknown' CHECK (pause_kind IN ('workspace','provider','unknown'));
+ALTER TABLE public.stt_service_state ADD COLUMN pause_token uuid NOT NULL DEFAULT gen_random_uuid();
+COMMENT ON COLUMN public.stt_service_state.pause_kind IS 'Workspace credit/policy blocks permit explicit admin recovery checks; provider and legacy unknown blocks require confirmed restored access, never automatic probes.';
