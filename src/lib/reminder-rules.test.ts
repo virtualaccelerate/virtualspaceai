@@ -1,0 +1,15 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { deadlineReminderWindow, suppressAiReminder, canSetupWorkspaceBot } from "./reminder-rules";
+const at = (time: string) => Date.parse(`2026-10-22T${time}Z`);
+test("3h before 18:00 Bishkek is 09:00 UTC", () => assert.equal(deadlineReminderWindow("2026-10-22", at("09:00:00"))?.kind, "h3:2026-10-22"));
+test("1h before 18:00 Bishkek is 11:00 UTC", () => assert.equal(deadlineReminderWindow("2026-10-22", at("11:00:00"))?.kind, "h1:2026-10-22"));
+test("deadline at 12:00 UTC has its own daily key", () => assert.equal(deadlineReminderWindow("2026-10-22", at("12:00:00"))?.kind, "deadline:2026-10-22"));
+test("overdue key is once per Bishkek day", () => assert.equal(deadlineReminderWindow("2026-10-21", at("12:00:00"))?.kind, "overdue:2026-10-22"));
+test("2h window is silent", () => assert.equal(deadlineReminderWindow("2026-10-22", at("10:00:00")), null));
+test("AI suppresses deadline for reminded task", () => assert.equal(suppressAiReminder("deadline", ["a"], new Set(["a"])), true));
+test("AI suppresses overdue for reminded task", () => assert.equal(suppressAiReminder("overdue", ["a"], new Set(["a"])), true));
+test("general brief remains allowed", () => assert.equal(suppressAiReminder("evening_brief", ["a"], new Set(["a"])), false));
+test("owner can request bot setup", () => assert.equal(canSetupWorkspaceBot("owner"), true));
+test("admin cannot request bot setup", () => assert.equal(canSetupWorkspaceBot("admin"), false));
+test("member cannot request bot setup", () => assert.equal(canSetupWorkspaceBot("member"), false));
