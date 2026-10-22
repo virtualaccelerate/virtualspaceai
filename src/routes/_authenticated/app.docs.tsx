@@ -1,7 +1,8 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "@tanstack/react-router";
 import { Users } from "lucide-react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { BookOpen, Upload, FileText, Trash2, Loader2, Download, File as FileIcon, RefreshCw, CheckCircle2, AlertTriangle, Link2, Plus, GripVertical, Pin } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -22,9 +23,21 @@ import { listProjects } from "@/lib/projects.functions";
 import { LINK_LABEL, detectLinkKind, normalizeUrl, parseTags, type LinkKind } from "@/lib/links";
 
 export const Route = createFileRoute("/_authenticated/app/docs")({
-  component: KnowledgeBase,
+  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "onboarding" } => ({
+    ...search,
+    tab: search.tab === "onboarding" ? "onboarding" as const : undefined,
+  }),
+  component: KnowledgeTabs,
   head: () => ({
-    meta: [{ title: "Knowledge Base — Virtual Space" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Knowledge Base — Virtual Space" },
+      { name: "description", content: "Manage documents, onboarding and training in Virtual Space." },
+      { property: "og:title", content: "Knowledge Base — Virtual Space" },
+      { property: "og:description", content: "Manage documents, onboarding and training in Virtual Space." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 
@@ -56,6 +69,33 @@ function formatBytes(n: number | null) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+
+function KnowledgeTabs() {
+  const { t } = useTranslation();
+  const { tab } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const router = useRouter();
+  // Reuse the registered, code-split page without changing its standalone route.
+  const EmbeddedPage = router.routesById["/_authenticated/app/onboarding/"].options.component;
+
+  return (
+    <Tabs value={tab ?? "documents"} onValueChange={(value) => {
+      void navigate({ search: (previous) => ({ ...previous, tab: value === "onboarding" ? "onboarding" : undefined }), resetScroll: false });
+    }} className="max-w-6xl mx-auto space-y-6">
+      <TabsList className="h-auto max-w-full">
+        <TabsTrigger value="documents" className="whitespace-normal text-left">{t("app.nav.tabDocuments")}</TabsTrigger>
+        <TabsTrigger value="onboarding" className="whitespace-normal text-left">{t("app.nav.tabOnboarding")}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="documents"><KnowledgeBase /></TabsContent>
+      <TabsContent value="onboarding">
+        <Suspense fallback={<div role="status" className="text-sm text-muted-foreground">{t("workspaceUi.common.loading")}</div>}>
+          {EmbeddedPage ? <EmbeddedPage /> : null}
+        </Suspense>
+      </TabsContent>
+    </Tabs>
+  );
 }
 
 function KnowledgeBase() {

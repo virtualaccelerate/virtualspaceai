@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { TaskTable } from "@/components/TaskTable";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
@@ -52,10 +53,19 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
-  component: TasksPage,
+  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "projects" } => ({
+    ...search,
+    tab: search.tab === "projects" ? "projects" as const : undefined,
+  }),
+  component: TaskTabs,
   head: () => ({
     meta: [
       { title: "Tasks — Virtual Space" },
+      { name: "description", content: "Manage workspace tasks and projects in Virtual Space." },
+      { property: "og:title", content: "Tasks — Virtual Space" },
+      { property: "og:description", content: "Manage workspace tasks and projects in Virtual Space." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -188,6 +198,33 @@ const emptyDraft = (status: TaskStatus = "backlog"): TaskDraft => ({
 
 const cleanTag = (v: string) => v.trim().replace(/^#/, "").replace(/[^\p{L}\p{N}_-]+/gu, "");
 const parseTagList = (v: string) => [...new Set(v.split(/[,\s]+/).map(cleanTag).filter(Boolean))].slice(0, 20);
+
+
+function TaskTabs() {
+  const { t } = useTranslation();
+  const { tab } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const router = useRouter();
+  // Reuse the registered, code-split page without changing its standalone route.
+  const EmbeddedPage = router.routesById["/_authenticated/app/projects"].options.component;
+
+  return (
+    <Tabs value={tab ?? "tasks"} onValueChange={(value) => {
+      void navigate({ search: (previous) => ({ ...previous, tab: value === "projects" ? "projects" : undefined }), resetScroll: false });
+    }} className="max-w-6xl mx-auto space-y-6">
+      <TabsList className="h-auto max-w-full">
+        <TabsTrigger value="tasks" className="whitespace-normal text-left">{t("app.nav.tabTasks")}</TabsTrigger>
+        <TabsTrigger value="projects" className="whitespace-normal text-left">{t("app.nav.tabProjects")}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="tasks"><TasksPage /></TabsContent>
+      <TabsContent value="projects">
+        <Suspense fallback={<div role="status" className="text-sm text-muted-foreground">{t("workspaceUi.common.loading")}</div>}>
+          {EmbeddedPage ? <EmbeddedPage /> : null}
+        </Suspense>
+      </TabsContent>
+    </Tabs>
+  );
+}
 
 function TasksPage() {
   const { t } = useTranslation();

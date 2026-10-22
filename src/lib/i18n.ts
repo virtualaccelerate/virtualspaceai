@@ -202,6 +202,11 @@ const resources = {
       },
       app: {
         nav: {
+          clientDb: "Client Database",
+          tabTasks: "Tasks",
+          tabProjects: "Projects",
+          tabDocuments: "Documents",
+          tabOnboarding: "Onboarding & Training",
           chat: "Chats", chatSubtitle: "Team conversations",
           mobileChat: "Chat", mobileOverview: "Overview", mobileTasks: "Tasks", mobileKnowledge: "Docs", mobileAgents: "Agents",
           communication: "Communication",
@@ -550,6 +555,11 @@ const resources = {
       },
       app: {
         nav: {
+          clientDb: "База клиентов",
+          tabTasks: "Задачи",
+          tabProjects: "Проекты",
+          tabDocuments: "Документы",
+          tabOnboarding: "Онбординг и обучение",
           chat: "Чаты", chatSubtitle: "Командные переписки",
           mobileChat: "Чат", mobileOverview: "Обзор", mobileTasks: "Задачи", mobileKnowledge: "База", mobileAgents: "Агенты",
           communication: "Коммуникация",
@@ -875,6 +885,11 @@ const resources = {
       },
       app: {
         nav: {
+          clientDb: "Клиенттер базасы",
+          tabTasks: "Тапсырмалар",
+          tabProjects: "Жобалар",
+          tabDocuments: "Құжаттар",
+          tabOnboarding: "Онбординг және оқыту",
           chat: "Чаттар", chatSubtitle: "Командалық баарлашуулар",
           mobileChat: "Чат", mobileOverview: "Шолу", mobileTasks: "Істер", mobileKnowledge: "Білім", mobileAgents: "Агенттер",
           communication: "Байланыс",
@@ -1191,6 +1206,11 @@ const resources = {
       },
       app: {
         nav: {
+          clientDb: "Кардарлар базасы",
+          tabTasks: "Тапшырмалар",
+          tabProjects: "Долбоорлор",
+          tabDocuments: "Документтер",
+          tabOnboarding: "Онбординг жана окутуу",
           chat: "Чаттар", chatSubtitle: "Команда баарлашуулары",
           mobileChat: "Чат", mobileOverview: "Кароо", mobileTasks: "Иштер", mobileKnowledge: "Билим", mobileAgents: "Агенттер",
           communication: "Байланыш",
@@ -1507,6 +1527,11 @@ const resources = {
       },
       app: {
         nav: {
+          clientDb: "Mijozlar bazasi",
+          tabTasks: "Vazifalar",
+          tabProjects: "Loyihalar",
+          tabDocuments: "Hujjatlar",
+          tabOnboarding: "Onboarding va o'qitish",
           chat: "Chatlar", chatSubtitle: "Jamoa suhbatlari",
           mobileChat: "Chat", mobileOverview: "Sharh", mobileTasks: "Vazifa", mobileKnowledge: "Bilim", mobileAgents: "Agentlar",
           communication: "Aloqa",
@@ -1823,6 +1848,11 @@ const resources = {
       },
       app: {
         nav: {
+          clientDb: "Пойгоҳи мизоҷон",
+          tabTasks: "Вазифаҳо",
+          tabProjects: "Лоиҳаҳо",
+          tabDocuments: "Ҳуҷҷатҳо",
+          tabOnboarding: "Онбординг ва омӯзиш",
           chat: "Чатҳо", chatSubtitle: "Гуфтугӯҳои даста",
           mobileChat: "Чат", mobileOverview: "Шарҳ", mobileTasks: "Корҳо", mobileKnowledge: "Дониш", mobileAgents: "Агентҳо",
           communication: "Пайвастшавӣ",
