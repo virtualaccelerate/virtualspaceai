@@ -70,7 +70,11 @@ async function api<T>(creds: Credentials, path: string, init?: RequestInit & { q
       const detail = await response.text().catch(() => "");
       console.error(`[trello] ${path} failed [${response.status}]: ${detail}`);
       if (response.status === 401 || response.status === 403) throw new Error("Trello отклонил ключ или токен");
-      if (response.status === 404) throw new Error("Объект Trello не найден");
+      if (response.status === 404) {
+        const notFound = new Error("Объект Trello не найден") as Error & { status?: number };
+        notFound.status = 404;
+        throw notFound;
+      }
       throw new Error(`Trello недоступен (${response.status})`);
     }
     const text = await response.text();
@@ -409,9 +413,15 @@ export async function archiveTrelloTask(taskId: string, actorId: string) {
   }
   const source = await sourceFor(task.teamspace_id);
   if (!source) throw new Error("Trello не подключён");
-  await api(credentials(source), `/cards/${encodeURIComponent(task.external_id)}`, {
-    method: "PUT", query: { closed: "true" },
-  });
+  try {
+    await api(credentials(source), `/cards/${encodeURIComponent(task.external_id)}`, {
+      method: "PUT", query: { closed: "true" },
+    });
+  } catch (error) {
+    const status = (error as Error & { status?: number }).status;
+    if (status !== 404) throw error;
+    // 404 — карточка уже удалена в Trello, локальную задачу можно удалять.
+  }
   return { ok: true };
 }
 
