@@ -329,6 +329,22 @@ export const extractDocumentText = createServerFn({ method: "POST" })
         return { ok: true, length: text.length };
       }
 
+      if (isWord || isOdt || isRtf || isZip) {
+        const text = isWord
+          ? await extractWordText(bytes)
+          : isOdt
+            ? await extractOdtText(bytes)
+            : isRtf
+              ? extractRtfText(bytes)
+              : await extractZipText(bytes);
+        await setStatus(
+          text.trim() ? "ready" : "empty",
+          text.trim() ? null : "В файле не нашлось читаемого текста",
+          text,
+        );
+        return { ok: true, length: text.length };
+      }
+
       if (bytes.byteLength > 15 * 1024 * 1024) {
         await setStatus("too_large", "Файл больше 15 МБ — разделите его на части.");
         return { ok: false, tooLarge: true as const };
