@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Workspace roles and access
-- Global Telegram setup requires the encrypted application-admin session, not workspace ownership; employees' done requests become review server-side, while a database trigger blocks direct approval/review forgery.
+- Global Telegram setup requires both active workspace ownership and the encrypted application-admin session; employees' done requests become review server-side, while a database trigger blocks direct approval/review forgery.
 - Shared demo sign-in is removed; never reintroduce a public account password.
 - Pending invitation email edits/deletes require workspace managers; reconciliation uses only a service-only fixed-search-path lookup of confirmed Auth email, never user-editable profile email, to prevent mailbox impersonation.
 
@@ -29,6 +29,7 @@
   people's onboarding/quiz results are manager-only in both the server functions and RLS.
 
 ## Background client extraction
+- Hourly task hooks run local deadline reminders independently of AI access pauses; deadline-window claims use task_reminders and AI delivery suppresses separately reminded tasks.
 - Daily briefs enqueue bounded workspace jobs with durable leases and terminal AI pause state; request-scoped waitUntil handles delivery while wake-on-enqueue retries unschedule after drain.
 - Tracker syncs collect notification intents per invocation and flush through an atomic database dedupe/summary function; real task events, not sync write timestamps, define daily completion facts.
 - YouGile operations share an invocation-local bounded request budget (including body reads and retries), never a cross-request promise queue; complete external snapshots are required before reconciliation so unavailable columns cannot archive cached tasks.

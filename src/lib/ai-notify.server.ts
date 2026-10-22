@@ -11,6 +11,7 @@
  */
 
 import { completionFacts, meaningfulUpdate } from "./notification-facts";
+import { suppressAiReminder } from "./reminder-rules";
 
 const BISHKEK_OFFSET_HOURS = 6;
 const MODEL = "google/gemini-3-flash-preview";
@@ -102,6 +103,7 @@ const SYSTEM = [
   "- Молчание лучше шума. Если ничего важного — верни пустой список.",
   "- Один человек получает максимум 3 уведомления за проход.",
   "- Не дублируй смысл в разных уведомлениях.",
+  "- Не отправляй отдельные deadline/overdue для задач из reminded_today; сроки можно упомянуть в общей сводке.",
   "- importance: high — нужно действие сегодня; medium — стоит знать; low — фон.",
   "",
   "ФОРМАТ ОТВЕТА — только JSON, без пояснений:",
@@ -350,11 +352,23 @@ export async function runAiNotifications(
     if (!snap || (!snap.payload.tasks.length && !snap.payload.done_today.length && !snap.payload.created_today.length) || !snap.members.length) continue;
     scanned++;
 
-    const items = await askModel(snap.payload, pass);
+    const reminderStart = new Date(`${today}T00:00:00+06:00`).toISOString();
+    const readReminded = async () => {
+      const ids = snap.payload.tasks.map(task => task.id);
+      if (!ids.length) return new Set<string>();
+      const { data, error } = await db.from("task_reminders").select("task_id, kind")
+        .in("task_id", ids).gte("sent_at", reminderStart);
+      if (error) throw new Error(error.message);
+      return new Set((data ?? []).filter(row => /^(h3|h1|deadline|overdue)(:|$)/.test(row.kind)).map(row => row.task_id));
+    };
+    let reminded = await readReminded();
+    const items = await askModel({ ...snap.payload, reminded_today: [...reminded] }, pass);
+    reminded = await readReminded(); // Include reminders delivered while AI was generating.
     opts?.onGenerated?.({ snapshot: snap, items });
     const perUser = new Map<string, number>();
 
     for (const item of items) {
+      if (suppressAiReminder(item.type, item.task_ids ?? [], reminded)) continue;
       const member = snap.members.find((m) => m.user_id === item.user_id);
       if (!member || !item.title || !item.text) continue;
       if (opts?.onlyUserId && member.user_id !== opts.onlyUserId) continue;
