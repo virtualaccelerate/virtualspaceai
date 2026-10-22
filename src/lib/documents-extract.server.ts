@@ -213,6 +213,248 @@ export async function extractSpreadsheetText(bytes: Uint8Array) {
   return sections.join("\n\n").slice(0, 200_000);
 }
 
+/**
+ * Extract readable text from a Word .docx file: paragraphs (keeping line
+ * breaks, tabs and <w:br/>), tables row by row (cells joined with " | "),
+ * plus headers, footers and footnotes when present.
+ */
+export async function extractWordText(bytes: Uint8Array): Promise<string> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(bytes);
+
+  // Replace structural markers with sentinels, strip every tag, then restore —
+  // this keeps <w:tab/> and <w:br/> that live between <w:t> runs.
+  const blockText = (xml: string) =>
+    decodeXmlEntities(
+      xml
+        .replace(/<w:tab\s*\/>/g, "")
+        .replace(/<w:br\b[^>]*\/?>/g, "")
+        .replace(/<w:cr\s*\/?>/g, "")
+        .replace(/<[^>]+>/g, ""),
+    )
+      .replace(//g, "\t")
+      .replace(//g, "\n");
+
+  const renderBlocks = (xml: string) => {
+    const body = xml.match(/<w:body[\s>]([\s\S]*)<\/w:body>/)?.[1] ?? xml;
+    const blocks = body.match(/<w:tbl\b[\s\S]*?<\/w:tbl>|<w:p\b[\s\S]*?<\/w:p>/g) ?? [];
+    const lines: string[] = [];
+    for (const block of blocks) {
+      if (block.startsWith("<w:tbl")) {
+        for (const row of block.match(/<w:tr\b[\s\S]*?<\/w:tr>/g) ?? []) {
+          const cells = (row.match(/<w:tc\b[\s\S]*?<\/w:tc>/g) ?? []).map((c) =>
+            blockText(c).replace(/\s+/g, " ").trim(),
+          );
+          if (cells.some(Boolean)) lines.push(cells.join(" | "));
+        }
+      } else {
+        const line = blockText(block).trimEnd();
+        if (line.trim()) lines.push(line);
+      }
+    }
+    return lines.join("\n");
+  };
+
+  const headers: string[] = [];
+  const footers: string[] = [];
+  let footnotes = "";
+  for (const path of Object.keys(zip.files)) {
+    if (/^word\/header\d+\.xml$/.test(path)) {
+      const t = renderBlocks((await zip.file(path)?.async("string")) ?? "");
+      if (t.trim()) headers.push(t);
+    } else if (/^word\/footer\d+\.xml$/.test(path)) {
+      const t = renderBlocks((await zip.file(path)?.async("string")) ?? "");
+      if (t.trim()) footers.push(t);
+    } else if (path === "word/footnotes.xml") {
+      footnotes = renderBlocks((await zip.file(path)?.async("string")) ?? "");
+    }
+  }
+
+  const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
+  const parts = [...headers, renderBlocks(docXml), ...footers, footnotes].filter((p) => p.trim());
+  return parts.join("\n\n").slice(0, 180_000);
+}
+
+/** Extract readable text from an OpenDocument text file (.odt) via content.xml. */
+export async function extractOdtText(bytes: Uint8Array): Promise<string> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(bytes);
+  const xml = (await zip.file("content.xml")?.async("string")) ?? "";
+  const marked = xml
+    .replace(/<text:line-break\s*\/>/g, "")
+    .replace(/<text:tab\s*\/>/g, "")
+    .replace(/<text:s\b[^>]*\/>/g, " ");
+  const blocks =
+    marked.match(/<text:(?:p|h)\b[\s\S]*?<\/text:(?:p|h)>|<table:table-row\b[\s\S]*?<\/table:table-row>/g) ?? [];
+  const lines: string[] = [];
+  for (const block of blocks) {
+    if (block.startsWith("<table:table-row")) {
+      const cells = (block.match(/<table:table-cell\b[\s\S]*?<\/table:table-cell>/g) ?? []).map((c) =>
+        decodeXmlEntities(c.replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim(),
+      );
+      if (cells.some(Boolean)) lines.push(cells.join(" | "));
+    } else {
+      const line = decodeXmlEntities(block.replace(/<[^>]+>/g, ""))
+        .replace(//g, "\t")
+        .replace(//g, "\n")
+        .trimEnd();
+      if (line.trim()) lines.push(line);
+    }
+  }
+  return lines.join("\n").slice(0, 180_000);
+}
+
+/** Map a byte to a character using Windows-1251 (covers Cyrillic \'xx escapes). */
+function cp1251Char(b: number): string {
+  if (b >= 0xc0) return String.fromCodePoint(0x0410 + (b - 0xc0)); // А–я
+  const HIGH: Record<number, string> = {
+    0x80: "Ђ", 0x81: "Ѓ", 0x82: "‚", 0x83: "ѓ", 0x84: "„", 0x85: "…", 0x86: "†", 0x87: "‡",
+    0x88: "€", 0x89: "‰", 0x8a: "Љ", 0x8b: "‹", 0x8c: "Њ", 0x8d: "Ќ", 0x8e: "Ћ", 0x8f: "Џ",
+    0x90: "ђ", 0x91: "‘", 0x92: "’", 0x93: "“", 0x94: "”", 0x95: "•", 0x96: "–", 0x97: "—",
+    0x99: "™", 0x9a: "љ", 0x9b: "›", 0x9c: "њ", 0x9d: "ќ", 0x9e: "ћ", 0x9f: "џ",
+    0xa1: "Ў", 0xa2: "ў", 0xa3: "Ј", 0xa5: "Ґ", 0xa8: "Ё", 0xaa: "Є", 0xaf: "Ї",
+    0xb2: "І", 0xb3: "і", 0xb4: "ґ", 0xb8: "ё", 0xba: "є", 0xbf: "ї",
+  };
+  return HIGH[b] ?? String.fromCodePoint(b);
+}
+
+/** Extract plain text from an .rtf file: strips control words/groups, decodes \'xx and \uN escapes. */
+export function extractRtfText(bytes: Uint8Array): string {
+  const raw = new TextDecoder("latin1").decode(bytes);
+  const SKIP_GROUPS = new Set([
+    "fonttbl", "colortbl", "stylesheet", "info", "pict", "object",
+    "themedata", "colorschememapping", "latentstyles", "datastore", "generator",
+  ]);
+  let out = "";
+  let i = 0;
+  let depth = 0;
+  let skipDepth: number | null = null;
+  let ucSkip = 1;
+  while (i < raw.length) {
+    const ch = raw[i];
+    if (ch === "{") {
+      const m = raw.slice(i + 1, i + 40).match(/^\\\*?\\([a-z]+)/i);
+      if (m && SKIP_GROUPS.has(m[1].toLowerCase())) skipDepth = depth + 1;
+      depth++;
+      i++;
+      continue;
+    }
+    if (ch === "}") {
+      if (skipDepth !== null && depth === skipDepth) skipDepth = null;
+      depth--;
+      i++;
+      continue;
+    }
+    if (skipDepth !== null && depth >= skipDepth) {
+      i++;
+      continue;
+    }
+    if (ch === "\\") {
+      const rest = raw.slice(i + 1);
+      if (rest.startsWith("\\") || rest.startsWith("{") || rest.startsWith("}")) {
+        out += rest[0];
+        i += 2;
+        continue;
+      }
+      const hex = rest.match(/^'([0-9a-fA-F]{2})/);
+      if (hex) {
+        out += cp1251Char(parseInt(hex[1], 16));
+        i += 4;
+        continue;
+      }
+      const word = rest.match(/^([a-z]+)(-?\d+)?\s?/i);
+      if (word) {
+        const w = word[1].toLowerCase();
+        const num = word[2];
+        i += 1 + word[0].length;
+        if (w === "par" || w === "line") out += "\n";
+        else if (w === "tab") out += "\t";
+        else if (w === "bullet") out += "•";
+        else if (w === "uc") ucSkip = Math.max(0, parseInt(num ?? "1", 10) || 0);
+        else if (w === "u") {
+          let code = parseInt(num ?? "0", 10);
+          if (Number.isFinite(code)) {
+            if (code < 0) code += 65536;
+            out += String.fromCodePoint(code);
+          }
+          // Skip the \ucN fallback characters that follow the \uN word.
+          let left = ucSkip;
+          while (left-- > 0 && i < raw.length) {
+            if (raw[i] === "\\" && raw[i + 1] === "'") i += 4;
+            else if (raw[i] === "\\") i += 2;
+            else i += 1;
+          }
+        }
+        continue;
+      }
+      i += 2;
+      continue;
+    }
+    if (ch === "\n" || ch === "\r") {
+      i++;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, 180_000);
+}
+
+const ZIP_MEDIA_EXT = /\.(mp3|mp4|m4a|wav|ogg|oga|opus|mov|webm|avi|mkv|tga)$/i;
+const ZIP_LIST_ONLY_EXT = /\.(pdf|png|jpe?g|webp|gif|heic|bmp|tiff?|svg)$/i;
+
+/** Text for a supported file inside a zip archive, or null when unsupported. */
+async function extractEmbeddedText(data: Uint8Array, path: string): Promise<string | null> {
+  if (TEXT_EXT.test(path)) return new TextDecoder().decode(data);
+  if (/\.docx$/i.test(path)) return extractWordText(data);
+  if (/\.odt$/i.test(path)) return extractOdtText(data);
+  if (/\.rtf$/i.test(path)) return extractRtfText(data);
+  if (SPREADSHEET_EXT.test(path)) return extractSpreadsheetText(data);
+  if (/\.pptx$/i.test(path)) return extractPresentationText(data);
+  return null;
+}
+
+/**
+ * Extract text from a .zip archive (e.g. a WhatsApp chat export with
+ * `_chat.txt`). Every readable file becomes a "## FILE: <path>" section.
+ * Folders, __MACOSX, hidden files, nested zips and media are skipped;
+ * PDFs/images are listed by name only. Limits: 50 files, 10 MB per file,
+ * 180 000 chars total.
+ */
+export async function extractZipText(bytes: Uint8Array): Promise<string> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(bytes);
+  const sections: string[] = [];
+  let total = 0;
+  let count = 0;
+  for (const path of Object.keys(zip.files).sort()) {
+    const entry = zip.files[path];
+    if (entry.dir) continue;
+    const segments = path.split("/");
+    if (segments[0] === "__MACOSX" || segments.some((s) => s.startsWith("."))) continue;
+    if (/\.zip$/i.test(path)) continue; // no nested archives
+    if (count >= 50) break;
+    if (ZIP_MEDIA_EXT.test(path)) continue;
+    if (ZIP_LIST_ONLY_EXT.test(path)) {
+      sections.push(`## FILE: ${path}\n[PDF/изображение — загрузите отдельно, чтобы ИИ прочитал]`);
+      count++;
+      continue;
+    }
+    const declared = (entry as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize;
+    if (typeof declared === "number" && declared > 10 * 1024 * 1024) continue;
+    const data = await entry.async("uint8array");
+    if (data.byteLength > 10 * 1024 * 1024) continue;
+    const text = await extractEmbeddedText(data, path).catch(() => null);
+    if (text === null) continue;
+    const section = `## FILE: ${path}\n${text.trim() || "[пустой файл]"}`;
+    sections.push(section.slice(0, Math.max(0, 180_000 - total)));
+    total += section.length;
+    count++;
+    if (total >= 180_000) break;
+  }
+  return sections.join("\n\n").slice(0, 180_000);
+}
+
 export function toBase64(bytes: Uint8Array) {
   let bin = "";
   const chunk = 0x8000;
