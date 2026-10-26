@@ -29,6 +29,7 @@
   people's onboarding/quiz results are manager-only in both the server functions and RLS.
 
 ## Background client extraction
+- Hourly task hooks also run Google Calendar synchronization through request-scoped waitUntil, separately from brief jobs and AI pauses, so automatic sync does not block the Worker response.
 - Hourly task hooks run local deadline reminders independently of AI access pauses; deadline-window claims use task_reminders and AI delivery suppresses separately reminded tasks.
 - Daily briefs enqueue bounded workspace jobs with durable leases and terminal AI pause state; request-scoped waitUntil handles delivery while wake-on-enqueue retries unschedule after drain.
 - Tracker syncs collect notification intents per invocation and flush through an atomic database dedupe/summary function; real task events, not sync write timestamps, define daily completion facts.

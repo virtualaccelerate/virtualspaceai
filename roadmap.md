@@ -1,6 +1,6 @@
 ## Задачи
 - [ ] Verify monitoring: restore missing automatic Google Calendar sync
-- [ ] Verify monitoring: assess ten-minute voice recovery against access safeguards
+- [ ] Ten-minute voice recovery blocked: provider access must be restored before retrying; verified current persistent safeguard
 - [x] Restore hourly deadline reminders and prevent AI reminder duplicates; verify with temporary test user/tasks
 - [x] Restrict Telegram setup to workspace owners while retaining global admin protection
 - [x] Исправить фоновую доставку сводок и таймаут cron
