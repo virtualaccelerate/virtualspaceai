@@ -3,6 +3,12 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/oauth/google-drive/return")({
+  head: () => ({
+    meta: [
+      { title: "Google Drive connection — Virtual Space" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: OAuthReturn,
 });
 
