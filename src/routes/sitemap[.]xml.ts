@@ -40,22 +40,28 @@ export const Route = createFileRoute("/sitemap.xml")({
         ];
 
         // Published mentor profiles are public pages — list them too.
-        const { data: mentors, error } = await publicClient()
-          .from("mentors")
-          .select("id, updated_at")
-          .eq("published", true)
-          .limit(500);
-        if (error) {
-          console.error("[sitemap] mentors query failed", error.message);
-          return new Response("Sitemap temporarily unavailable", { status: 503 });
-        }
-        for (const m of mentors ?? []) {
-          entries.push({
-            path: `/mentors/${m.id}`,
-            changefreq: "monthly",
-            priority: "0.6",
-            lastmod: m.updated_at ? m.updated_at.slice(0, 10) : undefined,
-          });
+        // A failure here (or missing env vars) must not break the whole sitemap:
+        // log it and serve the static entries only.
+        try {
+          const { data: mentors, error } = await publicClient()
+            .from("mentors")
+            .select("id, updated_at")
+            .eq("published", true)
+            .limit(500);
+          if (error) {
+            console.error("[sitemap] mentors query failed", error.message);
+          } else {
+            for (const m of mentors ?? []) {
+              entries.push({
+                path: `/mentors/${m.id}`,
+                changefreq: "monthly",
+                priority: "0.6",
+                lastmod: m.updated_at ? m.updated_at.slice(0, 10) : undefined,
+              });
+            }
+          }
+        } catch (err) {
+          console.error("[sitemap] mentors query threw", err);
         }
 
         const urls = entries.map((e) =>
