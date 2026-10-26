@@ -20,6 +20,8 @@ export const Route = createFileRoute("/courses")({
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://ai-virtualspace.com/courses" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://ai-virtualspace.com/courses" }],
