@@ -10,7 +10,7 @@ export const Route = createFileRoute("/tg")({
   head: () => ({
     meta: [
       { title: "Virtual Space — Mini App" },
-      { name: "robots", content: "noindex" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
 });

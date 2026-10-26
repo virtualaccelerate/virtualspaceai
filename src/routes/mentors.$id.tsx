@@ -20,6 +20,8 @@ export const Route = createFileRoute("/mentors/$id")({
     const m = loaderData.mentor;
     const title = `${m.full_name} — ${m.role_title || "Mentor"} | Virtual Space`;
     const description = (m.short_bio || m.full_bio || `Book a consultation with ${m.full_name}.`).slice(0, 155);
+    const url = `https://ai-virtualspace.com/mentors/${m.id}`;
+    const image = m.photo_url && m.photo_url.startsWith("https://") ? m.photo_url : undefined;
     return {
       meta: [
         { title },
@@ -27,8 +29,16 @@ export const Route = createFileRoute("/mentors/$id")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "profile" },
+        { property: "og:url", content: url },
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
         { name: "twitter:card", content: "summary_large_image" },
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: MentorDetail,

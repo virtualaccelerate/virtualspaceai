@@ -9,6 +9,7 @@ export const Route = createFileRoute("/oauth/google-calendar/return")({
     { property: "og:description", content: "Complete your personal Google Calendar connection to Virtual Space." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex, nofollow" },
   ] }),
   component: OAuthReturn,
 });

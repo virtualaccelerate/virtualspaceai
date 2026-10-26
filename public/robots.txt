@@ -1,4 +1,17 @@
 User-agent: *
 Allow: /
+Disallow: /app/
+Disallow: /admin
+Disallow: /api/
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /tg
+Disallow: /onboarding
+Disallow: /oauth.google-calendar.return
+Disallow: /oauth.google-drive.return
+Disallow: /.lovable
+Disallow: /mcp
+Disallow: /.mcp
+Disallow: /.well-known
 
 Sitemap: https://ai-virtualspace.com/sitemap.xml

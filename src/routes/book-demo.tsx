@@ -10,6 +10,7 @@ import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { submitDemoRequest } from "@/lib/demo-request.functions";
 
 const SITE_URL = "https://ai-virtualspace.com";
+const OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/62b5b4ec-67c8-4341-8918-1ce79a7d68ce";
 
 export const Route = createFileRoute("/book-demo")({
   component: BookDemoPage,
@@ -21,6 +22,8 @@ export const Route = createFileRoute("/book-demo")({
       { property: "og:description", content: "Book a live demo of Virtual Space. See how AI agents fit your workflows and help your team ship faster." },
       { property: "og:url", content: SITE_URL + "/book-demo" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [{ rel: "canonical", href: SITE_URL + "/book-demo" }],
   }),

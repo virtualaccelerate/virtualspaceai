@@ -45,7 +45,7 @@ export const Route = createFileRoute("/onboarding")({
       { property: "og:description", content: "Personalize your company workspace and join your team in Virtual Space." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
 });

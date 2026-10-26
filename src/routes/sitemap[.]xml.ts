@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 const BASE_URL = "https://ai-virtualspace.com";
 
@@ -7,6 +9,22 @@ interface SitemapEntry {
   path: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
   priority?: string;
+  lastmod?: string;
+}
+
+function publicClient() {
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"]!;
+  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
+  });
 }
 
 export const Route = createFileRoute("/sitemap.xml")({
@@ -16,12 +34,35 @@ export const Route = createFileRoute("/sitemap.xml")({
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
           { path: "/book-demo", changefreq: "monthly", priority: "0.8" },
+          { path: "/courses", changefreq: "weekly", priority: "0.7" },
+          { path: "/privacy", changefreq: "yearly", priority: "0.3" },
+          { path: "/terms", changefreq: "yearly", priority: "0.3" },
         ];
+
+        // Published mentor profiles are public pages — list them too.
+        const { data: mentors, error } = await publicClient()
+          .from("mentors")
+          .select("id, updated_at")
+          .eq("published", true)
+          .limit(500);
+        if (error) {
+          console.error("[sitemap] mentors query failed", error.message);
+          return new Response("Sitemap temporarily unavailable", { status: 503 });
+        }
+        for (const m of mentors ?? []) {
+          entries.push({
+            path: `/mentors/${m.id}`,
+            changefreq: "monthly",
+            priority: "0.6",
+            lastmod: m.updated_at ? m.updated_at.slice(0, 10) : undefined,
+          });
+        }
 
         const urls = entries.map((e) =>
           [
             `  <url>`,
             `    <loc>${BASE_URL}${e.path}</loc>`,
+            e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>` : null,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
             `  </url>`,
