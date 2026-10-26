@@ -44,19 +44,36 @@ export const Route = createFileRoute("/")({
       { rel: "canonical", href: SITE_URL + "/" },
       { rel: "preload", as: "image", href: heroBg.url },
     ],
-    scripts: [{
-      type: "application/ld+json",
-      children: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        name: "Virtual Space",
-        applicationCategory: "BusinessApplication",
-        operatingSystem: "Web",
-        url: SITE_URL,
-        description: "AI-agentic workspace that connects teams, tools, and AI agents to automate business processes.",
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-      }),
-    }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Virtual Space",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: SITE_URL,
+          description: "AI-agentic workspace that connects teams, tools, and AI agents to automate business processes.",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Virtual Space",
+          url: SITE_URL,
+          logo: `${SITE_URL}/favicon.ico`,
+          parentOrganization: {
+            "@type": "Organization",
+            name: "Virtual Accelerate",
+            url: "https://www.virtualaccelerate.com/",
+          },
+        }),
+      },
+    ],
   }),
 });
 
