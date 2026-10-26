@@ -1,4 +1,6 @@
 ## Задачи
+- [x] Verify monitoring: restore missing automatic Google Calendar sync; 79 tests and isolated hourly-handler flow passed; Cloudflare adapter supplies request.waitUntil
+- [ ] Ten-minute voice recovery blocked: provider access must be restored before retrying; verified current persistent safeguard
 - [x] Restore hourly deadline reminders and prevent AI reminder duplicates; verify with temporary test user/tasks
 - [x] Restrict Telegram setup to workspace owners while retaining global admin protection
 - [x] Исправить фоновую доставку сводок и таймаут cron

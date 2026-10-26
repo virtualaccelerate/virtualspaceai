@@ -1,7 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-/** Daily briefs only; tracker synchronization belongs to the five-minute job. */
+export async function runHourlyCalendarSync(request: Request, sync: () => Promise<unknown>) {
+  const work = Promise.resolve().then(sync).catch(error => console.error('[google-calendar-sync]', error));
+  const waitUntil = (request as Request & { waitUntil?: (promise: Promise<unknown>) => void }).waitUntil;
+  if (waitUntil) waitUntil.call(request, work);
+  else await work; // Development/non-Worker fallback is awaited, never untracked.
+}
+
+/** Hourly Calendar sync, local reminders and daily briefs; trackers use the five-minute job. */
 export const Route = createFileRoute('/api/public/hooks/tasks-daily')({
   server: {
     handlers: {
@@ -27,12 +34,15 @@ export const Route = createFileRoute('/api/public/hooks/tasks-daily')({
           else await work; // Development/non-Worker fallback is awaited, never untracked.
           return Response.json({ ok: true, accepted: true }, { status: 202 });
         }
+        // Independent of AI access pauses and brief hours; not run by workspace job callbacks.
+        const calendar = runHourlyCalendarSync(request, () => import('@/lib/google-calendar.server').then(m => m.syncAllGoogleCalendars()));
         // Independent of AI access pauses; every hourly callback runs local reminders.
         const reminders = import('@/lib/task-flow.server')
           .then(m => m.runDeadlineReminders())
           .catch(error => console.error('[deadline-reminders]', error));
         if (waitUntil) waitUntil.call(request, reminders);
         else await reminders;
+        await calendar;
         const now = new Date();
         const day = new Date(now.getTime() + 6 * 3600_000).getUTCDay();
         const scheduled = now.getUTCHours() === 4 ? 'morning' : now.getUTCHours() === 12 ? 'evening' : null;
