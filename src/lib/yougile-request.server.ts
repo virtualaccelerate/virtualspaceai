@@ -37,7 +37,7 @@ export function createYouGileRequest(options: {
       lastCall = Date.now();
       const controller = new AbortController();
       check();
-      const requestMs = options.requestMs ?? 3_000;
+      const requestMs = options.requestMs ?? 10_000; // 1000-row pages can take a few seconds
       const timeoutMs = Math.min(requestMs, left());
       // A request cut short by the remaining budget is "not finished yet", not an outage.
       const timeoutMessage = timeoutMs < requestMs ? BUDGET_EXHAUSTED : UNAVAILABLE;
