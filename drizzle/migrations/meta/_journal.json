@@ -330,6 +330,13 @@
       "when": 1793136175992,
       "tag": "0046_telegram_group_processing",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793137958335,
+      "tag": "0047_task_comment_metadata_and_group_merge",
+      "breakpoints": true
     }
   ]
 }

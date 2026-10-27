@@ -1775,11 +1775,14 @@ export type Database = {
           actor_id: string | null
           actor_name: string | null
           created_at: string
+          deleted_at: string | null
+          edited_at: string | null
           external_event_id: string | null
           field: string | null
           from_value: string | null
           id: string
           kind: string
+          mentions: string[]
           note: string | null
           source: string
           task_id: string
@@ -1790,11 +1793,14 @@ export type Database = {
           actor_id?: string | null
           actor_name?: string | null
           created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
           external_event_id?: string | null
           field?: string | null
           from_value?: string | null
           id?: string
           kind: string
+          mentions?: string[]
           note?: string | null
           source?: string
           task_id: string
@@ -1805,11 +1811,14 @@ export type Database = {
           actor_id?: string | null
           actor_name?: string | null
           created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
           external_event_id?: string | null
           field?: string | null
           from_value?: string | null
           id?: string
           kind?: string
+          mentions?: string[]
           note?: string | null
           source?: string
           task_id?: string
@@ -2255,6 +2264,8 @@ export type Database = {
           last_processed_at: string | null
           link_code: string | null
           linked_by: string | null
+          merged_into: string | null
+          previous_chat_ids: number[]
           project: string | null
           status: string
           teamspace_id: string | null
@@ -2269,6 +2280,8 @@ export type Database = {
           last_processed_at?: string | null
           link_code?: string | null
           linked_by?: string | null
+          merged_into?: string | null
+          previous_chat_ids?: number[]
           project?: string | null
           status?: string
           teamspace_id?: string | null
@@ -2283,12 +2296,21 @@ export type Database = {
           last_processed_at?: string | null
           link_code?: string | null
           linked_by?: string | null
+          merged_into?: string | null
+          previous_chat_ids?: number[]
           project?: string | null
           status?: string
           teamspace_id?: string | null
           title?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "telegram_groups_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "telegram_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "telegram_groups_teamspace_id_fkey"
             columns: ["teamspace_id"]
@@ -2486,6 +2508,10 @@ export type Database = {
         }[]
       }
       join_teamspace_by_code: { Args: { _code: string }; Returns: string }
+      merge_telegram_group: {
+        Args: { new_chat: number; old_chat: number }
+        Returns: string
+      }
       send_daily_task_digest: { Args: never; Returns: undefined }
       sync_task_trackers: { Args: never; Returns: undefined }
       verified_pending_member_account: {
