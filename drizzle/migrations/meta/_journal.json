@@ -337,6 +337,13 @@
       "when": 1793137958335,
       "tag": "0047_task_comment_metadata_and_group_merge",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793137988844,
+      "tag": "0048_atomic_group_chat_id_swap",
+      "breakpoints": true
     }
   ]
 }
