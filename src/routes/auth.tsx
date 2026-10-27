@@ -1,5 +1,7 @@
+import { AuthLoading } from "@/components/AuthLoading";
+import { lovable } from "@/integrations/lovable";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Mail, Lock, ArrowRight, Check, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +57,8 @@ function getNextPath(): string | null {
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [checkingSession, setCheckingSession] = useState(true);
+  const navigatingRef = useRef(false);
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -68,15 +72,20 @@ function AuthPage() {
   useEffect(() => {
     let mounted = true;
     const goAfterAuth = () => {
+      if (!mounted || navigatingRef.current) return;
+      navigatingRef.current = true;
+      setCheckingSession(true);
       const next = getNextPath();
       if (next) window.location.href = next;
-      else navigate({ to: "/app", replace: true });
+      else void navigate({ to: "/app", replace: true });
     };
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted && data.session) goAfterAuth();
-    });
+    void supabase.auth.initialize().then(() => supabase.auth.getSession()).then(({ data }) => {
+      if (!mounted) return;
+      if (data.session) goAfterAuth();
+      else if (!navigatingRef.current) setCheckingSession(false);
+    }).catch(() => { if (mounted) setCheckingSession(false); });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) goAfterAuth();
+      if (event === "SIGNED_IN" && session) queueMicrotask(goAfterAuth);
     });
     return () => {
       mounted = false;
@@ -151,13 +160,18 @@ function AuthPage() {
     try {
       const next = getNextPath();
       const redirectTo = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
-      const { error: err } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: { prompt: "select_account" },
-        },
-      });
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectTo });
+      const err = result.error;
+      if (!result.redirected && !err) {
+        setGoogleLoading(false);
+        setCheckingSession(true);
+        const { data } = await supabase.auth.getSession();
+        if (data.session && !navigatingRef.current) {
+          navigatingRef.current = true;
+          if (next) window.location.href = next;
+          else await navigate({ to: "/app", replace: true });
+        } else if (!data.session) setCheckingSession(false);
+      }
       if (err) throw err;
     } catch (err) {
       console.error(err);
@@ -166,6 +180,8 @@ function AuthPage() {
     }
   };
 
+
+  if (checkingSession || googleLoading) return <AuthLoading />;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">

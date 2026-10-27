@@ -29,6 +29,7 @@ import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { createGoogleCalendarMeeting } from "@/lib/google-calendar.functions";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TaskAssignmentPicker } from "@/components/TaskAssignmentPicker";
 
 type CreatedTask = { id: string; title: string };
@@ -250,9 +251,10 @@ function MessageContent({
 type Props = {
   variant?: "full" | "compact";
   conversationId?: string;
+  onClose?: () => void;
 };
 
-export function ChatPanel({ variant = "full", conversationId: forcedId }: Props) {
+export function ChatPanel({ variant = "full", conversationId: forcedId, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const agentLang = i18n.language?.startsWith("en") ? "en" : "ru";
   const navigate = useNavigate();
@@ -285,6 +287,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const [attached, setAttached] = useState<{ id: string; name: string }[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<AgentId | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const nearBottomRef = useRef(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [recording, setRecording] = useState(false);
@@ -362,7 +365,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       if (!mountedRef.current) return;
       setInput(prev => prev ? `${prev} ${result.text}` : result.text);
       retryAudioRef.current = null;
-      requestAnimationFrame(() => inputRef.current?.focus());
+      requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
     } catch (e) {
       if (mountedRef.current) setSttError(e instanceof Error ? e.message : "Не удалось распознать речь.");
     } finally {
@@ -474,10 +477,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
   const effectiveAgent = inlineAgent || selectedAgent || activeAgent;
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    if (nearBottomRef.current) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "instant" });
   }, [messages, loading]);
 
-  useEffect(() => { inputRef.current?.focus(); }, [activeId]);
+  useEffect(() => { inputRef.current?.focus({ preventScroll: true }); }, [activeId]);
 
   // Bootstrap: teamspace + conversations + active conversation
   useEffect(() => {
@@ -807,7 +810,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       setError(e instanceof Error ? e.message : t("shellUi.chat.somethingWrong", "Something went wrong."));
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => inputRef.current?.focus());
+      requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
     }
   };
 
@@ -883,79 +886,26 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
 
   const empty = messages.length === 0;
 
-  const rootClass = isCompact
-    ? "h-full flex flex-col"
-    : "h-[calc(100vh-3.5rem-1rem-5rem)] sm:h-[calc(100vh-3.5rem-1.5rem-5rem)] lg:h-[calc(100vh-3.5rem-4rem)] flex";
+  const rootClass = "h-full min-h-0 overflow-hidden flex";
 
   const CompactHeader = (
-    <div className="flex items-center gap-2 pb-2">
-      <button
-        onClick={onNewChat}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 px-2.5 py-1.5 text-xs font-semibold transition"
-      >
-        <MessageSquarePlus className="h-3.5 w-3.5" />
-        {t("app.chat.newChat", "New chat")}
-      </button>
-      <div className="relative">
-        <button
-          onClick={() => setThreadsOpen((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card hover:bg-accent/40 px-2.5 py-1.5 text-xs font-medium text-foreground/80 transition"
-        >
-          <History className="h-3.5 w-3.5" />
-          {t("app.chat.history", "History")}
-          <span className="ml-1 text-muted-foreground">{conversations.length}</span>
-        </button>
-        {threadsOpen && (
-          <>
-            <button aria-label={t("shellUi.chat.ariaClose", "Close")} className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
-            <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
-              {conversations.length === 0 ? (
-                <div className="p-3 text-xs text-muted-foreground text-center">
-                  {t("app.chat.noHistory", "No previous chats yet")}
-                </div>
-              ) : conversations.map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => onSwitchThread(c.id)}
-                  className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/50 ${
-                    c.id === activeId ? "bg-accent/40" : ""
-                  }`}
-                >
-                  {c.agent_id ? <Bot className="h-3.5 w-3.5 text-primary shrink-0" /> : <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-                  <span className="flex-1 truncate text-foreground">{c.title}</span>
-                  <button
-                    onClick={(e) => onDeleteThread(c.id, e)}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
-                    aria-label={t("shellUi.chat.ariaDelete", "Delete")}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-      {effectiveAgent && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold">
-          <Bot className="h-3 w-3" /> @{effectiveAgent}
-        </span>
-      )}
-      <div className="flex-1" />
-      {messages.length > 0 && (
-        <button
-          onClick={onClear}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
-          title={t("app.overview.clear", "Clear")}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      )}
+    <div className="flex shrink-0 items-center gap-2 border-b border-border pb-3">
+      <Select value={activeId ?? "new"} onValueChange={(id) => { if (id === "new") { setActiveId(undefined); setMessages([]); } else onSwitchThread(id); }}>
+        <SelectTrigger className="min-w-0 flex-1" aria-label={t("app.chat.history", "History")}>
+          <SelectValue placeholder={t("app.chat.newChat", "New chat")} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="new">{t("app.chat.newChat", "New chat")}</SelectItem>
+          {conversations.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Button variant="outline" size="icon" onClick={onNewChat} title={t("app.chat.newChat", "New chat")} aria-label={t("app.chat.newChat", "New chat")}><Plus className="h-4 w-4" /></Button>
+      {onClose && <Button variant="ghost" size="icon" onClick={onClose} title={t("shellUi.chat.ariaClose", "Close")} aria-label={t("shellUi.chat.ariaClose", "Close")}><X className="h-4 w-4" /></Button>}
     </div>
   );
 
   const ChatColumn = (
-    <div className={isCompact ? "flex-1 flex flex-col min-h-0" : "flex-1 min-w-0 flex flex-col max-w-4xl mx-auto w-full"}>
+    <div className={isCompact ? "h-full min-w-0 flex flex-col min-h-0 overflow-hidden" : "flex-1 min-h-0 min-w-0 overflow-hidden flex flex-col max-w-4xl mx-auto w-full"}>
       {isCompact ? CompactHeader : (
         <div className="flex items-center gap-2 pb-3 md:hidden">
           <button
@@ -1024,16 +974,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
       )}
 
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto pr-1">
+      <div ref={scrollRef} data-chat-messages onScroll={() => { const el = scrollRef.current; if (el) nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} className="flex-1 min-h-0 overflow-y-auto overscroll-contain [overflow-anchor:none] [scrollbar-gutter:stable] pr-1">
         {empty ? (
           isCompact ? (
-            <div className="h-full flex flex-col items-center justify-center text-center px-4 py-6">
-              <VirtualSpaceLogo size={44} />
-              <h2 className="mt-3 font-display text-base text-foreground">Virtual Space</h2>
-              <p className="mt-1 text-xs text-muted-foreground max-w-[220px]">
-                {t("app.overview.askZukhaSubtitle")}
-              </p>
-            </div>
+            null
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
               <motion.div
@@ -1232,7 +1176,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
         </div>
       )}
 
-      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+      {!isCompact && <div className="mb-2 shrink-0 flex flex-wrap items-center gap-1.5">
         {AGENTS.map((a) => {
           const Icon = AGENT_ICONS[a.icon];
           const id = a.id;
@@ -1264,13 +1208,13 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
             {t("app.chat.clearAgent", "clear")}
           </button>
         )}
-      </div>
+      </div>}
 
       {sttError && <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-destructive">
         <span>{sttError}</span>
         {retryAudioRef.current && <Button type="button" variant="ghost" size="sm" disabled={transcribing} onClick={() => { const saved = retryAudioRef.current; if (saved) void submitRecording(saved); }}>Повторить</Button>}
       </div>}
-      <div className="relative mt-1">
+      <div data-chat-input className="relative mt-1 shrink-0">
         <div className="pointer-events-none absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,transparent,hsl(var(--primary)/0.6),transparent_40%)] opacity-70 blur-[6px] animate-[spin_6s_linear_infinite]" />
         <div className="relative flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
           <input
@@ -1316,7 +1260,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKey}
               placeholder={t("app.overview.placeholder")}
-              className="block flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40"
+              className="block min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40"
             />
           )}
           <Button variant="ghost" size="icon"
@@ -1333,15 +1277,15 @@ export function ChatPanel({ variant = "full", conversationId: forcedId }: Props)
           >
             {transcribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
           </Button>
-          <button
+          <Button size="icon"
             type="button"
-            onClick={() => send()}
+            onClick={() => { nearBottomRef.current = true; void send(); }}
             disabled={loading || !input.trim()}
-            className={`${isCompact ? "h-9 w-9" : "h-10 w-10"} rounded-full bg-primary text-black flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.45)]`}
+            className={`${isCompact ? "h-9 w-9" : "h-10 w-10"} rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0`}
             aria-label={t("shellUi.chat.ariaSend", "Send")}
           >
             {loading ? <Loader2 className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} animate-spin`} /> : <Send className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} fill-current -translate-x-px translate-y-px`} />}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

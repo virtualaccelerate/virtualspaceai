@@ -1,3 +1,4 @@
+import { AuthLoading } from "@/components/AuthLoading";
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
@@ -26,7 +27,11 @@ export const Route = createFileRoute("/_authenticated")({
   head: () => ({
     meta: [{ name: "robots", content: "noindex, nofollow" }],
   }),
+  pendingComponent: AuthLoading,
+  pendingMs: 0,
+  pendingMinMs: 0,
   beforeLoad: async () => {
+    await supabase.auth.initialize();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
     const { data: membership } = await supabase
@@ -63,6 +68,8 @@ function AuthenticatedLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const isChatPage = pathname === "/app" || pathname === "/app/" || pathname.startsWith("/app/c/");
 
   const [expanded, setExpanded] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -238,7 +245,7 @@ function AuthenticatedLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex w-full">
+    <div className={`${isChatPage ? "h-dvh overflow-hidden" : "min-h-screen"} bg-background text-foreground flex w-full`}>
       {/* Sidebar */}
       <div
         aria-hidden="true"
@@ -387,8 +394,8 @@ function AuthenticatedLayout() {
       )}
 
       {/* Main */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-20 h-18 border-b border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 flex items-center gap-3">
+      <div className="flex-1 min-h-0 min-w-0 flex flex-col">
+        <header className="sticky top-0 z-20 h-18 shrink-0 border-b border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 flex items-center gap-3">
           <button
             className={`${isTg ? "" : "lg:hidden"} text-white/80 p-1.5 -ml-1.5 rounded-md hover:bg-white/5`}
             onClick={() => setMobileOpen(true)}
@@ -433,7 +440,7 @@ function AuthenticatedLayout() {
             </button>
           </div>
         </header>
-        <main className={`flex-1 ${isTg ? "p-4 pb-24" : "p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8"}`}>
+        <main className={`flex-1 ${isChatPage ? "min-h-0 overflow-hidden" : ""} ${isTg ? "p-4 pb-24" : "p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8"}`}>
           <Outlet />
         </main>
       </div>
