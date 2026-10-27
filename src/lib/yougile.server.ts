@@ -50,14 +50,15 @@ function content(value: unknown): YouGileItem[] {
   return [];
 }
 
-async function pages(key: string, path: string, scope = createYouGileRequest()) {
+async function pages(key: string, path: string, scope = createYouGileRequest(), limit = 100) {
+  // YouGile allows ~50 requests/minute per company, so big lists use large pages.
   const rows: YouGileItem[] = [];
-  for (let offset = 0; offset < 10000; offset += 100) {
+  for (let offset = 0; offset < limit * 100; offset += limit) {
     const separator = path.includes("?") ? "&" : "?";
-    const result = await api<unknown>(key, `${path}${separator}limit=100&offset=${offset}`, undefined, scope);
+    const result = await api<unknown>(key, `${path}${separator}limit=${limit}&offset=${offset}`, undefined, scope);
     const batch = content(result);
     rows.push(...batch);
-    if (batch.length < 100) return rows;
+    if (batch.length < limit) return rows;
   }
   throw new YouGileRequestError("YouGile вернул слишком много данных. Сохранённые задачи оставлены без изменений");
 }
@@ -114,23 +115,15 @@ async function loadStructure(key: string, projectIds?: string[] | null, scope = 
   const projects = await pages(key, "/projects", scope);
   const selected = (projectIds ?? []).filter(Boolean);
   if (!selected.length) return { projects, boards: [], columns: [], users: [] };
-  const boards: YouGileItem[] = [];
-  for (const projectId of selected) {
-    // A project or board removed in YouGile must not break the whole sync.
-    const list = await pages(key, `/boards?projectId=${encodeURIComponent(projectId)}`, scope).catch((error: unknown) => {
-      if (error instanceof YouGileRequestError && error.status === 404) return [] as YouGileItem[];
-      throw error;
-    });
-    boards.push(...list.map((board) => ({ ...board, projectId })));
-  }
-  const columns: YouGileItem[] = [];
-  for (const board of boards) {
-    const list = await pages(key, `/columns?boardId=${encodeURIComponent(board.id)}`, scope).catch((error: unknown) => {
-      if (error instanceof YouGileRequestError && error.status === 404) return [] as YouGileItem[];
-      throw error;
-    });
-    columns.push(...list.map((column) => ({ ...column, boardId: board.id, projectId: (board as { projectId?: string }).projectId })));
-  }
+  // Company-wide lists filtered locally: a few requests instead of one per project/board,
+  // and a project or board removed in YouGile simply drops out instead of failing the sync.
+  const wanted = new Set(selected);
+  const boards = (await pages(key, "/boards", scope, 1000))
+    .filter((board) => board.deleted !== true && wanted.has(String(board.projectId ?? "")));
+  const boardProject = new Map(boards.map((board) => [board.id, String(board.projectId)]));
+  const columns = (await pages(key, "/columns", scope, 1000))
+    .filter((column) => column.deleted !== true && boardProject.has(String(column.boardId ?? "")))
+    .map((column) => ({ ...column, projectId: boardProject.get(String(column.boardId)) }));
 
   const users = await pages(key, "/users", scope);
   return { projects, boards, columns, users };
@@ -427,10 +420,8 @@ export async function syncSource(source: Source, scope: YouGileRequest = createY
       return { synced: 0, archived: 0 };
     }
     // Fetch the complete snapshot before any writes; failed columns must not archive saved tasks.
-    const tasks: YouGileItem[] = [];
-    for (const columnId of columnIds) {
-      tasks.push(...await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}`, scope));
-    }
+    // One company-wide list in 1000-row pages, kept only for the mirrored columns.
+    const tasks = (await pages(key, "/task-list", scope, 1000)).filter((raw) => columnIds.has(String(raw.columnId ?? "")));
     const result = await mirrorTasks(source, { boards, columns, users }, tasks, true);
     await admin.from("task_sync_sources").update({ last_sync_at: new Date().toISOString(), last_error: null }).eq("id", source.id);
     return result;
