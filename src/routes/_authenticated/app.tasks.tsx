@@ -693,7 +693,7 @@ function TasksPage() {
             value={filterProject}
             options={directory.projects}
             emptyLabel={`${t("tasksUi.filterProject", "Project")}: ${t("tasksUi.filterAll", "All")}`}
-            createLabel={t("tasksUi.create", "Create")}
+            createLabel={t("tasksUi.createEntry", "Create")}
             onChange={(v) => setFilter("project", v)}
             onCreate={() => void createEntry("project").then((n) => n && setFilter("project", n))}
           />
@@ -703,7 +703,7 @@ function TasksPage() {
             value={filterDepartment}
             options={directory.departments}
             emptyLabel={`${t("tasksUi.filterDepartment", "Department")}: ${t("tasksUi.filterAll", "All")}`}
-            createLabel={t("tasksUi.create", "Create")}
+            createLabel={t("tasksUi.createEntry", "Create")}
             onChange={(v) => setFilter("department", v)}
             onCreate={() => void createEntry("department").then((n) => n && setFilter("department", n))}
           />
@@ -1166,7 +1166,7 @@ function TasksPage() {
                   options={projectNames}
                   disabled={editing?.external_source === "trello"}
                   emptyLabel={t("tasksUi.noProject", "No project")}
-                  createLabel={t("tasksUi.create", "Create")}
+                  createLabel={t("tasksUi.createEntry", "Create")}
                   onChange={(v) => setDraft((d) => {
                     if (!v) return { ...d, project: "" };
                     const opt = projectOptions.find((p) => p.name === v);
@@ -1185,7 +1185,7 @@ function TasksPage() {
                   options={directory.departments}
                   disabled={editing?.external_source === "trello"}
                   emptyLabel={t("tasksUi.noDepartment", "No department")}
-                  createLabel={t("tasksUi.create", "Create")}
+                  createLabel={t("tasksUi.createEntry", "Create")}
                   onChange={(v) => setDraft((d) => ({ ...d, department: v }))}
                   onCreate={() => void createEntry("department").then((n) => n && setDraft((d) => ({ ...d, department: n })))}
                 />
