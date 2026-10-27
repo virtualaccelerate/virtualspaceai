@@ -1,6 +1,6 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { decryptConnectionKey, encryptConnectionKey } from "./app-user-connections.server";
-import { createYouGileRequest, YouGileRequestError, type YouGileRequest } from "./yougile-request.server";
+import { BACKGROUND_BUDGET_MS, createYouGileRequest, YouGileRequestError, type YouGileRequest } from "./yougile-request.server";
 
 type Status = "backlog" | "in_progress" | "review" | "done";
 type Source = {
@@ -268,6 +268,150 @@ async function registerWebhook(source: Source, scope = createYouGileRequest()): 
   }
 }
 
+type Structure = { boards: YouGileItem[]; columns: YouGileItem[]; users: YouGileItem[] };
+type LocalRow = {
+  id: string; external_id: string | null; assignee_id: string | null; assignee_name: string | null; status: string;
+  priority: string | null; due_date: string | null; title: string; external_archived: boolean;
+  sync_archived_at: string | null; external_column_id: string | null;
+};
+const LOCAL_COLUMNS = "id, external_id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, sync_archived_at, external_column_id";
+
+/** Completed, archived or deleted in YouGile: not mirrored (local copies are only hidden). */
+function isClosed(raw: YouGileItem) {
+  return raw.completed === true || raw.archived === true || raw.deleted === true;
+}
+
+/**
+ * Light mirror: upserts only open YouGile tasks in batches; local copies of
+ * closed/missing tasks get `external_archived=true` (never deleted).
+ * `reconcile` hides every local open copy not present in `tasks` — only
+ * safe with a complete snapshot of all selected projects.
+ */
+async function mirrorTasks(source: Source, structure: Structure, tasks: YouGileItem[], reconcile: boolean) {
+  const admin = await db();
+  const { boards, columns, users } = structure;
+  const projectList = selectedProjects(source);
+  const projectName = new Map(projectList.map((row) => [row.id, row.name]));
+  const boardName = new Map(boards.map((row) => [row.id, String(row.title ?? row['name'] ?? "YouGile")]));
+  const boardProject = new Map(boards.map((row) => [row.id, String((row as { projectId?: string }).projectId ?? "")]));
+  const columnBoard = new Map(columns.map((row) => [row.id, String(row.boardId ?? "")]));
+  const userEmail = new Map(users.map((row) => [row.id, String(row.email ?? "").toLowerCase()]));
+  const { data: memberships } = await admin.from("teamspace_members").select("user_id").eq("teamspace_id", source.teamspace_id);
+  const memberIds = (memberships ?? []).map((row) => row.user_id);
+  const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
+  const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
+
+  // YouGile columns become workspace columns; unknown ones are created.
+  const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
+  const statusByColumn = await ensureStatusesForColumns(
+    source.teamspace_id,
+    "yougile",
+    columns.map((row) => ({ id: String(row.id), name: String(row.title ?? row['name'] ?? "Колонка") })),
+  );
+  const defaultStatus = new Map<Status, string | null>();
+  const { resolveTaskLabel } = await import("./projects.server");
+  const projectLabel = new Map<string, string | null>();
+  for (const name of new Set(projectList.map((row) => row.name))) {
+    projectLabel.set(name, (await resolveTaskLabel("project", source.teamspace_id, source.created_by, name)) ?? null);
+  }
+
+  // Existing local copies in one read (paged only past PostgREST's row cap).
+  const existing = new Map<string, LocalRow>();
+  for (let from = 0; ; from += 1000) {
+    let query = admin.from("tasks").select(LOCAL_COLUMNS).eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile");
+    if (!reconcile) query = query.in("external_id", tasks.map((row) => row.id));
+    const { data, error } = await query.order("id").range(from, from + 999);
+    if (error) throw error;
+    for (const row of (data ?? []) as LocalRow[]) if (row.external_id) existing.set(row.external_id, row);
+    if ((data ?? []).length < 1000) break;
+  }
+
+  const open = tasks.filter((raw) => !isClosed(raw));
+  const openIds = new Set(open.map((raw) => raw.id));
+  const patches = [];
+  for (const raw of open) {
+    const assigned = Array.isArray(raw.assigned) ? raw.assigned.map(String) : [];
+    const mappedId = assigned.map((id) => source.user_map?.[id] ?? profileByEmail.get(userEmail.get(id) ?? "")?.id).find(Boolean) ?? null;
+    const mappedProfile = (profiles ?? []).find((row) => row.id === mappedId);
+    const columnId = String(raw.columnId ?? "");
+    const boardId = columnBoard.get(columnId) ?? "";
+    const projectId = boardProject.get(boardId) ?? "";
+    const workspaceStatus = statusByColumn.get(columnId) ?? null;
+    const status: Status = workspaceStatus?.base_status ?? taskStatus(raw, source.column_map ?? {});
+    if (!workspaceStatus && !defaultStatus.has(status)) defaultStatus.set(status, await defaultStatusId(source.teamspace_id, status));
+    const externalProject = projectName.get(projectId) ?? source.project_name;
+    patches.push({
+      user_id: source.created_by,
+      teamspace_id: source.teamspace_id,
+      title: String(raw.title ?? "Задача YouGile").slice(0, 500),
+      description: typeof raw.description === "string" ? raw.description.slice(0, 10000) : null,
+      status,
+      status_id: workspaceStatus?.id ?? defaultStatus.get(status) ?? null,
+      priority: priority(raw),
+      assignee_id: mappedId,
+      assignee_name: mappedProfile?.full_name || mappedProfile?.email || null,
+      due_date: taskDeadline(raw),
+      position: 0,
+      project: externalProject ? projectLabel.get(externalProject) ?? null : null,
+      external_source: "yougile",
+      external_id: raw.id,
+      external_url: typeof raw.url === "string" ? raw.url : null,
+      external_project: externalProject,
+      external_project_id: projectId || null,
+      external_board: boardName.get(boardId) ?? null,
+      external_column_id: columnId || null,
+      external_updated_at: externalTime(raw.timestamp),
+      external_archived: false,
+      sync_archived_at: null,
+    });
+  }
+
+  const { emitExternalTaskChange } = await import("./task-changes.server");
+  const { flushTrackerNotifications } = await import("./tracker-notifications.server");
+  const notificationBatch: import("./tracker-notifications.server").TrackerBatch = [];
+  let synced = 0;
+  for (let i = 0; i < patches.length; i += 100) {
+    const chunk = patches.slice(i, i + 100);
+    const { data: saved, error } = await admin.from("tasks").upsert(chunk, { onConflict: "teamspace_id,external_source,external_id" }).select("id, external_id, title, assignee_id");
+    if (error) throw error;
+    const byExternal = new Map(chunk.map((row) => [row.external_id, row]));
+    for (const row of saved ?? []) {
+      const patch = byExternal.get(String(row.external_id));
+      if (!patch) continue;
+      const before = existing.get(patch.external_id) ?? null;
+      const statusName = statusByColumn.get(patch.external_column_id ?? "")?.name ?? patch.status;
+      await emitExternalTaskChange({
+        source: "yougile",
+        teamspaceId: source.teamspace_id,
+        taskId: row.id,
+        title: patch.title,
+        before: before
+          ? { ...before, status_name: statusByColumn.get(before.external_column_id ?? "")?.name ?? before.status }
+          : null,
+        after: { ...patch, status_name: statusName },
+        batch: notificationBatch,
+      }).catch(() => {});
+      if (row.assignee_id && row.assignee_id !== before?.assignee_id && row.assignee_id !== source.created_by) {
+        notificationBatch.push({ userId: row.assignee_id, teamspaceId: source.teamspace_id, taskId: row.id, tracker: "YouGile", title: "Вам назначена задача", body: row.title, kind: "task_assigned", actorId: source.created_by });
+      }
+      synced++;
+    }
+  }
+
+  // Hide (never delete) local copies that are closed in YouGile or gone from the snapshot.
+  const hide = [...existing.values()]
+    .filter((row) => !row.external_archived && row.external_id && !openIds.has(row.external_id))
+    .filter((row) => reconcile || tasks.some((raw) => raw.id === row.external_id))
+    .map((row) => row.id);
+  const archivedAt = new Date().toISOString();
+  for (let i = 0; i < hide.length; i += 100) {
+    const { error } = await admin.from("tasks").update({ external_archived: true, sync_archived_at: archivedAt }).in("id", hide.slice(i, i + 100));
+    if (error) throw error;
+  }
+  await flushTrackerNotifications(notificationBatch);
+  return { synced, archived: hide.length };
+}
+
 export async function syncSource(source: Source, scope: YouGileRequest = createYouGileRequest()) {
   const projectList = selectedProjects(source);
   if (!source.enabled || !projectList.length) return { synced: 0, archived: 0 };
@@ -282,112 +426,55 @@ export async function syncSource(source: Source, scope: YouGileRequest = createY
       await admin.from("task_sync_sources").update({ last_error: "YouGile не вернул колонки проекта — задачи оставлены без изменений" }).eq("id", source.id);
       return { synced: 0, archived: 0 };
     }
-
-    const projectName = new Map(projectList.map((row) => [row.id, row.name]));
-    const boardName = new Map(boards.map((row) => [row.id, String(row.title ?? row['name'] ?? "YouGile")]));
-    const boardProject = new Map(boards.map((row) => [row.id, String((row as { projectId?: string }).projectId ?? "")]));
-    const columnBoard = new Map(columns.map((row) => [row.id, String(row.boardId ?? "")]));
-    const userEmail = new Map(users.map((row) => [row.id, String(row.email ?? "").toLowerCase()]));
-    const { data: memberships } = await admin.from("teamspace_members").select("user_id").eq("teamspace_id", source.teamspace_id);
-    const memberIds = (memberships ?? []).map((row) => row.user_id);
-    const { data: profiles } = memberIds.length ? await admin.from("profiles").select("id, full_name, email").in("id", memberIds) : { data: [] };
-    const profileByEmail = new Map((profiles ?? []).filter((row) => row.email).map((row) => [String(row.email).toLowerCase(), row]));
     // Fetch the complete snapshot before any writes; failed columns must not archive saved tasks.
     const tasks: YouGileItem[] = [];
     for (const columnId of columnIds) {
-      tasks.push(...await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}&includeDeleted=true`, scope));
+      tasks.push(...await pages(key, `/task-list?columnId=${encodeURIComponent(columnId)}`, scope));
     }
-    scope.check();
-    // YouGile columns become workspace columns; unknown ones are created.
-    const { ensureStatusesForColumns, defaultStatusId } = await import("./task-statuses.server");
-    const statusByColumn = await ensureStatusesForColumns(
-      source.teamspace_id,
-      "yougile",
-      columns.map((row) => ({ id: String(row.id), name: String(row.title ?? row['name'] ?? "Колонка") })),
-    );
-    const { emitExternalTaskChange } = await import("./task-changes.server");
-    const { flushTrackerNotifications } = await import("./tracker-notifications.server");
-    const notificationBatch: import("./tracker-notifications.server").TrackerBatch = [];
-    const seen: string[] = [];
-    let synced = 0;
-    for (const raw of tasks) {
-      scope.check();
-      const externalId = raw.id;
-      seen.push(externalId);
-      const assigned = Array.isArray(raw.assigned) ? raw.assigned.map(String) : [];
-      const mappedId = assigned.map((id) => source.user_map?.[id] ?? profileByEmail.get(userEmail.get(id) ?? "")?.id).find(Boolean) ?? null;
-      const mappedProfile = (profiles ?? []).find((row) => row.id === mappedId);
-      const columnId = String(raw.columnId ?? "");
-      const boardId = columnBoard.get(columnId) ?? "";
-      const projectId = boardProject.get(boardId) ?? "";
-      const workspaceStatus = statusByColumn.get(columnId) ?? null;
-      // The mirrored column keeps the board layout, but YouGile's own
-      // "completed" flag decides whether the task counts as done.
-      const completed = raw.completed === true || raw.archived === true;
-      const status: Status = completed
-        ? "done"
-        : workspaceStatus?.base_status ?? taskStatus(raw, source.column_map ?? {});
-      const statusId = workspaceStatus?.id ?? (await defaultStatusId(source.teamspace_id, status));
-
-      const deleted = raw.deleted === true;
-      const patch = {
-        user_id: source.created_by,
-        teamspace_id: source.teamspace_id,
-        title: String(raw.title ?? "Задача YouGile").slice(0, 500),
-        description: typeof raw.description === "string" ? raw.description.slice(0, 10000) : null,
-        status,
-        status_id: statusId,
-        priority: priority(raw),
-        assignee_id: mappedId,
-        assignee_name: mappedProfile?.full_name || mappedProfile?.email || null,
-        due_date: taskDeadline(raw),
-        position: 0,
-        external_source: "yougile",
-        external_id: externalId,
-        external_url: typeof raw.url === "string" ? raw.url : null,
-        external_project: projectName.get(projectId) ?? source.project_name,
-        external_project_id: projectId || null,
-        external_board: boardName.get(boardId) ?? null,
-        external_column_id: columnId || null,
-        external_updated_at: externalTime(raw.timestamp),
-        external_archived: deleted || raw.archived === true,
-        sync_archived_at: null,
-      };
-
-      const { data: before } = await admin.from("tasks").select("id, assignee_id, assignee_name, status, priority, due_date, title, external_archived, sync_archived_at, external_column_id").eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_id", externalId).maybeSingle();
-      const { data: saved, error } = await admin.from("tasks").upsert(patch, { onConflict: "teamspace_id,external_source,external_id" }).select("id, title, assignee_id, status, priority, due_date").single();
-      if (error) throw error;
-      await emitExternalTaskChange({
-        source: "yougile",
-        teamspaceId: source.teamspace_id,
-        taskId: saved.id,
-        title: patch.title,
-        before: before
-          ? { ...before, status_name: statusByColumn.get(before.external_column_id ?? "")?.name ?? before.status }
-          : null,
-        after: { ...patch, status_name: workspaceStatus?.name ?? patch.status },
-        batch: notificationBatch,
-      }).catch(() => {});
-      if (saved.assignee_id && saved.assignee_id !== before?.assignee_id && saved.assignee_id !== source.created_by) {
-        notificationBatch.push({ userId: saved.assignee_id, teamspaceId: source.teamspace_id, taskId: saved.id, tracker: "YouGile", title: "Вам назначена задача", body: saved.title, kind: "task_assigned", actorId: source.created_by });
-      }
-      synced++;
-    }
-    let archived = 0;
-    scope.check();
-    if (seen.length) {
-      const { data } = await admin.from("tasks").update({ external_archived: true, sync_archived_at: new Date().toISOString() }).eq("teamspace_id", source.teamspace_id).eq("external_source", "yougile").eq("external_archived", false).not("external_id", "in", `(${seen.join(",")})`).select("id");
-      archived = data?.length ?? 0;
-    }
-
+    const result = await mirrorTasks(source, { boards, columns, users }, tasks, true);
     await admin.from("task_sync_sources").update({ last_sync_at: new Date().toISOString(), last_error: null }).eq("id", source.id);
-    await flushTrackerNotifications(notificationBatch);
-    return { synced, archived };
+    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await admin.from("task_sync_sources").update({ last_error: message }).eq("id", source.id);
     throw error;
   }
+}
+
+/** Webhook fast path: mirror one task (column → board → selected project) without a full sweep. */
+async function syncSingleTask(source: Source, taskId: string, scope: YouGileRequest) {
+  const admin = await db();
+  const key = decryptConnectionKey(source.api_key_ciphertext);
+  const task = await api<YouGileItem>(key, `/tasks/${encodeURIComponent(taskId)}`, undefined, scope).catch((error: unknown) => {
+    if (error instanceof YouGileRequestError && error.status === 404) return { id: taskId, deleted: true } as YouGileItem;
+    throw error;
+  });
+  if (!task?.id) return;
+  if (isClosed(task) || !task.columnId) {
+    await mirrorTasks(source, { boards: [], columns: [], users: [] }, [{ ...task, deleted: true }], false);
+    return;
+  }
+  const column = await api<YouGileItem>(key, `/columns/${encodeURIComponent(String(task.columnId))}`, undefined, scope);
+  const board = await api<YouGileItem>(key, `/boards/${encodeURIComponent(String(column?.boardId ?? ""))}`, undefined, scope);
+  const projectId = String(board?.projectId ?? "");
+  // Tasks moved outside the mirrored projects are hidden like any other missing task.
+  if (!selectedProjects(source).some((row) => row.id === projectId)) {
+    await mirrorTasks(source, { boards: [], columns: [], users: [] }, [{ ...task, deleted: true }], false);
+    return;
+  }
+  const users = await pages(key, "/users", scope);
+  await mirrorTasks(source, { boards: [{ ...board, projectId }], columns: [{ ...column, boardId: board.id }], users }, [task], false);
+  await admin.from("task_sync_sources").update({ last_error: null }).eq("id", source.id);
+}
+
+/** Extracts a task id from a YouGile webhook body ({ event: "task-…", payload: { id } }). */
+export function webhookTaskId(body: unknown): string | null {
+  if (!body || typeof body !== "object") return null;
+  const event = String((body as { event?: unknown }).event ?? "");
+  const payload = (body as { payload?: unknown }).payload;
+  const id = payload && typeof payload === "object" ? (payload as { id?: unknown }).id : null;
+  if (!event.startsWith("task") || typeof id !== "string" || !id.trim()) return null;
+  return id.trim();
 }
 
 export async function syncYouGileForUser(userId: string, teamspaceId: string) {
@@ -402,14 +489,14 @@ export async function syncAllYouGileSources() {
   const { data } = await admin.from("task_sync_sources").select("*").eq("provider", "yougile").eq("enabled", true);
   let synced = 0;
   let failed = 0;
-  const scope = createYouGileRequest();
+  // A fresh budget per source: one slow or failing workspace never starves the others.
   for (const source of (data ?? []) as Source[]) {
-    try { await syncSource(source, scope); synced++; } catch { failed++; }
+    try { await syncSource(source, createYouGileRequest({ budgetMs: BACKGROUND_BUDGET_MS })); synced++; } catch { failed++; }
   }
   return { synced, failed };
 }
 
-export async function handleYouGileWebhook(id: string, secret: string) {
+export async function handleYouGileWebhook(id: string, secret: string, body?: unknown) {
   const admin = await db();
   const { data } = await admin.from("task_sync_sources").select("*").eq("id", id).eq("provider", "yougile").eq("enabled", true).maybeSingle();
   const source = data as Source | null;
@@ -417,7 +504,16 @@ export async function handleYouGileWebhook(id: string, secret: string) {
   const left = Buffer.from(secret);
   const right = Buffer.from(source.webhook_secret);
   if (left.length !== right.length || !timingSafeEqual(left, right)) return false;
-  await syncSource(source);
+  const taskId = webhookTaskId(body);
+  if (taskId) {
+    try {
+      await syncSingleTask(source, taskId, createYouGileRequest({ budgetMs: BACKGROUND_BUDGET_MS }));
+      return true;
+    } catch (error) {
+      console.error("[yougile] single-task webhook sync failed, falling back to full sync", error instanceof Error ? error.message : error);
+    }
+  }
+  await syncSource(source, createYouGileRequest({ budgetMs: BACKGROUND_BUDGET_MS }));
   return true;
 }
 
