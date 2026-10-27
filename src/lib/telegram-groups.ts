@@ -24,3 +24,28 @@ export function newGroupLinkCode(): string {
 export function normalizeGroupCode(code: string): string {
   return code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
+
+const normTitle = (s: string) => s.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+
+/** A proposed task duplicates an open task (or an earlier proposal) when titles match after normalization. */
+export function isDuplicateTask(title: string, existing: string[]): boolean {
+  const t = normTitle(title);
+  return !t || existing.some((e) => normTitle(e) === t);
+}
+
+/** Group-reported completion: managers close tasks, everyone else (or unknown authors) sends them to review. */
+export function groupCompletionStatus(authorIsManager: boolean): "done" | "review" {
+  return authorIsManager ? "done" : "review";
+}
+
+/** Messages newer than both the bot join time and the last processing pass. */
+export function pendingMessages<T extends { sent_at: string }>(messages: T[], botAddedAt: string, lastProcessedAt: string | null): T[] {
+  const since = Math.max(Date.parse(botAddedAt) || 0, lastProcessedAt ? Date.parse(lastProcessedAt) || 0 : 0);
+  return messages.filter((m) => Date.parse(m.sent_at) > since || (!lastProcessedAt && Date.parse(m.sent_at) >= since));
+}
+
+const DONE_RE = /(сделал|сделала|сделано|готово|выполнил|выполнила|закрыл|закрыла|\bdone\b|\bfinished\b)/i;
+/** Saves AI credits: one lone message is processed only when it reports completion. */
+export function shouldProcess(texts: string[]): boolean {
+  return texts.length >= 2 || (texts.length === 1 && DONE_RE.test(texts[0] ?? ""));
+}
