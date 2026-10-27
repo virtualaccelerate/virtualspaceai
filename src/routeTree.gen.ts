@@ -50,6 +50,7 @@ import { Route as AuthenticatedAppTelegramRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppTimeRouteImport } from './routes/_authenticated/app.time'
 import { Route as AuthenticatedAppWhatsappRouteImport } from './routes/_authenticated/app.whatsapp'
 import { Route as ApiPublicTrelloWebhookRouteImport } from './routes/api/public/trello-webhook'
+import { Route as ApiPublicWahaWebhookRouteImport } from './routes/api/public/waha-webhook'
 import { Route as ApiPublicYougileWebhookRouteImport } from './routes/api/public/yougile-webhook'
 import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth.google-calendar.return'
 import { Route as OauthGoogleDriveReturnRouteImport } from './routes/oauth.google-drive.return'
@@ -281,6 +282,11 @@ const ApiPublicTrelloWebhookRoute = ApiPublicTrelloWebhookRouteImport.update({
   path: '/api/public/trello-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWahaWebhookRoute = ApiPublicWahaWebhookRouteImport.update({
+  id: '/api/public/waha-webhook',
+  path: '/api/public/waha-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicYougileWebhookRoute = ApiPublicYougileWebhookRouteImport.update({
   id: '/api/public/yougile-webhook',
   path: '/api/public/yougile-webhook',
@@ -402,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/app/whatsapp': typeof AuthenticatedAppWhatsappRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
+  '/api/public/waha-webhook': typeof ApiPublicWahaWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
@@ -457,6 +464,7 @@ export interface FileRoutesByTo {
   '/app/time': typeof AuthenticatedAppTimeRoute
   '/app/whatsapp': typeof AuthenticatedAppWhatsappRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
+  '/api/public/waha-webhook': typeof ApiPublicWahaWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
@@ -515,6 +523,7 @@ export interface FileRoutesById {
   '/_authenticated/app/time': typeof AuthenticatedAppTimeRoute
   '/_authenticated/app/whatsapp': typeof AuthenticatedAppWhatsappRoute
   '/api/public/trello-webhook': typeof ApiPublicTrelloWebhookRoute
+  '/api/public/waha-webhook': typeof ApiPublicWahaWebhookRoute
   '/api/public/yougile-webhook': typeof ApiPublicYougileWebhookRoute
   '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/app/time'
     | '/app/whatsapp'
     | '/api/public/trello-webhook'
+    | '/api/public/waha-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-calendar/return'
     | '/oauth/google-drive/return'
@@ -628,6 +638,7 @@ export interface FileRouteTypes {
     | '/app/time'
     | '/app/whatsapp'
     | '/api/public/trello-webhook'
+    | '/api/public/waha-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-calendar/return'
     | '/oauth/google-drive/return'
@@ -685,6 +696,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/time'
     | '/_authenticated/app/whatsapp'
     | '/api/public/trello-webhook'
+    | '/api/public/waha-webhook'
     | '/api/public/yougile-webhook'
     | '/oauth/google-calendar/return'
     | '/oauth/google-drive/return'
@@ -722,6 +734,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicTrelloWebhookRoute: typeof ApiPublicTrelloWebhookRoute
+  ApiPublicWahaWebhookRoute: typeof ApiPublicWahaWebhookRoute
   ApiPublicYougileWebhookRoute: typeof ApiPublicYougileWebhookRoute
   OauthGoogleCalendarReturnRoute: typeof OauthGoogleCalendarReturnRoute
   OauthGoogleDriveReturnRoute: typeof OauthGoogleDriveReturnRoute
@@ -1024,6 +1037,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTrelloWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/waha-webhook': {
+      id: '/api/public/waha-webhook'
+      path: '/api/public/waha-webhook'
+      fullPath: '/api/public/waha-webhook'
+      preLoaderRoute: typeof ApiPublicWahaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/yougile-webhook': {
       id: '/api/public/yougile-webhook'
       path: '/api/public/yougile-webhook'
@@ -1215,6 +1235,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicTrelloWebhookRoute: ApiPublicTrelloWebhookRoute,
+  ApiPublicWahaWebhookRoute: ApiPublicWahaWebhookRoute,
   ApiPublicYougileWebhookRoute: ApiPublicYougileWebhookRoute,
   OauthGoogleCalendarReturnRoute: OauthGoogleCalendarReturnRoute,
   OauthGoogleDriveReturnRoute: OauthGoogleDriveReturnRoute,

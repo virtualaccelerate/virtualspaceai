@@ -351,6 +351,13 @@
       "when": 1793138029230,
       "tag": "0049_own_task_comment_edit_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1793139845838,
+      "tag": "0050_whatsapp_groups",
+      "breakpoints": true
     }
   ]
 }

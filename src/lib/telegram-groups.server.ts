@@ -3,6 +3,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendMessage, tg } from "./telegram.server";
 import { groupCompletionStatus, isAfterBotAdded, isDuplicateTask, isGroupChat, isMigrationTarget, newGroupLinkCode, pendingMessages, shouldProcess } from "./telegram-groups";
 import { resolveMember } from "./member-resolution";
+import { digits, jidPhone, newWhatsappGroupRow, numericMessageId, shouldStore, whatsappWelcome, type ParsedMessage } from "./waha-payload";
+import { lidToPhone, sendText } from "./waha.server";
 
 const db = supabaseAdmin as any;
 
@@ -101,30 +103,36 @@ async function askJson(system: string, user: string): Promise<any> {
   return json.choices?.[0]?.message?.content ?? "";
 }
 
-type Member = { id: string; name: string; email: string | null; tgId: number | null; tgUser: string | null; manager: boolean };
+type Member = { id: string; name: string; email: string | null; tgId: number | null; tgUser: string | null; phone: string | null; manager: boolean };
 
 async function loadMembers(teamspaceId: string): Promise<Member[]> {
   const { data: rows } = await db.from("teamspace_members").select("user_id, role").eq("teamspace_id", teamspaceId);
   const ids = (rows ?? []).map((r: any) => r.user_id);
   if (!ids.length) return [];
-  const [{ data: profiles }, { data: links }] = await Promise.all([
+  const [{ data: profiles }, { data: links }, { data: wa }] = await Promise.all([
     db.from("profiles").select("id, full_name, email").in("id", ids),
     db.from("telegram_links").select("user_id, chat_id, telegram_username").in("user_id", ids).not("chat_id", "is", null),
+    db.from("whatsapp_links").select("user_id, phone_number").in("user_id", ids).not("phone_number", "is", null),
   ]);
   return (rows ?? []).map((r: any) => {
     const p = (profiles ?? []).find((x: any) => x.id === r.user_id);
     const l = (links ?? []).find((x: any) => x.user_id === r.user_id);
+    const w = (wa ?? []).find((x: any) => x.user_id === r.user_id);
     return { id: r.user_id, name: p?.full_name || p?.email || "", email: p?.email ?? null,
       tgId: l?.chat_id ? Number(l.chat_id) : null, tgUser: l?.telegram_username?.replace(/^@/, "").toLowerCase() ?? null,
+      phone: digits(w?.phone_number) || null,
       manager: r.role === "owner" || r.role === "admin" };
   });
 }
 
-/** Telegram id → linked account; then @username; then name via the shared exact resolver. */
-function resolveAssignee(raw: string | null | undefined, members: Member[], tgId?: number | null): Member | null {
+/** Telegram id / phone → linked account; then @username or phone text; then name via the shared exact resolver. */
+function resolveAssignee(raw: string | null | undefined, members: Member[], tgId?: number | null, phone?: string | null): Member | null {
   if (tgId) { const m = members.find((x) => x.tgId === tgId); if (m) return m; }
+  if (phone) { const m = members.find((x) => x.phone && x.phone === digits(phone)); if (m) return m; }
   const v = (raw ?? "").trim();
   if (!v) return null;
+  const d = digits(v);
+  if (d.length >= 7 && /^[+@\d\s()-]+$/.test(v)) { const m = members.find((x) => x.phone === d); if (m) return m; }
   const u = v.replace(/^@/, "").toLowerCase();
   const byUser = members.find((x) => x.tgUser === u);
   if (byUser) return byUser;
@@ -143,7 +151,9 @@ export async function processGroup(groupId: string): Promise<{ created: number; 
   const { data: g } = await db.from("telegram_groups").select("*").eq("id", groupId).maybeSingle();
   if (!g || g.status !== "linked" || !g.teamspace_id) return { created: 0, completed: 0, skipped: "not linked" };
   const since = [g.bot_added_at, g.last_processed_at].filter(Boolean).sort().pop();
-  const { data: raw } = await db.from("telegram_group_messages").select("message_id, from_id, from_username, author_name, text, sent_at")
+  const lidMemo = new Map<string, string | null>();
+  const waMentions: string[] = [];
+  const { data: raw } = await db.from("telegram_group_messages").select("message_id, from_id, from_username, author_name, sender_jid, text, sent_at")
     .eq("group_id", g.id).gte("sent_at", since).order("sent_at").limit(300);
   const msgs = pendingMessages(raw ?? [], g.bot_added_at, g.last_processed_at);
   if (!msgs.length) return { created: 0, completed: 0, skipped: "no messages" };
@@ -178,7 +188,9 @@ export async function processGroup(groupId: string): Promise<{ created: number; 
     });
     if (error) { console.error("[tg-group] insert failed", error.message); continue; }
     created++;
-    const handle = who?.tgUser ? "@" + who.tgUser : who?.name ?? nt.assignee ?? "без исполнителя";
+    const isWa = g.provider === "whatsapp";
+    if (isWa && who?.phone) waMentions.push(`${who.phone}@c.us`);
+    const handle = isWa && who?.phone ? "@" + who.phone : who?.tgUser && !isWa ? "@" + who.tgUser : who?.name ?? nt.assignee ?? "без исполнителя";
     lines.push(`➕ ${title} — ${handle} — ${due ?? "без срока"}`);
   }
 
@@ -187,7 +199,8 @@ export async function processGroup(groupId: string): Promise<{ created: number; 
     if (!task) continue;
     const ids = (Array.isArray(c.message_ids) ? c.message_ids : []).map(Number);
     const src: any = ids.map((i: number) => byMsg.get(i)).find(Boolean);
-    const author = src ? resolveAssignee(src.from_username, members, src.from_id) : null;
+    const phone = src?.sender_jid ? await senderPhone(src.sender_jid, lidMemo) : null;
+    const author = src ? resolveAssignee(src.from_username ?? src.author_name?.replace(/\s*\(\+\d+\)$/, ""), members, src.from_id, phone) : null;
     const status = groupCompletionStatus(Boolean(author?.manager));
     const patch: any = { status, ...(status === "review" ? { submitted_at: new Date().toISOString() } : {}) };
     const { error } = await db.from("tasks").update(patch).eq("id", task.id);
@@ -209,7 +222,7 @@ export async function processGroup(groupId: string): Promise<{ created: number; 
   }
 
   await mark();
-  if (lines.length) await sendMessage(g.chat_id, `Добавлено: ${created}, закрыто: ${completed}\n${lines.join("\n")}`);
+  if (lines.length) await groupSend(g, `Добавлено: ${created}, закрыто: ${completed}\n${lines.join("\n")}`, waMentions.length ? [...new Set(waMentions)] : undefined);
   return { created, completed };
 }
 
@@ -223,10 +236,21 @@ export async function processAllGroups() {
   return { groups: (groups ?? []).length, created, completed, failed };
 }
 
+/** Sends a group reply through the group's own messenger. */
+async function groupSend(g: any, text: string, mentions?: string[]) {
+  if (g.provider === "whatsapp") return sendText(g.external_chat_id, text, mentions);
+  return sendMessage(g.chat_id, text);
+}
+
 async function runCommand(chatId: number, cmd: string, arg: string) {
-  const { data: g } = await db.from("telegram_groups").select("id, teamspace_id, project, status").eq("chat_id", chatId).maybeSingle();
+  const { data: g } = await db.from("telegram_groups").select("id, teamspace_id, project, status, provider, chat_id, external_chat_id").eq("chat_id", chatId).maybeSingle();
+  return runGroupCommand(g ?? { provider: "telegram", chat_id: chatId }, cmd, arg);
+}
+
+async function runGroupCommand(g: any, cmd: string, arg: string) {
+  const send = (text: string) => groupSend(g, text);
   if (!g || g.status !== "linked" || !g.teamspace_id) {
-    await sendMessage(chatId, "Группа ещё не привязана. Введите код на странице Telegram → «Группы».");
+    await send("Группа ещё не привязана. Введите код на странице Telegram → «Группы».");
     return;
   }
   if (cmd === "tasks") {
@@ -239,15 +263,43 @@ async function runCommand(chatId: number, cmd: string, arg: string) {
       const m = members.find((x) => x.id === t.assignee_id);
       return `• ${t.title} — ${m?.tgUser ? "@" + m.tgUser : m?.name ?? t.assignee_name ?? "без исполнителя"}${t.due_date ? " — " + t.due_date : ""}`;
     });
-    await sendMessage(chatId, list.length ? `Открытые задачи${g.project ? " «" + g.project + "»" : ""}:\n${list.join("\n")}` : "Открытых задач нет.");
+    await send(list.length ? `Открытые задачи${g.project ? " «" + g.project + "»" : ""}:\n${list.join("\n")}` : "Открытых задач нет.");
     return;
   }
   const days = arg === "week" ? 7 : arg === "month" ? 30 : 1;
   const from = new Date(Date.now() - days * 86400000).toISOString();
   const { data: msgs } = await db.from("telegram_group_messages").select("from_username, author_name, text, sent_at")
     .eq("group_id", g.id).gte("sent_at", from).order("sent_at").limit(800);
-  if (!msgs?.length) { await sendMessage(chatId, "За этот период сообщений нет."); return; }
+  if (!msgs?.length) { await send("За этот период сообщений нет."); return; }
   const transcript = msgs.map((m: any) => `${m.sent_at.slice(0, 16)} ${m.from_username ? "@" + m.from_username : m.author_name ?? "?"}: ${m.text}`).join("\n").slice(-60000);
   const text = await askJson("Сделай краткое саммари рабочей переписки на русском, простым текстом без markdown, разделы: Главное, Решения, Задачи (с @исполнителями), Открытые вопросы. Пустые разделы пропускай. Не более 3500 символов.", transcript);
-  await sendMessage(chatId, String(text).trim().slice(0, 4000) || "Не удалось составить саммари.");
+  await send(String(text).trim().slice(0, 4000) || "Не удалось составить саммари.");
+}
+
+// ---------------- WhatsApp groups (WAHA) ----------------
+
+export async function handleWahaMessage(m: ParsedMessage) {
+  if (!shouldStore(m)) return;
+  const { data: g } = await db.from("telegram_groups").select("id, teamspace_id, project, status, provider, chat_id, external_chat_id, bot_added_at")
+    .eq("provider", "whatsapp").eq("external_chat_id", m.chatId).maybeSingle();
+  if (!g) {
+    const code = newGroupLinkCode();
+    const { error } = await db.from("telegram_groups").insert(newWhatsappGroupRow(m.chatId, code));
+    if (!error) await sendText(m.chatId, whatsappWelcome(code));
+    return;
+  }
+  if (g.status !== "linked") return; // pending/left groups store nothing
+  const cmd = /^\/(summary|tasks)(?:\s+(\S+))?/i.exec((m.body ?? "").trim());
+  if (cmd) { await runGroupCommand(g, cmd[1].toLowerCase(), (cmd[2] ?? "").toLowerCase()); return; }
+  if (!m.body || Date.parse(m.ts) < Date.parse(g.bot_added_at)) return;
+  await db.from("telegram_group_messages").upsert({
+    group_id: g.id, provider: "whatsapp", chat_id: null, message_id: numericMessageId(m.id), external_message_id: m.id,
+    sender_jid: m.senderJid, author_name: m.sender, text: m.body, sent_at: m.ts,
+  }, { onConflict: "provider,external_message_id", ignoreDuplicates: true });
+}
+
+async function senderPhone(jid: string | null | undefined, memo: Map<string, string | null>) {
+  if (!jid) return null;
+  if (jid.endsWith("@lid")) return lidToPhone(jid, memo);
+  return jidPhone(jid);
 }

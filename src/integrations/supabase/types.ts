@@ -2210,37 +2210,46 @@ export type Database = {
       telegram_group_messages: {
         Row: {
           author_name: string | null
-          chat_id: number
+          chat_id: number | null
           created_at: string
+          external_message_id: string | null
           from_id: number | null
           from_username: string | null
           group_id: string
           id: string
           message_id: number
+          provider: string
+          sender_jid: string | null
           sent_at: string
           text: string | null
         }
         Insert: {
           author_name?: string | null
-          chat_id: number
+          chat_id?: number | null
           created_at?: string
+          external_message_id?: string | null
           from_id?: number | null
           from_username?: string | null
           group_id: string
           id?: string
           message_id: number
+          provider?: string
+          sender_jid?: string | null
           sent_at: string
           text?: string | null
         }
         Update: {
           author_name?: string | null
-          chat_id?: number
+          chat_id?: number | null
           created_at?: string
+          external_message_id?: string | null
           from_id?: number | null
           from_username?: string | null
           group_id?: string
           id?: string
           message_id?: number
+          provider?: string
+          sender_jid?: string | null
           sent_at?: string
           text?: string | null
         }
@@ -2258,8 +2267,9 @@ export type Database = {
         Row: {
           bot_added_at: string
           bot_is_admin: boolean
-          chat_id: number
+          chat_id: number | null
           created_at: string
+          external_chat_id: string | null
           id: string
           last_processed_at: string | null
           link_code: string | null
@@ -2267,6 +2277,7 @@ export type Database = {
           merged_into: string | null
           previous_chat_ids: number[]
           project: string | null
+          provider: string
           status: string
           teamspace_id: string | null
           title: string | null
@@ -2274,8 +2285,9 @@ export type Database = {
         Insert: {
           bot_added_at?: string
           bot_is_admin?: boolean
-          chat_id: number
+          chat_id?: number | null
           created_at?: string
+          external_chat_id?: string | null
           id?: string
           last_processed_at?: string | null
           link_code?: string | null
@@ -2283,6 +2295,7 @@ export type Database = {
           merged_into?: string | null
           previous_chat_ids?: number[]
           project?: string | null
+          provider?: string
           status?: string
           teamspace_id?: string | null
           title?: string | null
@@ -2290,8 +2303,9 @@ export type Database = {
         Update: {
           bot_added_at?: string
           bot_is_admin?: boolean
-          chat_id?: number
+          chat_id?: number | null
           created_at?: string
+          external_chat_id?: string | null
           id?: string
           last_processed_at?: string | null
           link_code?: string | null
@@ -2299,6 +2313,7 @@ export type Database = {
           merged_into?: string | null
           previous_chat_ids?: number[]
           project?: string | null
+          provider?: string
           status?: string
           teamspace_id?: string | null
           title?: string | null

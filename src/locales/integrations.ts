@@ -93,7 +93,7 @@ const bundle: GroupResources = {
         can: { new: "Create tasks from a plain message: “Call the client tomorrow, urgent”", status: "Update task status: “I finished the report”", ai: "Ask the AI assistant about your tasks and knowledge base" },
       },
       telegram: {
-        groups: { title: "Groups", hint: "Add the bot to a Telegram group — it posts a link code there. Enter the code and pick a project.", code: "Code from the group", project: "Project", noProject: "No project", link: "Link", linked: "Group linked", empty: "No linked groups yet", admin: "Bot admin", yes: "yes", no: "no", last: "Last message", left: "bot removed" },
+        groups: { title: "Groups (Telegram & WhatsApp)", hint: "Add the bot to a Telegram group — it posts a link code there. Enter the code and pick a project.", code: "Code from the group", project: "Project", noProject: "No project", link: "Link", linked: "Group linked", empty: "No linked groups yet", admin: "Bot admin", yes: "yes", no: "no", last: "Last message", left: "bot removed" },
         activated: "Bot activated",
         activateError: "Could not activate the bot",
         unlinked: "Telegram disconnected",
@@ -283,7 +283,7 @@ const bundle: GroupResources = {
         can: { new: "Создавать задачи из обычного сообщения: «Позвонить клиенту завтра, срочно»", status: "Менять статус задачи: «Я закончил отчёт»", ai: "Отвечать на вопросы о задачах и базе знаний" },
       },
       telegram: {
-        groups: { title: "Группы", hint: "Добавьте бота в группу Telegram — он пришлёт туда код привязки. Введите код и выберите проект.", code: "Код из группы", project: "Проект", noProject: "Без проекта", link: "Привязать", linked: "Группа привязана", empty: "Привязанных групп пока нет", admin: "Бот — админ", yes: "да", no: "нет", last: "Последнее сообщение", left: "бот удалён" },
+        groups: { title: "Группы (Telegram и WhatsApp)", hint: "Добавьте бота в группу Telegram — он пришлёт туда код привязки. Введите код и выберите проект.", code: "Код из группы", project: "Проект", noProject: "Без проекта", link: "Привязать", linked: "Группа привязана", empty: "Привязанных групп пока нет", admin: "Бот — админ", yes: "да", no: "нет", last: "Последнее сообщение", left: "бот удалён" },
         activated: "Бот активирован",
         activateError: "Не удалось активировать бота",
         unlinked: "Telegram отключён",
@@ -460,6 +460,7 @@ const bundle: GroupResources = {
         lastSync: "Соңғы синхрондау",
       },
       telegram: {
+        groups: { title: "Топтар (Telegram және WhatsApp)" },
         activated: "Бот белсендірілді",
         activateError: "Ботты белсендіру мүмкін болмады",
         unlinked: "Telegram ажыратылды",
@@ -636,6 +637,7 @@ const bundle: GroupResources = {
         lastSync: "Акыркы синхрондоо",
       },
       telegram: {
+        groups: { title: "Топтор (Telegram жана WhatsApp)" },
         activated: "Бот иштетилди",
         activateError: "Ботту иштетүү мүмкүн болбоду",
         unlinked: "Telegram ажыратылды",
@@ -812,6 +814,7 @@ const bundle: GroupResources = {
         lastSync: "Oxirgi sinxronlash",
       },
       telegram: {
+        groups: { title: "Guruhlar (Telegram va WhatsApp)" },
         activated: "Bot faollashtirildi",
         activateError: "Botni faollashtirib bo'lmadi",
         unlinked: "Telegram uzildi",
@@ -988,6 +991,7 @@ const bundle: GroupResources = {
         lastSync: "Ҳамоҳангсозии охирин",
       },
       telegram: {
+        groups: { title: "Гурӯҳҳо (Telegram ва WhatsApp)" },
         activated: "Бот фаъол шуд",
         activateError: "Фаъол кардани бот муяссар нашуд",
         unlinked: "Telegram қатъ карда шуд",
