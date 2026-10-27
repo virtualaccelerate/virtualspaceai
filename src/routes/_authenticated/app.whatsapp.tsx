@@ -69,7 +69,7 @@ function WhatsAppPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       <header className="flex items-start gap-4">
         <div className="h-11 w-11 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
-          <MessageCircle className="h-5 w-5" />
+          <WhatsAppGlyph className="h-5 w-5" />
         </div>
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -120,7 +120,7 @@ function WhatsAppPage() {
               </p>
             )}
             <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-sm text-primary">
+              <code className="rounded-xl border border-accent-foreground/15 bg-accent px-3.5 py-2 font-mono text-base font-semibold tracking-widest text-accent-foreground">
                 {data?.code ?? "…"}
               </code>
               <button
@@ -137,7 +137,7 @@ function WhatsAppPage() {
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
                 >
-                  <MessageCircle className="h-3.5 w-3.5" />
+                  <WhatsAppGlyph className="h-3.5 w-3.5" />
                   {t("integrationsUi.whatsapp.open", "Open WhatsApp")}
                 </a>
               ) : (
@@ -147,7 +147,7 @@ function WhatsAppPage() {
                   aria-disabled
                   className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-xs font-medium text-white/40 cursor-not-allowed"
                 >
-                  <MessageCircle className="h-3.5 w-3.5" />
+                  <WhatsAppGlyph className="h-3.5 w-3.5" />
                   {t("integrationsUi.whatsapp.open", "Open WhatsApp")}
                   {!WHATSAPP_BOT_READY && <InProgressPill />}
                 </button>
