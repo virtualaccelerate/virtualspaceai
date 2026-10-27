@@ -64,6 +64,7 @@ function friendlyCalendarError(code: string, t: (key: string, fallback: string) 
     case "GOOGLE_TASKS_SYNC_FAILED": return t("integrationsUi.tasksSyncFailed", "Some task deadlines didn’t reach Google Tasks — we’ll retry automatically.");
     case "GOOGLE_CALENDAR_SYNC_FAILED": return t("integrationsUi.calendarSyncFailed", "Calendar sync failed — please try again later.");
     default:
+      if (/Google Tasks/i.test(code)) return t("integrationsUi.tasksUnavailable", "Google Tasks sync is temporarily unavailable — calendar events sync normally.");
       // Short app messages (popup blocked etc.) pass through; provider/JSON dumps don't.
       return code.length <= 120 && !/[{}]|\[\d{3}\]|googleapis|https?:/.test(code) ? code : t("integrationsUi.calendarSyncFailed", "Calendar sync failed — please try again later.");
   }
