@@ -92,15 +92,16 @@ export async function listTaskEventsForUser(userId: string, taskId: string) {
       chat = (await listYouGileTaskChat(task.teamspace_id, external.external_id).catch(() => [])) as Record<string, unknown>[];
     }
   }
-  const merged = [...(events ?? []), ...chat].sort(
+  const creation = (events ?? []).some((e) => e.kind === "created") ? [] : [{id: `created-${task.id}`, kind: "created", field: null, from_value: null, to_value: null, note: null, actor_id: task.user_id, actor_name: null, source: task.source_group_id ? "telegram_group" : task.external_source ?? "virtual_space", created_at: task.created_at}];
+  const merged = [...(events ?? []), ...chat, ...creation].sort(
     (a, b) => new Date(String(b['created_at'])).getTime() - new Date(String(a['created_at'])).getTime(),
   );
   const { data: membershipRows } = task.teamspace_id ? await admin.from("teamspace_members").select("user_id").eq("teamspace_id", task.teamspace_id) : { data: [] };
   const ids = [...new Set([...(membershipRows ?? []).map((m) => m.user_id), ...(events ?? []).flatMap((e) => e.actor_id ? [e.actor_id] : [])])];
-  const { data: profiles } = ids.length ? await admin.from("profiles").select("id, full_name, avatar_url").in("id", ids) : { data: [] };
+  const { data: profiles } = ids.length ? await admin.from("profiles").select("id, full_name, email, avatar_url").in("id", ids) : { data: [] };
   const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
   return { task: { ...task, status_name: statusName }, viewer_id: userId,
-    members: (membershipRows ?? []).map((m) => ({ id: m.user_id, name: byId.get(m.user_id)?.full_name || "Team member" })),
+    members: (membershipRows ?? []).map((m) => ({ id: m.user_id, name: byId.get(m.user_id)?.full_name || byId.get(m.user_id)?.email || "Team member" })),
     events: merged.map((e: any) => ({ ...e, actor_avatar: byId.get(e.actor_id)?.avatar_url ?? null })) };
 
 }
