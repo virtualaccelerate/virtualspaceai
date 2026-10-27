@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { logChatEvent } from "@/lib/chat-history.functions";
 import { createTask, deleteTask, deleteTasksBulk, listTaskMembers, reviewTask, submitTaskForReview, updateTask, updateTasksBulk } from "@/lib/tasks.functions";
-import { listProjects } from "@/lib/projects.functions";
+import { createDepartment, createProject, listProjects, listTaskDirectory } from "@/lib/projects.functions";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,9 +53,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
-  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "projects" } => ({
+  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "projects"; project?: string; department?: string } => ({
     ...search,
     tab: search.tab === "projects" ? "projects" as const : undefined,
+    project: typeof search.project === "string" && search.project ? search.project : undefined,
+    department: typeof search.department === "string" && search.department ? search.department : undefined,
   }),
   component: TaskTabs,
   head: () => ({
@@ -182,6 +184,7 @@ type TaskDraft = {
   assignee_id: string;
   due_date: string;
   project: string;
+  department: string;
   tags: string;
 };
 
@@ -193,8 +196,29 @@ const emptyDraft = (status: TaskStatus = "backlog"): TaskDraft => ({
   assignee_id: "",
   due_date: "",
   project: "",
+  department: "",
   tags: "",
 });
+
+const ADD_NEW = "__create__";
+
+/** Directory dropdown: an "all"/"none" option, the saved names and "+ Create" at the bottom. */
+function DirectorySelect({ value, options, emptyLabel, createLabel, onChange, onCreate, disabled, ariaLabel, className }: {
+  value: string; options: string[]; emptyLabel: string; createLabel: string; ariaLabel: string; className?: string;
+  disabled?: boolean; onChange: (v: string) => void; onCreate: () => void;
+}) {
+  return (
+    <Select value={value || "none"} disabled={disabled} onValueChange={(v) => (v === ADD_NEW ? onCreate() : onChange(v === "none" ? "" : v))}>
+      <SelectTrigger aria-label={ariaLabel} className={className}><SelectValue /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">{emptyLabel}</SelectItem>
+        {value && !options.some((o) => o === value) && <SelectItem value={value}>{value}</SelectItem>}
+        {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+        <SelectItem value={ADD_NEW} className="text-primary">+ {createLabel}</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
 
 const cleanTag = (v: string) => v.trim().replace(/^#/, "").replace(/[^\p{L}\p{N}_-]+/gu, "");
 const parseTagList = (v: string) => [...new Set(v.split(/[,\s]+/).map(cleanTag).filter(Boolean))].slice(0, 20);
@@ -269,6 +293,40 @@ function TasksPage() {
   const loadProjectsFn = useServerFn(listProjects);
   const [projectOptions, setProjectOptions] = useState<{ name: string; tag: string }[]>([]);
   const [bulkAssignee, setBulkAssignee] = useState<string>("");
+  const search = Route.useSearch();
+  const navigateTasks = Route.useNavigate();
+  const filterProject = search.project ?? "";
+  const filterDepartment = search.department ?? "";
+  const setFilter = (key: "project" | "department", value: string) =>
+    void navigateTasks({ search: (prev) => ({ ...prev, [key]: value || undefined }), resetScroll: false });
+  const loadDirectoryFn = useServerFn(listTaskDirectory);
+  const createProjectFn = useServerFn(createProject);
+  const createDepartmentFn = useServerFn(createDepartment);
+  const [directory, setDirectory] = useState<{ projects: string[]; departments: string[] }>({ projects: [], departments: [] });
+  const refreshDirectory = () => loadDirectoryFn({ data: {} }).then(setDirectory).catch(() => {});
+  useEffect(() => { void refreshDirectory(); }, []);
+  async function createEntry(kind: "project" | "department"): Promise<string | null> {
+    const name = window.prompt(kind === "project" ? t("tasksUi.newProjectPrompt", "New project name") : t("tasksUi.newDepartmentPrompt", "New department name"))?.trim();
+    if (!name) return null;
+    try {
+      const res = kind === "project" ? await createProjectFn({ data: { name } }) : await createDepartmentFn({ data: { name } });
+      await refreshDirectory();
+      return (res as { name: string }).name;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+      return null;
+    }
+  }
+  const projectNames = useMemo(() => {
+    const seen = new Set<string>();
+    return [...directory.projects, ...projectOptions.map((p) => p.name)].filter((n) => !seen.has(n.toLowerCase()) && !!seen.add(n.toLowerCase()));
+  }, [directory.projects, projectOptions]);
+  const shownTasks = useMemo(() => {
+    const fp = filterProject.toLowerCase();
+    const fd = filterDepartment.toLowerCase();
+    if (!fp && !fd) return tasks;
+    return tasks.filter((x) => (!fp || (x.project ?? "").toLowerCase() === fp) && (!fd || (x.department ?? "").toLowerCase() === fd));
+  }, [tasks, filterProject, filterDepartment]);
   const [bulkDue, setBulkDue] = useState<string>("");
 
   useEffect(() => {
@@ -454,9 +512,9 @@ function TasksPage() {
       review: [],
       done: [],
     };
-    for (const t of tasks) map[t.status].push(t);
+    for (const t of shownTasks) map[t.status].push(t);
     return map;
-  }, [tasks]);
+  }, [shownTasks]);
 
   // Board columns: mirrored tracker columns when the workspace has them,
   // otherwise the four base ones. Completed tasks always sit in "Done".
@@ -478,7 +536,7 @@ function TasksPage() {
   const groupedByColumn = useMemo(() => {
     const map: Record<string, Task[]> = {};
     for (const col of boardCols) map[col.key] = [];
-    for (const task of tasks) {
+    for (const task of shownTasks) {
       const key = task.status === "done"
         ? "base:done"
         : task.status_id && map[task.status_id]
@@ -487,12 +545,12 @@ function TasksPage() {
       (map[key] ??= []).push(task);
     }
     return map;
-  }, [tasks, boardCols]);
+  }, [shownTasks, boardCols]);
 
 
   function openCreate(status: TaskStatus = "backlog") {
     setEditing(null);
-    setDraft(emptyDraft(status));
+    setDraft({ ...emptyDraft(status), project: filterProject, department: filterDepartment });
     setDialogOpen(true);
   }
 
@@ -518,6 +576,7 @@ function TasksPage() {
       assignee_id: task.assignee_id ?? "",
       due_date: task.due_date ?? "",
       project: task.project ?? "",
+      department: task.department ?? "",
       tags: (task.tags ?? []).map((x) => `#${x}`).join(" "),
     });
     setDialogOpen(true);
@@ -538,6 +597,7 @@ function TasksPage() {
       assignee_id: draft.assignee_id || null,
       due_date: draft.due_date || null,
       project: draft.project.trim() || null,
+      department: draft.department.trim() || null,
       tags: parseTagList(draft.tags),
     };
 
@@ -627,6 +687,26 @@ function TasksPage() {
               {t("tasksUi.viewTable", "Table")}
             </button>
           </div>
+          <DirectorySelect
+            ariaLabel={t("tasksUi.filterProject", "Project")}
+            className="w-44"
+            value={filterProject}
+            options={directory.projects}
+            emptyLabel={`${t("tasksUi.filterProject", "Project")}: ${t("tasksUi.filterAll", "All")}`}
+            createLabel={t("tasksUi.create", "Create")}
+            onChange={(v) => setFilter("project", v)}
+            onCreate={() => void createEntry("project").then((n) => n && setFilter("project", n))}
+          />
+          <DirectorySelect
+            ariaLabel={t("tasksUi.filterDepartment", "Department")}
+            className="w-44"
+            value={filterDepartment}
+            options={directory.departments}
+            emptyLabel={`${t("tasksUi.filterDepartment", "Department")}: ${t("tasksUi.filterAll", "All")}`}
+            createLabel={t("tasksUi.create", "Create")}
+            onChange={(v) => setFilter("department", v)}
+            onCreate={() => void createEntry("department").then((n) => n && setFilter("department", n))}
+          />
           <Button
             variant={onlyMine ? "default" : "outline"}
             onClick={() => setOnlyMine((v) => !v)}
@@ -706,7 +786,7 @@ function TasksPage() {
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
           onToggleSelectAll={toggleSelectAll}
-          tasks={(onlyMine ? tasks.filter((x) => x.assignee_id === userId) : tasks) as never}
+          tasks={(onlyMine ? shownTasks.filter((x) => x.assignee_id === userId) : shownTasks) as never}
           columns={COLUMNS.map((c) => ({ id: c.id, label: colLabel(c.id) }))}
           priorityLabel={(p: TaskPriority) => priorityLabel(p)}
           onOpen={(task: { id: string }) => {
@@ -1080,26 +1160,35 @@ function TasksPage() {
               </div>
               <div className="space-y-2">
                 <Label>{t("tasksUi.fProject", "Project")}</Label>
-                <Select
-                  value={draft.project || "none"}
+<DirectorySelect
+                  ariaLabel={t("tasksUi.fProject", "Project")}
+                  value={draft.project}
+                  options={projectNames}
                   disabled={editing?.external_source === "trello"}
-                  onValueChange={(v) => setDraft((d) => {
-                    if (v === "none") return { ...d, project: "" };
+                  emptyLabel={t("tasksUi.noProject", "No project")}
+                  createLabel={t("tasksUi.create", "Create")}
+                  onChange={(v) => setDraft((d) => {
+                    if (!v) return { ...d, project: "" };
                     const opt = projectOptions.find((p) => p.name === v);
                     const tags = parseTagList(d.tags);
                     if (opt && !tags.includes(opt.tag)) tags.push(opt.tag);
                     return { ...d, project: v, tags: tags.map((x) => `#${x}`).join(" ") };
                   })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t("tasksUi.noProject", "No project")}</SelectItem>
-                    {draft.project && !projectOptions.some((p) => p.name === draft.project) && (
-                      <SelectItem value={draft.project}>{draft.project}</SelectItem>
-                    )}
-                    {projectOptions.map((p) => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                  onCreate={() => void createEntry("project").then((n) => n && setDraft((d) => ({ ...d, project: n })))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("tasksUi.fDepartment", "Department")}</Label>
+                <DirectorySelect
+                  ariaLabel={t("tasksUi.fDepartment", "Department")}
+                  value={draft.department}
+                  options={directory.departments}
+                  disabled={editing?.external_source === "trello"}
+                  emptyLabel={t("tasksUi.noDepartment", "No department")}
+                  createLabel={t("tasksUi.create", "Create")}
+                  onChange={(v) => setDraft((d) => ({ ...d, department: v }))}
+                  onCreate={() => void createEntry("department").then((n) => n && setDraft((d) => ({ ...d, department: n })))}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="task-tags">{t("tasksUi.fTags", "Tags")}</Label>
