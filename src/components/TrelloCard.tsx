@@ -166,7 +166,7 @@ export function TrelloCard() {
           {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
         </div>
       )}
-      <IntegrationGuide prefix="integrationsUi.trello.guide" steps={8} connected={!!state?.connected} />
+      <IntegrationGuide prefix="integrationsUi.trello.guide" name="Trello" steps={8} connected={!!state?.connected} doneSteps={[...(state?.connected ? [1, 2, 3, 4, 5] : []), ...(state?.connected && state?.board_id ? [6] : []), ...(state?.connected && Object.keys(state?.column_map ?? {}).length ? [7] : []), ...(state?.connected && Object.keys(state?.user_map ?? {}).length && state?.last_sync_at ? [8] : [])]} />
       {(error || state?.last_error) && <p className="text-sm text-destructive">{error || state.last_error}</p>}
     </div>
   );

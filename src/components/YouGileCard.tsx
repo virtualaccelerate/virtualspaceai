@@ -132,7 +132,7 @@ export function YouGileCard() {
           {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.yougile.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
         </div>
       )}
-      <IntegrationGuide prefix="integrationsUi.yougile.guide" steps={5} connected={!!state?.connected} />
+      <IntegrationGuide prefix="integrationsUi.yougile.guide" name="YouGile" steps={5} connected={!!state?.connected} doneSteps={[...(state?.connected ? [1, 2] : []), ...(state?.connected && (state?.selected_projects ?? []).length ? [3] : []), ...(state?.connected && (state?.selected_projects ?? []).length && columns.length ? [4] : []), ...(state?.connected && Object.keys(state?.user_map ?? {}).length && state?.last_sync_at ? [5] : [])]} />
       {(error || state?.last_error) && <p className="text-sm text-destructive">{error || state.last_error}</p>}
     </div>
   );
