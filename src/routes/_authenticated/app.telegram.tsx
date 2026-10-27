@@ -9,10 +9,13 @@ import { toast } from "sonner";
 import { useWorkspaceRole } from "@/hooks/useWorkspaceRole";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { canSetupWorkspaceBot } from "@/lib/reminder-rules";
+import { canLinkGroup as canLinkGroupRole } from "@/lib/telegram-groups";
 import {
   getTelegramStatus,
   setupTelegramWebhook,
   unlinkTelegram,
+  listTelegramGroups,
+  linkTelegramGroup,
 } from "@/lib/telegram.functions";
 
 export const Route = createFileRoute("/_authenticated/app/telegram")({
@@ -189,6 +192,8 @@ function TelegramPage() {
         </div>
       </section>
 
+      {canLinkGroupRole(role) && <GroupsSection />}
+
       <DigestSettings />
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
@@ -322,6 +327,68 @@ function DigestSettings() {
           </button>
         </div>
       </div>
+    </section>
+  );
+}
+
+function GroupsSection() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const list = useServerFn(listTelegramGroups);
+  const link = useServerFn(linkTelegramGroup);
+  const [code, setCode] = useState("");
+  const [project, setProject] = useState("");
+  const { data } = useQuery({
+    queryKey: ["tg-groups"],
+    queryFn: async () => {
+      const teamspaceId = await getActiveTeamspaceId();
+      return teamspaceId ? list({ data: { teamspaceId } }) : { groups: [], projects: [] };
+    },
+  });
+  const mut = useMutation({
+    mutationFn: async () => {
+      const teamspaceId = await getActiveTeamspaceId();
+      if (!teamspaceId) throw new Error("Выберите пространство");
+      return link({ data: { teamspaceId, code, project: project || null } });
+    },
+    onSuccess: () => {
+      toast.success(t("integrationsUi.telegram.groups.linked", "Group linked"));
+      setCode("");
+      qc.invalidateQueries({ queryKey: ["tg-groups"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const g = (k: string, d: string) => t(`integrationsUi.telegram.groups.${k}`, d);
+  return (
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+      <h2 className="text-[11px] uppercase tracking-widest text-white/50 mb-3">{g("title", "Groups")}</h2>
+      <p className="text-sm text-white/70">{g("hint", "Add the bot to a Telegram group — it posts a link code there. Enter the code and pick a project.")}</p>
+      <form className="mt-4 flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); if (code.trim()) mut.mutate(); }}>
+        <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={g("code", "Code from the group")}
+          className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white uppercase" />
+        <select value={project} onChange={(e) => setProject(e.target.value)} aria-label={g("project", "Project")}
+          className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white">
+          <option value="">{g("noProject", "No project")}</option>
+          {(data?.projects ?? []).map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <button type="submit" disabled={mut.isPending || !code.trim()}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50">
+          {mut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+          {g("link", "Link")}
+        </button>
+      </form>
+      <ul className="mt-4 divide-y divide-white/10 text-sm">
+        {(data?.groups ?? []).length === 0 ? <li className="py-2 text-white/40">{g("empty", "No linked groups yet")}</li> :
+          data!.groups.map((row) => (
+            <li key={row.id} className="py-2 flex flex-wrap gap-x-4 gap-y-1 text-white/75">
+              <span className="font-medium text-white">{row.title ?? "—"}</span>
+              <span>{g("project", "Project")}: {row.project ?? g("noProject", "No project")}</span>
+              <span>{g("admin", "Bot admin")}: {row.bot_is_admin ? g("yes", "yes") : g("no", "no")}</span>
+              <span>{g("last", "Last message")}: {row.lastMessageAt ? new Date(row.lastMessageAt).toLocaleString() : "—"}</span>
+              {row.status === "left" && <span className="text-white/40">{g("left", "bot removed")}</span>}
+            </li>
+          ))}
+      </ul>
     </section>
   );
 }
