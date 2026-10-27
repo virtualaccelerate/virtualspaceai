@@ -37,7 +37,10 @@ export function createYouGileRequest(options: {
       lastCall = Date.now();
       const controller = new AbortController();
       check();
-      const timeoutMs = Math.min(options.requestMs ?? 3_000, left());
+      const requestMs = options.requestMs ?? 3_000;
+      const timeoutMs = Math.min(requestMs, left());
+      // A request cut short by the remaining budget is "not finished yet", not an outage.
+      const timeoutMessage = timeoutMs < requestMs ? BUDGET_EXHAUSTED : UNAVAILABLE;
       let timer: ReturnType<typeof setTimeout> | undefined;
       const started = Date.now();
       let measured = false;
@@ -54,7 +57,7 @@ export function createYouGileRequest(options: {
           new Promise<never>((_, reject) => {
             timer = setTimeout(() => {
               controller.abort();
-              reject(new YouGileRequestError(UNAVAILABLE));
+              reject(new YouGileRequestError(timeoutMessage));
             }, timeoutMs);
           }),
         ]);
