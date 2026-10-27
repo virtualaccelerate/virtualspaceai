@@ -1,0 +1,1 @@
+ALTER TABLE public.google_calendar_settings ADD COLUMN IF NOT EXISTS tasks_paused_until timestamptz;

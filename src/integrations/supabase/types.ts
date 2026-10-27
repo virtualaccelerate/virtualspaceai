@@ -763,6 +763,7 @@ export type Database = {
           last_sync_at: string | null
           reconnect_required: boolean
           sync_token: string | null
+          tasks_paused_until: string | null
           updated_at: string
           user_id: string
         }
@@ -774,6 +775,7 @@ export type Database = {
           last_sync_at?: string | null
           reconnect_required?: boolean
           sync_token?: string | null
+          tasks_paused_until?: string | null
           updated_at?: string
           user_id: string
         }
@@ -785,6 +787,7 @@ export type Database = {
           last_sync_at?: string | null
           reconnect_required?: boolean
           sync_token?: string | null
+          tasks_paused_until?: string | null
           updated_at?: string
           user_id?: string
         }
