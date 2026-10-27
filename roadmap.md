@@ -1,4 +1,6 @@
 ## Задачи
+- [ ] Add task comments, mentions, notifications, combined feed and counters; preserve tasks/events
+- [ ] Merge Telegram supergroup migrations and existing test duplicates; process single messages after 15 minutes; test and final screenshot
 - [x] Stabilize main/floating chats, prevent Google login flash, hide UUID labels and complete task translations; no data changes
 - [x] Verify monitoring: restore missing automatic Google Calendar sync; 79 tests and isolated hourly-handler flow passed; Cloudflare adapter supplies request.waitUntil
 - [ ] Ten-minute voice recovery blocked: provider access must be restored before retrying; verified current persistent safeguard
