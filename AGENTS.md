@@ -33,7 +33,7 @@
 - Hourly task hooks run local deadline reminders independently of AI access pauses; deadline-window claims use task_reminders and AI delivery suppresses separately reminded tasks.
 - Daily briefs enqueue bounded workspace jobs with durable leases and terminal AI pause state; request-scoped waitUntil handles delivery while wake-on-enqueue retries unschedule after drain.
 - Tracker syncs collect notification intents per invocation and flush through an atomic database dedupe/summary function; real task events, not sync write timestamps, define daily completion facts.
-- YouGile operations share an invocation-local bounded request budget (including body reads and retries), never a cross-request promise queue; complete external snapshots are required before reconciliation so unavailable columns cannot archive cached tasks.
+- YouGile operations use an invocation-local budget counting only YouGile HTTP time (fresh per source; larger for background), never a cross-request queue; sync reads company-wide 1000-row lists filtered locally (YouGile rate limit), mirrors only open tasks in batched upserts, hides closed/missing copies via `external_archived` (never deletes) and requires a complete snapshot before reconciliation.
 
 - AI task assignment uses the shared exact/case-form member resolver and explicit account-id pickers; ambiguous names must never select the first member or become assignment labels.
 - AI-chat update cards resolve assignment only for explicit assignee tokens; unrelated edits omit assignment fields to preserve imported labels and non-visible assignees.
