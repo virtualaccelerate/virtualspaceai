@@ -16,6 +16,8 @@ export default defineTool({
     priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
     due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     assignee_name: z.string().max(200).optional(),
+    project: z.string().max(160).optional().describe("Project name from the workspace directory (added if new)."),
+    department: z.string().max(160).optional().describe("Department name from the workspace directory (added if new)."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   handler: async ({ id, ...patch }, ctx) => {

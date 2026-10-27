@@ -3,6 +3,14 @@ import type { GroupResources } from "./merge";
 const bundle: GroupResources = {
   en: {
     tasksUi: {
+      filterProject: "Project",
+      filterDepartment: "Department",
+      filterAll: "All",
+      createEntry: "Create",
+      fDepartment: "Department",
+      noDepartment: "No department",
+      newProjectPrompt: "New project name",
+      newDepartmentPrompt: "New department name",
       title: "Tasks",
       subtitle: "Kanban board: create tasks, assign owners, and move them between statuses.",
       managedSubtitle: "Tasks are managed in {{managedBy}}. Notifications and reports are available here.{{syncInfo}}",
@@ -94,6 +102,14 @@ const bundle: GroupResources = {
   },
   ru: {
     tasksUi: {
+      filterProject: "Проект",
+      filterDepartment: "Отдел",
+      filterAll: "Все",
+      createEntry: "Создать",
+      fDepartment: "Отдел",
+      noDepartment: "Без отдела",
+      newProjectPrompt: "Название нового проекта",
+      newDepartmentPrompt: "Название нового отдела",
       title: "Задачи",
       subtitle: "Канбан-доска: создавайте задачи, назначайте исполнителей и двигайте их между статусами.",
       managedSubtitle: "Задачи управляются в {{managedBy}}. Здесь доступны уведомления и отчёты.{{syncInfo}}",

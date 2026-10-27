@@ -41,3 +41,21 @@ export const createProject = createServerFn({ method: "POST" })
     const { createProjectForUser } = await import("./projects.server");
     return createProjectForUser(context.userId, data.name, data.teamspace_id ?? null);
   });
+
+export const listTaskDirectory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ teamspace_id: z.string().uuid().nullish() }).parse(raw ?? {}))
+  .handler(async ({ data, context }) => {
+    const { listTaskDirectoryForUser } = await import("./projects.server");
+    return listTaskDirectoryForUser(context.userId, data.teamspace_id ?? null);
+  });
+
+export const createDepartment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ name: z.string().trim().min(1).max(160), teamspace_id: z.string().uuid().nullish() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { createDepartmentForUser } = await import("./projects.server");
+    return createDepartmentForUser(context.userId, data.name, data.teamspace_id ?? null);
+  });

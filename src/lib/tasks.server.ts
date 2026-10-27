@@ -121,6 +121,9 @@ export async function createTaskForUser(
   const status = await completionStatusForUser(userId, teamspaceId, data.status ?? "backlog");
   // A name without an account (pending member from an import) is kept as a label.
   const name = (await assigneeName(teamspaceId, data.assignee_id)) ?? data.assignee_name ?? null;
+  const { resolveTaskLabel } = await import("./projects.server");
+  const project = await resolveTaskLabel("project", teamspaceId, userId, data.project ?? null);
+  const department = await resolveTaskLabel("department", teamspaceId, userId, data.department ?? null);
   const { count } = await db.from("tasks").select("id", { count: "exact", head: true }).eq("teamspace_id", teamspaceId).eq("status", status);
   const { data: row, error } = await db.from("tasks").insert({
     user_id: userId,
@@ -131,8 +134,8 @@ export async function createTaskForUser(
     priority: data.priority ?? "medium",
     assignee_id: data.assignee_id ?? null,
     assignee_name: name,
-    project: data.project ?? null,
-    department: data.department ?? null,
+    project: project ?? null,
+    department: department ?? null,
     tags: (data as { tags?: string[] }).tags ?? [],
     due_date: data.due_date ?? null,
     position: (count ?? 0) * 1000,
@@ -202,6 +205,11 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
     due_date: data.due_date,
     position: data.position,
   };
+  {
+    const { resolveTaskLabel } = await import("./projects.server");
+    patch.project = await resolveTaskLabel("project", current.teamspace_id, userId, patch.project);
+    patch.department = await resolveTaskLabel("department", current.teamspace_id, userId, patch.department);
+  }
   for (const key of Object.keys(patch) as (keyof typeof patch)[]) {
     if (patch[key] === undefined) delete patch[key];
   }
