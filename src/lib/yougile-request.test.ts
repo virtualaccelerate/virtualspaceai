@@ -47,3 +47,38 @@ describe("bounded YouGile transport", () => {
     await pending;
   });
 });
+describe("YouGile sync budget", () => {
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  test("700 tasks with slow local writes between pages finish within an HTTP-only budget", async () => {
+    // 7 columns × 100 tasks; each page is fast to fetch, but saving it takes longer than the whole budget.
+    const scope = createYouGileRequest({ budgetMs: 2_000, fetch: (async (url: string) => {
+      const offset = Number(new URL(url).searchParams.get("offset"));
+      return Response.json({ content: offset === 0 ? Array.from({ length: 100 }, (_, i) => ({ id: `t${i}` })) : [] });
+    }) as typeof fetch });
+    const started = Date.now();
+    let total = 0;
+    for (let column = 0; column < 7; column++) {
+      const page = await scope.request<{ content: unknown[] }>("k", `/task-list?columnId=c${column}&limit=100&offset=0`);
+      total += page.content.length;
+      await sleep(400); // simulated batched DB upsert, not counted against YouGile time
+    }
+    scope.check();
+    assert.equal(total, 700);
+    assert.ok(Date.now() - started > 2_000, "wall time exceeded the budget, HTTP time did not");
+  });
+  test("exhausted budget reports a 'continue automatically' message, not an outage", async () => {
+    const scope = createYouGileRequest({ budgetMs: 30, requestMs: 1_000, fetch: (async () => new Promise<Response>(() => {})) as typeof fetch });
+    await assert.rejects(scope.request("k", "/projects"), /Синхронизация не успела завершиться, продолжим автоматически/);
+    assert.throws(() => scope.check(), /продолжим автоматически/);
+  });
+  test("each source gets its own budget", async () => {
+    const hung = createYouGileRequest({ budgetMs: 30, requestMs: 1_000, fetch: (async () => new Promise<Response>(() => {})) as typeof fetch });
+    await assert.rejects(hung.request("k", "/projects"));
+    const next = createYouGileRequest({ budgetMs: 30, fetch: (async () => Response.json([{ id: "p" }])) as typeof fetch });
+    assert.deepEqual(await next.request("k", "/projects"), [{ id: "p" }]);
+  });
+  test("401/403 keep the real message", async () => {
+    const scope = createYouGileRequest({ fetch: (async () => new Response("no", { status: 403 })) as typeof fetch });
+    await assert.rejects(scope.request("k", "/projects"), /YouGile отклонил API-ключ/);
+  });
+});
