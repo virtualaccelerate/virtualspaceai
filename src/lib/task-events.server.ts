@@ -51,7 +51,7 @@ export async function listTaskEventsForUser(userId: string, taskId: string) {
   const admin = await db();
   const { data: task } = await admin
     .from("tasks")
-    .select("id, teamspace_id, user_id, title, description, status, priority, due_date, assignee_id, assignee_name, project, department, created_at, updated_at, external_source, external_url, external_project, external_board, external_archived, status_id")
+    .select("id, teamspace_id, user_id, title, description, status, priority, due_date, assignee_id, assignee_name, project, department, created_at, updated_at, external_source, external_url, external_project, external_board, external_archived, status_id, source_group_id")
     .eq("id", taskId)
     .maybeSingle();
   if (!task) throw new Error("Задача не найдена");
@@ -65,7 +65,8 @@ export async function listTaskEventsForUser(userId: string, taskId: string) {
     if (!membership) throw new Error("Нет доступа к задаче");
     const { isWorkspaceManager } = await import("./roles.server");
     const isManager = await isWorkspaceManager(userId, task.teamspace_id);
-    if (!isManager && task.assignee_id !== userId && task.user_id !== userId) {
+    const { taskBelongsTo, viewerIdentity } = await import("./task-visibility.server");
+    if (!isManager && !taskBelongsTo(task, await viewerIdentity(userId))) {
       throw new Error("Нет доступа к задаче");
     }
   } else if (task.assignee_id !== userId) {
@@ -94,8 +95,49 @@ export async function listTaskEventsForUser(userId: string, taskId: string) {
   const merged = [...(events ?? []), ...chat].sort(
     (a, b) => new Date(String(b['created_at'])).getTime() - new Date(String(a['created_at'])).getTime(),
   );
-  return { task: { ...task, status_name: statusName }, events: merged };
+  const { data: membershipRows } = task.teamspace_id ? await admin.from("teamspace_members").select("user_id").eq("teamspace_id", task.teamspace_id) : { data: [] };
+  const ids = [...new Set([...(membershipRows ?? []).map((m) => m.user_id), ...(events ?? []).flatMap((e) => e.actor_id ? [e.actor_id] : [])])];
+  const { data: profiles } = ids.length ? await admin.from("profiles").select("id, full_name, avatar_url").in("id", ids) : { data: [] };
+  const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
+  return { task: { ...task, status_name: statusName }, viewer_id: userId,
+    members: (membershipRows ?? []).map((m) => ({ id: m.user_id, name: byId.get(m.user_id)?.full_name || "Team member" })),
+    events: merged.map((e: any) => ({ ...e, actor_avatar: byId.get(e.actor_id)?.avatar_url ?? null })) };
 
+}
+
+export async function saveCommentForUser(userId: string, input: {task_id: string; comment_id?: string; body: string; mentions: string[]}) {
+  const { task, members } = await listTaskEventsForUser(userId, input.task_id);
+  if (!task.teamspace_id) throw new Error("No workspace");
+  const admin = await db();
+  const { canEditComment, commentRecipients } = await import("./task-comment-rules");
+  const mentions = [...new Set(input.mentions)].filter((id) => members.some((m) => m.id === id));
+  const { displayName } = await import("./notifications.server");
+  if (input.comment_id) {
+    const { data: event } = await admin.from("task_events").select("*").eq("id", input.comment_id).eq("task_id", input.task_id).maybeSingle();
+    if (!event || !canEditComment(event, userId)) throw new Error("Comment access denied");
+    const { error } = await admin.from("task_events").update({note: input.body, mentions, edited_at: new Date().toISOString()}).eq("id", event.id).eq("actor_id", userId).is("deleted_at", null);
+    if (error) throw error;
+  } else {
+    const { error } = await admin.from("task_events").insert({task_id: task.id, teamspace_id: task.teamspace_id, actor_id: userId, actor_name: await displayName(userId), source: "virtual_space", kind: "comment", note: input.body, mentions});
+    if (error) throw error;
+    const { deliver } = await import("./agent-automation.server");
+    for (const recipient of commentRecipients(userId, task.user_id, task.assignee_id, mentions, members.map((m) => m.id))) {
+      try { await deliver({userId: recipient, teamspaceId: task.teamspace_id, actorId: userId, taskId: task.id, title: mentions.includes(recipient) ? "Вас упомянули в комментарии" : "Новый комментарий к задаче", body: `${task.title}\n${input.body}`}); }
+      catch (error) { console.error("[task-comment] notification failed", error instanceof Error ? error.message : "delivery error"); }
+    }
+  }
+  return { ok: true };
+}
+
+export async function deleteCommentForUser(userId: string, taskId: string, commentId: string) {
+  await listTaskEventsForUser(userId, taskId);
+  const admin = await db();
+  const { data: event } = await admin.from("task_events").select("*").eq("id", commentId).eq("task_id", taskId).maybeSingle();
+  const { canEditComment } = await import("./task-comment-rules");
+  if (!event || !canEditComment(event, userId)) throw new Error("Comment access denied");
+  const { error } = await admin.from("task_events").update({deleted_at: new Date().toISOString()}).eq("id", commentId).eq("actor_id", userId).is("deleted_at", null);
+  if (error) throw error;
+  return { ok: true };
 }
 
 /** Recent activity across both trackers, for the workspace board and the bot. */

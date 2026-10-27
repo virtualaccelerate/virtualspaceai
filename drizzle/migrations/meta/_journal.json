@@ -344,6 +344,13 @@
       "when": 1793137988844,
       "tag": "0048_atomic_group_chat_id_swap",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1793138029230,
+      "tag": "0049_own_task_comment_edit_policy",
+      "breakpoints": true
     }
   ]
 }
