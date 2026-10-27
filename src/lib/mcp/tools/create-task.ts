@@ -23,6 +23,8 @@ export default defineTool({
       .regex(/^\d{4}-\d{2}-\d{2}$/)
       .describe("Required due date as YYYY-MM-DD."),
     assignee_name: z.string().max(200).optional().describe("Who the task is assigned to."),
+    project: z.string().max(160).optional().describe("Project name; matched case-insensitively to the workspace directory, added if new."),
+    department: z.string().max(160).optional().describe("Department name; matched case-insensitively to the workspace directory, added if new."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
@@ -37,6 +39,8 @@ export default defineTool({
         status: input.status,
         priority: input.priority,
         due_date: input.due_date,
+        project: input.project,
+        department: input.department,
       });
     } catch (error) {
       return errorResult(error instanceof Error ? error.message : String(error));

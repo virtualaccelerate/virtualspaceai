@@ -301,3 +301,57 @@ export async function createProjectForUser(userId: string, name: string, teamspa
   if (error) throw new Error(error.message);
   return data;
 }
+
+const UUID_LABEL = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Clean an AI/import project or department label: strip stray "|" separators, drop leaked ids. */
+export function cleanTaskLabel(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const v = value.replace(/^[\s|]+|[\s|]+$/g, "").replace(/\s+/g, " ").slice(0, 160);
+  if (!v || UUID_LABEL.test(v)) return null;
+  return v;
+}
+
+/**
+ * Map a label to the workspace directory (case-insensitive), adding it when missing,
+ * so every write path (UI, AI chat, Telegram, MCP) keeps one spelling per workspace.
+ */
+export async function resolveTaskLabel(
+  kind: "project" | "department",
+  spaceId: string,
+  userId: string,
+  value: string | null | undefined,
+): Promise<string | null | undefined> {
+  if (value === undefined) return undefined;
+  const clean = cleanTaskLabel(value);
+  if (!clean) return null;
+  const db = await admin();
+  const table = kind === "project" ? "projects" : "departments";
+  const escaped = clean.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const { data: existing } = await (db.from(table) as any).select("name").eq("teamspace_id", spaceId).ilike("name", escaped).maybeSingle();
+  if (existing?.name) return existing.name as string;
+  const row: Record<string, unknown> = { teamspace_id: spaceId, name: clean, created_by: userId };
+  if (kind === "project") row.tag = projectTag(clean) || "project";
+  await (db.from(table) as any).insert(row).then(() => {}, () => {});
+  return clean;
+}
+
+export async function listTaskDirectoryForUser(userId: string, teamspaceId?: string | null) {
+  const spaceId = await activeTeamspace(userId, teamspaceId);
+  const db = await admin();
+  const [{ data: projects }, { data: departments }] = await Promise.all([
+    db.from("projects").select("name").eq("teamspace_id", spaceId).order("name"),
+    db.from("departments").select("name").eq("teamspace_id", spaceId).order("name"),
+  ]);
+  return {
+    projects: (projects ?? []).map((p) => p.name),
+    departments: (departments ?? []).map((d) => d.name),
+  };
+}
+
+export async function createDepartmentForUser(userId: string, name: string, teamspaceId?: string | null) {
+  const spaceId = await activeTeamspace(userId, teamspaceId);
+  const resolved = await resolveTaskLabel("department", spaceId, userId, name);
+  if (!resolved) throw new Error("Укажите название отдела");
+  return { name: resolved };
+}
