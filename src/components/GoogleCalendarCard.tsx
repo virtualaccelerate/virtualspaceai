@@ -51,7 +51,7 @@ export function GoogleCalendarCard() {
       <div className="flex gap-2"><Button variant="outline" size="sm" disabled={busy} onClick={() => void sync()}><RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />{t("integrationsUi.sync", "Sync")}</Button><Button variant="ghost" size="icon" disabled={busy} onClick={() => void disconnect()} title={t("integrationsUi.disconnect", "Disconnect")}><Unplug className="h-4 w-4" /></Button></div>
       <div className="text-[11px] text-muted-foreground sm:col-span-2">{status.lastSyncAt ? `${t("integrationsUi.lastSync", "Last sync")}: ${new Date(status.lastSyncAt).toLocaleString(i18n.language)}` : t("integrationsUi.notSynced", "Not synchronized yet")}</div>
     </div>}
-    {(error || status?.lastError) && <div className="flex gap-2 text-xs text-destructive"><AlertTriangle className="h-4 w-4 shrink-0" /><span>{friendlyCalendarError(error || status?.lastError || "", t)}</span></div>}
+    {(error || status?.lastError) && <div className={`flex gap-2 text-xs ${!error && /GOOGLE_TASKS_UNAVAILABLE|Google Tasks/.test(status?.lastError ?? "") ? "text-muted-foreground" : "text-destructive"}`}><AlertTriangle className="h-4 w-4 shrink-0" /><span>{friendlyCalendarError(error || status?.lastError || "", t)}</span></div>}
   </div>;
 }
 
