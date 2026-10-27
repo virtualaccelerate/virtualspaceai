@@ -369,7 +369,7 @@ function GroupsSection() {
         <select value={project} onChange={(e) => setProject(e.target.value)} aria-label={g("project", "Project")}
           className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white">
           <option value="">{g("noProject", "No project")}</option>
-          {(data?.projects ?? []).map((p) => <option key={p} value={p}>{p}</option>)}
+          {(data?.projects ?? []).map((p: string) => <option key={p} value={p}>{p}</option>)}
         </select>
         <button type="submit" disabled={mut.isPending || !code.trim()}
           className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50">
