@@ -51,6 +51,21 @@ export function GoogleCalendarCard() {
       <div className="flex gap-2"><Button variant="outline" size="sm" disabled={busy} onClick={() => void sync()}><RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />{t("integrationsUi.sync", "Sync")}</Button><Button variant="ghost" size="icon" disabled={busy} onClick={() => void disconnect()} title={t("integrationsUi.disconnect", "Disconnect")}><Unplug className="h-4 w-4" /></Button></div>
       <div className="text-[11px] text-muted-foreground sm:col-span-2">{status.lastSyncAt ? `${t("integrationsUi.lastSync", "Last sync")}: ${new Date(status.lastSyncAt).toLocaleString(i18n.language)}` : t("integrationsUi.notSynced", "Not synchronized yet")}</div>
     </div>}
-    {(error || status?.lastError) && <div className="flex gap-2 text-xs text-destructive"><AlertTriangle className="h-4 w-4 shrink-0" /><span>{(error || status?.lastError)?.replace("GOOGLE_TASKS_RECONNECT_REQUIRED", t("integrationsUi.tasksReconnectRequired", "Reconnect Google to also sync task deadlines to Google Tasks.")).replace("GOOGLE_CALENDAR_RECONNECT_REQUIRED", t("integrationsUi.reconnectRequired", "Access expired. Please reconnect."))}</span></div>}
+    {(error || status?.lastError) && <div className="flex gap-2 text-xs text-destructive"><AlertTriangle className="h-4 w-4 shrink-0" /><span>{friendlyCalendarError(error || status?.lastError || "", t)}</span></div>}
   </div>;
+}
+
+/** Map stored error codes to short messages; never render raw provider text/JSON. */
+function friendlyCalendarError(code: string, t: (key: string, fallback: string) => string) {
+  switch (code) {
+    case "GOOGLE_TASKS_RECONNECT_REQUIRED": return t("integrationsUi.tasksReconnectRequired", "Reconnect Google to also sync task deadlines to Google Tasks.");
+    case "GOOGLE_CALENDAR_RECONNECT_REQUIRED": return t("integrationsUi.reconnectRequired", "Access expired. Please reconnect.");
+    case "GOOGLE_TASKS_UNAVAILABLE": return t("integrationsUi.tasksUnavailable", "Google Tasks sync is temporarily unavailable — calendar events sync normally.");
+    case "GOOGLE_TASKS_SYNC_FAILED": return t("integrationsUi.tasksSyncFailed", "Some task deadlines didn’t reach Google Tasks — we’ll retry automatically.");
+    case "GOOGLE_CALENDAR_SYNC_FAILED": return t("integrationsUi.calendarSyncFailed", "Calendar sync failed — please try again later.");
+    default:
+      if (/Google Tasks/i.test(code)) return t("integrationsUi.tasksUnavailable", "Google Tasks sync is temporarily unavailable — calendar events sync normally.");
+      // Short app messages (popup blocked etc.) pass through; provider/JSON dumps don't.
+      return code.length <= 120 && !/[{}]|\[\d{3}\]|googleapis|https?:/.test(code) ? code : t("integrationsUi.calendarSyncFailed", "Calendar sync failed — please try again later.");
+  }
 }

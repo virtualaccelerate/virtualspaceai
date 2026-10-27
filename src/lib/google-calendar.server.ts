@@ -147,7 +147,7 @@ export async function deleteTaskCalendarEvent(taskId: string, onlyUserId?: strin
   if (onlyUserId) query = query.eq("user_id", onlyUserId);
   const { data: links } = await query;
   for (const link of links ?? []) {
-    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID)) {
+    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID) && !(await tasksPaused(link.user_id))) {
       const res = await calendarFetch(link.user_id, `/calendar/v3/calendars/${encodeURIComponent(link.calendar_id)}/events/${encodeURIComponent(link.event_id)}`, { method: "DELETE" });
       if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Google Calendar delete failed [${res.status}]`);
     }
@@ -155,6 +155,19 @@ export async function deleteTaskCalendarEvent(taskId: string, onlyUserId?: strin
   }
 }
 export const TASKS_SCOPE_MISSING = "GOOGLE_TASKS_RECONNECT_REQUIRED";
+/** Google Tasks API is disabled on the managed OAuth project — pause Tasks calls, Calendar keeps syncing. */
+export const TASKS_UNAVAILABLE = "GOOGLE_TASKS_UNAVAILABLE";
+export const TASKS_SYNC_FAILED = "GOOGLE_TASKS_SYNC_FAILED";
+export const CALENDAR_SYNC_FAILED = "GOOGLE_CALENDAR_SYNC_FAILED";
+const TASKS_PAUSE_MS = 24 * 60 * 60 * 1000;
+export function isTasksApiDisabledError(status: number, body: string) {
+  return status === 403 && /SERVICE_DISABLED|accessNotConfigured|has not been used in project|is disabled/i.test(body);
+}
+async function tasksPaused(userId: string) {
+  const db = await admin();
+  const { data } = await db.from("google_calendar_settings").select("tasks_paused_until").eq("user_id", userId).maybeSingle();
+  return !!data?.tasks_paused_until && new Date(data.tasks_paused_until).getTime() > Date.now();
+}
 type GoogleTask = { id: string };
 const TASKS_BASE = "/tasks/v1/lists/%40default/tasks";
 /** Google Tasks calls go through the same Calendar connection; old tokens lack the tasks scope. */
@@ -174,6 +187,12 @@ async function tasksFetch(userId: string, path: string, init?: RequestInit) {
       await db.from("google_calendar_settings").update({ last_error: TASKS_SCOPE_MISSING, updated_at: new Date().toISOString() }).eq("user_id", userId);
       throw new Error(TASKS_SCOPE_MISSING);
     }
+    if (isTasksApiDisabledError(res.status, text)) {
+      console.error("[google-tasks] API disabled, pausing 24h", res.status, text.slice(0, 500));
+      const db = await admin();
+      await db.from("google_calendar_settings").update({ last_error: TASKS_UNAVAILABLE, tasks_paused_until: new Date(Date.now() + TASKS_PAUSE_MS).toISOString(), updated_at: new Date().toISOString() }).eq("user_id", userId);
+      throw new Error(TASKS_UNAVAILABLE);
+    }
   }
   return res;
 }
@@ -187,6 +206,7 @@ export async function syncTaskToGoogleTasks(task: TaskRow, previousUserId?: stri
     return;
   }
   if (!(await getConnectionKeyForUser(targetUserId, CONNECTOR_ID))) return;
+  if (await tasksPaused(targetUserId)) return;
   try {
     const { data: link } = await db.from("google_tasks_links").select("google_task_id").eq("user_id", targetUserId).eq("task_id", task.id).maybeSingle();
     const body = { title: task.title, notes: task.description ?? undefined, due: `${task.due_date}T00:00:00.000Z`, status: task.status === "done" ? "completed" : "needsAction" };
@@ -202,8 +222,10 @@ export async function syncTaskToGoogleTasks(task: TaskRow, previousUserId?: stri
     // Previously swallowed silently by every call site (.catch(() => {})) — record it so
     // it actually surfaces on the Integrations page instead of vanishing without a trace.
     const message = error instanceof Error ? error.message : String(error);
-    if (message !== TASKS_SCOPE_MISSING && message !== RECONNECT_REQUIRED) {
-      await db.from("google_calendar_settings").update({ last_error: message.slice(0, 500), updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
+    if (message !== TASKS_SCOPE_MISSING && message !== RECONNECT_REQUIRED && message !== TASKS_UNAVAILABLE) {
+      // Raw provider text stays in server logs only; the card shows a short message.
+      console.error("[google-tasks] sync failed", message.slice(0, 500));
+      await db.from("google_calendar_settings").update({ last_error: TASKS_SYNC_FAILED, updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
     }
     throw error;
   }
@@ -215,7 +237,7 @@ export async function deleteGoogleTask(taskId: string, onlyUserId?: string | nul
   if (onlyUserId) query = query.eq("user_id", onlyUserId);
   const { data: links } = await query;
   for (const link of links ?? []) {
-    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID)) {
+    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID) && !(await tasksPaused(link.user_id))) {
       const res = await tasksFetch(link.user_id, `${TASKS_BASE}/${encodeURIComponent(link.google_task_id)}`, { method: "DELETE" });
       if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Google Tasks delete failed [${res.status}]`);
     }
@@ -257,10 +279,16 @@ export async function syncUserCalendar(userId: string) {
     .is("external_source", null)
     .or(`assignee_id.eq.${userId},and(assignee_id.is.null,user_id.eq.${userId})`);
   let tasksSyncError: string | null = null;
-  for (const task of tasks ?? []) {
+  const paused = await tasksPaused(userId);
+  if (paused) tasksSyncError = TASKS_UNAVAILABLE;
+  for (const task of paused ? [] : tasks ?? []) {
     if (!linkedTaskIds.has(task.id)) {
       // Keep the real failure visible — don't let the unconditional upsert below erase it.
-      await syncTaskToGoogleTasks(task).catch((e) => { tasksSyncError = e instanceof Error ? e.message.slice(0, 500) : String(e); });
+      await syncTaskToGoogleTasks(task).catch((e) => {
+        const m = e instanceof Error ? e.message : String(e);
+        tasksSyncError = [TASKS_SCOPE_MISSING, RECONNECT_REQUIRED, TASKS_UNAVAILABLE].includes(m) ? m : TASKS_SYNC_FAILED;
+      });
+      if (tasksSyncError === TASKS_UNAVAILABLE) break;
     }
   }
   const now = new Date().toISOString();
@@ -273,7 +301,11 @@ export async function syncAllGoogleCalendars() {
   let synced = 0, failed = 0;
   for (const row of rows ?? []) {
     try { await syncUserCalendar(row.user_id); synced++; }
-    catch (error) { failed++; await db.from("google_calendar_settings").update({ last_error: error instanceof Error ? error.message.slice(0, 500) : String(error), updated_at: new Date().toISOString() }).eq("user_id", row.user_id); }
+    catch (error) {
+      failed++;
+      const m = error instanceof Error ? error.message : String(error);
+      console.error("[google-calendar] sync failed", row.user_id, m.slice(0, 500));
+      await db.from("google_calendar_settings").update({ last_error: m === RECONNECT_REQUIRED ? m : CALENDAR_SYNC_FAILED, updated_at: new Date().toISOString() }).eq("user_id", row.user_id); }
   }
   return { synced, failed };
 }
