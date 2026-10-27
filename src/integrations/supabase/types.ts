@@ -1955,6 +1955,8 @@ export type Database = {
           proof_url: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          source_group_id: string | null
+          source_message_ids: number[] | null
           status: Database["public"]["Enums"]["task_status"]
           status_id: string | null
           submitted_at: string | null
@@ -1989,6 +1991,8 @@ export type Database = {
           proof_url?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source_group_id?: string | null
+          source_message_ids?: number[] | null
           status?: Database["public"]["Enums"]["task_status"]
           status_id?: string | null
           submitted_at?: string | null
@@ -2023,6 +2027,8 @@ export type Database = {
           proof_url?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source_group_id?: string | null
+          source_message_ids?: number[] | null
           status?: Database["public"]["Enums"]["task_status"]
           status_id?: string | null
           submitted_at?: string | null
@@ -2246,6 +2252,7 @@ export type Database = {
           chat_id: number
           created_at: string
           id: string
+          last_processed_at: string | null
           link_code: string | null
           linked_by: string | null
           project: string | null
@@ -2259,6 +2266,7 @@ export type Database = {
           chat_id: number
           created_at?: string
           id?: string
+          last_processed_at?: string | null
           link_code?: string | null
           linked_by?: string | null
           project?: string | null
@@ -2272,6 +2280,7 @@ export type Database = {
           chat_id?: number
           created_at?: string
           id?: string
+          last_processed_at?: string | null
           link_code?: string | null
           linked_by?: string | null
           project?: string | null
