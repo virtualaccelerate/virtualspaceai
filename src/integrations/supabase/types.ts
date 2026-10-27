@@ -551,6 +551,38 @@ export type Database = {
         }
         Relationships: []
       }
+      departments: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          teamspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          teamspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -2017,6 +2049,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tasks_project_department_backup: {
+        Row: {
+          backed_up_at: string
+          department: string | null
+          project: string | null
+          task_id: string
+        }
+        Insert: {
+          backed_up_at?: string
+          department?: string | null
+          project?: string | null
+          task_id: string
+        }
+        Update: {
+          backed_up_at?: string
+          department?: string | null
+          project?: string | null
+          task_id?: string
+        }
+        Relationships: []
       }
       teamspace_members: {
         Row: {
