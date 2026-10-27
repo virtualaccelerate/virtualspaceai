@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/public/yougile-webhook")({
         const body = await request.json().catch(() => null);
         if (!body || typeof body !== "object") return new Response("Invalid payload", { status: 400 });
         const { handleYouGileWebhook } = await import("@/lib/yougile.server");
-        const accepted = await handleYouGileWebhook(parsed.data.id, parsed.data.secret);
+        const accepted = await handleYouGileWebhook(parsed.data.id, parsed.data.secret, body);
         return accepted ? Response.json({ ok: true }) : new Response("Unauthorized", { status: 401 });
       },
     },
