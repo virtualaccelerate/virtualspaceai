@@ -5,7 +5,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { TaskTable } from "@/components/TaskTable";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
-import { CalendarIcon, Flag, MoreHorizontal, Pencil, Plus, Trash2, Upload, User } from "lucide-react";
+import { getTaskCommentCounts } from "@/lib/task-events.functions";
+import { CalendarIcon, Flag, MessageSquareText, MoreHorizontal, Pencil, Plus, Trash2, Upload, User } from "lucide-react";
 import { TaskImportDialog } from "@/components/TaskImportDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -264,6 +265,10 @@ function TasksPage() {
   const submitTaskFn = useServerFn(submitTaskForReview);
   const reviewTaskFn = useServerFn(reviewTask);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const loadCommentCounts = useServerFn(getTaskCommentCounts);
+  const refreshCommentCounts = () => loadCommentCounts({data: {task_ids: tasks.map((task) => task.id)}}).then(setCommentCounts).catch(() => {});
+  useEffect(() => { void refreshCommentCounts(); }, [tasks, loadCommentCounts]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -784,6 +789,7 @@ function TasksPage() {
         <div className="text-sm text-muted-foreground">{t("tasksUi.loading", "Loading…")}</div>
       ) : view === "table" ? (
         <TaskTable
+          commentCounts={commentCounts}
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
           onToggleSelectAll={toggleSelectAll}
@@ -988,6 +994,7 @@ function TasksPage() {
                           )}
 
                           <div className="mt-3 flex items-center gap-1.5">
+                            {(commentCounts[task.id] ?? 0) > 0 && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title={t("tasksUi.comments.count", {count: commentCounts[task.id]})}><MessageSquareText className="h-3.5 w-3.5"/>{commentCounts[task.id]}</span>}
                             {task.assignee_name ? (
                               <span
                                 className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/80 text-[10px] font-semibold text-white ring-2 ring-background"
@@ -1061,6 +1068,7 @@ function TasksPage() {
       )}
 
       <TaskDetailDialog
+        onCommentsChange={() => void refreshCommentCounts()}
         taskId={detailId}
         open={detailOpen}
         onOpenChange={setDetailOpen}
