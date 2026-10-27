@@ -78,6 +78,16 @@ const RU = {
       ],
     },
     {
+      title: "Интеграции",
+      items: [
+        { q: "Как подключить Trello?", a: "Владелец или администратор создаёт в Trello API-ключ и токен и вставляет их в Интеграции → Trello, затем выбирает доску, статусы и участников. Пошаговая инструкция — в разделе Интеграции → Trello → Инструкция." },
+        { q: "Как подключить YouGile?", a: "Владелец или администратор вставляет API-ключ YouGile в Интеграции → YouGile, выбирает проекты и сопоставляет участников. Пошаговая инструкция — в разделе Интеграции → YouGile → Инструкция." },
+        { q: "Почему задачи из Trello/YouGile не появились?", a: "Проверьте, что доска (Trello) или проекты (YouGile) выбраны и что у подключённого аккаунта есть к ним доступ, затем нажмите кнопку синхронизации. Синхронизация также идёт автоматически каждые 5 минут." },
+        { q: "Почему задача не назначилась на сотрудника?", a: "Скорее всего, участник Trello/YouGile не сопоставлен с сотрудником в настройках интеграции. Выберите сотрудника для него и нажмите «Сохранить и синхронизировать»." },
+        { q: "Можно ли удалить задачу из Trello/YouGile?", a: "Trello — да: при удалении карточка архивируется в Trello. YouGile — только в самом YouGile." },
+      ],
+    },
+    {
       title: "Доступ и безопасность",
       items: [
         { q: "Что видят обычные участники?", a: "Только свои задачи. Зарплаты, финансы, база клиентов и чужие результаты доступны только руководителям." },
@@ -139,6 +149,16 @@ const EN: typeof RU = {
         { q: "Does it see my Google Drive?", a: "If Google Drive is connected in “Integrations”, it finds relevant files and reads them." },
         { q: "How do I schedule a meeting?", a: "Write “Schedule a team call tomorrow at 3pm”. Date and time are enough — it creates a Google Calendar event." },
         { q: "Can it build onboarding or a checklist?", a: "Yes: “Create onboarding for a new manager” — it appears in “Onboarding & Training”." },
+      ],
+    },
+    {
+      title: "Integrations",
+      items: [
+        { q: "How do I connect Trello?", a: "The owner or an admin creates a Trello API key and token, pastes them in Integrations → Trello, then picks the board, statuses and members. Step-by-step guide: Integrations → Trello → Connection guide." },
+        { q: "How do I connect YouGile?", a: "The owner or an admin pastes the YouGile API key in Integrations → YouGile, picks projects and matches members. Step-by-step guide: Integrations → YouGile → Connection guide." },
+        { q: "Why didn’t tasks from Trello/YouGile appear?", a: "Check that a board (Trello) or projects (YouGile) are selected and the connected account has access, then press sync. Sync also runs automatically every 5 minutes." },
+        { q: "Why wasn’t a task assigned to an employee?", a: "The Trello/YouGile member is probably not matched to an employee in the integration settings. Pick an employee for them and click “Save and sync”." },
+        { q: "Can I delete a Trello/YouGile task?", a: "Trello — yes: the card is archived in Trello. YouGile — only in YouGile itself." },
       ],
     },
     {

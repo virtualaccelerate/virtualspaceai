@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { IntegrationGuide } from "@/components/IntegrationGuide";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { configureTrello, connectTrello, disconnectTrello, getTrelloStatus, inspectTrelloBoard, syncTrello } from "@/lib/trello.functions";
 
@@ -99,7 +100,6 @@ export function TrelloCard() {
           <Button disabled={busy || !key.trim() || !token.trim() || !teamspaceId} onClick={() => run(() => connectFn({ data: { teamspace_id: teamspaceId ?? "", api_key: key.trim(), api_token: token.trim() } }))}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.trello.connect", "Connect")}
           </Button>
-          <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.hint", "The key and token are created at trello.com/power-ups/admin — we store them encrypted and never display them.")}</p>
         </div>
       ) : (
         <div className="space-y-4 border-t border-border pt-4">
@@ -166,6 +166,7 @@ export function TrelloCard() {
           {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
         </div>
       )}
+      <IntegrationGuide prefix="integrationsUi.trello.guide" steps={8} connected={!!state?.connected} />
       {(error || state?.last_error) && <p className="text-sm text-destructive">{error || state.last_error}</p>}
     </div>
   );

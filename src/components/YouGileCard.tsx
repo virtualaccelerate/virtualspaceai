@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { IntegrationGuide } from "@/components/IntegrationGuide";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { configureYouGile, connectYouGile, disconnectYouGile, getYouGileStatus, inspectYouGileProject, syncYouGile } from "@/lib/yougile.functions";
 
@@ -83,9 +84,12 @@ export function YouGileCard() {
       </div>
 
       {!state?.connected ? (
+        <div className="space-y-2">
         <div className="flex gap-2">
           <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={t("integrationsUi.yougile.apiKey", "YouGile API key")} />
           <Button disabled={busy || !key.trim() || !teamspaceId} onClick={() => run(() => connectFn({ data: { teamspace_id: teamspaceId ?? "", api_key: key.trim() } }))}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.yougile.connect", "Connect")}</Button>
+        </div>
+          <p className="text-xs text-muted-foreground">{t("integrationsUi.yougile.guide.keyHint", "How to get the key — see the guide below.")}</p>
         </div>
       ) : (
         <div className="space-y-4 border-t border-border pt-4">
@@ -128,6 +132,7 @@ export function YouGileCard() {
           {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.yougile.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
         </div>
       )}
+      <IntegrationGuide prefix="integrationsUi.yougile.guide" steps={5} connected={!!state?.connected} />
       {(error || state?.last_error) && <p className="text-sm text-destructive">{error || state.last_error}</p>}
     </div>
   );
