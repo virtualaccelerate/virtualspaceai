@@ -1,3 +1,4 @@
+import { taskLabelDisplay } from "@/lib/task-label-display";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, History, Loader2, Pencil } from "lucide-react";
@@ -76,14 +77,17 @@ export function TaskDetailDialog({
 
   const task = detail?.task;
   const tracker = trackerName(task?.external_source);
-  const locale = i18n.language === "en" ? "en-GB" : "ru-RU";
+  const locale = i18n.language;
+  const statusLabel = (value: string) => t(`tasksUi.col.${value}`, { defaultValue: value });
+  const priorityLabel = (value: string) => t(`tasksUi.priority.${value}`, { defaultValue: value });
+  const eventValue = (field: string | null, value: string | null) => !value ? "—" : field === "status" ? statusLabel(value) : field === "priority" ? priorityLabel(value) : taskLabelDisplay(value) ?? "—";
 
   function describe(event: EventRow) {
-    if (event.kind === "comment") return event.note ?? "";
+    if (event.kind === "comment") return `${t("tasksUi.detail.events.comment")} · ${event.note ?? ""}`;
     const parts: string[] = [];
-    if (event.field) parts.push(event.field);
-    if (event.from_value || event.to_value) parts.push(`${event.from_value ?? "—"} → ${event.to_value ?? "—"}`);
-    if (!parts.length) parts.push(event.kind);
+    if (event.field) parts.push(t(`tasksUi.detail.events.${event.field}`, { defaultValue: event.field }));
+    if (event.from_value || event.to_value) parts.push(`${eventValue(event.field, event.from_value)} → ${eventValue(event.field, event.to_value)}`);
+    if (!parts.length) parts.push(t(`tasksUi.detail.events.${event.kind}`, { defaultValue: event.kind }));
     if (event.note) parts.push(event.note);
     return parts.join(" · ");
   }
@@ -91,7 +95,7 @@ export function TaskDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="pr-6">{task?.title ?? t("tasksUi.detail.title", "Task")}</DialogTitle>
         </DialogHeader>
@@ -107,15 +111,15 @@ export function TaskDetailDialog({
             {task.description && <p className="text-muted-foreground whitespace-pre-wrap">{task.description}</p>}
 
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
-              <Field label={t("tasksUi.detail.status", "Status")} value={task.status_name ?? task.status} />
-              <Field label={t("tasksUi.detail.priority", "Priority")} value={task.priority} />
+              <Field label={t("tasksUi.detail.status", "Status")} value={task.status_name ?? statusLabel(task.status)} />
+              <Field label={t("tasksUi.detail.priority", "Priority")} value={priorityLabel(task.priority)} />
               <Field label={t("tasksUi.detail.assignee", "Assignee")} value={task.assignee_name ?? "—"} />
               <Field label={t("tasksUi.detail.due", "Due date")} value={task.due_date ?? "—"} />
-              {(task.project || task.external_project) && (
-                <Field label={t("tasksUi.detail.project", "Project")} value={task.external_project ?? task.project ?? "—"} />
+              {(taskLabelDisplay(task.project) || taskLabelDisplay(task.external_project)) && (
+                <Field label={t("tasksUi.detail.project", "Project")} value={taskLabelDisplay(task.external_project) ?? taskLabelDisplay(task.project) ?? "—"} />
               )}
-              {(task.department || task.external_board) && (
-                <Field label={t("tasksUi.detail.board", "Board")} value={task.external_board ?? task.department ?? "—"} />
+              {(taskLabelDisplay(task.department) || taskLabelDisplay(task.external_board)) && (
+                <Field label={t("tasksUi.detail.board", "Board")} value={taskLabelDisplay(task.external_board) ?? taskLabelDisplay(task.department) ?? "—"} />
               )}
             </dl>
 
@@ -171,9 +175,9 @@ export function TaskDetailDialog({
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="font-medium">{value}</dd>
+      <dd className="font-medium break-words">{value}</dd>
     </div>
   );
 }
