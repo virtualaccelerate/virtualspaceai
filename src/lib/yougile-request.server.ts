@@ -40,6 +40,7 @@ export function createYouGileRequest(options: {
       const timeoutMs = Math.min(options.requestMs ?? 3_000, left());
       let timer: ReturnType<typeof setTimeout> | undefined;
       const started = Date.now();
+      let measured = false;
       try {
         const result = await Promise.race([
           (async () => {
@@ -59,6 +60,7 @@ export function createYouGileRequest(options: {
         ]);
         const { response, text } = result;
         spent += Date.now() - started;
+        measured = true;
         if (response.ok) return (text ? JSON.parse(text) : null) as T;
         console.error(`[yougile] ${path} failed [${response.status}]: ${text.slice(0, 200)}`);
         if (response.status === 401 || response.status === 403) throw new YouGileRequestError("YouGile отклонил API-ключ", response.status);
@@ -73,7 +75,7 @@ export function createYouGileRequest(options: {
         const delay = Number.isFinite(seconds) ? seconds * 1000 : Number.isFinite(date) ? Math.max(0, date - Date.now()) : 800 * 2 ** attempt;
         await wait(Math.max(150, delay));
       } catch (error) {
-        if (!(error instanceof YouGileRequestError && error.message === BUDGET_EXHAUSTED)) spent += 0;
+        if (!measured) spent += Date.now() - started;
         if (error instanceof YouGileRequestError) throw error;
         throw new YouGileRequestError(UNAVAILABLE);
       } finally {
