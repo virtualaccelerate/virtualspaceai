@@ -1,9 +1,10 @@
-import { test, expect } from "bun:test";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import { isTasksApiDisabledError } from "./google-calendar.server";
 test("403 'API not used/disabled' pauses Tasks", () => {
-  expect(isTasksApiDisabledError(403, '{"error":{"status":"PERMISSION_DENIED","message":"Google Tasks API has not been used in project 606658056274 before or it is disabled.","details":[{"reason":"SERVICE_DISABLED"}]}}')).toBe(true);
+  assert.equal(isTasksApiDisabledError(403, '{"error":{"message":"Google Tasks API has not been used in project 606658056274 before or it is disabled.","details":[{"reason":"SERVICE_DISABLED"}]}}'), true);
 });
 test("scope 403 and other statuses are not treated as disabled API", () => {
-  expect(isTasksApiDisabledError(403, "ACCESS_TOKEN_SCOPE_INSUFFICIENT")).toBe(false);
-  expect(isTasksApiDisabledError(500, "SERVICE_DISABLED")).toBe(false);
+  assert.equal(isTasksApiDisabledError(403, "ACCESS_TOKEN_SCOPE_INSUFFICIENT"), false);
+  assert.equal(isTasksApiDisabledError(500, "SERVICE_DISABLED"), false);
 });
