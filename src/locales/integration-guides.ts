@@ -3,6 +3,12 @@
 
 export const trelloGuideRu = {
   title: "Инструкция по подключению",
+  progress: "Шаг {{current}} из {{total}}",
+  doneLabel: "Готово ✓ — {{name}} подключён",
+  open: "Открыть {{host}}",
+  stepAria: "Шаг {{n}}",
+  stepAriaDone: "Шаг {{n}}, выполнен",
+  stepAriaCurrent: "Шаг {{n}}, текущий",
   s1t: "Откройте админ-панель Power-Up",
   s1d: "Перейдите на https://trello.com/power-ups/admin (войдите в Trello аккаунт, у которого есть доступ к нужной доске).",
   s2t: "Создайте Power-Up",
@@ -25,6 +31,12 @@ export const trelloGuideRu = {
 
 export const trelloGuideEn: typeof trelloGuideRu = {
   title: "Connection guide",
+  progress: "Step {{current}} of {{total}}",
+  doneLabel: "Done ✓ — {{name}} connected",
+  open: "Open {{host}}",
+  stepAria: "Step {{n}}",
+  stepAriaDone: "Step {{n}}, done",
+  stepAriaCurrent: "Step {{n}}, current",
   s1t: "Open the Power-Up admin panel",
   s1d: "Go to https://trello.com/power-ups/admin (sign in with the Trello account that has access to the board you need).",
   s2t: "Create a Power-Up",
@@ -47,6 +59,12 @@ export const trelloGuideEn: typeof trelloGuideRu = {
 
 export const yougileGuideRu = {
   title: "Инструкция по подключению",
+  progress: "Шаг {{current}} из {{total}}",
+  doneLabel: "Готово ✓ — {{name}} подключён",
+  open: "Открыть {{host}}",
+  stepAria: "Шаг {{n}}",
+  stepAriaDone: "Шаг {{n}}, выполнен",
+  stepAriaCurrent: "Шаг {{n}}, текущий",
   keyHint: "Как получить ключ — см. инструкцию ниже.",
   s1t: "Получите API-ключ YouGile",
   s1d: "Ключ создаётся администратором компании в YouGile (по инструкции YouGile API v2: https://ru.yougile.com/api-v2). Если ключа нет — попросите администратора YouGile создать его.",
@@ -64,6 +82,12 @@ export const yougileGuideRu = {
 
 export const yougileGuideEn: typeof yougileGuideRu = {
   title: "Connection guide",
+  progress: "Step {{current}} of {{total}}",
+  doneLabel: "Done ✓ — {{name}} connected",
+  open: "Open {{host}}",
+  stepAria: "Step {{n}}",
+  stepAriaDone: "Step {{n}}, done",
+  stepAriaCurrent: "Step {{n}}, current",
   keyHint: "How to get the key — see the guide below.",
   s1t: "Get a YouGile API key",
   s1d: "The key is created by your company’s YouGile administrator (following the YouGile API v2 guide: https://ru.yougile.com/api-v2). If you don’t have a key, ask your YouGile admin to create one.",
