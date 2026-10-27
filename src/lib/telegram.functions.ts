@@ -129,3 +129,50 @@ export const unlinkTelegram = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     return { ok: true };
   });
+
+async function requireManager(context: any, teamspaceId: string) {
+  const { data: m } = await context.supabase.from("teamspace_members")
+    .select("role").eq("teamspace_id", teamspaceId).eq("user_id", context.userId).maybeSingle();
+  const { canLinkGroup } = await import("./telegram-groups");
+  if (!canLinkGroup(m?.role)) throw new Error("Только владелец или администратор пространства");
+}
+
+/** Linked groups of the workspace + the project directory, managers only. */
+export const listTelegramGroups = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ teamspaceId: z.string().uuid() }).parse(raw))
+  .handler(async ({ context, data }) => {
+    await requireManager(context, data.teamspaceId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const [{ data: groups }, { data: projects }] = await Promise.all([
+      db.from("telegram_groups").select("id, title, project, status, bot_is_admin").eq("teamspace_id", data.teamspaceId).order("created_at"),
+      db.from("projects").select("name").eq("teamspace_id", data.teamspaceId).order("name"),
+    ]);
+    const rows = await Promise.all((groups ?? []).map(async (g: any) => {
+      const { data: last } = await db.from("telegram_group_messages").select("sent_at").eq("group_id", g.id).order("sent_at", { ascending: false }).limit(1).maybeSingle();
+      return { ...g, lastMessageAt: (last?.sent_at as string | undefined) ?? null };
+    }));
+    return { groups: rows as { id: string; title: string | null; project: string | null; status: string; bot_is_admin: boolean; lastMessageAt: string | null }[],
+      projects: (projects ?? []).map((p: any) => p.name as string) };
+  });
+
+/** Links a group (by the one-time code posted in the group) to the workspace + project. */
+export const linkTelegramGroup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ teamspaceId: z.string().uuid(), code: z.string().min(4).max(32), project: z.string().max(200).nullable() }).parse(raw))
+  .handler(async ({ context, data }) => {
+    await requireManager(context, data.teamspaceId);
+    const { normalizeGroupCode } = await import("./telegram-groups");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: group } = await db.from("telegram_groups").select("id, status").eq("link_code", normalizeGroupCode(data.code)).maybeSingle();
+    if (!group || group.status === "left") throw new Error("Код не найден");
+    if (data.project) {
+      const { data: p } = await db.from("projects").select("name").eq("teamspace_id", data.teamspaceId).eq("name", data.project).maybeSingle();
+      if (!p) throw new Error("Проект не найден");
+    }
+    const { error } = await db.from("telegram_groups").update({ teamspace_id: data.teamspaceId, project: data.project, status: "linked", linked_by: context.userId, link_code: null }).eq("id", group.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
