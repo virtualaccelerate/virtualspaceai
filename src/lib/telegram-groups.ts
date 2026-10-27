@@ -45,7 +45,12 @@ export function pendingMessages<T extends { sent_at: string }>(messages: T[], bo
 }
 
 const DONE_RE = /(сделал|сделала|сделано|готово|выполнил|выполнила|закрыл|закрыла|\bdone\b|\bfinished\b)/i;
-/** Saves AI credits: one lone message is processed only when it reports completion. */
-export function shouldProcess(texts: string[]): boolean {
-  return texts.length >= 2 || (texts.length === 1 && DONE_RE.test(texts[0] ?? ""));
+/** A single non-completion message waits at most fifteen minutes. */
+export function shouldProcess(texts: string[], oldestSentAt?: string, now = Date.now()): boolean {
+  return texts.length >= 2 || (texts.length === 1 && (DONE_RE.test(texts[0] ?? "") || (Boolean(oldestSentAt) && now - Date.parse(oldestSentAt ?? "") >= 15 * 60 * 1000)));
+}
+
+/** Membership hints alone are not proof: only Telegram's verified migration target is accepted. */
+export function isMigrationTarget(oldChat: number, reportedTarget: number | undefined, newChat: number) {
+  return oldChat !== newChat && reportedTarget === newChat;
 }
