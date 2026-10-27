@@ -86,7 +86,7 @@ export const setupTelegramWebhook = createServerFn({ method: "POST" })
     const res = await tg<any>("setWebhook", {
       url: webhookUrl(),
       secret_token: await webhookSecret(token),
-      allowed_updates: ["message", "edited_message", "callback_query"],
+      allowed_updates: ["message", "edited_message", "callback_query", "my_chat_member"],
       drop_pending_updates: true,
     });
     await tg("setMyCommands", {
