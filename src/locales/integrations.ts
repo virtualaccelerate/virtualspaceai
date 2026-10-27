@@ -1,4 +1,5 @@
 import type { GroupResources } from "./merge";
+import { trelloGuideEn, trelloGuideRu, yougileGuideEn, yougileGuideRu } from "./integration-guides";
 
 const bundle: GroupResources = {
   en: {
@@ -38,6 +39,7 @@ const bundle: GroupResources = {
         bitrix: "CRM, deals and tasks",
       },
       trello: {
+        guide: trelloGuideEn,
         connected: "Connected",
         desc: "Task source for notifications and reports",
         sync: "Sync",
@@ -59,6 +61,7 @@ const bundle: GroupResources = {
         lastSync: "Last sync",
       },
       yougile: {
+        guide: yougileGuideEn,
         connected: "Connected",
         desc: "Task source for notifications and reports",
         sync: "Sync",
@@ -222,6 +225,7 @@ const bundle: GroupResources = {
         bitrix: "CRM, сделки и задачи",
       },
       trello: {
+        guide: trelloGuideRu,
         connected: "Подключено",
         desc: "Источник задач для уведомлений и отчётов",
         sync: "Синхронизировать",
@@ -243,6 +247,7 @@ const bundle: GroupResources = {
         lastSync: "Последняя синхронизация",
       },
       yougile: {
+        guide: yougileGuideRu,
         connected: "Подключено",
         desc: "Источник задач для уведомлений и отчётов",
         sync: "Синхронизировать",
@@ -405,6 +410,7 @@ const bundle: GroupResources = {
         bitrix: "CRM, келісімдер және тапсырмалар",
       },
       trello: {
+        guide: trelloGuideEn,
         connected: "Қосылған",
         desc: "Хабарландырулар мен есептер үшін тапсырма көзі",
         sync: "Синхрондау",
@@ -426,6 +432,7 @@ const bundle: GroupResources = {
         lastSync: "Соңғы синхрондау",
       },
       yougile: {
+        guide: yougileGuideEn,
         connected: "Қосылған",
         desc: "Хабарландырулар мен есептер үшін тапсырма көзі",
         sync: "Синхрондау",
@@ -579,6 +586,7 @@ const bundle: GroupResources = {
         bitrix: "CRM, бүтүмдөр жана тапшырмалар",
       },
       trello: {
+        guide: trelloGuideEn,
         connected: "Туташты",
         desc: "Билдирүүлөр жана отчеттор үчүн тапшырма булагы",
         sync: "Синхрондоо",
@@ -600,6 +608,7 @@ const bundle: GroupResources = {
         lastSync: "Акыркы синхрондоо",
       },
       yougile: {
+        guide: yougileGuideEn,
         connected: "Туташты",
         desc: "Билдирүүлөр жана отчеттор үчүн тапшырма булагы",
         sync: "Синхрондоо",
@@ -753,6 +762,7 @@ const bundle: GroupResources = {
         bitrix: "CRM, bitimlar va vazifalar",
       },
       trello: {
+        guide: trelloGuideEn,
         connected: "Ulangan",
         desc: "Bildirishnomalar va hisobotlar uchun vazifalar manbai",
         sync: "Sinxronlash",
@@ -774,6 +784,7 @@ const bundle: GroupResources = {
         lastSync: "Oxirgi sinxronlash",
       },
       yougile: {
+        guide: yougileGuideEn,
         connected: "Ulangan",
         desc: "Bildirishnomalar va hisobotlar uchun vazifalar manbai",
         sync: "Sinxronlash",
@@ -927,6 +938,7 @@ const bundle: GroupResources = {
         bitrix: "CRM, созишҳо ва вазифаҳо",
       },
       trello: {
+        guide: trelloGuideEn,
         connected: "Пайваст шуд",
         desc: "Манбаи вазифаҳо барои огоҳиномаҳо ва ҳисоботҳо",
         sync: "Ҳамоҳангсозӣ",
@@ -948,6 +960,7 @@ const bundle: GroupResources = {
         lastSync: "Ҳамоҳангсозии охирин",
       },
       yougile: {
+        guide: yougileGuideEn,
         connected: "Пайваст шуд",
         desc: "Манбаи вазифаҳо барои огоҳиномаҳо ва ҳисоботҳо",
         sync: "Ҳамоҳангсозӣ",
