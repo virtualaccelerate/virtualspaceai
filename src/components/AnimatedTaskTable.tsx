@@ -1,3 +1,4 @@
+import { taskLabelDisplay } from "@/lib/task-label-display";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -129,6 +130,7 @@ export function AnimatedTaskTable() {
                   </span>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {tasks[deptIdx]?.map((label, taskIdx) => {
+                      if (!taskLabelDisplay(label)) return null;
                       const key = `${deptIdx}-${taskIdx}`;
                       const isActive = activeKeys.has(key);
                       return (

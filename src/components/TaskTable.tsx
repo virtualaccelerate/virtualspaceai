@@ -1,3 +1,4 @@
+import { taskLabelDisplay } from "@/lib/task-label-display";
 import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowUpDown, Flag, Trash2 } from "lucide-react";
@@ -213,13 +214,13 @@ function TaskTableBase({
                 {task.description && (
                   <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{task.description}</p>
                 )}
-                {(task.project || task.department) && (
+                {(taskLabelDisplay(task.project) || taskLabelDisplay(task.department)) && (
                   <span className="mt-1 flex flex-wrap gap-1">
-                    {task.project && (
-                      <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{task.project}</span>
+                    {taskLabelDisplay(task.project) && (
+                      <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{taskLabelDisplay(task.project)}</span>
                     )}
-                    {task.department && (
-                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{task.department}</span>
+                    {taskLabelDisplay(task.department) && (
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{taskLabelDisplay(task.department)}</span>
                     )}
                   </span>
                 )}

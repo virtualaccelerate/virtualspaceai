@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { ChatPanel } from "@/components/ChatPanel";
 
 export function FloatingChat() {
+  const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
 
@@ -22,36 +26,28 @@ export function FloatingChat() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.98 }}
-            transition={{ duration: 0.18 }}
-            className="fixed z-40 right-4 bottom-40 sm:right-6 sm:bottom-24 w-[min(380px,calc(100vw-2rem))] h-[min(600px,calc(100vh-12rem))] rounded-2xl border border-border bg-background shadow-2xl overflow-hidden flex flex-col"
+            initial={{ x: reducedMotion ? 0 : "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: reducedMotion ? 0 : "100%" }}
+            transition={{ duration: reducedMotion ? 0 : 0.2 }}
+            role="dialog"
+            aria-label={t("app.chat.newChat", "New chat")}
+            className="fixed z-50 inset-y-0 right-0 w-full sm:w-[380px] h-dvh border-l border-border bg-background shadow-2xl overflow-hidden flex flex-col p-3"
           >
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
-              <div className="text-sm font-semibold text-foreground">Virtual Space</div>
-              <button
-                onClick={() => setOpen(false)}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-md"
-                aria-label="Close chat"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="flex-1 min-h-0 p-3">
-              <ChatPanel variant="compact" />
-            </div>
+            <ChatPanel variant="compact" onClose={() => setOpen(false)} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close chat" : "Open chat"}
-        className="fixed z-40 right-4 bottom-20 sm:right-6 sm:bottom-6 h-14 w-14 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_10px_30px_hsl(var(--primary)/0.45)] hover:scale-105 transition"
+      {!open && <Button size="icon"
+        onClick={() => setOpen(true)}
+        aria-label={t("app.chat.newChat", "New chat")}
+        title={t("app.chat.newChat", "New chat")}
+        className="fixed z-40 right-4 bottom-20 sm:right-6 lg:bottom-6 h-10 w-10 rounded-lg bg-primary text-primary-foreground shadow-lg"
       >
-        {open ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
-      </button>
+        <Sparkles className="h-5 w-5" />
+      </Button>}
+
     </>
   );
 }

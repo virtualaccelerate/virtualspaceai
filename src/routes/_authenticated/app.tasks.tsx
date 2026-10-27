@@ -1,3 +1,4 @@
+import { taskLabelDisplay } from "@/lib/task-label-display";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -971,16 +972,16 @@ function TasksPage() {
                             </button>
                           )}
 
-                          {(task.project || task.department) && (
+                          {(taskLabelDisplay(task.project) || taskLabelDisplay(task.department)) && (
                             <div className="mt-2 flex flex-wrap gap-1">
-                              {task.project && (
+                              {taskLabelDisplay(task.project) && (
                                 <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                                  {task.project}
+                                  {taskLabelDisplay(task.project)}
                                 </span>
                               )}
-                              {task.department && (
+                              {taskLabelDisplay(task.department) && (
                                 <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                  {task.department}
+                                  {taskLabelDisplay(task.department)}
                                 </span>
                               )}
                             </div>
