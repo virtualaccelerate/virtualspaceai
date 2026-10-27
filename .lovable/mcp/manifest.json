@@ -39,6 +39,16 @@
                 "done"
               ]
             },
+            "project": {
+              "description": "Only tasks in this project (case-insensitive name).",
+              "type": "string",
+              "maxLength": 160
+            },
+            "department": {
+              "description": "Only tasks in this department (case-insensitive name).",
+              "type": "string",
+              "maxLength": 160
+            },
             "limit": {
               "description": "Max tasks to return (default 50).",
               "type": "integer",
@@ -102,6 +112,16 @@
               "description": "Who the task is assigned to.",
               "type": "string",
               "maxLength": 200
+            },
+            "project": {
+              "description": "Project name; matched case-insensitively to the workspace directory, added if new.",
+              "type": "string",
+              "maxLength": 160
+            },
+            "department": {
+              "description": "Department name; matched case-insensitively to the workspace directory, added if new.",
+              "type": "string",
+              "maxLength": 160
             }
           },
           "required": [
@@ -163,6 +183,16 @@
             "assignee_name": {
               "type": "string",
               "maxLength": 200
+            },
+            "project": {
+              "description": "Project name from the workspace directory (added if new).",
+              "type": "string",
+              "maxLength": 160
+            },
+            "department": {
+              "description": "Department name from the workspace directory (added if new).",
+              "type": "string",
+              "maxLength": 160
             }
           },
           "required": [
