@@ -1,7 +1,7 @@
 import { taskLabelDisplay } from "@/lib/task-label-display";
 import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowUpDown, Flag, Trash2 } from "lucide-react";
+import { ArrowUpDown, Flag, MessageSquareText, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -73,8 +73,10 @@ function TaskTableBase({
   onToggleSelect,
   onToggleSelectAll,
   labels,
+  commentCounts = {},
 }: {
   tasks: TableTask[];
+  commentCounts?: Record<string, number>;
   columns: Column[];
   locale?: string;
   priorityLabel: (p: TableTaskPriority) => string;
@@ -214,6 +216,7 @@ function TaskTableBase({
                 {task.description && (
                   <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{task.description}</p>
                 )}
+                {(commentCounts[task.id] ?? 0) > 0 && <span className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground" title={t("tasksUi.comments.count", {count: commentCounts[task.id]})}><MessageSquareText className="h-3 w-3"/>{commentCounts[task.id]}</span>}
                 {(taskLabelDisplay(task.project) || taskLabelDisplay(task.department)) && (
                   <span className="mt-1 flex flex-wrap gap-1">
                     {taskLabelDisplay(task.project) && (

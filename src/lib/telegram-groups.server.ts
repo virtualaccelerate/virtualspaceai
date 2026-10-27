@@ -1,7 +1,7 @@
 // Server-only: Telegram group membership + message capture. Never import from client code.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { sendMessage } from "./telegram.server";
-import { groupCompletionStatus, isAfterBotAdded, isDuplicateTask, isGroupChat, newGroupLinkCode, pendingMessages, shouldProcess } from "./telegram-groups";
+import { sendMessage, tg } from "./telegram.server";
+import { groupCompletionStatus, isAfterBotAdded, isDuplicateTask, isGroupChat, isMigrationTarget, newGroupLinkCode, pendingMessages, shouldProcess } from "./telegram-groups";
 import { resolveMember } from "./member-resolution";
 
 const db = supabaseAdmin as any;
@@ -17,13 +17,13 @@ export async function handleGroupUpdate(update: any): Promise<boolean> {
   const message = update.message ?? update.edited_message;
   if (!message || !isGroupChat(message.chat)) return false;
   if (message.migrate_to_chat_id) {
-    await db.from("telegram_groups").update({ chat_id: message.migrate_to_chat_id }).eq("chat_id", message.chat.id);
+    await mergeGroup(message.chat.id, message.migrate_to_chat_id);
     return true;
   }
-  if (message.migrate_from_chat_id) return true;
+  if (message.migrate_from_chat_id) { await mergeGroup(message.migrate_from_chat_id, message.chat.id); return true; }
   const cmd = /^\/(summary|tasks)(?:@\w+)?(?:\s+(\S+))?/i.exec((message.text ?? "").trim());
   if (cmd) {
-    await runCommand(message.chat.id, cmd[1]!.toLowerCase(), (cmd[2] ?? "").toLowerCase()).catch((e) =>
+    await runCommand(message.chat.id, (cmd[1] ?? "").toLowerCase(), (cmd[2] ?? "").toLowerCase()).catch((e) =>
       console.error("[tg-group] command failed", e instanceof Error ? e.message : e));
     return true;
   }
@@ -31,9 +31,28 @@ export async function handleGroupUpdate(update: any): Promise<boolean> {
   return true;
 }
 
+async function mergeGroup(oldChat: number, newChat: number) {
+  const {error} = await db.rpc("merge_telegram_group", {old_chat: oldChat, new_chat: newChat});
+  if (error) throw new Error(error.message);
+}
+
+async function resolveMigratedMembership(chat: any) {
+  if (chat.type !== "supergroup") return;
+  // Never merge by title: unrelated groups can share a name. getChat's migration response proves the target.
+  const {data: candidates} = await db.from("telegram_groups").select("chat_id").eq("title", chat.title ?? "").is("merged_into", null).gt("chat_id", -1000000000000).limit(20);
+  for (const candidate of candidates ?? []) {
+    try {
+      const result = await tg<{parameters?: {migrate_to_chat_id?: number}}>("getChat", {chat_id: candidate.chat_id});
+      if (isMigrationTarget(Number(candidate.chat_id), result.parameters?.migrate_to_chat_id, Number(chat.id))) { await mergeGroup(Number(candidate.chat_id), Number(chat.id)); return; }
+    } catch { /* A failed lookup is not proof of migration. */ }
+  }
+}
+
 async function onMembership(chat: any, oldStatus?: string, newStatus?: string) {
   const present = ["member", "administrator", "creator", "restricted"];
-  const { data: existing } = await db.from("telegram_groups").select("id, status, link_code").eq("chat_id", chat.id).maybeSingle();
+  await resolveMigratedMembership(chat);
+  const { data: existing } = await db.from("telegram_groups").select("id, status, link_code, merged_into").eq("chat_id", chat.id).maybeSingle();
+  if (existing?.merged_into) return;
   if (newStatus === "left" || newStatus === "kicked") {
     if (existing) await db.from("telegram_groups").update({ status: "left", bot_is_admin: false }).eq("id", existing.id);
     return;
@@ -41,7 +60,7 @@ async function onMembership(chat: any, oldStatus?: string, newStatus?: string) {
   if (!newStatus || !present.includes(newStatus)) return;
   const isAdmin = newStatus === "administrator";
   const justAdded = !existing || existing.status === "left" || !present.includes(oldStatus ?? "");
-  if (!justAdded) {
+  if (!justAdded || existing?.status === "linked") {
     await db.from("telegram_groups").update({ bot_is_admin: isAdmin, title: chat.title ?? null }).eq("id", existing.id);
     return;
   }
@@ -129,7 +148,7 @@ export async function processGroup(groupId: string): Promise<{ created: number; 
   const msgs = pendingMessages(raw ?? [], g.bot_added_at, g.last_processed_at);
   if (!msgs.length) return { created: 0, completed: 0, skipped: "no messages" };
   const mark = () => db.from("telegram_groups").update({ last_processed_at: msgs[msgs.length - 1].sent_at }).eq("id", g.id);
-  if (!shouldProcess(msgs.map((m: any) => m.text ?? ""))) return { created: 0, completed: 0, skipped: "too few" };
+  if (!shouldProcess(msgs.map((m: any) => m.text ?? ""), msgs[0]?.sent_at)) return { created: 0, completed: 0, skipped: "too few" };
 
   const { data: open } = await db.from("tasks").select("id, title, assignee_name, assignee_id, due_date, status")
     .eq("teamspace_id", g.teamspace_id).eq("source_group_id", g.id).in("status", ["backlog", "in_progress"]).limit(200);

@@ -49,3 +49,5 @@
 - Task project/department values pass through `resolveTaskLabel` (projects.server) on every create/update, which strips stray "|"/ids and maps to the per-workspace `projects`/`departments` directory — AI token splitting once leaked separators and workspace ids into these fields.
 - Task label presentation uses browser-safe `taskLabelDisplay` to suppress UUID chips without mutating stored data.
 - Auth screens wait for client initialization and share `AuthLoading`; protected routes still validate the user and workspace membership before rendering.
+- Local task comments reuse task_events with author-only soft edits/deletes and deduplicated notifications; tracker discussions remain read-only to avoid unintended external writes.
+- Telegram migrations use a service-only atomic merge preserving the original group identity and inactive aliases; verify Telegram migration IDs rather than merging by title to prevent cross-group linking.

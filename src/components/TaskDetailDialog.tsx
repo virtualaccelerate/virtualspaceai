@@ -1,10 +1,14 @@
 import { taskLabelDisplay } from "@/lib/task-label-display";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ExternalLink, History, Loader2, Pencil } from "lucide-react";
+import { ExternalLink, History, Loader2, Pencil, Send, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getTaskHistory } from "@/lib/task-events.functions";
+import { deleteTaskComment, getTaskHistory, saveTaskComment } from "@/lib/task-events.functions";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 type EventRow = {
   id: string;
@@ -16,6 +20,11 @@ type EventRow = {
   source: string | null;
   note: string | null;
   created_at: string;
+  actor_id: string | null;
+  actor_avatar?: string | null;
+  edited_at?: string | null;
+  deleted_at?: string | null;
+  mentions?: string[];
 };
 
 type Detail = {
@@ -36,6 +45,8 @@ type Detail = {
     external_board: string | null;
   };
   events: EventRow[];
+  viewer_id: string;
+  members: {id: string; name: string}[];
 };
 
 function trackerName(source: string | null | undefined) {
@@ -47,26 +58,36 @@ export function TaskDetailDialog({
   open,
   onOpenChange,
   onEdit,
+  onCommentsChange,
 }: {
   taskId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit?: (taskId: string) => void;
+  onCommentsChange?: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const [detail, setDetail] = useState<Detail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [body, setBody] = useState("");
+  const [mentions, setMentions] = useState<string[]>([]);
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [onlyComments, setOnlyComments] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<{start: number; end: number; text: string} | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!open || !taskId) return;
     let cancelled = false;
     setLoading(true);
+    setBody(""); setMentions([]); setEditingComment(null); setOnlyComments(false); setMentionQuery(null); setLoadError(false);
     setDetail(null);
     getTaskHistory({ data: { task_id: taskId } })
       .then((result: Detail) => {
         if (!cancelled) setDetail(result);
       })
-      .catch(() => {})
+      .catch(() => { if (!cancelled) setLoadError(true); })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -74,6 +95,33 @@ export function TaskDetailDialog({
       cancelled = true;
     };
   }, [open, taskId]);
+
+  async function refresh() {
+    if (!taskId) return;
+    setDetail(await getTaskHistory({data: {task_id: taskId}}));
+    onCommentsChange?.();
+  }
+  async function sendComment() {
+    if (!taskId || !body.trim() || saving) return;
+    setSaving(true);
+    try {
+      await saveTaskComment({data: {task_id: taskId, comment_id: editingComment ?? undefined, body, mentions: mentions.filter((id) => {
+        const member = detail?.members.find((m) => m.id === id);
+        return member && body.includes(`@${member.name}`);
+      })}});
+      setBody(""); setMentions([]); setEditingComment(null); setMentionQuery(null);
+      await refresh();
+    } catch { toast.error(t("tasksUi.comments.error")); }
+    finally { setSaving(false); }
+  }
+  async function removeComment(id: string) {
+    if (!taskId || saving) return;
+    setSaving(true);
+    try { await deleteTaskComment({data: {task_id: taskId, comment_id: id}}); await refresh(); }
+    catch { toast.error(t("tasksUi.comments.error")); }
+    finally { setSaving(false); }
+  }
+  const candidates = mentionQuery ? (detail?.members ?? []).filter((m) => m.name.toLowerCase().includes(mentionQuery.text.toLowerCase())).slice(0, 8) : [];
 
   const task = detail?.task;
   const tracker = trackerName(task?.external_source);
@@ -105,6 +153,7 @@ export function TaskDetailDialog({
             <Loader2 className="h-5 w-5 animate-spin" />
           </div>
         )}
+        {loadError && <p role="alert" className="text-sm text-destructive">{t("tasksUi.comments.error")}</p>}
 
         {task && (
           <div className="space-y-4 text-sm">
@@ -129,23 +178,58 @@ export function TaskDetailDialog({
               </p>
             )}
 
+            <div className="space-y-2">
+              <Textarea aria-label={t("tasksUi.comments.placeholder")} placeholder={t("tasksUi.comments.placeholder")} value={body} maxLength={5000} disabled={saving} rows={3}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  const end = e.target.selectionStart;
+                  const match = /(?:^|\s)@([^@\n]*)$/.exec(e.target.value.slice(0, end));
+                  setMentionQuery(match ? {start: end - (match[1]?.length ?? 0) - 1, end, text: match[1] ?? ""} : null);
+                }}
+                onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.nativeEvent.isComposing) { e.preventDefault(); void sendComment(); } }}
+              />
+              {candidates.length > 0 && <div role="listbox" aria-label={t("tasksUi.comments.mentions")} className="max-h-40 overflow-y-auto border border-border rounded-md bg-popover p-1">
+                {candidates.map((member) => <Button key={member.id} role="option" aria-selected={false} variant="ghost" className="w-full justify-start h-auto whitespace-normal text-left" onClick={() => {
+                  if (!mentionQuery) return;
+                  setBody(body.slice(0, mentionQuery.start) + `@${member.name} ` + body.slice(mentionQuery.end));
+                  setMentions((prev) => [...new Set([...prev, member.id])]); setMentionQuery(null);
+                }}>{member.name}</Button>)}
+              </div>}
+              <div className="flex justify-end gap-2">
+                {editingComment && <Button size="sm" variant="ghost" disabled={saving} onClick={() => {setEditingComment(null); setBody(""); setMentions([]);}}>{t("tasksUi.cancel")}</Button>}
+                <Button size="sm" disabled={!body.trim() || saving} onClick={() => void sendComment()}>{saving ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>}{t(editingComment ? "tasksUi.save" : "tasksUi.comments.send")}</Button>
+              </div>
+            </div>
+
             <div>
-              <h3 className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h3 className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <History className="h-3.5 w-3.5" />
-                {t("tasksUi.detail.history", "History")}
+                {t("tasksUi.comments.feed")}
               </h3>
-              {detail.events.length === 0 ? (
+              <label className="flex items-center gap-2 text-xs text-muted-foreground"><Switch checked={onlyComments} onCheckedChange={setOnlyComments} aria-label={t("tasksUi.comments.only")}/>{t("tasksUi.comments.only")}</label>
+              </div>
+              {detail.events.filter((event) => !onlyComments || event.kind === "comment").length === 0 ? (
                 <p className="text-xs text-muted-foreground">{t("tasksUi.detail.noHistory", "No changes yet")}</p>
               ) : (
-                <ol className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                  {detail.events.map((event) => (
-                    <li key={event.id} className="rounded-lg border border-border/60 px-3 py-2">
-                      <div className="text-xs text-muted-foreground">
+                <ol className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  {detail.events.filter((event) => !onlyComments || event.kind === "comment").map((event) => (
+                    <li key={event.id} className="flex gap-2 border-b border-border/60 pb-3 last:border-0">
+                      {event.kind === "comment" && <Avatar className="h-7 w-7"><AvatarImage src={event.actor_avatar ?? undefined}/><AvatarFallback className="text-xs">{event.actor_name?.slice(0, 1) ?? "?"}</AvatarFallback></Avatar>}
+                      <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                        {event.actor_name && <span className="font-medium text-foreground">{event.actor_name}</span>}
                         {new Date(event.created_at).toLocaleString(locale, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        {event.actor_name ? ` · ${event.actor_name}` : ""}
                         {trackerName(event.source) ? ` · ${trackerName(event.source)}` : ""}
+                        {event.source === "telegram_group" && <span>{t("tasksUi.comments.telegramGroup")}</span>}
+                        {event.edited_at && <span>{t("tasksUi.comments.edited")}</span>}
                       </div>
-                      <div className="mt-0.5">{describe(event)}</div>
+                      <div className="mt-1 whitespace-pre-wrap break-words">{event.kind === "comment" ? event.deleted_at ? <span className="italic text-muted-foreground">{t("tasksUi.comments.deleted")}</span> : <CommentText text={event.note ?? ""}/> : describe(event)}</div>
+                      {event.kind === "comment" && event.source === "virtual_space" && event.actor_id === detail.viewer_id && !event.deleted_at && <div className="mt-1 flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("tasksUi.comments.edit")} title={t("tasksUi.comments.edit")} disabled={saving} onClick={() => {setEditingComment(event.id); setBody(event.note ?? ""); setMentions(event.mentions ?? []);}}><Pencil className="h-3.5 w-3.5"/></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("tasksUi.comments.delete")} title={t("tasksUi.comments.delete")} disabled={saving} onClick={() => void removeComment(event.id)}><Trash2 className="h-3.5 w-3.5"/></Button>
+                      </div>}
+                      </div>
                     </li>
                   ))}
                 </ol>
@@ -171,6 +255,10 @@ export function TaskDetailDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function CommentText({text}: {text: string}) {
+  return <>{text.split(/(https?:\/\/[^\s<>]+)/g).map((part, index) => /^https?:\/\//.test(part) ? <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">{part}</a> : part)}</>;
 }
 
 function Field({ label, value }: { label: string; value: string }) {

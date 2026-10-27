@@ -3,6 +3,7 @@ import type { GroupResources } from "./merge";
 const bundle: GroupResources = {
   en: {
     tasksUi: {
+      comments: {"feed": "Comments and activity", "placeholder": "Write a comment…", "send": "Send", "only": "Comments only", "deleted": "Comment deleted", "edited": "edited", "edit": "Edit comment", "delete": "Delete comment", "mentions": "Workspace members", "telegramGroup": "From Telegram group", "error": "Could not save or load comments", "count": "Comments: {{count}}"},
       detail: {
         "title": "Task",
         "status": "Status",
@@ -130,6 +131,7 @@ const bundle: GroupResources = {
   },
   ru: {
     tasksUi: {
+      comments: {"feed": "Комментарии и действия", "placeholder": "Написать комментарий…", "send": "Отправить", "only": "Только комментарии", "deleted": "комментарий удалён", "edited": "изменён", "edit": "Изменить комментарий", "delete": "Удалить комментарий", "mentions": "Участники пространства", "telegramGroup": "Из группы Telegram", "error": "Не удалось сохранить или загрузить комментарии", "count": "Комментарии: {{count}}"},
       detail: {
         "title": "Задача",
         "status": "Статус",
@@ -257,6 +259,7 @@ const bundle: GroupResources = {
   },
   kk: {
     tasksUi: {
+      comments: {"feed": "Пікірлер мен әрекеттер", "placeholder": "Пікір жазыңыз…", "send": "Жіберу", "only": "Тек пікірлер", "deleted": "пікір жойылды", "edited": "өңделген", "edit": "Пікірді өңдеу", "delete": "Пікірді жою", "mentions": "Кеңістік мүшелері", "telegramGroup": "Telegram тобынан", "error": "Пікірлерді сақтау немесе жүктеу мүмкін болмады", "count": "Пікірлер: {{count}}"},
       detail: {
         "title": "Тапсырма",
         "status": "Мәртебе",
@@ -384,6 +387,7 @@ const bundle: GroupResources = {
   },
   ky: {
     tasksUi: {
+      comments: {"feed": "Комментарийлер жана аракеттер", "placeholder": "Комментарий жазыңыз…", "send": "Жөнөтүү", "only": "Комментарийлер гана", "deleted": "комментарий өчүрүлгөн", "edited": "өзгөртүлгөн", "edit": "Комментарийди өзгөртүү", "delete": "Комментарийди өчүрүү", "mentions": "Мейкиндиктин мүчөлөрү", "telegramGroup": "Telegram тобунан", "error": "Комментарийлерди сактоо же жүктөө мүмкүн болгон жок", "count": "Комментарийлер: {{count}}"},
       detail: {
         "title": "Тапшырма",
         "status": "Статус",
@@ -511,6 +515,7 @@ const bundle: GroupResources = {
   },
   uz: {
     tasksUi: {
+      comments: {"feed": "Izohlar va harakatlar", "placeholder": "Izoh yozing…", "send": "Yuborish", "only": "Faqat izohlar", "deleted": "izoh o‘chirildi", "edited": "tahrirlangan", "edit": "Izohni tahrirlash", "delete": "Izohni o‘chirish", "mentions": "Ish maydoni a’zolari", "telegramGroup": "Telegram guruhidan", "error": "Izohlarni saqlash yoki yuklash imkoni bo‘lmadi", "count": "Izohlar: {{count}}"},
       detail: {
         "title": "Vazifa",
         "status": "Holat",
@@ -638,6 +643,7 @@ const bundle: GroupResources = {
   },
   tg: {
     tasksUi: {
+      comments: {"feed": "Шарҳҳо ва амалҳо", "placeholder": "Шарҳ нависед…", "send": "Фиристодан", "only": "Танҳо шарҳҳо", "deleted": "шарҳ ҳазф шуд", "edited": "тағйир ёфт", "edit": "Тағйир додани шарҳ", "delete": "Ҳазфи шарҳ", "mentions": "Аъзои фазо", "telegramGroup": "Аз гурӯҳи Telegram", "error": "Сабт ё бор кардани шарҳҳо муяссар нашуд", "count": "Шарҳҳо: {{count}}"},
       detail: {
         "title": "Вазифа",
         "status": "Ҳолат",

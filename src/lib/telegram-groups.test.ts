@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { canLinkGroup, groupCompletionStatus, isAfterBotAdded, isDuplicateTask, normalizeGroupCode, pendingMessages, shouldProcess } from "./telegram-groups";
+import { canLinkGroup, groupCompletionStatus, isAfterBotAdded, isDuplicateTask, isMigrationTarget, normalizeGroupCode, pendingMessages, shouldProcess } from "./telegram-groups";
 
 describe("telegram group rules", () => {
   it("only workspace owners/admins can link a group", () => {
@@ -37,5 +37,16 @@ describe("telegram group rules", () => {
     assert.equal(shouldProcess(["привет"]), false);
     assert.equal(shouldProcess(["сделал отчёт"]), true);
     assert.equal(shouldProcess(["a", "b"]), true);
+  });
+  it("processes one pending message at fifteen minutes, not before", () => {
+    const sent = "2026-10-27T12:00:00Z";
+    assert.equal(shouldProcess(["Подготовить отчёт"], sent, Date.parse(sent) + 899999), false);
+    assert.equal(shouldProcess(["Подготовить отчёт"], sent, Date.parse(sent) + 900000), true);
+    assert.equal(shouldProcess([], sent, Date.parse(sent) + 900000), false);
+  });
+  it("accepts only a verified old-to-new migration, never a same-title guess", () => {
+    assert.equal(isMigrationTarget(-5148556816, -1004334550244, -1004334550244), true);
+    assert.equal(isMigrationTarget(-5148556816, undefined, -1004334550244), false);
+    assert.equal(isMigrationTarget(-5148556816, -100999, -1004334550244), false);
   });
 });
