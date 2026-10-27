@@ -35,7 +35,10 @@ export const Route = createFileRoute("/api/public/hooks/trackers-sync")({
         const { processClientSyncQueue } = await import("@/lib/clients.server");
         const clients = await processClientSyncQueue().catch(() => ({ processed: 0, failed: 1, pending: 0 }));
 
-        return Response.json({ ok: true, trello, yougile, automations, clients });
+        const { processAllGroups } = await import("@/lib/telegram-groups.server");
+        const telegramGroups = await processAllGroups().catch((e) => ({ groups: 0, created: 0, completed: 0, failed: 1, error: String(e) }));
+
+        return Response.json({ ok: true, trello, yougile, automations, clients, telegramGroups });
       },
     },
   },
