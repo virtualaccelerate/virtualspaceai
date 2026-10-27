@@ -1235,6 +1235,9 @@ export async function handleUpdate(update: any) {
     await handleCallback(update.callback_query);
     return;
   }
+  // Groups are captured separately; personal chats continue below unchanged.
+  const { handleGroupUpdate } = await import("./telegram-groups.server");
+  if (await handleGroupUpdate(update)) return;
   const message = update.message ?? update.edited_message;
   const chatId = message?.chat?.id;
   let text: string = (message?.text ?? message?.caption ?? "").trim();

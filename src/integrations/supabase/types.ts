@@ -2192,6 +2192,103 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_group_messages: {
+        Row: {
+          author_name: string | null
+          chat_id: number
+          created_at: string
+          from_id: number | null
+          from_username: string | null
+          group_id: string
+          id: string
+          message_id: number
+          sent_at: string
+          text: string | null
+        }
+        Insert: {
+          author_name?: string | null
+          chat_id: number
+          created_at?: string
+          from_id?: number | null
+          from_username?: string | null
+          group_id: string
+          id?: string
+          message_id: number
+          sent_at: string
+          text?: string | null
+        }
+        Update: {
+          author_name?: string | null
+          chat_id?: number
+          created_at?: string
+          from_id?: number | null
+          from_username?: string | null
+          group_id?: string
+          id?: string
+          message_id?: number
+          sent_at?: string
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telegram_groups: {
+        Row: {
+          bot_added_at: string
+          bot_is_admin: boolean
+          chat_id: number
+          created_at: string
+          id: string
+          link_code: string | null
+          linked_by: string | null
+          project: string | null
+          status: string
+          teamspace_id: string | null
+          title: string | null
+        }
+        Insert: {
+          bot_added_at?: string
+          bot_is_admin?: boolean
+          chat_id: number
+          created_at?: string
+          id?: string
+          link_code?: string | null
+          linked_by?: string | null
+          project?: string | null
+          status?: string
+          teamspace_id?: string | null
+          title?: string | null
+        }
+        Update: {
+          bot_added_at?: string
+          bot_is_admin?: boolean
+          chat_id?: number
+          created_at?: string
+          id?: string
+          link_code?: string | null
+          linked_by?: string | null
+          project?: string | null
+          status?: string
+          teamspace_id?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_groups_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telegram_links: {
         Row: {
           chat_id: number | null
