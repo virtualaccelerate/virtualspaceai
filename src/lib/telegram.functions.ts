@@ -146,14 +146,14 @@ export const listTelegramGroups = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const [{ data: groups }, { data: projects }] = await Promise.all([
-      db.from("telegram_groups").select("id, title, project, status, bot_is_admin").eq("teamspace_id", data.teamspaceId).order("created_at"),
+      db.from("telegram_groups").select("id, title, project, status, bot_is_admin, provider, external_chat_id").eq("teamspace_id", data.teamspaceId).order("created_at"),
       db.from("projects").select("name").eq("teamspace_id", data.teamspaceId).order("name"),
     ]);
     const rows = await Promise.all((groups ?? []).map(async (g: any) => {
       const { data: last } = await db.from("telegram_group_messages").select("sent_at").eq("group_id", g.id).order("sent_at", { ascending: false }).limit(1).maybeSingle();
       return { ...g, lastMessageAt: (last?.sent_at as string | undefined) ?? null };
     }));
-    return { groups: rows as { id: string; title: string | null; project: string | null; status: string; bot_is_admin: boolean; lastMessageAt: string | null }[],
+    return { groups: rows as { id: string; title: string | null; project: string | null; status: string; bot_is_admin: boolean; provider: string; external_chat_id: string | null; lastMessageAt: string | null }[],
       projects: (projects ?? []).map((p: any) => p.name as string) };
   });
 
