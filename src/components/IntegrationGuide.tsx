@@ -89,7 +89,7 @@ export function IntegrationGuide({
                   <span
                     aria-label={t(isDone ? `${prefix}.stepAriaDone` : isCurrent ? `${prefix}.stepAriaCurrent` : `${prefix}.stepAria`, { n, defaultValue: `Step ${n}` })}
                     className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                      isDone ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground"
+                      isDone ? "bg-success text-success-foreground" : "bg-step-number text-step-number-foreground"
                     } ${isCurrent ? "ring-4 ring-primary/30 ring-offset-2 ring-offset-background" : ""} ${!isDone && !isCurrent ? "opacity-70" : ""}`}
                   >
                     {isDone ? <Check className="h-4 w-4" /> : n}

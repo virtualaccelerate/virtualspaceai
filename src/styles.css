@@ -35,6 +35,8 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-signal: var(--signal);
+  --color-step-number: var(--step-number);
+  --color-step-number-foreground: var(--step-number-foreground);
   /* Brandbook: Manrope everywhere */
   --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
@@ -69,6 +71,9 @@
   --brand: oklch(0.80 0.22 138);
   --brand-foreground: oklch(0.19 0.02 240);
   --signal: oklch(0.91 0.16 138);
+  /* Step-number circles: deep Virtual Green so the white digit keeps AA contrast in both themes. */
+  --step-number: oklch(0.54 0.2 138);
+  --step-number-foreground: oklch(0.99 0 0);
 
   --glass-tint: white;
   --glass-bg-1: 5%;
