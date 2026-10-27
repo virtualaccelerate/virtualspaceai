@@ -38,16 +38,13 @@ async function mergeGroup(oldChat: number, newChat: number) {
 
 async function resolveMigratedMembership(chat: any) {
   if (chat.type !== "supergroup") return;
-  const {data: known} = await db.from("telegram_groups").select("id").eq("chat_id", chat.id).is("merged_into", null).maybeSingle();
-  if (known) return;
   // Never merge by title: unrelated groups can share a name. getChat's migration response proves the target.
   const {data: candidates} = await db.from("telegram_groups").select("chat_id").eq("title", chat.title ?? "").is("merged_into", null).gt("chat_id", -1000000000000).limit(20);
   for (const candidate of candidates ?? []) {
-    try { await tg("getChat", {chat_id: candidate.chat_id}); }
-    catch (error) {
-      const target = error instanceof Error ? /TG_MIGRATE_TO:(-?\d+)/.exec(error.message)?.[1] : undefined;
-      if (isMigrationTarget(Number(candidate.chat_id), target ? Number(target) : undefined, Number(chat.id))) { await mergeGroup(Number(candidate.chat_id), Number(chat.id)); return; }
-    }
+    try {
+      const result = await tg<{parameters?: {migrate_to_chat_id?: number}}>("getChat", {chat_id: candidate.chat_id});
+      if (isMigrationTarget(Number(candidate.chat_id), result.parameters?.migrate_to_chat_id, Number(chat.id))) { await mergeGroup(Number(candidate.chat_id), Number(chat.id)); return; }
+    } catch { /* A failed lookup is not proof of migration. */ }
   }
 }
 
