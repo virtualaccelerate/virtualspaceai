@@ -890,7 +890,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
 
   const CompactHeader = (
     <div className="flex shrink-0 items-center gap-2 border-b border-border pb-3">
-      <Select value={activeId ?? "new"} onValueChange={(id) => { if (id !== "new") onSwitchThread(id); }}>
+      <Select value={activeId ?? "new"} onValueChange={(id) => { if (id === "new") { setActiveId(undefined); setMessages([]); } else onSwitchThread(id); }}>
         <SelectTrigger className="min-w-0 flex-1" aria-label={t("app.chat.history", "History")}>
           <SelectValue placeholder={t("app.chat.newChat", "New chat")} />
         </SelectTrigger>
