@@ -16,7 +16,7 @@ export const loadPilot = createServerFn({ method: "POST" })
 export const updatePilot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => workspace.extend({
-    item: z.number().int().min(1).max(15), checked: z.boolean(),
+    item: z.number().int().min(1).max(18), checked: z.boolean(),
     result_percent: z.number().min(0).max(100).nullable().optional(),
   }).parse(raw))
   .handler(async ({ data, context }) => {
@@ -27,7 +27,7 @@ export const updatePilot = createServerFn({ method: "POST" })
     // Unchecked rows are retained, preventing evidence from immediately rechecking a manager's decision.
     const result = await context.supabase.from("pilot_checks").upsert({
       teamspace_id: data.teamspace_id, item: data.item, checked: data.checked,
-      automatic: false, ...(data.item === 10 && data.result_percent !== undefined ? { result_percent: data.result_percent } : {}),
+      automatic: false, ...(data.item === 13 && data.result_percent !== undefined ? { result_percent: data.result_percent } : {}),
     }, { onConflict: "teamspace_id,item" });
     if (result.error) throw new Error("PILOT_SAVE_FAILED");
     return { ok: true };

@@ -254,3 +254,21 @@ html.light .hero-force-dark .text-white\/60 { color: rgb(255 255 255 / 0.6); }
 html.light .hero-force-dark .bg-white\/10 { background-color: rgb(255 255 255 / 0.1); }
 html.light .hero-force-dark .hover\:bg-white\/10:hover { background-color: rgb(255 255 255 / 0.15); }
 html.light .hero-force-dark .border-white\/10 { border-color: rgb(255 255 255 / 0.15); }
+
+/* Pilot checklist "printed sheet" palette (light) — dark theme falls back to app tokens */
+.pilot-sheet {
+  --pilot-bg: var(--background); --pilot-fg: var(--foreground); --pilot-muted: var(--muted-foreground);
+  --pilot-card: var(--card); --pilot-line: var(--border); --pilot-accent: var(--primary);
+  --pilot-tag-1: color-mix(in oklab, oklch(0.7 0.1 250) 25%, transparent);
+  --pilot-tag-2: color-mix(in oklab, var(--primary) 18%, transparent);
+  --pilot-tag-3: color-mix(in oklab, oklch(0.75 0.06 70) 25%, transparent);
+  --pilot-dark: var(--card); --pilot-dark-fg: var(--foreground);
+  font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  background: var(--pilot-bg); color: var(--pilot-fg);
+}
+html.light .pilot-sheet {
+  --pilot-bg: #f5f4f0; --pilot-fg: #1f2a22; --pilot-muted: #6b7068; --pilot-card: #ffffff;
+  --pilot-line: #e7e4dc; --pilot-accent: #2e7d1f; --pilot-tag-1: #dde9f7; --pilot-tag-2: #e2efd9; --pilot-tag-3: #f2e8da;
+  --pilot-dark: #1f2a22; --pilot-dark-fg: #ffffff;
+}
+.pilot-sheet .pilot-card { background: var(--pilot-card); border-radius: 14px; box-shadow: 0 2px 10px rgb(31 42 34 / 0.07); border: 1px solid var(--pilot-line); }
