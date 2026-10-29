@@ -1,4 +1,5 @@
 ## Задачи
+- [ ] Add shared pilot checklist, authorized persistence, automatic evidence, six-language UI and verification
 - [x] Add task comments, mentions, notifications, combined feed and counters; preserve tasks/events; UI save/edit/soft-delete verified, real Telegram notifications untested
 - [x] Merge Telegram supergroup migrations and existing test duplicates; process single messages after 15 minutes; 102 tests and final desktop/mobile screenshot checked
 - [x] Stabilize main/floating chats, prevent Google login flash, hide UUID labels and complete task translations; no data changes
