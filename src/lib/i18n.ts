@@ -276,6 +276,8 @@ const resources = {
           team: { title: "Team & invites", desc: "Manage members and roles." },
           teamspace: { title: "Teamspace", desc: "Workspace name and preferences." },
           logo: { title: "Workspace logo", hint: "PNG, JPG or WebP, up to 2 MB", alt: "Workspace logo", upload: "Upload", replace: "Replace", remove: "Remove", saved: "Logo updated", removed: "Logo removed", ownerOnly: "Only the workspace owner or administrator can change the logo" },
+          name: { label: "Workspace name", edit: "Rename", save: "Save", cancel: "Cancel", saved: "Workspace renamed", empty: "The name cannot be empty", hint: "Up to 80 characters", ownerOnly: "Only the workspace owner or administrator can rename it" },
+
         },
         tasks: {
           dlgEdit: "Edit task",
@@ -629,6 +631,8 @@ const resources = {
           team: { title: "Команда и приглашения", desc: "Участники и роли." },
           teamspace: { title: "Рабочее пространство", desc: "Название и настройки." },
           logo: { title: "Логотип пространства", hint: "PNG, JPG или WebP, не более 2 МБ", alt: "Логотип рабочего пространства", upload: "Загрузить", replace: "Заменить", remove: "Удалить", saved: "Логотип обновлён", removed: "Логотип удалён", ownerOnly: "Изменить логотип может владелец или администратор пространства" },
+          name: { label: "Название пространства", edit: "Переименовать", save: "Сохранить", cancel: "Отмена", saved: "Пространство переименовано", empty: "Название не может быть пустым", hint: "Не более 80 символов", ownerOnly: "Переименовать пространство может только владелец или администратор" },
+
         },
         tasks: {
           dlgEdit: "Редактировать задачу",
@@ -958,6 +962,8 @@ const resources = {
           team: { title: "Команда мен шақырулар", desc: "Мүшелер мен рөлдер." },
           teamspace: { title: "Жұмыс кеңістігі", desc: "Атауы мен параметрлер." },
           logo: { title: "Кеңістік логотипі", hint: "PNG, JPG немесе WebP, 2 МБ дейін", alt: "Жұмыс кеңістігінің логотипі", upload: "Жүктеу", replace: "Ауыстыру", remove: "Жою", saved: "Логотип жаңартылды", removed: "Логотип жойылды", ownerOnly: "Логотипті тек кеңістік иесі немесе әкімшісі өзгерте алады" },
+          name: { label: "Кеңістік атауы", edit: "Атауды өзгерту", save: "Сақтау", cancel: "Болдырмау", saved: "Кеңістік атауы өзгертілді", empty: "Атау бос бола алмайды", hint: "80 таңбадан аспасын", ownerOnly: "Кеңістікті тек оның иесі немесе әкімшісі қайта атай алады" },
+
         },
         tasks: {
           dlgEdit: "Тапсырманы өңдеу",
@@ -1279,6 +1285,8 @@ const resources = {
           team: { title: "Команда жана чакыруулар", desc: "Мүчөлөр жана ролдор." },
           teamspace: { title: "Иш мейкиндиги", desc: "Аты жана жөндөөлөр." },
           logo: { title: "Мейкиндиктин логотиби", hint: "PNG, JPG же WebP, 2 МБ чейин", alt: "Иш мейкиндигинин логотиби", upload: "Жүктөө", replace: "Алмаштыруу", remove: "Өчүрүү", saved: "Логотип жаңыртылды", removed: "Логотип өчүрүлдү", ownerOnly: "Логотипти мейкиндиктин ээси же администратору гана өзгөртө алат" },
+          name: { label: "Мейкиндиктин аты", edit: "Атын өзгөртүү", save: "Сактоо", cancel: "Жокко чыгаруу", saved: "Мейкиндиктин аты өзгөртүлдү", empty: "Ат бош боло албайт", hint: "80 белгиден ашпасын", ownerOnly: "Мейкиндикти анын ээси же администратору гана кайра атай алат" },
+
         },
         tasks: {
           dlgEdit: "Тапшырманы түзөтүү",
@@ -1600,6 +1608,8 @@ const resources = {
           team: { title: "Jamoa va takliflar", desc: "Aʼzolar va rollar." },
           teamspace: { title: "Ish maydoni", desc: "Nom va sozlamalar." },
           logo: { title: "Ish maydoni logotipi", hint: "PNG, JPG yoki WebP, 2 MB gacha", alt: "Ish maydoni logotipi", upload: "Yuklash", replace: "Almashtirish", remove: "Oʻchirish", saved: "Logotip yangilandi", removed: "Logotip oʻchirildi", ownerOnly: "Logotipni faqat ish maydoni egasi yoki administratori o‘zgartira oladi" },
+          name: { label: "Ish maydoni nomi", edit: "Nomni o‘zgartirish", save: "Saqlash", cancel: "Bekor qilish", saved: "Ish maydoni nomi o‘zgartirildi", empty: "Nom bo‘sh bo‘la olmaydi", hint: "80 belgidan oshmasin", ownerOnly: "Ish maydonini faqat egasi yoki administratori qayta nomlay oladi" },
+
         },
         tasks: {
           dlgEdit: "Vazifani tahrirlash",
@@ -1921,6 +1931,8 @@ const resources = {
           team: { title: "Даста ва даъватҳо", desc: "Аъзоён ва нақшҳо." },
           teamspace: { title: "Фазои корӣ", desc: "Ном ва танзимот." },
           logo: { title: "Логотипи фазо", hint: "PNG, JPG ё WebP, то 2 МБ", alt: "Логотипи фазои корӣ", upload: "Бор кардан", replace: "Иваз кардан", remove: "Нест кардан", saved: "Логотип нав шуд", removed: "Логотип нест шуд", ownerOnly: "Логотипро танҳо соҳиби фазо ё администратор иваз карда метавонад" },
+          name: { label: "Номи фазо", edit: "Номро иваз кардан", save: "Захира кардан", cancel: "Бекор кардан", saved: "Номи фазо иваз шуд", empty: "Ном наметавонад холӣ бошад", hint: "Бештар аз 80 аломат набошад", ownerOnly: "Фазоро танҳо соҳиби он ё администратор қайта номгузорӣ карда метавонад" },
+
         },
         tasks: {
           dlgEdit: "Таҳрири вазифа",

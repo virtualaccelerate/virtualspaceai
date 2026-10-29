@@ -118,6 +118,14 @@ function AuthenticatedLayout() {
 
   useEffect(() => { void loadTeamspaces(); }, []);
 
+  // Keep the header and sidebar in sync after a workspace rename.
+  useEffect(() => {
+    const onRenamed = () => { void loadTeamspaces(); };
+    window.addEventListener("teamspace-renamed", onRenamed);
+    return () => window.removeEventListener("teamspace-renamed", onRenamed);
+  }, []);
+
+
   const switchTeamspace = async (id: string) => {
     if (id === teamspace?.id) { setMenuOpen(false); return; }
     await setActiveTeamspace(id);
