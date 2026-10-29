@@ -1,16 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Settings as SettingsIcon, User, UserPlus, Building2, ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { Settings as SettingsIcon, User, UserPlus, Building2, ImagePlus, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { getActiveTeamspaceId, listMyTeamspaces, removeTeamspaceLogo, uploadTeamspaceLogo, type TeamspaceSummary } from "@/lib/active-teamspace";
-import { deleteTeamspace } from "@/lib/teamspaces.functions";
+import { deleteTeamspace, renameTeamspace } from "@/lib/teamspaces.functions";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   component: SettingsPage,
@@ -24,6 +25,9 @@ function SettingsPage() {
   const [teamspace, setTeamspace] = useState<TeamspaceSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameBusy, setNameBusy] = useState(false);
   const canManage = teamspace?.role === "owner" || teamspace?.role === "admin";
 
   const loadTeamspace = async () => {
@@ -59,6 +63,34 @@ function SettingsPage() {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const startRename = () => {
+    setNameDraft(teamspace?.name ?? "");
+    setRenaming(true);
+  };
+
+  const saveName = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!teamspace) return;
+    const draft = nameDraft.trim();
+    if (!draft) {
+      toast.error(t("app.settings.name.empty", "Название не может быть пустым"));
+      return;
+    }
+    setNameBusy(true);
+    try {
+      const result = await renameTeamspace({ data: { teamspaceId: teamspace.id, name: draft } });
+      setTeamspace({ ...teamspace, name: result.name });
+      setRenaming(false);
+      toast.success(t("app.settings.name.saved", "Пространство переименовано"));
+      window.dispatchEvent(new Event("teamspace-renamed"));
+      await loadTeamspace();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setNameBusy(false);
     }
   };
 
@@ -114,6 +146,56 @@ function SettingsPage() {
             <h2 className="text-base font-semibold text-foreground">{t("app.settings.teamspace.title", "Рабочее пространство")}</h2>
             <p className="text-xs text-muted-foreground">{teamspace?.name ?? t("app.header.loading", "Загрузка…")}</p>
           </div>
+        </div>
+        <div className="mt-4 rounded-lg border border-border bg-card p-4">
+          <div className="text-sm font-medium text-foreground">{t("app.settings.name.label", "Название пространства")}</div>
+          {canManage ? (
+            renaming ? (
+              <form className="mt-2 flex flex-wrap items-center gap-2" onSubmit={(event) => void saveName(event)}>
+                <label className="sr-only" htmlFor="teamspace-name-input">
+                  {t("app.settings.name.label", "Название пространства")}
+                </label>
+                <Input
+                  id="teamspace-name-input"
+                  autoFocus
+                  value={nameDraft}
+                  maxLength={80}
+                  onChange={(event) => setNameDraft(event.target.value)}
+                  onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setRenaming(false); } }}
+                  className="min-w-[10rem] max-w-sm flex-1"
+                />
+                <Button size="sm" type="submit" disabled={nameBusy || !nameDraft.trim()}>
+                  {nameBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {t("app.settings.name.save", "Сохранить")}
+                </Button>
+                <Button size="sm" type="button" variant="ghost" onClick={() => setRenaming(false)}>
+                  {t("app.settings.name.cancel", "Отмена")}
+                </Button>
+              </form>
+            ) : (
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
+                  {teamspace?.name ?? t("app.header.loading", "Загрузка…")}
+                </div>
+                <Button size="sm" variant="outline" className="shrink-0" disabled={!teamspace} onClick={startRename}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  {t("app.settings.name.edit", "Переименовать")}
+                </Button>
+              </div>
+            )
+          ) : (
+            <>
+              <div className="mt-1 text-base font-semibold text-foreground">
+                {teamspace?.name ?? t("app.header.loading", "Загрузка…")}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("app.settings.name.ownerOnly", "Переименовать пространство может только владелец или администратор")}
+              </p>
+            </>
+          )}
+          {canManage && (
+            <p className="mt-2 text-xs text-muted-foreground">{t("app.settings.name.hint", "Не более 80 символов")}</p>
+          )}
         </div>
         <div className="mt-4 flex items-center gap-4 rounded-lg border border-border bg-card p-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-primary/15 text-lg font-bold text-primary">
