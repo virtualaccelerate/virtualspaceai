@@ -1574,6 +1574,47 @@ export type Database = {
           },
         ]
       }
+      pilot_checks: {
+        Row: {
+          automatic: boolean
+          checked: boolean
+          checked_at: string | null
+          checked_by: string | null
+          checker_name: string | null
+          item: number
+          result_percent: number | null
+          teamspace_id: string
+        }
+        Insert: {
+          automatic?: boolean
+          checked?: boolean
+          checked_at?: string | null
+          checked_by?: string | null
+          checker_name?: string | null
+          item: number
+          result_percent?: number | null
+          teamspace_id: string
+        }
+        Update: {
+          automatic?: boolean
+          checked?: boolean
+          checked_at?: string | null
+          checked_by?: string | null
+          checker_name?: string | null
+          item?: number
+          result_percent?: number | null
+          teamspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_checks_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2523,6 +2564,7 @@ export type Database = {
         }[]
       }
       join_teamspace_by_code: { Args: { _code: string }; Returns: string }
+      load_pilot_checklist: { Args: { p_teamspace: string }; Returns: Json }
       merge_telegram_group: {
         Args: { new_chat: number; old_chat: number }
         Returns: string

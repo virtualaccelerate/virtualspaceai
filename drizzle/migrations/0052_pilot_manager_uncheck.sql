@@ -1,0 +1,1 @@
+ALTER POLICY pilot_insert ON public.pilot_checks WITH CHECK (private.is_teamspace_member(teamspace_id, auth.uid()) AND (checked OR private.is_teamspace_manager(teamspace_id, auth.uid())) AND (item <= 10 OR private.is_teamspace_manager(teamspace_id, auth.uid())));
