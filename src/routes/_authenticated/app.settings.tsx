@@ -188,11 +188,14 @@ function SettingsPage() {
               <div className="mt-1 text-base font-semibold text-foreground">
                 {teamspace?.name ?? t("app.header.loading", "Загрузка…")}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t("app.settings.name.ownerOnly", "Переименовать пространство может только владелец или администратор")}
-              </p>
+              {teamspace && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("app.settings.name.ownerOnly", "Переименовать пространство может только владелец или администратор")}
+                </p>
+              )}
             </>
           )}
+
           {canManage && (
             <p className="mt-2 text-xs text-muted-foreground">{t("app.settings.name.hint", "Не более 80 символов")}</p>
           )}
