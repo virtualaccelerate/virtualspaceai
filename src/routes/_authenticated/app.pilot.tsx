@@ -139,7 +139,7 @@ function PilotPage() {
                   <button type="button" role="checkbox" aria-checked={checked} aria-label={t(`pilot.items.${item}.title`)}
                     disabled={locked} title={locked ? t("pilot.forbidden") : undefined}
                     onClick={() => mutation.mutate({ item, checked: !checked })}
-                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 border-[var(--pilot-accent)] transition-colors disabled:cursor-not-allowed ${checked ? "bg-[var(--pilot-accent)] text-primary-foreground" : "bg-transparent"}`}>
+                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] border-2 border-[var(--pilot-accent)] transition-colors disabled:cursor-not-allowed ${checked ? "bg-[var(--pilot-accent)] text-primary-foreground" : "bg-transparent"}`}>
                     {checked && <Check className="h-4 w-4" strokeWidth={3} />}
                   </button>
                   <button type="button" onClick={() => toggle(item)} aria-expanded={expanded} aria-controls={`pilot-guide-${item}`}
