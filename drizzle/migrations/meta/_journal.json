@@ -372,6 +372,13 @@
       "when": 1793268528924,
       "tag": "0052_pilot_manager_uncheck",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1793270345021,
+      "tag": "0053_pilot_checklist_18_items",
+      "breakpoints": true
     }
   ]
 }
