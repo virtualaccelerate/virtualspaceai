@@ -41,6 +41,7 @@ import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppLearnRouteImport } from './routes/_authenticated/app.learn'
 import { Route as AuthenticatedAppMentorsRouteImport } from './routes/_authenticated/app.mentors'
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
+import { Route as AuthenticatedAppPilotRouteImport } from './routes/_authenticated/app.pilot'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
@@ -233,6 +234,11 @@ const AuthenticatedAppOverviewRoute =
     path: '/overview',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppPilotRoute = AuthenticatedAppPilotRouteImport.update({
+  id: '/pilot',
+  path: '/pilot',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -399,6 +405,7 @@ export interface FileRoutesByFullPath {
   '/app/learn': typeof AuthenticatedAppLearnRoute
   '/app/mentors': typeof AuthenticatedAppMentorsRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
+  '/app/pilot': typeof AuthenticatedAppPilotRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -455,6 +462,7 @@ export interface FileRoutesByTo {
   '/app/learn': typeof AuthenticatedAppLearnRoute
   '/app/mentors': typeof AuthenticatedAppMentorsRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
+  '/app/pilot': typeof AuthenticatedAppPilotRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -514,6 +522,7 @@ export interface FileRoutesById {
   '/_authenticated/app/learn': typeof AuthenticatedAppLearnRoute
   '/_authenticated/app/mentors': typeof AuthenticatedAppMentorsRoute
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
+  '/_authenticated/app/pilot': typeof AuthenticatedAppPilotRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/app/learn'
     | '/app/mentors'
     | '/app/overview'
+    | '/app/pilot'
     | '/app/profile'
     | '/app/projects'
     | '/app/settings'
@@ -629,6 +639,7 @@ export interface FileRouteTypes {
     | '/app/learn'
     | '/app/mentors'
     | '/app/overview'
+    | '/app/pilot'
     | '/app/profile'
     | '/app/projects'
     | '/app/settings'
@@ -687,6 +698,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/learn'
     | '/_authenticated/app/mentors'
     | '/_authenticated/app/overview'
+    | '/_authenticated/app/pilot'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/projects'
     | '/_authenticated/app/settings'
@@ -974,6 +986,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/pilot': {
+      id: '/_authenticated/app/pilot'
+      path: '/pilot'
+      fullPath: '/app/pilot'
+      preLoaderRoute: typeof AuthenticatedAppPilotRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/profile': {
       id: '/_authenticated/app/profile'
       path: '/profile'
@@ -1158,6 +1177,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppLearnRoute: typeof AuthenticatedAppLearnRoute
   AuthenticatedAppMentorsRoute: typeof AuthenticatedAppMentorsRoute
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
+  AuthenticatedAppPilotRoute: typeof AuthenticatedAppPilotRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
@@ -1185,6 +1205,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppLearnRoute: AuthenticatedAppLearnRoute,
   AuthenticatedAppMentorsRoute: AuthenticatedAppMentorsRoute,
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
+  AuthenticatedAppPilotRoute: AuthenticatedAppPilotRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
