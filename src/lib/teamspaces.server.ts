@@ -94,3 +94,34 @@ export async function deleteTeamspaceForUser(userId: string, teamspaceId: string
 
   return { deleted: true, nextTeamspaceId: nextMembership?.teamspace_id ?? null };
 }
+
+export const MAX_TEAMSPECE_NAME_LENGTH = 80;
+
+/**
+ * Workspace-name rules: trim, collapse inner whitespace, cap at 80 characters.
+ * Throws when nothing is left.
+ */
+export function normalizeTeamspaceName(raw: string): string {
+  const name = String(raw ?? "").replace(/\s+/g, " ").trim().slice(0, MAX_TEAMSPECE_NAME_LENGTH);
+  if (!name) throw new Error("Название рабочего пространства не может быть пустым");
+  return name;
+}
+
+/** Rename a workspace. Owners and admins only; the check runs server-side. */
+export async function renameTeamspaceForUser(userId: string, teamspaceId: string, rawName: string) {
+  const name = normalizeTeamspaceName(rawName);
+  const { requireManager } = await import("./roles.server");
+  await requireManager(userId, teamspaceId, "переименовать рабочее пространство");
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("teamspaces")
+    .update({ name })
+    .eq("id", teamspaceId)
+    .select("id, name")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Рабочее пространство не найдено");
+
+  return { renamed: true, name: data.name };
+}
