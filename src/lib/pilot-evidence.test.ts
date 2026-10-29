@@ -1,9 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
-const migration = readFileSync(join(import.meta.dir, "../../drizzle/migrations/0051_pilot_checklist.sql"), "utf8");
+const migration = readFileSync(new URL("../../drizzle/migrations/0051_pilot_checklist.sql", import.meta.url), "utf8");
 // Execute the exact database evidence predicates against isolated fixture rows.
 // The live database is never written by these tests.
 import { spawnSync } from "node:child_process";
