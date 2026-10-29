@@ -259,8 +259,8 @@ html.light .hero-force-dark .border-white\/10 { border-color: rgb(255 255 255 / 
 .pilot-sheet {
   --pilot-bg: var(--background); --pilot-fg: var(--foreground); --pilot-muted: var(--muted-foreground);
   --pilot-card: var(--card); --pilot-line: var(--border); --pilot-accent: var(--primary);
-  --pilot-tag-1: color-mix(in oklab, var(--primary) 18%, transparent);
-  --pilot-tag-2: color-mix(in oklab, oklch(0.7 0.1 250) 25%, transparent);
+  --pilot-tag-1: color-mix(in oklab, oklch(0.7 0.1 250) 25%, transparent);
+  --pilot-tag-2: color-mix(in oklab, var(--primary) 18%, transparent);
   --pilot-tag-3: color-mix(in oklab, oklch(0.75 0.06 70) 25%, transparent);
   --pilot-dark: var(--card); --pilot-dark-fg: var(--foreground);
   font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
