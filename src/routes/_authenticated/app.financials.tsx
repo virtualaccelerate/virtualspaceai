@@ -67,13 +67,20 @@ function splitSheets(csv: string): { name: string; rows: string[][] }[] {
 
 
 export const Route = createFileRoute("/_authenticated/app/financials")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: search.tab === "payroll" ? "payroll" as const : "metrics" as const,
+  }),
   component: () => (
     <ManagerOnly>
       <FinancialsPage />
     </ManagerOnly>
   ),
   head: () => ({
-    meta: [{ title: "Financials — Virtual Space" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Financials — Virtual Space" }, { name: "robots", content: "noindex" },
+      { name: "description", content: "Review financial metrics and payroll in Virtual Space." },
+      { property: "og:title", content: "Financials — Virtual Space" },
+      { property: "og:description", content: "Review financial metrics and payroll in Virtual Space." },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }],
   }),
 });
 
@@ -160,7 +167,11 @@ function FinancialsPage() {
   };
 
 
-  const [tab, setTab] = useState<"metrics" | "payroll">("metrics");
+  const { tab } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const setTab = (value: "metrics" | "payroll") => {
+    void navigate({ search: { tab: value }, resetScroll: false });
+  };
   const [teamspaceId, setTeamspaceId] = useState<string | null>(null);
   const [sources, setSources] = useState<Src[]>([]);
   const [loading, setLoading] = useState(true);

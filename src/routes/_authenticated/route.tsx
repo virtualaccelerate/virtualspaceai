@@ -154,6 +154,7 @@ function AuthenticatedLayout() {
 
   const topNav: NavItem[] = [
     { to: "/app/overview", label: t("app.nav.overview"), subtitle: t("app.nav.overviewSubtitle", "Workspace insights"), icon: LayoutDashboard },
+    { to: "/app/pilot", label: t("app.nav.pilot"), icon: CheckSquare },
   ];
 
   const managerOnlyPaths = ["/app/financials", "/app/clients", "/app/integrations"];

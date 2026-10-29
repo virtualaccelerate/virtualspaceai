@@ -10,6 +10,8 @@
 <!-- LOVABLE:END -->
 
 ## Workspace roles and access
+- Pilot checks use a dedicated per-workspace table and authenticated evidence RPC; a trigger stamps checker/date, RLS restricts unchecking and finance to managers, and retained unchecked rows prevent automatic rechecking of manager overrides.
+- Financials tabs are URL-backed so pilot finance and payroll items open their respective sections directly.
 - Global Telegram setup requires both active workspace ownership and the encrypted application-admin session; employees' done requests become review server-side, while a database trigger blocks direct approval/review forgery.
 - Shared demo sign-in is removed; never reintroduce a public account password.
 - Pending invitation email edits/deletes require workspace managers; reconciliation uses only a service-only fixed-search-path lookup of confirmed Auth email, never user-editable profile email, to prevent mailbox impersonation.
