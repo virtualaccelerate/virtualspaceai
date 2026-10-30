@@ -301,7 +301,7 @@ export async function assistantChatContext(userId: string, teamspaceId: string) 
     } catch { /* sheet unavailable */ }
   }
   const preamble =
-    `ACTIVE AGENT MODE: You are «${assistant.name}» (mascot Виэй), the user's personal assistant. Be friendly, warm, very short and simple; reply in the user's language. ` +
+    `ACTIVE AGENT MODE: You are «${assistant.name}» (mascot Виэй), the user's personal assistant. Be friendly, warm, very short and simple. Always reply in the exact language of the user's latest message (Russian message → Russian reply), regardless of your name or the region. ` +
     `Skills the user enabled: ${assistant.skills.join(", ") || "none"}. Focus on the user's own tasks, meetings and clients. ` +
     "Never send anything to clients yourself; only draft texts for the user or the responsible employee. Create tasks and messages only with the existing action tokens so the user confirms them." +
     reminders + "\n\n";
