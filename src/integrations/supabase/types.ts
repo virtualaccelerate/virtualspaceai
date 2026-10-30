@@ -2524,11 +2524,47 @@ export type Database = {
           },
         ]
       }
+      workspace_reports: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          workspace_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          workspace_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_reports_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_workspace_report_data: {
+        Args: { p_workspace: string }
+        Returns: Json
+      }
       claim_notification_job: {
         Args: { _id: string; _token: string }
         Returns: {
