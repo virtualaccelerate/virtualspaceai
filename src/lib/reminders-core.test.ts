@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import { deepStrictEqual, notStrictEqual, strictEqual } from "node:assert";
-import { dedupeKey, detectHeaderRow, evaluateRow, parseSheetDate, rowKey, type TabMap } from "./reminders-core";
+import { dedupeKey, detectHeaderRow, evaluateRow, firstName, parseSheetDate, rowKey, type TabMap } from "./reminders-core";
 
 describe("parseSheetDate", () => {
   it("parses supported formats", () => {
@@ -44,5 +44,22 @@ describe("dedupe keys", () => {
   });
   it("finds header row below title rows", () => {
     strictEqual(detectHeaderRow([["АКТУАЛЬНЫЕ:"], [], ["ДАТА", "ФИО", "дата рождения", "контакты"]]), 2);
+  });
+});
+
+describe("greeting name", () => {
+  it("uses the 2nd word of «Фамилия Имя Отчество», or the single word", () => {
+    strictEqual(firstName("Тилектешев Нурэль"), "Нурэль");
+    strictEqual(firstName("Иванова Анна Петровна"), "Анна");
+    strictEqual(firstName("Айбек"), "Айбек");
+  });
+  it("addresses the client by first name", () => {
+    const r = evaluateRow("T", ["Тилектешев Нурэль", "996555", "30.10.2014"], { header_row: 0, name: 0, phone: 1, birthday: 2 }, today);
+    strictEqual(r.hits[0].message.startsWith("Нурэль, с днём рождения"), true);
+  });
+  it("addresses the parent when a parent column is filled", () => {
+    const r = evaluateRow("T", ["Тилектешев Нурэль", "996555", "30.10.2014", "Жанайым"], { header_row: 0, name: 0, phone: 1, birthday: 2, parent: 3 }, today);
+    strictEqual(r.hits[0].message.startsWith("Жанайым, "), true);
+    strictEqual(r.hits[0].message.includes("Нурэль"), true);
   });
 });
