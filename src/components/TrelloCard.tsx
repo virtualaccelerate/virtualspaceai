@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Loader2, RefreshCw, Unplug } from "lucide-react";
+import { Check, RefreshCw, Unplug } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,6 +33,8 @@ export function TrelloCard() {
   const [columnMap, setColumnMap] = useState<Record<string, Status>>({});
   const [userMap, setUserMap] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = async (id: string) => {
@@ -53,11 +57,12 @@ export function TrelloCard() {
   const team = (state?.team ?? []) as Member[];
   const board = useMemo(() => ((state?.boards ?? []) as Item[]).find((item) => item.id === boardId), [state, boardId]);
 
-  async function run(action: () => Promise<unknown>) {
+  async function run(action: () => Promise<unknown>, kind: string) {
     if (!teamspaceId) return;
     setBusy(true);
+    setPendingAction(kind);
     setError(null);
-    try { await action(); await load(teamspaceId); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+    try { await action(); await load(teamspaceId); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); setPendingAction(null); }
   }
 
   // Inspect-only: does NOT refetch persisted status afterwards, so the
@@ -85,9 +90,9 @@ export function TrelloCard() {
           <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.desc", "Task source for notifications and reports")}</p>
         </div>
         {state?.connected && (
-          <Button variant="ghost" size="icon" disabled={busy} onClick={() => run(() => syncFn({ data: { teamspace_id: teamspaceId ?? "" } }))} title={t("integrationsUi.trello.sync", "Sync")}>
+          <IconButton variant="ghost" size="icon" disabled={busy} loading={pendingAction === "sync"} onClick={() => run(() => syncFn({ data: { teamspace_id: teamspaceId ?? "" } }), "sync")} title={t("integrationsUi.trello.sync", "Sync")}>
             <RefreshCw className="h-4 w-4" />
-          </Button>
+          </IconButton>
         )}
       </div>
 
@@ -97,8 +102,8 @@ export function TrelloCard() {
             <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={t("integrationsUi.trello.apiKey", "Trello API key")} />
             <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder={t("integrationsUi.trello.apiToken", "Trello token")} />
           </div>
-          <Button disabled={busy || !key.trim() || !token.trim() || !teamspaceId} onClick={() => run(() => connectFn({ data: { teamspace_id: teamspaceId ?? "", api_key: key.trim(), api_token: token.trim() } }))}>
-            {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.trello.connect", "Connect")}
+          <Button loading={pendingAction === "connect"} disabled={busy || !key.trim() || !token.trim() || !teamspaceId} onClick={() => run(() => connectFn({ data: { teamspace_id: teamspaceId ?? "", api_key: key.trim(), api_token: token.trim() } }), "connect")}>
+             {t("integrationsUi.trello.connect", "Connect")}
           </Button>
         </div>
       ) : (
@@ -156,16 +161,17 @@ export function TrelloCard() {
           )}
 
           <div className="flex flex-wrap gap-2">
-            <Button disabled={busy || !boardId} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", board_id: boardId, board_name: board?.name ?? boardId, column_map: columnMap, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }))}>
-              {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.trello.save", "Save and sync")}
+            <Button loading={pendingAction === "save"} disabled={busy || !boardId} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", board_id: boardId, board_name: board?.name ?? boardId, column_map: columnMap, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }), "save")}>
+               {t("integrationsUi.trello.save", "Save and sync")}
             </Button>
-            <Button variant="outline" disabled={busy} onClick={() => run(() => disconnectFn({ data: { teamspace_id: teamspaceId ?? "" } }))}>
+            <Button variant="destructive" disabled={busy} onClick={() => setConfirmDisconnect(true)}>
               <Unplug className="h-4 w-4" /> {t("integrationsUi.trello.disconnect", "Disconnect")}
             </Button>
           </div>
           {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.trello.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
         </div>
       )}
+      <ActionConfirm open={confirmDisconnect} onOpenChange={setConfirmDisconnect} title={t("integrationsUi.trello.disconnect", "Disconnect") + " · Trello"} label={t("integrationsUi.trello.disconnect", "Disconnect")} loading={pendingAction === "disconnect"} onConfirm={async () => { await run(() => disconnectFn({ data: { teamspace_id: teamspaceId ?? "" } }), "disconnect"); setConfirmDisconnect(false); }} />
       <IntegrationGuide prefix="integrationsUi.trello.guide" name="Trello" steps={8} connected={!!state?.connected} doneSteps={[...(state?.connected ? [1, 2, 3, 4, 5] : []), ...(state?.connected && state?.board_id ? [6] : []), ...(state?.connected && Object.keys(state?.column_map ?? {}).length ? [7] : []), ...(state?.connected && Object.keys(state?.user_map ?? {}).length && state?.last_sync_at ? [8] : [])]} />
       {(error || state?.last_error) && <p className="text-sm text-destructive">{error || state.last_error}</p>}
     </div>

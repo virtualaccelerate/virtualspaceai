@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { CalendarDays, Check, Loader2, RefreshCw, Unplug, AlertTriangle } from "lucide-react";
+import { CalendarDays, Check, RefreshCw, Unplug, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { completeGoogleCalendarConnect, googleCalendarDisconnect, googleCalendarList, googleCalendarSelect, googleCalendarStatus, googleCalendarSync, startGoogleCalendarConnect } from "@/lib/google-calendar.functions";
 
@@ -25,32 +27,35 @@ export function GoogleCalendarCard() {
   const [status, setStatus] = useState<Awaited<ReturnType<typeof googleCalendarStatus>> | null>(null);
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [busy, setBusy] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const load = async () => { const next = await googleCalendarStatus(); setStatus(next); if (next.connected) setCalendars(await googleCalendarList()); };
   useEffect(() => { load().catch((e) => setError(e instanceof Error ? e.message : String(e))); }, []);
   const connect = async () => {
     const popup = window.open("", "google-calendar-oauth", "width=600,height=740");
     if (!popup) return setError(t("integrationsUi.popupBlocked", "Please allow pop-ups and try again."));
-    setBusy(true); setError(null);
+    setBusy(true); setPendingAction("connect"); setError(null);
     try { const { authorizationUrl } = await startGoogleCalendarConnect(); const waiting = waitForOAuth(popup); popup.location.href = authorizationUrl; const code = await waiting; await completeGoogleCalendarConnect({ data: { code } }); await load(); }
-    catch (e) { popup.close(); setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+    catch (e) { popup.close(); setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); setPendingAction(null); }
   };
-  const sync = async () => { setBusy(true); setError(null); try { await googleCalendarSync(); await load(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); } };
-  const disconnect = async () => { setBusy(true); try { await googleCalendarDisconnect(); setCalendars([]); await load(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); } };
+  const sync = async () => { setBusy(true); setPendingAction("sync"); setError(null); try { await googleCalendarSync(); await load(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); setPendingAction(null); } };
+  const disconnect = async () => { setBusy(true); setPendingAction("disconnect"); try { await googleCalendarDisconnect(); setCalendars([]); await load(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); setPendingAction(null); } };
   return <div className="glass-strong rounded-2xl border border-border p-4 space-y-4">
     <div className="flex items-start gap-3">
       <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0"><CalendarDays className="h-5 w-5" /></div>
       <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="font-semibold text-foreground">Google Calendar</span>{status?.connected && <span className="text-[10px] text-primary inline-flex items-center gap-1"><Check className="h-3 w-3" />{t("integrationsUi.connected", "Connected")}</span>}</div><p className="text-xs text-muted-foreground mt-1">{status?.email ?? t("integrationsUi.calendarDescription", "Meetings in your calendar, task deadlines in Google Tasks")}</p></div>
-      {(!status?.connected || status?.lastError === "GOOGLE_TASKS_RECONNECT_REQUIRED") && <Button size="sm" disabled={busy} onClick={() => void connect()}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}{status?.connected ? t("integrationsUi.reconnect", "Reconnect") : t("integrationsUi.connect", "Connect")}</Button>}
+      {(!status?.connected || status?.lastError === "GOOGLE_TASKS_RECONNECT_REQUIRED") && <Button size="sm" variant={status?.connected ? "outline" : "default"} loading={pendingAction === "connect"} disabled={busy} onClick={() => void connect()}>{status?.connected ? t("integrationsUi.reconnect", "Reconnect") : t("integrationsUi.connect", "Connect")}</Button>}
     </div>
     {status?.connected && <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-      <Select value={status.calendarId} onValueChange={(id) => { const item = calendars.find((x) => x.id === id); if (!item) return; setBusy(true); googleCalendarSelect({ data: { calendarId: id, name: item.summary } }).then(load).catch((e) => setError(e instanceof Error ? e.message : String(e))).finally(() => setBusy(false)); }}>
+      <Select disabled={busy} value={status.calendarId} onValueChange={(id) => { const item = calendars.find((x) => x.id === id); if (!item) return; setBusy(true); googleCalendarSelect({ data: { calendarId: id, name: item.summary } }).then(load).catch((e) => setError(e instanceof Error ? e.message : String(e))).finally(() => setBusy(false)); }}>
         <SelectTrigger><SelectValue placeholder={t("integrationsUi.chooseCalendar", "Choose calendar")} /></SelectTrigger>
         <SelectContent>{calendars.map((calendar) => <SelectItem key={calendar.id} value={calendar.id}>{calendar.summary}{calendar.primary ? ` (${t("integrationsUi.primary", "Primary")})` : ""}</SelectItem>)}</SelectContent>
       </Select>
-      <div className="flex gap-2"><Button variant="outline" size="sm" disabled={busy} onClick={() => void sync()}><RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />{t("integrationsUi.sync", "Sync")}</Button><Button variant="ghost" size="icon" disabled={busy} onClick={() => void disconnect()} title={t("integrationsUi.disconnect", "Disconnect")}><Unplug className="h-4 w-4" /></Button></div>
+      <div className="flex gap-2"><Button size="sm" loading={pendingAction === "sync"} disabled={busy} onClick={() => void sync()}><RefreshCw className="h-4 w-4" />{t("integrationsUi.sync", "Sync")}</Button><IconButton variant="destructive" disabled={busy} onClick={() => setConfirmDisconnect(true)} title={t("integrationsUi.disconnect", "Disconnect")}><Unplug className="h-4 w-4" /></IconButton></div>
       <div className="text-[11px] text-muted-foreground sm:col-span-2">{status.lastSyncAt ? `${t("integrationsUi.lastSync", "Last sync")}: ${new Date(status.lastSyncAt).toLocaleString(i18n.language)}` : t("integrationsUi.notSynced", "Not synchronized yet")}</div>
     </div>}
+    <ActionConfirm open={confirmDisconnect} onOpenChange={setConfirmDisconnect} title={t("integrationsUi.disconnect", "Disconnect") + " · Google Calendar"} label={t("integrationsUi.disconnect", "Disconnect")} loading={pendingAction === "disconnect"} onConfirm={async () => { await disconnect(); setConfirmDisconnect(false); }} />
     {(error || status?.lastError) && <div className={`flex gap-2 text-xs ${!error && /GOOGLE_TASKS_UNAVAILABLE|Google Tasks/.test(status?.lastError ?? "") ? "text-muted-foreground" : "text-destructive"}`}><AlertTriangle className="h-4 w-4 shrink-0" /><span>{friendlyCalendarError(error || status?.lastError || "", t)}</span></div>}
   </div>;
 }

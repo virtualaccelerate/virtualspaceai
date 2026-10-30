@@ -190,7 +190,7 @@ export function AdminAnalytics() {
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmt(w.created_at, dash)}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmt(w.last_activity, dash)}</td>
                   <td className="px-4 py-3">
-                    <Button variant="outline" size="sm" onClick={() => void openReports(w)}><FileText className="h-4 w-4" />{t("adminUi.reports.generate", "Generate report")}</Button>
+                    <Button variant="outline" size="sm" loading={reportLoading && workspace?.id === w.id} disabled={reportLoading || generating} onClick={() => void openReports(w)}><FileText className="h-4 w-4" />{t("adminUi.reports.generate", "Generate report")}</Button>
                   </td>
                 </tr>
               ))}
@@ -206,9 +206,9 @@ export function AdminAnalytics() {
             <DialogDescription>{t("adminUi.reports.period", "Last 30 days")}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={() => void regenerate()} disabled={generating || reportLoading}>
-              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              {generating ? t("adminUi.reports.generating", "Generating…") : reports.length ? t("adminUi.reports.regenerate", "Regenerate") : t("adminUi.reports.generate", "Generate report")}
+            <Button onClick={() => void regenerate()} loading={generating} disabled={reportLoading}>
+              <RefreshCw className="h-4 w-4" />
+              {reports.length ? t("adminUi.reports.regenerate", "Regenerate") : t("adminUi.reports.generate", "Generate report")}
             </Button>
             {reports.length > 0 && <Select value={selectedReport} onValueChange={setSelectedReport}>
               <SelectTrigger className="w-full sm:w-72" aria-label={t("adminUi.reports.history", "Report history")}><History className="h-4 w-4" /><SelectValue /></SelectTrigger>
