@@ -41,7 +41,7 @@ type Assistant = { id: string; name: string; skills: string[] };
 function Bubble({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-end gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
-      <img src={mascot.url} alt="Виэй" className="h-9 w-9 rounded-full bg-primary/15 object-contain p-0.5 shrink-0" />
+      <img src={mascot.url} alt="Виэй" className="h-9 w-9 rounded-full object-cover shrink-0" />
       <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-card border border-border px-4 py-2.5 text-sm text-foreground leading-relaxed">{children}</div>
     </div>
   );
@@ -244,7 +244,7 @@ function Settings({ teamspaceId, assistant, sources, reload }: { teamspaceId: st
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4 rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-5">
-        <img src={mascot.url} alt="Виэй" className="h-20 w-20 object-contain" />
+        <img src={mascot.url} alt="Виэй" className="h-20 w-20 object-cover rounded-2xl" />
         <div className="flex-1 min-w-0">
           <h1 className="font-display text-2xl text-foreground">{t("assistantUi.settingsTitle")}</h1>
           <div className="mt-2 flex flex-wrap gap-2">

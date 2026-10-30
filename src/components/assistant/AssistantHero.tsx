@@ -33,7 +33,7 @@ export function AssistantHero({ teamspaceId }: { teamspaceId?: string }) {
   return (
     <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-5 sm:p-7">
       <div className="flex flex-col sm:flex-row items-center gap-5">
-        <img src={mascot.url} alt={t("assistantUi.heroTitle")} className="h-32 w-32 sm:h-40 sm:w-40 object-contain drop-shadow-xl shrink-0" />
+        <img src={mascot.url} alt={t("assistantUi.heroTitle")} className="h-32 w-32 sm:h-40 sm:w-40 object-cover rounded-2xl shadow-xl shrink-0" />
         <div className="flex-1 min-w-0 text-center sm:text-left">
           {assistant ? (
             <>

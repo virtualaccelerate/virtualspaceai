@@ -1023,7 +1023,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                   transition={{ duration: 0.2 }}
                   className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} ${activeAgent === "personal" && m.role === "assistant" ? "items-start gap-2" : ""}`}
                 >
-                  {activeAgent === "personal" && m.role === "assistant" && <img src={vieyMascot.url} alt="Виэй" className="h-8 w-8 rounded-full bg-primary/15 object-contain p-0.5 shrink-0 mt-1" />}
+                  {activeAgent === "personal" && m.role === "assistant" && <img src={vieyMascot.url} alt="Виэй" className="h-8 w-8 rounded-full object-cover shrink-0 mt-1" />}
                   <div className={`max-w-[85%] rounded-2xl ${isCompact ? "px-4 py-2.5 text-sm" : "px-5 py-3 text-[15px]"} whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
                     {m.role === "assistant"
                       ? <MessageContent text={m.content} onOpenFile={openFile} openingFile={openingFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />
