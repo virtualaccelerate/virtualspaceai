@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { ManagerOnly } from "@/components/ManagerOnly";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -188,6 +191,9 @@ function FinancialsPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [askInput, setAskInput] = useState("");
   const [asking, setAsking] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -247,16 +253,19 @@ function FinancialsPage() {
   };
 
   const removeSrc = async (id: string) => {
-    if (!confirm(t("app.fin.confirmDelete", "Remove this table?"))) return;
+    setPendingAction("delete");
     try {
       await del({ data: { id } });
       setSources((p) => p.filter((s) => s.id !== id));
     } catch (e) { setError(e instanceof Error ? e.message : "Delete failed"); }
+    finally { setPendingAction(null); setDeleteTarget(null); }
   };
 
   const refreshOne = async (id: string) => {
+    setPendingAction(`refresh:${id}`);
     try { await refresh({ data: { id } }); }
     catch (e) { setError(e instanceof Error ? e.message : "Refresh failed"); }
+    finally { setPendingAction(null); }
   };
 
   const runAnalysis = async () => {
@@ -311,21 +320,16 @@ function FinancialsPage() {
             </p>
           </div>
         </div>
-        <button
-          onClick={runAnalysis}
-          disabled={analyzing || sources.length === 0}
-          className={`inline-flex items-center gap-2 rounded-xl bg-primary text-black font-semibold px-4 py-2 text-sm disabled:opacity-50 hover:opacity-90 transition ${tab === "payroll" ? "hidden" : ""}`}
-        >
-          {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {t("app.fin.analyze", "Analyze & build dashboard")}
-        </button>
+        <Button onClick={runAnalysis} loading={analyzing} disabled={sources.length === 0} className={tab === "payroll" ? "hidden" : ""}>
+          <Sparkles className="h-4 w-4" />{t("app.fin.analyze", "Analyze & build dashboard")}
+        </Button>
       </div>
 
       <div className="inline-flex rounded-xl border border-border bg-card p-1">
         {(["metrics","payroll"] as const).map((k) => (
-          <button key={k} onClick={() => setTab(k)} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+          <Button variant="ghost" key={k} onClick={() => setTab(k)} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
             {k === "metrics" ? t("app.fin.tabMetrics", i18n.language.startsWith("en") ? "Company metrics" : "Показатели компании") : t("app.fin.tabPayroll", i18n.language.startsWith("en") ? "Payroll" : "Зарплаты")}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -347,13 +351,7 @@ function FinancialsPage() {
               className="flex-1 rounded-lg bg-background border border-border px-3 py-2 text-sm outline-none focus:border-primary/60"
               onKeyDown={(e) => e.key === "Enter" && addByUrl()}
             />
-            <button
-              onClick={addByUrl}
-              disabled={addingUrl || !url.trim()}
-              className="rounded-lg bg-primary text-black text-sm font-semibold px-3 disabled:opacity-50"
-            >
-              {addingUrl ? <Loader2 className="h-4 w-4 animate-spin" /> : t("app.fin.add", "Add")}
-            </button>
+            <Button onClick={addByUrl} loading={addingUrl} disabled={!url.trim()}>{t("app.fin.add", "Add")}</Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
             {t("app.fin.sheetHint", "Share → Anyone with the link (Viewer).")}
@@ -365,10 +363,7 @@ function FinancialsPage() {
             <FileSpreadsheet className="h-4 w-4 text-primary" />
             <div className="text-sm font-semibold">{t("app.fin.uploadTitle", "Upload CSV / Excel")}</div>
           </div>
-          <div
-            onClick={() => fileRef.current?.click()}
-            className="cursor-pointer rounded-xl border-2 border-dashed border-border bg-background/40 hover:bg-background p-4 text-center text-sm"
-          >
+          <div className="rounded-xl border-2 border-dashed border-border bg-background/40 p-4 text-center text-sm">
             <input
               ref={fileRef}
               type="file"
@@ -377,10 +372,7 @@ function FinancialsPage() {
               className="hidden"
               onChange={(e) => e.target.files && handleFiles(e.target.files)}
             />
-            <div className="flex items-center justify-center gap-2 text-muted-foreground">
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Upload className="h-4 w-4 text-primary" />}
-              {uploading ? t("app.fin.uploading", "Uploading…") : t("app.fin.upload", "Click to upload .csv / .xlsx")}
-            </div>
+            <Button variant="outline" loading={uploading} onClick={() => fileRef.current?.click()} className="h-auto py-2 w-full"><Upload className="h-4 w-4" />{t("app.fin.upload", "Click to upload .csv / .xlsx")}</Button>
             <div className="text-xs text-muted-foreground mt-1">{t("app.fin.uploadHint", "Up to 15 MB per file")}</div>
           </div>
         </div>
@@ -412,17 +404,17 @@ function FinancialsPage() {
                 <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   {s.kind === "sheet" ? <Link2 className="h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4" />}
                 </div>
-                <button
+                <Button variant="ghost" loading={previewLoading && preview?.name === s.name}
                   type="button"
                   onClick={() => openPreview(s.id, s.name)}
-                  className="flex-1 min-w-0 text-left group"
+                  className="flex-1 min-w-0 h-auto justify-start text-left group [&>span]:block [&>span]:min-w-0"
                   title={t("app.fin.open", "Open table")}
                 >
                   <div className="text-sm text-foreground truncate group-hover:text-primary transition-colors">{s.name}</div>
                   <div className="text-xs text-muted-foreground truncate">
                     {s.kind === "sheet" ? "Google Sheet" : "Upload"} · {new Date(s.created_at).toLocaleDateString()}
                   </div>
-                </button>
+                </Button>
 
                 {s.kind === "sheet" && s.source_url && (
                   <>
@@ -430,27 +422,15 @@ function FinancialsPage() {
                       href={s.source_url}
                       target="_blank" rel="noopener noreferrer"
                       className="p-2 text-muted-foreground hover:text-foreground rounded-lg"
-                      aria-label="Open"
+                      aria-label={t("app.fin.open", "Open table")}
+                      title={t("app.fin.open", "Open table")}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </a>
-                    <button
-                      onClick={() => refreshOne(s.id)}
-                      className="p-2 text-muted-foreground hover:text-foreground rounded-lg"
-                      aria-label="Refresh"
-                      title={t("app.fin.refresh", "Refresh")}
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </button>
+                    <IconButton variant="ghost" loading={pendingAction === `refresh:${s.id}`} disabled={!!pendingAction} onClick={() => void refreshOne(s.id)} title={t("app.fin.refresh", "Refresh")}><RefreshCw className="h-4 w-4" /></IconButton>
                   </>
                 )}
-                <button
-                  onClick={() => removeSrc(s.id)}
-                  className="p-2 text-muted-foreground hover:text-red-500 rounded-lg"
-                  aria-label="Delete"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <IconButton variant="destructive" disabled={!!pendingAction} onClick={() => setDeleteTarget(s.id)} title={t("tasksUi.delete", "Delete")}><Trash2 className="h-4 w-4" /></IconButton>
               </li>
             ))}
           </ul>
@@ -589,21 +569,7 @@ function FinancialsPage() {
             {t("app.fin.ask", "Ask about your finances")}
           </div>
           {messages.length > 0 && (
-            <button
-              onClick={async () => {
-                if (!teamspaceId) return;
-                if (!confirm(t("app.fin.clearConfirm", "Clear chat history?"))) return;
-                try {
-                  await clearChat({ data: { teamspace_id: teamspaceId } });
-                  setMessages([]);
-                } catch (e) {
-                  setError(e instanceof Error ? e.message : "Failed to clear");
-                }
-              }}
-              className="text-xs text-muted-foreground hover:text-red-500 inline-flex items-center gap-1"
-            >
-              <Trash2 className="h-3 w-3" /> {t("app.fin.clear", "Clear")}
-            </button>
+            <Button variant="destructive" size="sm" disabled={asking || !!pendingAction} onClick={() => setConfirmClear(true)}><Trash2 className="h-3 w-3" />{t("app.fin.clear", "Clear")}</Button>
           )}
         </div>
         <div className="space-y-2 max-h-72 overflow-y-auto mb-3">
@@ -638,17 +604,18 @@ function FinancialsPage() {
             placeholder={t("app.fin.askPlaceholder", "Ask a question about the tables…")}
             className="flex-1 rounded-lg bg-background border border-border px-3 py-2 text-sm outline-none focus:border-primary/60"
           />
-          <button
-            onClick={sendAsk}
-            disabled={asking || !askInput.trim() || sources.length === 0}
-            className="h-10 w-10 rounded-full bg-primary text-black flex items-center justify-center disabled:opacity-50"
-            aria-label="Send"
-          >
-            <Send className="h-4 w-4" />
-          </button>
+          <IconButton onClick={() => void sendAsk()} loading={asking} disabled={!askInput.trim() || sources.length === 0} title={t("shellUi.chat.ariaSend", "Send")}><Send className="h-4 w-4" /></IconButton>
         </div>
       </div>
       </div>
+      <ActionConfirm open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title={t("app.fin.confirmDelete", "Remove this table?")} label={t("tasksUi.delete", "Delete")} loading={pendingAction === "delete"} onConfirm={async () => { if (deleteTarget) await removeSrc(deleteTarget); }} />
+      <ActionConfirm open={confirmClear} onOpenChange={setConfirmClear} title={t("app.fin.clearConfirm", "Clear chat history?")} label={t("app.fin.clear", "Clear")} loading={pendingAction === "clear"} onConfirm={async () => {
+        if (!teamspaceId) return;
+        setPendingAction("clear");
+        try { await clearChat({ data: { teamspace_id: teamspaceId } }); setMessages([]); setConfirmClear(false); }
+        catch (e) { setError(e instanceof Error ? e.message : "Failed to clear"); }
+        finally { setPendingAction(null); }
+      }} />
     </div>
   );
 }

@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Trash2, Send, ChevronDown, ChevronRight, Calculator } from "lucide-react";
@@ -32,6 +35,9 @@ export function PayrollPanel({ teamspaceId, language }: { teamspaceId: string; l
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [q, setQ] = useState("");
   const [asking, setAsking] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -48,13 +54,15 @@ export function PayrollPanel({ teamspaceId, language }: { teamspaceId: string; l
 
   const add = async () => {
     if (!form.user_id || !form.amount) return toast.error("Выберите сотрудника и сумму");
+    setSaving(true);
     try {
       await saveFn({ data: { teamspace_id: teamspaceId, user_id: form.user_id, kind: form.kind, amount: Number(form.amount),
         currency: form.currency, project: form.project || null, task_id: form.task_id || null } });
       setForm((f) => ({ ...f, amount: "", project: "", task_id: "" }));
       toast.success("Правило сохранено");
-      load();
+      await load();
     } catch (e) { toast.error((e as Error).message); }
+    finally { setSaving(false); }
   };
 
   const ask = async (text?: string) => {
@@ -88,12 +96,12 @@ export function PayrollPanel({ teamspaceId, language }: { teamspaceId: string; l
         <div className="divide-y divide-border">
           {calc.employees.map((e) => (
             <div key={e.user_id} className="py-3">
-              <button onClick={() => setOpen(open === e.user_id ? null : e.user_id)} className="w-full flex items-center gap-2 text-left">
+              <Button variant="ghost" onClick={() => setOpen(open === e.user_id ? null : e.user_id)} className="w-full flex items-center gap-2 text-left">
                 {open === e.user_id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 <span className="font-medium text-foreground flex-1">{e.name}</span>
                 <span className="text-xs text-muted-foreground">{e.done_tasks.length} задач выполнено</span>
                 <span className="font-semibold text-foreground min-w-[110px] text-right">{money(e.totals)}</span>
-              </button>
+              </Button>
               {open === e.user_id && (
                 <div className="mt-3 ml-6 space-y-3 text-sm">
                   {!e.lines.length && <p className="text-muted-foreground">Правила оплаты не настроены.</p>}
@@ -112,7 +120,7 @@ export function PayrollPanel({ teamspaceId, language }: { teamspaceId: string; l
                     {rules.rules.filter((r) => r.user_id === e.user_id).map((r) => (
                       <span key={r.id} className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs">
                         {KIND_LABEL[r.kind]}{r.project ? `: ${r.project}` : ""}{r.task_id ? `: ${rules.tasks.find((t) => t.id === r.task_id)?.title ?? "задача"}` : ""} — {r.amount} {r.currency}
-                        <button aria-label="Удалить правило" onClick={async () => { await delFn({ data: { teamspace_id: teamspaceId, id: r.id } }); load(); }}><Trash2 className="h-3 w-3" /></button>
+                        <IconButton variant="destructive" title="Удалить правило" disabled={deleting} onClick={() => setDeleteTarget(r.id)}><Trash2 className="h-3 w-3" /></IconButton>
                       </span>
                     ))}
                   </div>
@@ -151,9 +159,7 @@ export function PayrollPanel({ teamspaceId, language }: { teamspaceId: string; l
           <select className={input} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
             {["KGS", "KZT", "UZS", "TJS", "RUB", "USD", "EUR"].map((c) => <option key={c}>{c}</option>)}
           </select>
-          <button onClick={add} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold px-4 py-2 text-sm hover:opacity-90">
-            <Plus className="h-4 w-4" />Добавить
-          </button>
+          <Button loading={saving} onClick={() => void add()}><Plus className="h-4 w-4" />Добавить</Button>
         </div>
         <p className="text-xs text-muted-foreground">Подтверждение работы — задачи в статусе «Готово» в Task Tracker, закрытые в выбранном периоде. Фиксированная зарплата пересчитывается пропорционально дням, если период не равен месяцу.</p>
       </div>
@@ -163,7 +169,7 @@ export function PayrollPanel({ teamspaceId, language }: { teamspaceId: string; l
         {msgs.length === 0 && (
           <div className="flex flex-wrap gap-2">
             {["Кому и сколько нужно выплатить?", `Покажи расчёт зарплаты ${calc.employees[0]?.name ?? "сотрудника"}`, `Какие проекты и задачи выполнил ${calc.employees[0]?.name ?? "сотрудник"}?`].map((s) => (
-              <button key={s} onClick={() => ask(s)} className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary/60">{s}</button>
+              <Button key={s} variant="outline" loading={asking} onClick={() => void ask(s)} className="h-auto py-2 text-xs">{s}</Button>
             ))}
           </div>
         )}
@@ -175,9 +181,16 @@ export function PayrollPanel({ teamspaceId, language }: { teamspaceId: string; l
         </div>
         <div className="flex gap-2">
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} placeholder={`Например: сколько выплатить ${nameOf(calc.employees[0]?.user_id ?? "")} за этот месяц?`} className={`${input} flex-1`} />
-          <button onClick={() => ask()} disabled={asking || !q.trim()} aria-label="Отправить" className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50"><Send className="h-4 w-4" /></button>
+          <IconButton onClick={() => void ask()} loading={asking} disabled={!q.trim()} title="Отправить"><Send className="h-4 w-4" /></IconButton>
         </div>
       </div>
+      <ActionConfirm open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title="Удалить правило оплаты?" label="Удалить" loading={deleting} onConfirm={async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        try { await delFn({ data: { teamspace_id: teamspaceId, id: deleteTarget } }); await load(); setDeleteTarget(null); }
+        catch (e) { toast.error((e as Error).message); }
+        finally { setDeleting(false); }
+      }} />
     </div>
   );
 }
