@@ -12,6 +12,7 @@ const InputSchema = z.object({
   messages: z.array(MessageSchema).min(1).max(30),
   teamspace_id: z.string().uuid().optional(),
   agent_id: z.string().max(60).optional(),
+  conversation_id: z.string().uuid().optional(),
 });
 
 
@@ -58,6 +59,17 @@ export const askZukha = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    // The conversation row is the source of truth for workspace + agent, so a fast send can't lose context.
+    if (data.conversation_id) {
+      const { data: conv } = await context.supabase
+        .from("chat_conversations").select("agent_id, teamspace_id")
+        .eq("id", data.conversation_id).eq("user_id", context.userId).maybeSingle();
+      if (conv) {
+        if (conv.teamspace_id) data.teamspace_id = conv.teamspace_id;
+        // An inline @tag still overrides; otherwise use the conversation's agent.
+        if (conv.agent_id && (!data.agent_id || data.agent_id === conv.agent_id || !AGENT_PROMPTS[data.agent_id])) data.agent_id = conv.agent_id;
+      }
+    }
     const currentDate = new Date(Date.now() + 6 * 3600_000).toISOString().slice(0, 10);
 
     // Load knowledge base context for this teamspace (relevance-ranked)

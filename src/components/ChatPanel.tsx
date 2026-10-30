@@ -278,6 +278,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
   const [acceptingAll, setAcceptingAll] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [teamspaceId, setTeamspaceId] = useState<string | undefined>(undefined);
+  // Workspace + conversation (agent) context loaded; sending earlier would lose agent/workspace context.
+  const [ready, setReady] = useState(false);
   const [activeId, setActiveId] = useState<string | undefined>(forcedId);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [threadsOpen, setThreadsOpen] = useState(false);
@@ -495,7 +497,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
           if (convs.length > 0) setActiveId(convs[0].id);
         }
       } catch { /* ignore */ }
-    })();
+    })().finally(() => setReady(true));
   }, []);
 
   // Known knowledge-base document ids, used to drop invented file citations.
@@ -745,7 +747,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
 
   const send = async (text?: string) => {
     const raw = (text ?? input).trim();
-    if (!raw || loading) return;
+    if (!raw || loading || !ready) return;
 
     // Append attachment tokens so the model sees the files as citations
     const attachTokens = attached.map((a) => `[[file:${a.id}|${a.name}]]`).join(" ");
@@ -786,7 +788,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
 
 
     try {
-      const res = await ask({ data: { messages: next, teamspace_id: teamspaceId, agent_id: agent } });
+      const res = await ask({ data: { messages: next, teamspace_id: teamspaceId, agent_id: agent, conversation_id: convId } });
       const cleanedRaw = stripMarkdown(res.reply || "…");
       const { cleaned, tasks, updates, meetings } = parseTaskTokens(cleanedRaw);
       const assistantMsg: ChatMsg = {
@@ -1007,7 +1009,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.05 * i }}
-                  ><Button variant="outline" loading={loading} onClick={() => void send(s)} className="h-auto min-h-10 w-full px-3 py-2.5 text-xs">{s}</Button></motion.div>
+                  ><Button variant="outline" loading={loading} disabled={!ready} onClick={() => void send(s)} className="h-auto min-h-10 w-full px-3 py-2.5 text-xs">{s}</Button></motion.div>
                 ))}
               </div>
             </div>
@@ -1213,7 +1215,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKey}
-              placeholder={t("app.overview.placeholder")}
+              placeholder={ready ? t("app.overview.placeholder") : t("shellUi.chat.loadingContext", "Загрузка…")}
               className="block min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40"
             />
           )}
@@ -1235,7 +1237,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
             type="button"
             onClick={() => { nearBottomRef.current = true; void send(); }}
             loading={loading}
-            disabled={!input.trim()}
+            disabled={!input.trim() || !ready}
             className={`${isCompact ? "h-9 w-9" : "h-10 w-10"} rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0`}
             aria-label={t("shellUi.chat.ariaSend", "Send")}
           >
