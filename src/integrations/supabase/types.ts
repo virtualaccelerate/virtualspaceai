@@ -1574,6 +1574,44 @@ export type Database = {
           },
         ]
       }
+      personal_assistants: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          skills: string[]
+          teamspace_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          skills?: string[]
+          teamspace_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          skills?: string[]
+          teamspace_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_assistants_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_checks: {
         Row: {
           automatic: boolean
@@ -1690,6 +1728,101 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_log: {
+        Row: {
+          created_at: string
+          event_date: string
+          id: string
+          kind: string
+          notified_user_id: string | null
+          row_key: string
+          source_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          id?: string
+          kind: string
+          notified_user_id?: string | null
+          row_key: string
+          source_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          id?: string
+          kind?: string
+          notified_user_id?: string | null
+          row_key?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_log_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "reminder_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_sources: {
+        Row: {
+          assistant_id: string
+          column_map: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          last_checked_at: string | null
+          last_error: string | null
+          sheet_url: string
+          tabs: Json
+          teamspace_id: string
+          title: string | null
+        }
+        Insert: {
+          assistant_id: string
+          column_map?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          sheet_url: string
+          tabs?: Json
+          teamspace_id: string
+          title?: string | null
+        }
+        Update: {
+          assistant_id?: string
+          column_map?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          sheet_url?: string
+          tabs?: Json
+          teamspace_id?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_sources_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "personal_assistants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_sources_teamspace_id_fkey"
             columns: ["teamspace_id"]
             isOneToOne: false
             referencedRelation: "teamspaces"
