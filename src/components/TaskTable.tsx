@@ -257,9 +257,9 @@ function TaskTableBase({
               <td className="px-2 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                 {task.external_source !== "yougile" && <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="rounded-md px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-accent/50">
-                      •••
-                    </Button>
+                    <IconButton variant="ghost" aria-label={t("tasksUi.more", "More")}>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </IconButton>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {columns

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Globe, Check } from "lucide-react";
 import { LANGUAGES, persistLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { IconButton } from "@/components/ui/icon-button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function LangSwitcher({ compact = false }: { compact?: boolean }) {
   const { i18n } = useTranslation();
@@ -22,7 +22,7 @@ export function LangSwitcher({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className="relative" ref={ref}>
-      <Button
+      <TooltipProvider delayDuration={300}><Tooltip><TooltipTrigger asChild><Button
         variant="ghost"
         size={compact ? "icon" : "default"}
         onClick={() => setOpen((o) => !o)}
@@ -33,9 +33,9 @@ export function LangSwitcher({ compact = false }: { compact?: boolean }) {
       >
         <Globe className="h-4 w-4" />
         {!compact && <span className="uppercase">{current.code}</span>}
-      </Button>
+      </Button></TooltipTrigger><TooltipContent>Language</TooltipContent></Tooltip></TooltipProvider>
       {open && (
-        <div className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl overflow-hidden z-50 p-1">
+        <div className="absolute right-0 mt-2 w-40 rounded-lg border border-border bg-card shadow-lg overflow-hidden z-50 p-1">
           {LANGUAGES.map((l) => (
             <Button
               variant="ghost"
