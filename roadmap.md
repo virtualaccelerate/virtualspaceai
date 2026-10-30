@@ -1,4 +1,5 @@
 ## Задачи
+- [ ] Add application-admin workspace AI reports: SQL 30-day metrics, click-only Russian generation, protected history and RU/EN/KY labels; verify access and saved report flow
 - [x] Add shared pilot checklist, authorized persistence, automatic evidence, six-language UI; verified check/uncheck/result persistence, payroll link and desktop/mobile
 - [x] Add task comments, mentions, notifications, combined feed and counters; preserve tasks/events; UI save/edit/soft-delete verified, real Telegram notifications untested
 - [x] Merge Telegram supergroup migrations and existing test duplicates; process single messages after 15 minutes; 102 tests and final desktop/mobile screenshot checked
