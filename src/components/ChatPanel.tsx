@@ -1,3 +1,5 @@
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { googleDriveListFiles } from "@/lib/google-drive.functions";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -187,11 +189,13 @@ function parseTaskTokens(text: string): {
 function MessageContent({
   text,
   onOpenFile,
+  openingFile,
   knownDocIds,
   knownDriveIds,
 }: {
   text: string;
   onOpenFile: (id: string) => void;
+  openingFile?: string | null;
   knownDocIds?: Set<string>;
   knownDriveIds?: Set<string>;
 }) {
@@ -213,7 +217,7 @@ function MessageContent({
       continue;
     }
     nodes.push(
-      <button
+      <Button variant="ghost" loading={openingFile === id}
         key={`${id}-${m.index}`}
         onClick={() =>
           isDoc
@@ -226,7 +230,7 @@ function MessageContent({
       >
         <FileText className="h-3 w-3" />
         {name}
-      </button>,
+      </Button>,
     );
     last = m.index + m[0].length;
   }
@@ -265,6 +269,12 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [newChatLoading, setNewChatLoading] = useState(false);
+  const [openingFile, setOpeningFile] = useState<string | null>(null);
+  const [destructiveLoading, setDestructiveLoading] = useState(false);
+  const [deleteThread, setDeleteThread] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [acceptingAll, setAcceptingAll] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [teamspaceId, setTeamspaceId] = useState<string | undefined>(undefined);
   const [activeId, setActiveId] = useState<string | undefined>(forcedId);
@@ -635,10 +645,13 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
 
   const acceptAll = async (msgIdx: number) => {
     const list = messages[msgIdx]?.proposed ?? [];
-    for (let i = list.length - 1; i >= 0; i--) await acceptTask(msgIdx, i);
+    setAcceptingAll(msgIdx);
+    try { for (let i = list.length - 1; i >= 0; i--) await acceptTask(msgIdx, i); }
+    finally { setAcceptingAll(null); }
   };
 
   const openFile = async (id: string) => {
+    setOpeningFile(id);
     // Open a blank tab synchronously in the click handler so popup blockers
     // don't kill it while we await the signed URL. If the browser still
     // blocked it, fall back to navigating the current tab.
@@ -655,7 +668,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
     } catch (e) {
       if (win && !win.closed) win.close();
       setError(e instanceof Error ? e.message : t("shellUi.chat.couldNotOpenFile", "Could not open file"));
-    }
+    } finally { setOpeningFile(null); }
   };
 
   const suggestionsRaw = t("app.overview.suggestions", { returnObjects: true });
@@ -808,12 +821,14 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
   };
 
   const onClear = async () => {
-    setMessages([]);
-    if (!activeId) return;
-    try { await clearHistory({ data: { conversation_id: activeId } }); } catch { /* ignore */ }
+    setDestructiveLoading(true);
+    try { if (activeId) await clearHistory({ data: { conversation_id: activeId } }); setMessages([]); setConfirmClear(false); }
+    catch { /* preserve the existing error handling */ }
+    finally { setDestructiveLoading(false); }
   };
 
   const onNewChat = async () => {
+    setNewChatLoading(true);
     try {
       const conv = await createConv({ data: { teamspace_id: teamspaceId, title: t("app.chat.newChat", "New chat") } });
       setConversations((prev) => [conv, ...prev]);
@@ -826,7 +841,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : t("shellUi.chat.failedCreateChat", "Could not create chat"));
-    }
+    } finally { setNewChatLoading(false); }
   };
 
   useEffect(() => {
@@ -847,9 +862,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
     }
   };
 
-  const onDeleteThread = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm(t("app.chat.confirmDelete", "Delete this chat?"))) return;
+  const onDeleteThread = async (id: string) => {
+    setDestructiveLoading(true);
     try {
       await removeConv({ data: { id } });
       setConversations((prev) => prev.filter((c) => c.id !== id));
@@ -867,7 +881,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("shellUi.chat.deleteFailed", "Delete failed"));
-    }
+    } finally { setDestructiveLoading(false); setDeleteThread(null); }
   };
 
   const empty = messages.length === 0;
@@ -885,8 +899,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
           {conversations.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
         </SelectContent>
       </Select>
-      <Button variant="outline" size="icon" onClick={onNewChat} title={t("app.chat.newChat", "New chat")} aria-label={t("app.chat.newChat", "New chat")}><Plus className="h-4 w-4" /></Button>
-      {onClose && <Button variant="ghost" size="icon" onClick={onClose} title={t("shellUi.chat.ariaClose", "Close")} aria-label={t("shellUi.chat.ariaClose", "Close")}><X className="h-4 w-4" /></Button>}
+      <IconButton variant="outline" loading={newChatLoading} onClick={onNewChat} title={t("app.chat.newChat", "New chat")} aria-label={t("app.chat.newChat", "New chat")}><Plus className="h-4 w-4" /></IconButton>
+      {onClose && <IconButton variant="ghost"  onClick={onClose} title={t("shellUi.chat.ariaClose", "Close")} aria-label={t("shellUi.chat.ariaClose", "Close")}><X className="h-4 w-4" /></IconButton>}
     </div>
   );
 
@@ -894,25 +908,25 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
     <div className={isCompact ? "h-full min-w-0 flex flex-col min-h-0 overflow-hidden" : "flex-1 min-h-0 min-w-0 overflow-hidden flex flex-col max-w-4xl mx-auto w-full"}>
       {isCompact ? CompactHeader : (
         <div className="flex items-center gap-2 pb-3 md:hidden">
-          <button
+          <Button variant="outline" loading={newChatLoading}
             onClick={onNewChat}
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 px-2.5 py-1.5 text-xs font-semibold transition"
           >
             <MessageSquarePlus className="h-3.5 w-3.5" />
             {t("app.chat.newChat", "New chat")}
-          </button>
+          </Button>
           <div className="relative">
-            <button
+            <Button variant="outline"
               onClick={() => setThreadsOpen((v) => !v)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card hover:bg-accent/40 px-2.5 py-1.5 text-xs font-medium text-foreground/80 transition"
             >
               <History className="h-3.5 w-3.5" />
               {t("app.chat.history", "History")}
               <span className="ml-1 text-muted-foreground">{conversations.length}</span>
-            </button>
+            </Button>
             {threadsOpen && (
               <>
-                <button aria-label={t("shellUi.chat.ariaClose", "Close")} className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
+                <div aria-hidden="true" className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
                 <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
                   {conversations.length === 0 ? (
                     <div className="p-3 text-xs text-muted-foreground text-center">
@@ -928,13 +942,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                     >
                       {c.agent_id ? <Bot className="h-3.5 w-3.5 text-primary shrink-0" /> : <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
                       <span className="flex-1 truncate text-foreground">{c.title}</span>
-                      <button
-                        onClick={(e) => onDeleteThread(c.id, e)}
-                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
-                        aria-label={t("shellUi.chat.ariaDelete", "Delete")}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                      <IconButton variant="destructive" disabled={destructiveLoading} onClick={(e) => { e.stopPropagation(); setDeleteThread(c.id); }} aria-label={t("shellUi.chat.ariaDelete", "Delete")}><Trash2 className="h-3 w-3" /></IconButton>
                     </div>
                   ))}
                 </div>
@@ -948,13 +956,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
           )}
           <div className="flex-1" />
           {messages.length > 0 && (
-            <button
-              onClick={onClear}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
-              title={t("app.overview.clear", "Clear")}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            <IconButton variant="destructive" disabled={loading || destructiveLoading} onClick={() => setConfirmClear(true)} title={t("app.overview.clear", "Clear")}><Trash2 className="h-3.5 w-3.5" /></IconButton>
           )}
         </div>
       )}
@@ -999,14 +1001,12 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
               <p className="mt-2 text-sm text-muted-foreground max-w-md">{t("app.overview.askZukhaSubtitle")}</p>
               <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xl">
                 {suggestions.map((s, i) => (
-                  <motion.button
+                  <motion.div
                     key={s}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.05 * i }}
-                    onClick={() => send(s)}
-                    className="text-center rounded-xl border border-border bg-card hover:bg-accent/40 transition px-3 py-2.5 text-xs text-foreground/80"
-                  >{s}</motion.button>
+                  ><Button variant="outline" loading={loading} onClick={() => void send(s)} className="h-auto min-h-10 w-full px-3 py-2.5 text-xs">{s}</Button></motion.div>
                 ))}
               </div>
             </div>
@@ -1024,8 +1024,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                 >
                   <div className={`max-w-[85%] rounded-2xl ${isCompact ? "px-4 py-2.5 text-sm" : "px-5 py-3 text-[15px]"} whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
                     {m.role === "assistant"
-                      ? <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />
-                      : <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />}
+                      ? <MessageContent text={m.content} onOpenFile={openFile} openingFile={openingFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />
+                      : <MessageContent text={m.content} onOpenFile={openFile} openingFile={openingFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />}
 
                     {m.role === "assistant" && m.proposed && m.proposed.length > 0 && (
                       <div className="mt-2 space-y-1.5">
@@ -1058,27 +1058,23 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                               )}
                             </div>
                             <Button
-                              disabled={acceptingIdx === `${i}-${j}` || !tk.due_date || !tk.assignment_ready}
+                              loading={acceptingIdx === `${i}-${j}`}
+                              disabled={acceptingIdx !== null || acceptingAll !== null || !tk.due_date || !tk.assignment_ready}
                               onClick={() => void acceptTask(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >
-                              {acceptingIdx === `${i}-${j}` ? "…" : t("app.chat.acceptTask", "Accept")}
+                              {t("app.chat.acceptTask", "Accept")}
                             </Button>
-                            <Button variant="secondary"
+                            <Button variant="ghost" disabled={acceptingIdx !== null || acceptingAll !== null}
                               onClick={() => rejectTask(i, j)}
-                              className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
+                              className="px-2 py-1 text-[11px]"
                             >
                               {t("app.chat.rejectTask", "Reject")}
                             </Button>
                           </div>
                         ))}
                         {m.proposed.length > 1 && (
-                          <button
-                            onClick={() => void acceptAll(i)}
-                            className="text-[11px] font-semibold text-primary hover:underline"
-                          >
-                            {t("app.chat.acceptAllTasks", "Accept all")}
-                          </button>
+                          <Button variant="outline" size="sm" loading={acceptingAll === i} disabled={acceptingIdx !== null || acceptingAll !== null} onClick={() => void acceptAll(i)}>{t("app.chat.acceptAllTasks", "Accept all")}</Button>
                         )}
                       </div>
                     )}
@@ -1102,15 +1098,16 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                               }))} />}
                             </div>
                             <Button
-                              disabled={acceptingIdx === `u${i}-${j}` || Boolean(u.assignee_query && !u.assignment_ready)}
+                              loading={acceptingIdx === `u${i}-${j}`}
+                              disabled={acceptingIdx !== null || Boolean(u.assignee_query && !u.assignment_ready)}
                               onClick={() => void applyUpdate(i, j)}
                               className="rounded-md bg-primary text-primary-foreground px-2 py-1 text-[11px] font-semibold hover:bg-primary/90 transition disabled:opacity-60"
                             >
-                              {acceptingIdx === `u${i}-${j}` ? "…" : t("app.chat.applyChange", "Apply")}
+                              {t("app.chat.applyChange", "Apply")}
                             </Button>
-                            <Button variant="secondary"
+                            <Button variant="ghost" disabled={acceptingIdx !== null || acceptingAll !== null}
                               onClick={() => rejectUpdate(i, j)}
-                              className="rounded-md bg-muted text-muted-foreground px-2 py-1 text-[11px] font-medium hover:bg-muted/70 transition"
+                              className="px-2 py-1 text-[11px]"
                             >
                               {t("app.chat.rejectTask", "Reject")}
                             </Button>
@@ -1128,7 +1125,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                         ))}
                       </div>
                     )}
-                    {m.role === "assistant" && m.meetings && m.meetings.length > 0 && <div className="mt-2 space-y-2">{m.meetings.map((meeting, j) => <div key={`${meeting.title}-${j}`} className="rounded-xl border border-border bg-card/60 p-3 flex items-start gap-3"><CalendarDays className="h-4 w-4 text-primary mt-0.5" /><div className="min-w-0 flex-1"><div className="text-xs font-medium text-foreground">{meeting.title}</div><div className="text-[11px] text-muted-foreground mt-1">{new Date(meeting.start).toLocaleString(i18n.language)} — {new Date(meeting.end).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}</div>{meeting.attendees?.length ? <div className="text-[11px] text-muted-foreground truncate mt-0.5">{meeting.attendees.join(", ")}</div> : null}</div><Button size="sm" disabled={acceptingIdx === `m${i}-${j}`} onClick={() => void acceptMeeting(i, j)}>{acceptingIdx === `m${i}-${j}` ? "…" : t("app.chat.createMeeting", "Create")}</Button><Button variant="ghost" size="sm" onClick={() => setMessages((prev) => prev.map((item, index) => index !== i ? item : { ...item, meetings: (item.meetings ?? []).filter((_, itemIndex) => itemIndex !== j) }))}>{t("common.cancel", "Cancel")}</Button></div>)}</div>}
+                    {m.role === "assistant" && m.meetings && m.meetings.length > 0 && <div className="mt-2 space-y-2">{m.meetings.map((meeting, j) => <div key={`${meeting.title}-${j}`} className="rounded-xl border border-border bg-card/60 p-3 flex items-start gap-3"><CalendarDays className="h-4 w-4 text-primary mt-0.5" /><div className="min-w-0 flex-1"><div className="text-xs font-medium text-foreground">{meeting.title}</div><div className="text-[11px] text-muted-foreground mt-1">{new Date(meeting.start).toLocaleString(i18n.language)} — {new Date(meeting.end).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}</div>{meeting.attendees?.length ? <div className="text-[11px] text-muted-foreground truncate mt-0.5">{meeting.attendees.join(", ")}</div> : null}</div><Button size="sm" loading={acceptingIdx === `m${i}-${j}`} disabled={acceptingIdx !== null} onClick={() => void acceptMeeting(i, j)}>{t("app.chat.createMeeting", "Create")}</Button><Button variant="ghost" size="sm" onClick={() => setMessages((prev) => prev.map((item, index) => index !== i ? item : { ...item, meetings: (item.meetings ?? []).filter((_, itemIndex) => itemIndex !== j) }))}>{t("common.cancel", "Cancel")}</Button></div>)}</div>}
                     {m.role === "assistant" && m.createdMeetings && m.createdMeetings.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{m.createdMeetings.map((meeting) => meeting.url ? <a key={meeting.url} href={meeting.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"><CalendarDays className="h-3 w-3" />{meeting.title}<ExternalLink className="h-3 w-3" /></a> : <span key={meeting.title} className="text-xs text-primary">{meeting.title}</span>)}</div>}
                   </div>
                 </motion.div>
@@ -1152,11 +1149,11 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
             <span key={a.id} className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary px-2 py-1 text-xs">
               <Paperclip className="h-3 w-3" />
               <span className="max-w-[160px] truncate">{a.name}</span>
-              <button
+              <IconButton variant="ghost"
                 onClick={() => setAttached((prev) => prev.filter((x) => x.id !== a.id))}
                 className="text-primary/70 hover:text-primary"
                 aria-label={t("shellUi.chat.ariaRemove", "Remove")}
-              ><X className="h-3 w-3" /></button>
+              ><X className="h-3 w-3" /></IconButton>
             </span>
           ))}
         </div>
@@ -1165,8 +1162,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
 
       {sttError && <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-destructive">
         <span>{sttError}</span>
-        {retryAudioRef.current && <Button type="button" variant="ghost" size="sm" disabled={transcribing} onClick={() => { const saved = retryAudioRef.current; if (saved) void submitRecording(saved); }}>Повторить</Button>}
+        {retryAudioRef.current && <Button type="button" variant="ghost" size="sm" loading={transcribing} onClick={() => { const saved = retryAudioRef.current; if (saved) void submitRecording(saved); }}>Повторить</Button>}
       </div>}
+      <ActionConfirm open={!!deleteThread} onOpenChange={(open) => { if (!open) setDeleteThread(null); }} title={t("app.chat.confirmDelete", "Delete this chat?")} label={t("shellUi.chat.ariaDelete", "Delete")} loading={destructiveLoading} onConfirm={async () => { if (deleteThread) await onDeleteThread(deleteThread); }} />
+      <ActionConfirm open={confirmClear} onOpenChange={setConfirmClear} title={t("app.overview.clear", "Clear")} description={t("app.chat.confirmDelete", "Delete this chat?")} label={t("app.overview.clear", "Clear")} loading={destructiveLoading} onConfirm={onClear} />
       <div data-chat-input className="relative mt-1 shrink-0">
         <div className="pointer-events-none absolute -inset-[2px] rounded-2xl bg-[conic-gradient(from_0deg,transparent,hsl(var(--primary)/0.6),transparent_40%)] opacity-70 blur-[6px] animate-[spin_6s_linear_infinite]" />
         <div className="relative flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40 transition">
@@ -1177,7 +1176,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
             className="hidden"
             onChange={(e) => onFilesPicked(e.target.files)}
           />
-          <button
+          <IconButton variant="ghost" loading={uploading}
             type="button"
             onClick={onAttachClick}
             disabled={uploading || !teamspaceId}
@@ -1185,8 +1184,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/40 transition shrink-0 disabled:opacity-50"
             aria-label={t("shellUi.chat.ariaAttach", "Attach")}
           >
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          </button>
+            <Plus className="h-4 w-4" />
+          </IconButton>
           {recording ? (
             <div
               className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden px-1"
@@ -1216,10 +1215,10 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
               className="block min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none max-h-40"
             />
           )}
-          <Button variant="ghost" size="icon"
+          <IconButton variant="ghost" 
             type="button"
             onClick={toggleMic}
-            disabled={transcribing}
+            loading={transcribing}
             title={recording ? t("app.chat.micStop", "Stop recording") : t("app.chat.micStart", "Voice input")}
             aria-label={recording ? t("shellUi.chat.ariaStopRecording", "Stop recording") : t("shellUi.chat.ariaVoiceInput", "Voice input")}
             className={`p-1.5 rounded-lg transition shrink-0 disabled:opacity-50 ${
@@ -1228,17 +1227,18 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                 : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
             }`}
           >
-            {transcribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          <Button size="icon"
+            <Mic className="h-4 w-4" />
+          </IconButton>
+          <IconButton 
             type="button"
             onClick={() => { nearBottomRef.current = true; void send(); }}
-            disabled={loading || !input.trim()}
+            loading={loading}
+            disabled={!input.trim()}
             className={`${isCompact ? "h-9 w-9" : "h-10 w-10"} rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition disabled:opacity-50 shrink-0`}
             aria-label={t("shellUi.chat.ariaSend", "Send")}
           >
-            {loading ? <Loader2 className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} animate-spin`} /> : <Send className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} fill-current -translate-x-px translate-y-px`} />}
-          </Button>
+            <Send className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} fill-current -translate-x-px translate-y-px`} />
+          </IconButton>
         </div>
       </div>
     </div>

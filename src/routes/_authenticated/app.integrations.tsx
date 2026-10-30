@@ -14,6 +14,15 @@ import { GoogleCalendarCard } from "@/components/GoogleCalendarCard";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/integrations")({
+  head: () => ({ meta: [
+    { title: "Integrations — Virtual Space" },
+    { name: "description", content: "Manage connected workspace services in Virtual Space." },
+    { property: "og:title", content: "Integrations — Virtual Space" },
+    { property: "og:description", content: "Manage connected workspace services in Virtual Space." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
+  ] }),
   component: () => (
     <ManagerOnly>
       <IntegrationsPage />

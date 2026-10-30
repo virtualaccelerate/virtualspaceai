@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
@@ -35,6 +38,8 @@ export function SidebarChatProvider({
   const removeConv = useServerFn(deleteConversation);
   const createConv = useServerFn(createConversation);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
   const refresh = useCallback(async () => {
@@ -74,19 +79,26 @@ export function SidebarChatProvider({
   const onDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!confirm(t("app.chat.confirmDelete", "Delete this chat?"))) return;
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteTarget;
+    if (!id) return;
+    setDeleting(true);
     try {
       await removeConv({ data: { id } });
       setConversations((prev) => prev.filter((c) => c.id !== id));
       if (activeId === id) navigate({ to: "/app" });
     } catch {
       /* ignore */
-    }
+    } finally { setDeleting(false); setDeleteTarget(null); }
   };
 
   return (
     <Ctx.Provider value={{ showLabels, conversations, activeId, creating, onNewChat, onDelete }}>
       {children}
+      <ActionConfirm open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title={t("app.chat.confirmDelete", "Delete this chat?")} label={t("shellUi.chat.ariaDelete", "Delete")} loading={deleting} onConfirm={confirmDelete} />
     </Ctx.Provider>
   );
 }
@@ -103,7 +115,7 @@ export function NewChatButton() {
 
   if (!showLabels) {
     return (
-      <button
+      <IconButton variant="ghost" loading={creating}
         onClick={onNewChat}
         disabled={creating}
         title={t("app.chat.newChat", "New chat")}
@@ -113,21 +125,21 @@ export function NewChatButton() {
         <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-primary/15">
           <MessageSquarePlus className="h-[18px] w-[18px]" />
         </span>
-      </button>
+      </IconButton>
     );
   }
 
   return (
-    <button
+    <Button variant="ghost" loading={creating}
       onClick={onNewChat}
       disabled={creating}
-      className="w-full group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition disabled:opacity-50"
+      className="w-full h-auto justify-start group gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-primary hover:bg-primary/10 [&>span]:w-full [&>span]:justify-start"
     >
       <span className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-primary/15">
         <MessageSquarePlus className="h-[18px] w-[18px]" />
       </span>
       <span className="flex-1 text-left truncate">{t("app.chat.newChat", "New chat")}</span>
-    </button>
+    </Button>
   );
 }
 
@@ -191,16 +203,16 @@ export function ChatsNavItem() {
         {conversations.length > 0 && (
           <span className="text-xs text-muted-foreground">{conversations.length}</span>
         )}
-        <button
+        <IconButton variant="ghost"
           onClick={(e) => {
             e.stopPropagation();
             setOpen((v) => !v);
           }}
-          aria-label={open ? "collapse" : "expand"}
+          aria-label={t("app.chat.history", "History")} aria-expanded={open}
           className="p-0.5 text-muted-foreground hover:text-foreground"
         >
           {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </button>
+        </IconButton>
       </div>
 
       {open && (
@@ -226,13 +238,13 @@ export function ChatsNavItem() {
                   <MessageSquarePlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 )}
                 <span className="flex-1 truncate">{c.title}</span>
-                <button
+                <IconButton variant="destructive"
                   onClick={(e) => void onDelete(c.id, e)}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
-                  aria-label="delete"
+                  className="md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 text-muted-foreground hover:text-red-500 p-0.5"
+                  aria-label={t("shellUi.chat.ariaDelete", "Delete")}
                 >
                   <Trash2 className="h-3 w-3" />
-                </button>
+                </IconButton>
               </div>
             ))
           )}

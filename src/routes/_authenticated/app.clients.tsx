@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { ManagerOnly } from "@/components/ManagerOnly";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -86,6 +89,7 @@ function ClientsPage() {
   const [data, setData] = useState<Data | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
   const [q, setQ] = useState("");
   const [edit, setEdit] = useState<{ id: string; key: keyof Row; value: string } | null>(null);
 
@@ -116,7 +120,6 @@ function ClientsPage() {
   if (err) return <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">{errorText(err)}</div>;
   if (!data || !ts) return <div className="flex justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   const s = data.settings;
-  const btn = "inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:border-primary/60 disabled:opacity-50";
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -131,19 +134,19 @@ function ClientsPage() {
         <div className="flex flex-wrap gap-2">
           {s?.sheet_url ? (
             <>
-               <a href={s.sheet_url} target="_blank" rel="noreferrer" className={btn}><FileSpreadsheet className="h-4 w-4 text-primary" />{t("clientsUi.sheet")}<ExternalLink className="h-3 w-3" /></a>
-               <button className={btn} disabled={!!busy} onClick={() => act("sync", () => sync({ data: { teamspace_id: ts, language } }), () => ({ key: "clientsUi.sheetUpdated" }))}>
-                 {busy === "sync" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}{t("clientsUi.sync")}
-              </button>
+               <Button asChild variant="outline"><a href={s.sheet_url} target="_blank" rel="noreferrer"><FileSpreadsheet className="h-4 w-4 text-primary" />{t("clientsUi.sheet")}<ExternalLink className="h-3 w-3" /></a></Button>
+               <Button variant="outline" loading={busy === "sync"} disabled={!!busy} onClick={() => act("sync", () => sync({ data: { teamspace_id: ts, language } }), () => ({ key: "clientsUi.sheetUpdated" }))}>
+                 <RefreshCw className="h-4 w-4" />{t("clientsUi.sync")}
+              </Button>
             </>
           ) : (
-             <button className={btn} disabled={!!busy} onClick={() => act("setup", () => setup({ data: { teamspace_id: ts, language } }), () => ({ key: "clientsUi.setupDone" }))}>
-               {busy === "setup" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}{t("clientsUi.createSheet")}
-            </button>
+             <Button variant="outline" loading={busy === "setup"} disabled={!!busy} onClick={() => act("setup", () => setup({ data: { teamspace_id: ts, language } }), () => ({ key: "clientsUi.setupDone" }))}>
+               <FileSpreadsheet className="h-4 w-4" />{t("clientsUi.createSheet")}
+            </Button>
           )}
-           <button className={btn} disabled={!!busy} onClick={() => act("scan", () => scan({ data: { teamspace_id: ts, language } }), (r) => ({ key: "clientsUi.scanDone", params: { contacts: r.with_contacts, changed: r.changed } }))}>
-             {busy === "scan" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanSearch className="h-4 w-4" />}{t("clientsUi.scan")}
-          </button>
+           <Button variant="outline" loading={busy === "scan"} disabled={!!busy} onClick={() => act("scan", () => scan({ data: { teamspace_id: ts, language } }), (r) => ({ key: "clientsUi.scanDone", params: { contacts: r.with_contacts, changed: r.changed } }))}>
+             <ScanSearch className="h-4 w-4" />{t("clientsUi.scan")}
+          </Button>
         </div>
       </div>
 
@@ -198,7 +201,7 @@ function ClientsPage() {
                 })}
                 <td className="border border-border px-2 py-1.5 text-xs text-muted-foreground">{r.source_task_ids.length || ""}</td>
                 <td className="border border-border text-center">
-                   <button aria-label={t("clientsUi.deleteClient")} onClick={() => confirm(t("clientsUi.deleteConfirm", { name: r.name || r.phone || t("clientsUi.newClient") })) && act("del", () => del({ data: { teamspace_id: ts, language, id: r.id } }))} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                   <IconButton variant="destructive" aria-label={t("clientsUi.deleteClient")} title={t("clientsUi.deleteClient")} disabled={!!busy} onClick={() => setDeleteTarget(r)}><Trash2 className="h-3.5 w-3.5" /></IconButton>
                 </td>
               </tr>
             ))}
@@ -208,7 +211,8 @@ function ClientsPage() {
           </tbody>
         </table>
       </div>
-       <button className={btn} disabled={!!busy} onClick={() => act("add", () => save({ data: { teamspace_id: ts, language, name: "" } }))}><Plus className="h-4 w-4" />{t("clientsUi.addRow")}</button>
+       <Button variant="outline" loading={busy === "add"} disabled={!!busy} onClick={() => act("add", () => save({ data: { teamspace_id: ts, language, name: "" } }))}><Plus className="h-4 w-4" />{t("clientsUi.addRow")}</Button>
+      <ActionConfirm open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title={t("clientsUi.deleteClient")} description={t("clientsUi.deleteConfirm", { name: deleteTarget?.name || deleteTarget?.phone || t("clientsUi.newClient") })} label={t("clientsUi.deleteClient")} loading={busy === "del"} onConfirm={async () => { if (!deleteTarget) return; await act("del", () => del({ data: { teamspace_id: ts, language, id: deleteTarget.id } })); setDeleteTarget(null); }} />
     </div>
   );
 }

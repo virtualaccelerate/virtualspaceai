@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Loader2, RefreshCw, Unplug } from "lucide-react";
+import { Check, RefreshCw, Unplug } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +31,8 @@ export function YouGileCard() {
   const [columnMap, setColumnMap] = useState<Record<string, Status>>({});
   const [userMap, setUserMap] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = async (id: string) => {
@@ -56,11 +60,12 @@ export function YouGileCard() {
   );
 
 
-  async function run(action: () => Promise<unknown>) {
+  async function run(action: () => Promise<unknown>, kind: string) {
     if (!teamspaceId) return;
     setBusy(true);
+    setPendingAction(kind);
     setError(null);
-    try { await action(); await load(teamspaceId); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+    try { await action(); await load(teamspaceId); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); setPendingAction(null); }
   }
 
   // Inspect-only: does NOT refetch persisted status afterwards, so the
@@ -80,14 +85,14 @@ export function YouGileCard() {
           <div className="flex items-center gap-2 font-semibold text-foreground">YouGile {state?.connected && <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><Check className="h-3 w-3" /> {t("integrationsUi.yougile.connected", "Connected")}</span>}</div>
           <p className="text-xs text-muted-foreground">{t("integrationsUi.yougile.desc", "Task source for notifications and reports")}</p>
         </div>
-        {state?.connected && <Button variant="ghost" size="icon" disabled={busy} onClick={() => run(() => syncFn({ data: { teamspace_id: teamspaceId ?? "" } }))} title={t("integrationsUi.yougile.sync", "Sync")}><RefreshCw className="h-4 w-4" /></Button>}
+        {state?.connected && <IconButton variant="ghost" size="icon" disabled={busy} loading={pendingAction === "sync"} onClick={() => run(() => syncFn({ data: { teamspace_id: teamspaceId ?? "" } }), "sync")} title={t("integrationsUi.yougile.sync", "Sync")}><RefreshCw className="h-4 w-4" /></IconButton>}
       </div>
 
       {!state?.connected ? (
         <div className="space-y-2">
         <div className="flex gap-2">
           <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={t("integrationsUi.yougile.apiKey", "YouGile API key")} />
-          <Button disabled={busy || !key.trim() || !teamspaceId} onClick={() => run(() => connectFn({ data: { teamspace_id: teamspaceId ?? "", api_key: key.trim() } }))}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.yougile.connect", "Connect")}</Button>
+          <Button loading={pendingAction === "connect"} disabled={busy || !key.trim() || !teamspaceId} onClick={() => run(() => connectFn({ data: { teamspace_id: teamspaceId ?? "", api_key: key.trim() } }), "connect")}> {t("integrationsUi.yougile.connect", "Connect")}</Button>
         </div>
           <p className="text-xs text-muted-foreground">{t("integrationsUi.yougile.guide.keyHint", "How to get the key — see the guide below.")}</p>
         </div>
@@ -125,13 +130,14 @@ export function YouGileCard() {
           )}
           {projectIds.length > 0 && users.length > 0 && <div className="space-y-2"><Label>{t("integrationsUi.yougile.users", "Team members")}</Label>{users.map((user) => <div key={user.id} className="grid grid-cols-[1fr_180px] items-center gap-2"><span className="truncate text-sm text-foreground">{user.name ?? user.email ?? user.id}</span><Select value={userMap[user.id] || "skip"} onValueChange={(value) => setUserMap((old) => ({ ...old, [user.id]: value === "skip" ? "" : value }))}><SelectTrigger><SelectValue placeholder={t("integrationsUi.yougile.unmatched", "Not matched")} /></SelectTrigger><SelectContent><SelectItem value="skip">{t("integrationsUi.yougile.unmatched", "Not matched")}</SelectItem>{members.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name || member.email || member.id}</SelectItem>)}</SelectContent></Select></div>)}</div>}
           <div className="flex flex-wrap gap-2">
-            <Button disabled={busy || !chosen.length} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", projects: chosen, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }))}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("integrationsUi.yougile.save", "Save and sync")}</Button>
+            <Button loading={pendingAction === "save"} disabled={busy || !chosen.length} onClick={() => run(() => configureFn({ data: { teamspace_id: teamspaceId ?? "", projects: chosen, user_map: Object.fromEntries(Object.entries(userMap).filter(([, value]) => value)) } }), "save")}> {t("integrationsUi.yougile.save", "Save and sync")}</Button>
 
-            <Button variant="outline" disabled={busy} onClick={() => run(() => disconnectFn({ data: { teamspace_id: teamspaceId ?? "" } }))}><Unplug className="h-4 w-4" /> {t("integrationsUi.yougile.disconnect", "Disconnect")}</Button>
+            <Button variant="destructive" disabled={busy} onClick={() => setConfirmDisconnect(true)}><Unplug className="h-4 w-4" /> {t("integrationsUi.yougile.disconnect", "Disconnect")}</Button>
           </div>
           {state.last_sync_at && <p className="text-xs text-muted-foreground">{t("integrationsUi.yougile.lastSync", "Last sync")}: {new Date(state.last_sync_at).toLocaleString()}</p>}
         </div>
       )}
+      <ActionConfirm open={confirmDisconnect} onOpenChange={setConfirmDisconnect} title={t("integrationsUi.yougile.disconnect", "Disconnect") + " · YouGile"} label={t("integrationsUi.yougile.disconnect", "Disconnect")} loading={pendingAction === "disconnect"} onConfirm={async () => { await run(() => disconnectFn({ data: { teamspace_id: teamspaceId ?? "" } }), "disconnect"); setConfirmDisconnect(false); }} />
       <IntegrationGuide prefix="integrationsUi.yougile.guide" name="YouGile" steps={5} connected={!!state?.connected} doneSteps={[...(state?.connected ? [1, 2] : []), ...(state?.connected && (state?.selected_projects ?? []).length ? [3] : []), ...(state?.connected && (state?.selected_projects ?? []).length && columns.length ? [4] : []), ...(state?.connected && Object.keys(state?.user_map ?? {}).length && state?.last_sync_at ? [5] : [])]} />
       {(error || state?.last_error) && <p className="text-sm text-destructive">{error || state.last_error}</p>}
     </div>

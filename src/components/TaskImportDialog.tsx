@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { FileSpreadsheet, Upload } from "lucide-react";
 import { createTasksBulk, previewTasksFromTable } from "@/lib/task-import.functions";
 import type { PreviewResult, PreviewRow } from "@/lib/task-import.schemas";
 import { Button } from "@/components/ui/button";
@@ -166,21 +166,17 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
               className="hidden"
               onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
             />
-            <button
+            <Button variant="outline" loading={loading}
               onClick={() => fileRef.current?.click()}
               disabled={loading}
               className="w-full rounded-xl border-2 border-dashed border-border bg-muted/30 hover:bg-muted/60 transition p-8 flex flex-col items-center gap-2"
             >
-              {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              ) : (
-                <Upload className="h-6 w-6 text-primary" />
-              )}
+              <Upload className="h-6 w-6 text-primary" />
               <span className="text-sm font-medium text-foreground">
                 {t("app.import.choose", "Choose a file")}
               </span>
               <span className="text-xs text-muted-foreground">xlsx, xlsm, csv</span>
-            </button>
+            </Button>
 
             <div className="flex items-center gap-2">
               <Input
@@ -190,6 +186,7 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
               />
               <Button
                 variant="outline"
+                loading={loading}
                 disabled={loading || !sheetUrl.trim()}
                 onClick={() => run({ sheet_url: sheetUrl.trim() })}
               >
@@ -200,6 +197,7 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
             {source && (source.document_id || source.drive_file_id) && (
               <Button
                 variant="outline"
+                loading={loading}
                 className="w-full gap-2"
                 disabled={loading}
                 onClick={() => run(source)}
@@ -313,11 +311,11 @@ export function TaskImportDialog({ open, onOpenChange, teamspaceId, onImported, 
               {t("app.import.back", "Choose another file")}
             </Button>
           )}
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={creating}>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={creating}>
             {t("common.cancel", "Cancel")}
           </Button>
-          <Button onClick={create} disabled={!result || creating || selected.length === 0}>
-            {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          <Button loading={creating} onClick={create} disabled={!result || creating || selected.length === 0}>
+            
             {t("app.import.create", "Create tasks")}
             {selected.length > 0 ? ` (${selected.length})` : ""}
           </Button>

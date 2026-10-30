@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   HardDrive,
   Check,
-  Loader2,
   RefreshCw,
   FileText,
   Folder,
@@ -21,6 +20,8 @@ import {
   googleDriveCreateDocWithContent,
 } from "@/lib/google-drive.functions";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 
 type DriveFile = {
   id: string;
@@ -64,6 +65,8 @@ export function GoogleDriveCard() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [connected, setConnected] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [files, setFiles] = useState<DriveFile[]>([]);
@@ -107,6 +110,7 @@ export function GoogleDriveCard() {
   };
 
   const refresh = async () => {
+    setRefreshing(true);
     try {
       const status = await googleDriveStatus();
       setConnected(status.connected);
@@ -132,6 +136,7 @@ export function GoogleDriveCard() {
       }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -203,15 +208,16 @@ export function GoogleDriveCard() {
           </p>
         </div>
         {connected && (
-          <Button
+          <IconButton
             variant="ghost"
-            size="icon"
+            loading={refreshing}
+            disabled={busy}
             onClick={() => void refresh()}
             className="text-muted-foreground"
             title={t("integrationsUi.refresh", "Refresh")}
           >
             <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
+          </IconButton>
         )}
       </div>
 
@@ -230,7 +236,9 @@ export function GoogleDriveCard() {
                   href={f.webViewLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-white/40 hover:text-primary shrink-0"
+                  className="text-muted-foreground hover:text-primary shrink-0"
+                  aria-label={f.name}
+                  title={f.name}
                 >
                   <ExternalLink className="h-3 w-3" />
                 </a>
@@ -268,11 +276,12 @@ export function GoogleDriveCard() {
               />
               <div className="flex gap-2">
                 <Button
-                  disabled={busy || !docName.trim()}
+                  loading={busy}
+                  disabled={busy || refreshing || !docName.trim()}
                   onClick={() => void createDoc()}
                   className="flex-1 text-xs"
                 >
-                  {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  
                   {t("integrationsUi.create", "Create")}
                 </Button>
                 <Button
@@ -306,10 +315,10 @@ export function GoogleDriveCard() {
         </div>
       )}
 
-      <button type="button" onClick={() => setGuideOpen((value) => !value)} className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground">
+      <Button variant="ghost" type="button" onClick={() => setGuideOpen((value) => !value)} className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground">
         <span>{t("integrationsUi.guide", "How to connect")}</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${guideOpen ? "rotate-180" : ""}`} />
-      </button>
+      </Button>
       {guideOpen && (
         <ol className="list-decimal space-y-1 pl-5 text-xs leading-relaxed text-muted-foreground">
           <li>{t("integrationsUi.driveGuide1", "Click \"Connect\" and choose your Google account.")}</li>
@@ -319,18 +328,20 @@ export function GoogleDriveCard() {
       )}
 
       <Button
-        disabled={busy || loading}
-        variant={connected ? "outline" : "default"}
-        onClick={() => void (connected && !reconnectRequired ? disconnect() : connect())}
+        loading={busy && !creating}
+        disabled={busy || loading || refreshing}
+        variant={connected ? "destructive" : "default"}
+        onClick={() => { if (connected && !reconnectRequired) setConfirmDisconnect(true); else void connect(); }}
         className="w-full text-xs"
       >
-        {(busy || loading) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        
         {connected
           ? t("integrationsUi.disconnect", "Disconnect")
           : reconnectRequired
             ? t("integrationsUi.reconnect", "Reconnect")
             : t("integrationsUi.connect", "Connect")}
       </Button>
+      <ActionConfirm open={confirmDisconnect} onOpenChange={setConfirmDisconnect} title={t("integrationsUi.disconnect", "Disconnect") + " · Google Drive"} label={t("integrationsUi.disconnect", "Disconnect")} loading={busy} onConfirm={async () => { await disconnect(); setConfirmDisconnect(false); }} />
     </div>
   );
 }
