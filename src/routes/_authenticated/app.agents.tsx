@@ -12,6 +12,7 @@ import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { useNavigate } from "@tanstack/react-router";
 import { AGENTS, UPCOMING_AGENTS, type AgentDef } from "@/lib/agents";
 import { AgentAutomations } from "@/components/AgentAutomations";
+import { AssistantHero } from "@/components/assistant/AssistantHero";
 
 export const Route = createFileRoute("/_authenticated/app/agents")({
   component: AgentsPage,
@@ -86,6 +87,8 @@ function AgentsPage() {
           </p>
         </div>
       </div>
+
+      <AssistantHero teamspaceId={teamspaceId} />
 
       <div className="rounded-xl border border-border bg-card/60 p-3 text-xs text-muted-foreground">
         <span className="text-foreground font-medium">

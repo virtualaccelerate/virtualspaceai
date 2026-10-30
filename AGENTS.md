@@ -56,3 +56,4 @@
 - Local task comments reuse task_events with author-only soft edits/deletes and deduplicated notifications; tracker discussions remain read-only to avoid unintended external writes.
 - Telegram migrations use a service-only atomic merge preserving the original group identity and inactive aliases; verify Telegram migration IDs rather than merging by title to prevent cross-group linking.
 - WhatsApp groups (WAHA) reuse `telegram_groups`/`telegram_group_messages` with a `provider` column and the same `processGroup`; replies go through `groupSend` so both messengers share one extraction path.
+- Personal assistant reminders: pure rules in `src/lib/reminders-core.ts` (tested), server in `assistant.server.ts`; daily digest claims rows in `reminder_log` before `deliver()` so reruns never duplicate, and never messages clients.

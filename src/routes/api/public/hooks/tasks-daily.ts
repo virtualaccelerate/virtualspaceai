@@ -42,6 +42,14 @@ export const Route = createFileRoute('/api/public/hooks/tasks-daily')({
           .catch(error => console.error('[deadline-reminders]', error));
         if (waitUntil) waitUntil.call(request, reminders);
         else await reminders;
+        if (new Date().getUTCHours() === 3) {
+          // 09:00 Asia/Bishkek: client reminders digest, separate from AI briefs.
+          const clientReminders = import('@/lib/assistant.server')
+            .then(m => m.runClientReminders())
+            .catch(error => console.error('[client-reminders]', error));
+          if (waitUntil) waitUntil.call(request, clientReminders);
+          else await clientReminders;
+        }
         await calendar;
         const now = new Date();
         const day = new Date(now.getTime() + 6 * 3600_000).getUTCDay();

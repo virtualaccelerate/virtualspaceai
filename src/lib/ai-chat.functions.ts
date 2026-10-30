@@ -308,15 +308,24 @@ export const askZukha = createServerFn({ method: "POST" })
       /* Drive not connected or unavailable — continue without it */
     }
 
-    const agentPreamble = data.agent_id && AGENT_PROMPTS[data.agent_id]
+    let agentPreamble = data.agent_id && AGENT_PROMPTS[data.agent_id]
       ? `ACTIVE AGENT MODE: ${AGENT_PROMPTS[data.agent_id]}\n\n`
       : "";
+    let allowClients = true;
+    if (data.agent_id === "personal" && data.teamspace_id) {
+      try {
+        const { assistantChatContext } = await import("./assistant.server");
+        const pa = await assistantChatContext(context.userId, data.teamspace_id);
+        agentPreamble = pa.preamble;
+        allowClients = pa.allowClients;
+      } catch (e) { console.error("personal assistant context", e); }
+    }
 
     let companyBlock = "";
     try {
       const { buildCompanyContext } = await import("./company-context.server");
       companyBlock = await buildCompanyContext(data.teamspace_id);
-      if (data.teamspace_id) {
+      if (data.teamspace_id && allowClients) {
         const { clientsContext } = await import("./clients.server");
         companyBlock += await clientsContext(data.teamspace_id).catch(() => "");
       }
