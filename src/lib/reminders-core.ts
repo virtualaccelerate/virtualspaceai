@@ -2,7 +2,7 @@
 
 export type Ymd = { y: number; m: number; d: number };
 export type ReminderKind = "birthday" | "subscription_end" | "followup";
-export const MAP_FIELDS = ["name", "phone", "birthday", "sub_start", "sub_end", "followup", "responsible", "comment"] as const;
+export const MAP_FIELDS = ["name", "parent", "phone", "birthday", "sub_start", "sub_end", "followup", "responsible", "comment"] as const;
 export type MapField = (typeof MAP_FIELDS)[number];
 /** Per-tab mapping: header row index (0-based) and column index per field (-1 = none). */
 export type TabMap = { header_row: number } & Partial<Record<MapField, number>>;
@@ -60,6 +60,7 @@ export function normDigits(v: Cell): string {
 }
 
 const HEAD: Record<MapField, RegExp> = {
+  parent: /(родител|мама|папа|parent|guardian)/i,
   name: /^(фио|ф\.и\.о|имя|клиент|ученик|name|client)/i,
   phone: /(контакт|телефон|тел\.?|phone|номер|whatsapp)/i,
   birthday: /(дата рожд|день рожд|д\.р|др$|birth)/i,
@@ -76,7 +77,7 @@ export function guessFromHeader(row: Cell[]): Partial<Record<MapField, number>> 
   row.forEach((c, i) => {
     const t = cellText(c).toLowerCase();
     if (!t) return;
-    for (const f of MAP_FIELDS) if (out[f] === undefined && HEAD[f].test(t)) { out[f] = i; break; }
+    for (const f of ["parent", ...MAP_FIELDS.filter((x) => x !== "parent")] as MapField[]) if (out[f] === undefined && HEAD[f].test(t)) { out[f] = i; break; }
   });
   return out;
 }
@@ -97,6 +98,14 @@ export function heuristicTabMap(rows: Cell[][]): TabMap | null {
 }
 
 export const isArchiveTab = (name: string) => /^\s*архив/i.test(name);
+
+const ROLE_WORDS = /^(мама|папа|мать|отец|родитель|бабушка|дедушка|mom|dad)$/i;
+/** «Фамилия Имя [Отчество]» → «Имя»; a single word is used as is. Role words like «мама» are skipped. */
+export function firstName(full: string): string {
+  const words = full.split(/[\s,]+/).filter((w) => /^\p{L}[\p{L}'’-]*$/u.test(w) && !ROLE_WORDS.test(w));
+  if (!words.length) return "";
+  return words.length >= 2 ? words[1] : words[0];
+}
 
 export function rowKey(tab: string, name: string, phone: string): string {
   const n = name.toLowerCase().replace(/ё/g, "е").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -133,7 +142,9 @@ export function evaluateRow(tab: string, row: Cell[], map: TabMap, day: Ymd): { 
   const key = rowKey(tab, name, phone);
   const hits: RowHit[] = [];
   let invalid = false;
-  const first = name.split(" ").find((p) => /\p{L}/u.test(p)) ?? name;
+  const first = firstName(name);
+  const parent = firstName(cellText(get(row, map.parent)));
+  const hi = parent ? `Здравствуйте, ${parent}!` : `Здравствуйте, ${first}!`;
   const base = { name, phone, responsible, comment };
   const read = (f: MapField) => {
     const raw = get(row, map[f]);
@@ -150,7 +161,9 @@ export function evaluateRow(tab: string, row: Cell[], map: TabMap, day: Ymd): { 
         const age = target.y - bd.y;
         hits.push({ ...base, kind: "birthday", stage, event_date: ymdKey(target), log_key: `${key}#${stage}`,
           reason: stage === "today" ? `ДР сегодня${age > 0 && age < 120 ? ` (${age})` : ""}` : `ДР завтра, ${fmtRu(target)}`,
-          message: `${first}, с днём рождения! 🎉 Желаем здоровья, сил и новых побед. Ждём вас на тренировках!` });
+          message: parent
+            ? `${parent}, здравствуйте! Поздравляем ${first} с днём рождения! 🎉 Желаем здоровья, сил и новых побед. Ждём на тренировках!`
+            : `${first}, с днём рождения! 🎉 Желаем здоровья, сил и новых побед. Ждём вас на тренировках!` });
       }
     }
   }
@@ -160,7 +173,7 @@ export function evaluateRow(tab: string, row: Cell[], map: TabMap, day: Ymd): { 
       if (ymdKey(end) === ymdKey(addDays(day, off))) {
         hits.push({ ...base, kind: "subscription_end", stage, event_date: ymdKey(end), log_key: `${key}#${stage}`,
           reason: stage === "today" ? `абонемент заканчивается сегодня (${fmtRu(end)})` : `абонемент заканчивается ${fmtRu(end)}`,
-          message: `Здравствуйте, ${first}! Ваш абонемент заканчивается ${fmtRu(end)}. Продлеваем?` });
+          message: parent ? `${hi} Абонемент ${first} заканчивается ${fmtRu(end)}. Продлеваем?` : `${hi} Ваш абонемент заканчивается ${fmtRu(end)}. Продлеваем?` });
       }
     }
   }
@@ -168,7 +181,7 @@ export function evaluateRow(tab: string, row: Cell[], map: TabMap, day: Ymd): { 
   const fu = read("followup");
   if (fu && ymdKey(fu) === ymdKey(day)) {
     hits.push({ ...base, kind: "followup", stage: "today", event_date: ymdKey(fu), log_key: `${key}#today`,
-      reason: "follow-up сегодня", message: `Здравствуйте, ${first}! Хотели уточнить, как у вас дела и удобно ли продолжить занятия?` });
+      reason: "follow-up сегодня", message: `${hi} Хотели уточнить, как у вас дела и удобно ли продолжить занятия?` });
   }
   return { hits, invalid };
 }
