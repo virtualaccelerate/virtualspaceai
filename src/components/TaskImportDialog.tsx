@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { FileSpreadsheet, Upload } from "lucide-react";
 import { createTasksBulk, previewTasksFromTable } from "@/lib/task-import.functions";
 import type { PreviewResult, PreviewRow } from "@/lib/task-import.schemas";
 import { Button } from "@/components/ui/button";

@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 export function LangSwitcher({ compact = false }: { compact?: boolean }) {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [changing, setChanging] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const current = LANGUAGES.find((l) => i18n.language?.startsWith(l.code)) ?? LANGUAGES[0];
 
@@ -40,10 +41,15 @@ export function LangSwitcher({ compact = false }: { compact?: boolean }) {
             <Button
               variant="ghost"
               key={l.code}
-              onClick={() => {
-                void i18n.changeLanguage(l.code);
-                persistLanguage(l.code);
-                setOpen(false);
+              loading={changing === l.code}
+              disabled={changing !== null}
+              onClick={async () => {
+                setChanging(l.code);
+                try {
+                  await i18n.changeLanguage(l.code);
+                  persistLanguage(l.code);
+                  setOpen(false);
+                } finally { setChanging(null); }
               }}
               className="w-full justify-start text-foreground [&>span]:w-full [&>span]:justify-between"
             >

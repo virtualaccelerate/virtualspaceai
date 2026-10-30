@@ -1,5 +1,5 @@
 ## Задачи
-- [ ] Apply UI-only button loading, action hierarchy, confirmations and icon accessibility across tasks, chat, clients, financials, integrations and admin reports; replace LangSwitcher buttons and verify
+- [x] Apply UI-only button loading, action hierarchy, confirmations and icon accessibility across tasks, chat, clients, financials, integrations and admin reports; replace LangSwitcher buttons; 16 tests and signed-in page/dialog checks passed (live report generation and pending task save not exercised)
 - [x] Add application-admin workspace AI reports: SQL 30-day metrics, click-only Russian generation, protected history and RU/EN/KY labels; verified live generation/reload, restricted grants and 9 regression tests
 - [x] Add shared pilot checklist, authorized persistence, automatic evidence, six-language UI; verified check/uncheck/result persistence, payroll link and desktop/mobile
 - [x] Add task comments, mentions, notifications, combined feed and counters; preserve tasks/events; UI save/edit/soft-delete verified, real Telegram notifications untested
