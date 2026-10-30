@@ -174,13 +174,13 @@ export async function planSource(source: SourceRow, ownerId: string, days: Ymd[]
   const { matchMember } = await import("./task-import.server");
   const { normPhone } = await import("./clients.server");
   const items: PlannedItem[] = [];
-  const invalidRows = new Set<string>();
+  let invalid = 0;
   for (const t of wb.tabs) {
     const map = maps[t.name];
     if (!tabs.includes(t.name) || !map) continue;
     for (const day of days) {
       const r = evaluateTab(t.name, t.rows, map, day);
-      if (day === days[0]) invalidRows.add(`${t.name}:${r.invalid}`);
+      if (day === days[0]) invalid += r.invalid;
       for (const h of r.hits) {
         const who = h.responsible ? matchMember(h.responsible, members) : null;
         items.push({ ...h, tab: t.name, day: ymdKey(day), recipient_id: who?.id ?? ownerId, recipient_name: who?.name ?? owner?.name ?? "Владелец", matched: !!who, in_client_db: null });
@@ -197,7 +197,6 @@ export async function planSource(source: SourceRow, ownerId: string, days: Ymd[]
     }
     for (const it of items) { const p = normPhone(it.phone); it.in_client_db = p ? known.has(p) : false; }
   }
-  const invalid = [...invalidRows].reduce((s, k) => s + Number(k.split(":").pop()), 0);
   return { items, invalid };
 }
 
