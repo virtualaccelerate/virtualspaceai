@@ -12,6 +12,10 @@ function fmt(ts: string | null, dash: string) {
   return ts ? new Date(ts).toLocaleString("ru-RU") : dash;
 }
 
+function reportText(content: string) {
+  return content.replace(/^#{1,6}\s+/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/^\s*\*\s+/gm, "— ");
+}
+
 function Bars({ data, label, noData, actionsLabel, usersLabel }: { data: { period: string; events: number; users: number }[]; label: string; noData: string; actionsLabel: string; usersLabel: string }) {
   const max = Math.max(1, ...data.map((d) => d.events));
   return (
@@ -212,7 +216,7 @@ export function AdminAnalytics() {
             </Select>}
           </div>
           {reportError && <p role="alert" className="text-sm text-destructive break-words">{reportError}</p>}
-          {reportLoading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : reports.length ? <article className="whitespace-pre-wrap break-words text-sm leading-relaxed" aria-live="polite">{reports.find(report => report.id === selectedReport)?.content}</article> : <p className="text-sm text-muted-foreground">{t("adminUi.reports.empty", "No reports yet")}</p>}
+          {reportLoading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : reports.length ? <article className="whitespace-pre-wrap break-words text-sm leading-relaxed" aria-live="polite">{reportText(reports.find(report => report.id === selectedReport)?.content ?? "")}</article> : <p className="text-sm text-muted-foreground">{t("adminUi.reports.empty", "No reports yet")}</p>}
         </DialogContent>
       </Dialog>
 

@@ -312,7 +312,7 @@ export const adminGenerateWorkspaceReport = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireAdmin();
     const { generateWorkspaceReport } = await import("./admin-analytics.server");
-    return generateWorkspaceReport(data.workspace_id, process.env.ADMIN_USERNAME || "application-admin");
+    return generateWorkspaceReport(data.workspace_id, "application-admin");
   });
 
 export const adminGetAnalytics = createServerFn({ method: "GET" }).handler(async () => {
