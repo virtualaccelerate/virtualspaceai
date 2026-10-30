@@ -189,11 +189,13 @@ function parseTaskTokens(text: string): {
 function MessageContent({
   text,
   onOpenFile,
+  openingFile,
   knownDocIds,
   knownDriveIds,
 }: {
   text: string;
   onOpenFile: (id: string) => void;
+  openingFile?: string | null;
   knownDocIds?: Set<string>;
   knownDriveIds?: Set<string>;
 }) {
@@ -215,7 +217,7 @@ function MessageContent({
       continue;
     }
     nodes.push(
-      <button
+      <Button variant="ghost" loading={openingFile === id}
         key={`${id}-${m.index}`}
         onClick={() =>
           isDoc
@@ -228,7 +230,7 @@ function MessageContent({
       >
         <FileText className="h-3 w-3" />
         {name}
-      </button>,
+      </Button>,
     );
     last = m.index + m[0].length;
   }
@@ -268,6 +270,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [newChatLoading, setNewChatLoading] = useState(false);
+  const [openingFile, setOpeningFile] = useState<string | null>(null);
   const [destructiveLoading, setDestructiveLoading] = useState(false);
   const [deleteThread, setDeleteThread] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -648,6 +651,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
   };
 
   const openFile = async (id: string) => {
+    setOpeningFile(id);
     // Open a blank tab synchronously in the click handler so popup blockers
     // don't kill it while we await the signed URL. If the browser still
     // blocked it, fall back to navigating the current tab.
@@ -664,7 +668,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
     } catch (e) {
       if (win && !win.closed) win.close();
       setError(e instanceof Error ? e.message : t("shellUi.chat.couldNotOpenFile", "Could not open file"));
-    }
+    } finally { setOpeningFile(null); }
   };
 
   const suggestionsRaw = t("app.overview.suggestions", { returnObjects: true });
@@ -922,7 +926,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
             </Button>
             {threadsOpen && (
               <>
-                <button aria-label={t("shellUi.chat.ariaClose", "Close")} className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
+                <div aria-hidden="true" className="fixed inset-0 z-30" onClick={() => setThreadsOpen(false)} />
                 <div className="absolute left-0 top-full mt-1 z-40 w-72 max-h-80 overflow-auto rounded-xl border border-border bg-popover shadow-2xl p-1">
                   {conversations.length === 0 ? (
                     <div className="p-3 text-xs text-muted-foreground text-center">
@@ -1020,8 +1024,8 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
                 >
                   <div className={`max-w-[85%] rounded-2xl ${isCompact ? "px-4 py-2.5 text-sm" : "px-5 py-3 text-[15px]"} whitespace-pre-wrap leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
                     {m.role === "assistant"
-                      ? <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />
-                      : <MessageContent text={m.content} onOpenFile={openFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />}
+                      ? <MessageContent text={m.content} onOpenFile={openFile} openingFile={openingFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />
+                      : <MessageContent text={m.content} onOpenFile={openFile} openingFile={openingFile} knownDocIds={knownDocIds} knownDriveIds={knownDriveIds} />}
 
                     {m.role === "assistant" && m.proposed && m.proposed.length > 0 && (
                       <div className="mt-2 space-y-1.5">
