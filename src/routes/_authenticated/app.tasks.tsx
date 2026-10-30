@@ -1,3 +1,5 @@
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { taskLabelDisplay } from "@/lib/task-label-display";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -43,16 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "projects"; project?: string; department?: string } => ({
@@ -287,6 +280,8 @@ function TasksPage() {
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
 
   const [saving, setSaving] = useState(false);
+  const [taskBusy, setTaskBusy] = useState<string | null>(null);
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [view, setView] = useState<"board" | "table">("board");
   const [managedBy, setManagedBy] = useState<"YouGile" | "Trello" | null>(null);
@@ -352,6 +347,7 @@ function TasksPage() {
     if (!selectedIds.length) return;
     if (kind === "due" && !bulkDue) return;
     setBulkBusy(true);
+    setBulkAction(kind);
     try {
       const payload: any = { ids: selectedIds };
       if (kind === "assignee") payload.assignee_id = bulkAssignee === "unassigned" || !bulkAssignee ? null : bulkAssignee;
@@ -365,6 +361,7 @@ function TasksPage() {
       toast.error(e instanceof Error ? e.message : String(e));
     } finally {
       setBulkBusy(false);
+      setBulkAction(null);
     }
   }
 
@@ -379,6 +376,7 @@ function TasksPage() {
   async function runBulkDelete(mode: "selected" | "all") {
     if (mode === "selected" && !selectedIds.length) return;
     setBulkBusy(true);
+    setBulkAction("delete");
     try {
       const res = (await deleteTasksBulkFn({
         data: {
@@ -397,6 +395,7 @@ function TasksPage() {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       setBulkBusy(false);
+      setBulkAction(null);
       setBulkMode(null);
     }
   }
@@ -414,6 +413,7 @@ function TasksPage() {
   async function submitForReview(task: Task) {
     const note = window.prompt(t("tasksUi.promptProof", "Link or comment for submission (optional)")) ?? "";
     const isLink = /^https?:\/\//i.test(note.trim());
+    setTaskBusy(`submit:${task.id}`);
     try {
       await submitTaskFn({
         data: {
@@ -426,17 +426,18 @@ function TasksPage() {
       await reloadTasks();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("tasksUi.errSend", "Failed to send"));
-    }
+    } finally { setTaskBusy(null); }
   }
 
   async function decide(task: Task, decision: "approve" | "rework") {
+    setTaskBusy(`${decision}:${task.id}`);
     try {
       await reviewTaskFn({ data: { id: task.id, decision } });
       toast.success(decision === "approve" ? t("tasksUi.taskApproved", "Task approved") : t("tasksUi.taskReturned", "Returned for rework"));
       await reloadTasks();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("tasksUi.errDecision", "Failed to save decision"));
-    }
+    } finally { setTaskBusy(null); }
   }
 
   function scopeToRole(rows: Task[], uid: string, manager: boolean) {
@@ -630,6 +631,7 @@ function TasksPage() {
   }
 
   async function handleDelete(id: string) {
+    setTaskBusy(`delete:${id}`);
     const prev = tasks;
     setTasks((p) => p.filter((t) => t.id !== id));
     try {
@@ -638,7 +640,7 @@ function TasksPage() {
     } catch (error) {
       setTasks(prev);
       toast.error(error instanceof Error ? error.message : String(error));
-    }
+    } finally { setTaskBusy(null); }
   }
 
   async function moveTask(id: string, status: TaskStatus) {
@@ -674,7 +676,7 @@ function TasksPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-lg border border-border p-0.5">
-            <button
+            <Button variant="ghost"
               onClick={() => changeView("board")}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-medium transition",
@@ -682,8 +684,8 @@ function TasksPage() {
               )}
             >
               {t("tasksUi.viewBoard", "Board")}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost"
               onClick={() => changeView("table")}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-medium transition",
@@ -691,7 +693,7 @@ function TasksPage() {
               )}
             >
               {t("tasksUi.viewTable", "Table")}
-            </button>
+            </Button>
           </div>
           <DirectorySelect
             ariaLabel={t("tasksUi.filterProject", "Project")}
@@ -714,7 +716,7 @@ function TasksPage() {
             onCreate={() => void createEntry("department").then((n) => n && setFilter("department", n))}
           />
           <Button
-            variant={onlyMine ? "default" : "outline"}
+            variant={onlyMine ? "secondary" : "outline"}
             onClick={() => setOnlyMine((v) => !v)}
             className="gap-2"
           >
@@ -729,9 +731,9 @@ function TasksPage() {
           {!yougileManaged && tasks.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label={t("tasksUi.more", "More")}>
+                <IconButton variant="outline" aria-label={t("tasksUi.more", "More")}>
                   <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                </IconButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => changeView("table")}>
@@ -763,11 +765,11 @@ function TasksPage() {
                 {members.map((m) => <SelectItem key={m.id} value={m.id}>{m.full_name || m.email || m.id}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Button size="sm" variant="outline" disabled={bulkBusy || !bulkAssignee} onClick={() => runBulkUpdate("assignee")}>
+            <Button size="sm" variant="outline" loading={bulkAction === "assignee"} disabled={bulkBusy || !bulkAssignee} onClick={() => runBulkUpdate("assignee")}>
               {t("tasksUi.bulkAssign", "Assign")}
             </Button>
             <Input type="date" value={bulkDue} onChange={(e) => setBulkDue(e.target.value)} className="h-8 w-40" />
-            <Button size="sm" variant="outline" disabled={bulkBusy || !bulkDue} onClick={() => runBulkUpdate("due")}>
+            <Button size="sm" variant="outline" loading={bulkAction === "due"} disabled={bulkBusy || !bulkDue} onClick={() => runBulkUpdate("due")}>
               {t("tasksUi.bulkDue", "Set deadline")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
@@ -775,7 +777,8 @@ function TasksPage() {
             </Button>
             <Button
               size="sm"
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              variant="destructive"
+              className="gap-2"
               disabled={bulkBusy}
               onClick={() => setBulkMode("selected")}
             >
@@ -857,13 +860,13 @@ function TasksPage() {
                       </span>
                       <span className="text-xs text-muted-foreground font-medium">{items.length}</span>
                     </div>
-                    <button
+                    <IconButton variant="ghost"
                       onClick={() => openCreate(col.base)}
                       className="text-muted-foreground hover:text-foreground transition"
                       aria-label={t("tasksUi.addTaskTo", "Add task to {{col}}", { col: col.label })}
                     >
                       <Plus className="h-4 w-4" />
-                    </button>
+                    </IconButton>
 
                   </div>
 
@@ -897,12 +900,12 @@ function TasksPage() {
                             {task.external_source === "trello" && <Badge variant="outline" className="text-[9px]">Trello</Badge>}
                             {task.external_source !== "yougile" && <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <button
-                                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition -mr-1"
-                                  aria-label="Task actions"
+                                <IconButton variant="ghost"
+                                  className="md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 text-muted-foreground hover:text-foreground transition -mr-1"
+                                  aria-label={t("tasksUi.more", "More")}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
-                                </button>
+                                </IconButton>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenuItem onClick={() => openEdit(task)}>
@@ -950,24 +953,14 @@ function TasksPage() {
                                 </a>
                               )}
                               <div className="mt-2 flex gap-1.5">
-                    {!yougileManaged && <button
-                                  onClick={() => decide(task, "approve")}
-                                  className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
-                                >
-                                  {t("tasksUi.approve", "Approve")}
-                    </button>}
-                                <button
-                                  onClick={() => decide(task, "rework")}
-                                  className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
-                                >
-                                  {t("tasksUi.rework", "Needs rework")}
-                                </button>
+                    {!yougileManaged && <Button variant="default" size="sm" loading={taskBusy === `approve:${task.id}`} disabled={!!taskBusy} onClick={() => void decide(task, "approve")}>{t("tasksUi.approve")}</Button>}
+                                <Button variant="outline" size="sm" loading={taskBusy === `rework:${task.id}`} disabled={!!taskBusy} onClick={() => void decide(task, "rework")}>{t("tasksUi.rework")}</Button>
                               </div>
                             </div>
                           )}
 
                           {isMine && task.status !== "review" && task.status !== "done" && (
-                            <button
+                            <Button variant="outline" size="sm" loading={taskBusy === `submit:${task.id}`} disabled={!!taskBusy}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 submitForReview(task);
@@ -975,7 +968,7 @@ function TasksPage() {
                               className="mt-2 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent"
                             >
                               {t("tasksUi.submitForReview", "Submit for review")}
-                            </button>
+                            </Button>
                           )}
 
                           {(taskLabelDisplay(task.project) || taskLabelDisplay(task.department)) && (
@@ -1047,22 +1040,22 @@ function TasksPage() {
                     })}
                   </div>
 
-                  <button
+                  <Button variant="ghost"
                     onClick={() => openCreate(col.base)}
                     className="mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 hover:bg-accent/40 transition"
                   >
                     <Plus className="h-3.5 w-3.5" /> {t("tasksUi.addTask", "Add Task")}
-                  </button>
+                  </Button>
                 </div>
               );
             })}
 
-            {!yougileManaged && <button
+            {!yougileManaged && <Button variant="outline"
               onClick={() => openCreate()}
               className="w-[220px] shrink-0 self-start flex items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
             >
               <Plus className="h-4 w-4" /> {t("tasksUi.addGroup", "Add group")}
-            </button>}
+            </Button>}
           </div>
         </div>
       )}
@@ -1205,11 +1198,11 @@ function TasksPage() {
                 {editing?.external_source !== "trello" && projectOptions.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {projectOptions.slice(0, 8).map((p) => (
-                      <button key={p.tag} type="button" onClick={() => setDraft((d) => {
+                      <Button variant="ghost" size="sm" key={p.tag} type="button" onClick={() => setDraft((d) => {
                         const tags = parseTagList(d.tags);
                         if (!tags.includes(p.tag)) tags.push(p.tag);
                         return { ...d, tags: tags.map((x) => `#${x}`).join(" "), project: d.project || p.name };
-                      })} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">#{p.tag}</button>
+                      })} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">#{p.tag}</Button>
                     ))}
                   </div>
                 )}
@@ -1219,8 +1212,8 @@ function TasksPage() {
           <DialogFooter className="gap-2">
             {editing && (
               <Button
-                variant="ghost"
-                className="text-rose-300 hover:text-rose-200 mr-auto"
+                variant="destructive"
+                className="mr-auto"
                 onClick={() => {
                   setDeleteTarget(editing);
                 }}
@@ -1229,54 +1222,16 @@ function TasksPage() {
               </Button>
             )}
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>{t("tasksUi.cancel", "Cancel")}</Button>
-            <Button disabled={saving} onClick={handleSave}>{editing ? t("tasksUi.save", "Save") : t("tasksUi.create", "Create task")}</Button>
+            <Button loading={saving} onClick={handleSave}>{editing ? t("tasksUi.save", "Save") : t("tasksUi.create", "Create task")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("tasksUi.confirmDeleteTitle", "Delete task?")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("tasksUi.confirmDeleteBody", "This action cannot be undone.")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("tasksUi.cancel", "Cancel")}</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => {
-              const target = deleteTarget;
-              setDeleteTarget(null);
-              setDialogOpen(false);
-              if (target) void handleDelete(target.id);
-            }}>{t("tasksUi.delete", "Delete")}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={!!bulkMode} onOpenChange={(open) => { if (!open) setBulkMode(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {bulkMode === "all"
-                ? t("tasksUi.confirmDeleteAllTitle", "Delete all tasks?")
-                : t("tasksUi.confirmDeleteSelTitle", "Delete selected tasks?")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkMode === "all"
-                ? t("tasksUi.confirmDeleteAllBody", "All tasks in this workspace will be deleted. This action cannot be undone.")
-                : t("tasksUi.confirmDeleteSelBody", "The selected tasks will be deleted. This action cannot be undone. ({{count}})", { count: selectedIds.length })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("tasksUi.cancel", "Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground"
-              onClick={() => { const mode = bulkMode; if (mode) void runBulkDelete(mode); }}
-            >
-              {t("tasksUi.delete", "Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ActionConfirm open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title={t("tasksUi.confirmDeleteTitle", "Delete task?")} description={t("tasksUi.confirmDeleteBody", "This action cannot be undone.")} label={t("tasksUi.delete", "Delete")} loading={taskBusy?.startsWith("delete:")} onConfirm={async () => {
+        if (!deleteTarget) return;
+        await handleDelete(deleteTarget.id); setDeleteTarget(null); setDialogOpen(false);
+      }} />
+      <ActionConfirm open={!!bulkMode} onOpenChange={(open) => { if (!open) setBulkMode(null); }} title={bulkMode === "all" ? t("tasksUi.confirmDeleteAllTitle", "Delete all tasks?") : t("tasksUi.confirmDeleteSelTitle", "Delete selected tasks?")} description={bulkMode === "all" ? t("tasksUi.confirmDeleteAllBody") : t("tasksUi.confirmDeleteSelBody", { count: selectedIds.length })} label={t("tasksUi.delete", "Delete")} loading={bulkAction === "delete"} onConfirm={async () => { if (bulkMode) await runBulkDelete(bulkMode); }} />
 
       <TaskImportDialog
         open={importOpen}

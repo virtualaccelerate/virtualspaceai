@@ -1,3 +1,5 @@
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
 import { taskLabelDisplay } from "@/lib/task-label-display";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -74,6 +76,7 @@ export function TaskDetailDialog({
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [onlyComments, setOnlyComments] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [mentionQuery, setMentionQuery] = useState<{start: number; end: number; text: string} | null>(null);
   const [loadError, setLoadError] = useState(false);
 
@@ -197,7 +200,7 @@ export function TaskDetailDialog({
               </div>}
               <div className="flex justify-end gap-2">
                 {editingComment && <Button size="sm" variant="ghost" disabled={saving} onClick={() => {setEditingComment(null); setBody(""); setMentions([]);}}>{t("tasksUi.cancel")}</Button>}
-                <Button size="sm" disabled={!body.trim() || saving} onClick={() => void sendComment()}>{saving ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>}{t(editingComment ? "tasksUi.save" : "tasksUi.comments.send")}</Button>
+                <Button size="sm" loading={saving && !deleteTarget} disabled={!body.trim() || saving} onClick={() => void sendComment()}><Send className="h-4 w-4"/>{t(editingComment ? "tasksUi.save" : "tasksUi.comments.send")}</Button>
               </div>
             </div>
 
@@ -226,8 +229,8 @@ export function TaskDetailDialog({
                       </div>
                       <div className="mt-1 whitespace-pre-wrap break-words">{event.kind === "comment" ? event.deleted_at ? <span className="italic text-muted-foreground">{t("tasksUi.comments.deleted")}</span> : <CommentText text={event.note ?? ""}/> : describe(event)}</div>
                       {event.kind === "comment" && event.source === "virtual_space" && event.actor_id === detail.viewer_id && !event.deleted_at && <div className="mt-1 flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("tasksUi.comments.edit")} title={t("tasksUi.comments.edit")} disabled={saving} onClick={() => {setEditingComment(event.id); setBody(event.note ?? ""); setMentions(event.mentions ?? []);}}><Pencil className="h-3.5 w-3.5"/></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("tasksUi.comments.delete")} title={t("tasksUi.comments.delete")} disabled={saving} onClick={() => void removeComment(event.id)}><Trash2 className="h-3.5 w-3.5"/></Button>
+                        <IconButton variant="ghost" aria-label={t("tasksUi.comments.edit")} title={t("tasksUi.comments.edit")} disabled={saving} onClick={() => {setEditingComment(event.id); setBody(event.note ?? ""); setMentions(event.mentions ?? []);}}><Pencil className="h-3.5 w-3.5"/></IconButton>
+                        <IconButton variant="destructive" aria-label={t("tasksUi.comments.delete")} title={t("tasksUi.comments.delete")} disabled={saving} onClick={() => setDeleteTarget(event.id)}><Trash2 className="h-3.5 w-3.5"/></IconButton>
                       </div>}
                       </div>
                     </li>
@@ -246,12 +249,13 @@ export function TaskDetailDialog({
             </Button>
           )}
           {task && tracker !== "YouGile" && onEdit && (
-            <Button onClick={() => onEdit(task.id)}>
+            <Button variant="outline" onClick={() => onEdit(task.id)}>
               <Pencil className="h-4 w-4" />
               {t("tasksUi.detail.edit", "Edit")}
             </Button>
           )}
         </DialogFooter>
+      <ActionConfirm open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title={t("tasksUi.comments.delete")} description={t("tasksUi.confirmDeleteBody")} label={t("tasksUi.comments.delete")} loading={saving} onConfirm={async () => { if (deleteTarget) { await removeComment(deleteTarget); setDeleteTarget(null); } }} />
       </DialogContent>
     </Dialog>
   );

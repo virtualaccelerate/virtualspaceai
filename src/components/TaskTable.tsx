@@ -1,7 +1,9 @@
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { taskLabelDisplay } from "@/lib/task-label-display";
 import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowUpDown, Flag, MessageSquareText, Trash2 } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Flag, MessageSquareText, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -143,7 +145,7 @@ function TaskTableBase({
 
   const Head = ({ k, children, className }: { k: SortKey; children: React.ReactNode; className?: string }) => (
     <th className={cn("px-3 py-2 text-left font-medium", className)}>
-      <button
+      <Button variant="ghost"
         onClick={() => toggleSort(k)}
         className={cn(
           "inline-flex items-center gap-1 text-xs uppercase tracking-wide transition",
@@ -152,7 +154,7 @@ function TaskTableBase({
       >
         {children}
         <ArrowUpDown className="h-3 w-3" />
-      </button>
+      </Button>
     </th>
   );
 
@@ -257,7 +259,7 @@ function TaskTableBase({
                   <DropdownMenuTrigger asChild>
                     <button className="rounded-md px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-accent/50">
                       •••
-                    </button>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {columns
