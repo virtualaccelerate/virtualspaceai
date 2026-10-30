@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Workspace roles and access
+- Workspace AI reports use a service-only SQL aggregate and report table behind the encrypted application-admin session; workspace roles never grant report access, and generation runs only on explicit clicks.
 - Pilot checks use a dedicated per-workspace table and authenticated evidence RPC; a trigger stamps checker/date, RLS restricts unchecking and finance to managers, and retained unchecked rows prevent automatic rechecking of manager overrides.
 - Financials tabs are URL-backed so pilot finance and payroll items open their respective sections directly.
 - Global Telegram setup requires both active workspace ownership and the encrypted application-admin session; employees' done requests become review server-side, while a database trigger blocks direct approval/review forgery.
