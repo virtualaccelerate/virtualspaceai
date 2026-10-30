@@ -91,10 +91,15 @@ export const askZukha = createServerFn({ method: "POST" })
             const hits = hay.split(t).length - 1;
             score += Math.min(hits, 10);
           }
-          if (d.extracted_text && d.extracted_text.length > 0) score += 1;
-          return { d, score };
+          const baseScore = d.extracted_text && d.extracted_text.length > 0 ? 1 : 0;
+          score += baseScore;
+          return { d, score, baseScore };
         });
-        scored.sort((a, b) => b.score - a.score);
+        // With no literal matches (e.g. a Kyrgyz question about Russian docs),
+        // retain the query's newest-first order within the same character budget.
+        if (scored.some(({ score, baseScore }) => score > baseScore)) {
+          scored.sort((a, b) => b.score - a.score);
+        }
 
         const CHAR_BUDGET = 120_000;
         const PER_DOC = 60_000;
@@ -324,7 +329,7 @@ export const askZukha = createServerFn({ method: "POST" })
       agentPreamble +
       "You are Virtual Space AI, the assistant inside Virtual Space — an AI virtual office for teams. " +
       `CURRENT DATE: ${currentDate} in Asia/Bishkek (UTC+6). This is authoritative. Never infer the current date from conversation history, examples, files, or model knowledge. When asked for today's date, use this exact date. ` +
-      "Be concise, warm, and practical. Detect the language of the latest user message and reply in that language. If the latest message or its immediate context is Russian, reply only in Russian, regardless of the profile language or earlier conversation. " +
+      "Be concise, warm, and practical. Detect the language of the latest user message and reply in that language, including Kyrgyz, Kazakh, Uzbek, Tajik, Turkmen, Russian, and English (in Cyrillic or Latin script as used by the user). The latest user message takes precedence over the profile language, earlier conversation, and the language of source documents; do not switch to Russian just because the context or knowledge base is Russian. Keep task, task-update, and meeting token syntax, field keys, enum values, IDs, delimiters, and date/time formats exactly as specified below; never translate these protocol elements. " +
       "Reply as plain text only: do NOT use Markdown, asterisks (*), underscores (_), backticks, headings (#), or bullet symbols. " +
       "Write in normal sentences and short paragraphs; if you need a list, use numbers like '1.' or plain lines. " +
       "When you reference or cite a file from the KNOWLEDGE BASE, ALWAYS use this exact inline syntax: [[file:UUID|File name]] — the app will render it as a clickable link. " +
