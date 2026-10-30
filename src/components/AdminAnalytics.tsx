@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
-import { adminGetAnalytics } from "@/lib/admin.functions";
-import type { AdminAnalytics as Analytics } from "@/lib/admin-analytics.server";
+import { FileText, History, Loader2, RefreshCw } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { adminGetAnalytics, adminListWorkspaceReports, adminGenerateWorkspaceReport } from "@/lib/admin.functions";
+import type { AdminAnalytics as Analytics, WorkspaceReport } from "@/lib/admin-analytics.server";
 
 function fmt(ts: string | null, dash: string) {
   return ts ? new Date(ts).toLocaleString("ru-RU") : dash;
+}
+
+function reportText(content: string) {
+  return content.replace(/^#{1,6}\s+/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/^\s*\*\s+/gm, "— ");
 }
 
 function Bars({ data, label, noData, actionsLabel, usersLabel }: { data: { period: string; events: number; users: number }[]; label: string; noData: string; actionsLabel: string; usersLabel: string }) {
@@ -39,6 +47,34 @@ export function AdminAnalytics() {
   const { t } = useTranslation();
   const [data, setData] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [workspace, setWorkspace] = useState<{ id: string; name: string } | null>(null);
+  const [reports, setReports] = useState<WorkspaceReport[]>([]);
+  const [selectedReport, setSelectedReport] = useState("");
+  const [reportLoading, setReportLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [reportError, setReportError] = useState("");
+  const listReports = useServerFn(adminListWorkspaceReports);
+  const generateReport = useServerFn(adminGenerateWorkspaceReport);
+
+  const openReports = async (w: { id: string; name: string }) => {
+    setWorkspace(w); setReports([]); setSelectedReport(""); setReportError(""); setReportLoading(true);
+    try {
+      const result = await listReports({ data: { workspace_id: w.id } });
+      setReports(result); setSelectedReport(result[0]?.id ?? "");
+    } catch { setReportError(t("adminUi.reports.loadError", "Could not load reports")); }
+    finally { setReportLoading(false); }
+  };
+  const regenerate = async () => {
+    if (!workspace || generating || reportLoading) return;
+    setGenerating(true); setReportError("");
+    try {
+      const report = await generateReport({ data: { workspace_id: workspace.id } });
+      setReports(previous => [report, ...previous]); setSelectedReport(report.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      setReportError(message && !message.startsWith("REPORT_") ? message : t("adminUi.reports.generateError", "Could not generate report"));
+    } finally { setGenerating(false); }
+  };
 
   useEffect(() => {
     adminGetAnalytics()
@@ -128,6 +164,7 @@ export function AdminAnalytics() {
                   t("adminUi.analytics.colMessages", "Сообщения"),
                   t("adminUi.analytics.colCreated", "Создано"),
                   t("adminUi.analytics.colLastActivity", "Последняя активность"),
+                  t("adminUi.reports.column", "AI report"),
                 ].map(
                   (h) => (
                     <th key={h} className="text-left font-medium px-4 py-3 whitespace-nowrap">
@@ -152,12 +189,36 @@ export function AdminAnalytics() {
                   <td className="px-4 py-3">{w.messages}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmt(w.created_at, dash)}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmt(w.last_activity, dash)}</td>
+                  <td className="px-4 py-3">
+                    <Button variant="outline" size="sm" onClick={() => void openReports(w)}><FileText className="h-4 w-4" />{t("adminUi.reports.generate", "Generate report")}</Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </section>
+
+      <Dialog open={workspace !== null} onOpenChange={(open) => { if (!open && !generating && !reportLoading) setWorkspace(null); }}>
+        <DialogContent className="sm:max-w-3xl max-h-[85dvh] overflow-y-auto" onEscapeKeyDown={(e) => { if (generating || reportLoading) e.preventDefault(); }} onInteractOutside={(e) => { if (generating || reportLoading) e.preventDefault(); }}>
+          <DialogHeader>
+            <DialogTitle>{t("adminUi.reports.title", "AI report")} · {workspace?.name}</DialogTitle>
+            <DialogDescription>{t("adminUi.reports.period", "Last 30 days")}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={() => void regenerate()} disabled={generating || reportLoading}>
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              {generating ? t("adminUi.reports.generating", "Generating…") : reports.length ? t("adminUi.reports.regenerate", "Regenerate") : t("adminUi.reports.generate", "Generate report")}
+            </Button>
+            {reports.length > 0 && <Select value={selectedReport} onValueChange={setSelectedReport}>
+              <SelectTrigger className="w-full sm:w-72" aria-label={t("adminUi.reports.history", "Report history")}><History className="h-4 w-4" /><SelectValue /></SelectTrigger>
+              <SelectContent>{reports.map((report, index) => <SelectItem key={report.id} value={report.id}>{index === 0 ? `${t("adminUi.reports.latest", "Latest")} · ` : ""}{fmt(report.created_at, dash)}</SelectItem>)}</SelectContent>
+            </Select>}
+          </div>
+          {reportError && <p role="alert" className="text-sm text-destructive break-words">{reportError}</p>}
+          {reportLoading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : reports.length ? <article className="whitespace-pre-wrap break-words text-sm leading-relaxed" aria-live="polite">{reportText(reports.find(report => report.id === selectedReport)?.content ?? "")}</article> : <p className="text-sm text-muted-foreground">{t("adminUi.reports.empty", "No reports yet")}</p>}
+        </DialogContent>
+      </Dialog>
 
       <section className="glass rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-border/50">

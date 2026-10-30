@@ -139,6 +139,7 @@ const bundle: GroupResources = {
         markFailed: "Cancel",
         noPurchases: "No purchases yet",
       },
+      reports: { column: "AI report", title: "Workspace AI report", generate: "Generate report", regenerate: "Regenerate", generating: "Generating…", period: "Last 30 days", history: "Report history", latest: "Latest", empty: "No reports yet", loadError: "Could not load reports", generateError: "Could not generate report. Try again later." },
       analytics: {
         noData: "No data yet",
         noAccess: "No access to data",
@@ -317,6 +318,7 @@ const bundle: GroupResources = {
         markFailed: "Отменить",
         noPurchases: "Покупок пока нет",
       },
+      reports: { column: "AI-отчет", title: "AI-отчет пространства", generate: "Создать отчет", regenerate: "Создать заново", generating: "Создание…", period: "Последние 30 дней", history: "История отчетов", latest: "Последний", empty: "Отчетов пока нет", loadError: "Не удалось загрузить отчеты", generateError: "Не удалось создать отчет. Попробуйте позже." },
       analytics: {
         noData: "Нет доступа к данным",
         noAccess: "Нет доступа к данным",
@@ -673,6 +675,7 @@ const bundle: GroupResources = {
         markFailed: "Жокко чыгаруу",
         noPurchases: "Азырынча сатып алуулар жок",
       },
+      reports: { column: "AI-отчет", title: "Мейкиндиктин AI-отчету", generate: "Отчет түзүү", regenerate: "Кайра түзүү", generating: "Түзүлүүдө…", period: "Акыркы 30 күн", history: "Отчеттордун тарыхы", latest: "Акыркы", empty: "Азырынча отчет жок", loadError: "Отчетторду жүктөө мүмкүн болгон жок", generateError: "Отчет түзүү мүмкүн болгон жок. Кийинчерээк аракет кылыңыз." },
       analytics: {
         noData: "Маалыматтарга жетки жок",
         noAccess: "Маалыматтарга жетки жок",

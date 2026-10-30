@@ -299,6 +299,22 @@ export const adminSetPurchaseStatus = createServerFn({ method: "POST" })
 
 // ---------------- Analytics ----------------
 
+export const adminListWorkspaceReports = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => z.object({ workspace_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { listWorkspaceReports } = await import("./admin-analytics.server");
+    return listWorkspaceReports(data.workspace_id);
+  });
+
+export const adminGenerateWorkspaceReport = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ workspace_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { generateWorkspaceReport } = await import("./admin-analytics.server");
+    return generateWorkspaceReport(data.workspace_id, "application-admin");
+  });
+
 export const adminGetAnalytics = createServerFn({ method: "GET" }).handler(async () => {
   if (!(await isAdmin())) return null;
   const { getAdminAnalytics } = await import("@/lib/admin-analytics.server");

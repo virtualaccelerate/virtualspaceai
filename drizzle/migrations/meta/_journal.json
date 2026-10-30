@@ -379,6 +379,13 @@
       "when": 1793270345021,
       "tag": "0053_pilot_checklist_18_items",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793327487952,
+      "tag": "0054_workspace_ai_reports",
+      "breakpoints": true
     }
   ]
 }
