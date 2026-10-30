@@ -174,6 +174,7 @@ export async function planSource(source: SourceRow, ownerId: string, days: Ymd[]
   const { matchMember } = await import("./task-import.server");
   const { normPhone } = await import("./clients.server");
   const items: PlannedItem[] = [];
+  const seen = new Set<string>();
   let invalid = 0;
   for (const t of wb.tabs) {
     const map = maps[t.name];
@@ -182,6 +183,10 @@ export async function planSource(source: SourceRow, ownerId: string, days: Ymd[]
       const r = evaluateTab(t.name, t.rows, map, day);
       if (day === days[0]) invalid += r.invalid;
       for (const h of r.hits) {
+        // The same client often appears on several rows of one tab — list them once per day.
+        const k = `${ymdKey(day)}|${h.log_key}|${h.kind}|${h.event_date}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
         const who = h.responsible ? matchMember(h.responsible, members) : null;
         items.push({ ...h, tab: t.name, day: ymdKey(day), recipient_id: who?.id ?? ownerId, recipient_name: who?.name ?? owner?.name ?? "Владелец", matched: !!who, in_client_db: null });
       }
