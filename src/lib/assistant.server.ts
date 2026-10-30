@@ -71,7 +71,7 @@ export async function readWorkbook(sheetUrl: string): Promise<Workbook> {
 }
 
 /** AI proposes the mapping per tab (header row may be lower than row 1); heuristic fallback. */
-async function aiMapping(tabs: Workbook["tabs"]): Promise<Record<string, TabMap>> {
+export async function aiMapping(tabs: Workbook["tabs"]): Promise<Record<string, TabMap>> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key || !tabs.length) return {};
   const sample = tabs.map((t) => ({
