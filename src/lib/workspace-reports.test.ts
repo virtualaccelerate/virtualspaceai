@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
+declare const Bun: { Transpiler: new (options: { loader: string }) => { transformSync(source: string): string } };
+
 const wrappers = readFileSync(new URL("./admin.functions.ts", import.meta.url), "utf8");
 for (const name of ["adminListWorkspaceReports", "adminGenerateWorkspaceReport"]) {
   test(`${name} rejects requests without application-admin session before loading report data`, async () => {
