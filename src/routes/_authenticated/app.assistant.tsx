@@ -291,7 +291,7 @@ function Settings({ teamspaceId, assistant, sources, reload }: { teamspaceId: st
           {sources.length > 0 && <ReminderPreview teamspaceId={teamspaceId} />}
         </section>
       )}
-      <ActionConfirm open={!!removeId} onOpenChange={(o) => !o && setRemoveId(null)} title={t("assistantUi.removeConfirm")} confirmLabel={t("assistantUi.remove")}
+      <ActionConfirm open={!!removeId} onOpenChange={(o) => !o && setRemoveId(null)} title={t("assistantUi.removeConfirm")} label={t("assistantUi.remove")}
         onConfirm={async () => { if (removeId) { await del({ data: { id: removeId } }); setRemoveId(null); await reload(); } }} />
     </div>
   );
