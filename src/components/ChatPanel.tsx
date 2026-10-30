@@ -4,10 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Plus, Mic, Loader2, FileText, CheckSquare, Trash2,
-  MessageSquarePlus, History, Bot, X, Paperclip, Lightbulb,
-  Users, LayoutGrid, Brain, Search, ShieldAlert, CalendarDays, ExternalLink,
+  MessageSquarePlus, History, Bot, X, Paperclip, CalendarDays, ExternalLink,
 } from "lucide-react";
-import { AGENTS, AGENT_TAG_RE, type AgentId as AgentIdType } from "@/lib/agents";
+import { AGENT_TAG_RE } from "@/lib/agents";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { askZukha } from "@/lib/ai-chat.functions";
@@ -256,7 +255,6 @@ type Props = {
 
 export function ChatPanel({ variant = "full", conversationId: forcedId, onClose }: Props) {
   const { t, i18n } = useTranslation();
-  const agentLang = i18n.language?.startsWith("en") ? "en" : "ru";
   const navigate = useNavigate();
   const ask = useServerFn(askZukha);
   const sign = useServerFn(getDocumentSignedUrl);
@@ -285,7 +283,6 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
   const [threadsOpen, setThreadsOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [attached, setAttached] = useState<{ id: string; name: string }[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<AgentId | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -474,7 +471,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
     const m = input.match(AGENT_TAG);
     return m ? m[1].toLowerCase() : undefined;
   }, [input]);
-  const effectiveAgent = inlineAgent || selectedAgent || activeAgent;
+  const effectiveAgent = inlineAgent || activeAgent;
 
   useEffect(() => {
     if (nearBottomRef.current) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "instant" });
@@ -751,7 +748,7 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
     const attachTokens = attached.map((a) => `[[file:${a.id}|${a.name}]]`).join(" ");
     const contentForSend = attachTokens ? `${raw}\n\n${attachTokens}` : raw;
     // Strip inline @agent tag from what we display, but pass agent id to server
-    const agent = (raw.match(AGENT_TAG)?.[1] || selectedAgent || activeAgent || "").toLowerCase() || undefined;
+    const agent = (raw.match(AGENT_TAG)?.[1] || activeAgent || "").toLowerCase() || undefined;
 
     setInput("");
     setError(null);
@@ -1176,39 +1173,6 @@ export function ChatPanel({ variant = "full", conversationId: forcedId, onClose 
         </div>
       )}
 
-      {!isCompact && <div className="mb-2 shrink-0 flex flex-wrap items-center gap-1.5">
-        {AGENTS.map((a) => {
-          const Icon = AGENT_ICONS[a.icon];
-          const id = a.id;
-          const label = a.title[agentLang];
-          const active = selectedAgent === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setSelectedAgent(active ? null : id)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition ${
-                active
-                  ? "bg-primary text-primary-foreground border-primary shadow-[0_0_16px_hsl(var(--primary)/0.55)]"
-                  : "bg-card text-foreground/70 border-border hover:text-foreground hover:bg-accent/40"
-              }`}
-              title={label}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          );
-        })}
-        {selectedAgent && (
-          <button
-            type="button"
-            onClick={() => setSelectedAgent(null)}
-            className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
-          >
-            {t("app.chat.clearAgent", "clear")}
-          </button>
-        )}
-      </div>}
 
       {sttError && <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-destructive">
         <span>{sttError}</span>
