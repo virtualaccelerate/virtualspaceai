@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Workspace roles and access
+- Main-page icon actions use IconButton for labels/tooltips; destructive actions use ActionConfirm to keep confirmation open during pending UI operations without altering server behavior.
 - Workspace AI reports use a service-only SQL aggregate and report table behind the encrypted application-admin session; workspace roles never grant report access, and generation runs only on explicit clicks.
 - Pilot checks use a dedicated per-workspace table and authenticated evidence RPC; a trigger stamps checker/date, RLS restricts unchecking and finance to managers, and retained unchecked rows prevent automatic rechecking of manager overrides.
 - Financials tabs are URL-backed so pilot finance and payroll items open their respective sections directly.

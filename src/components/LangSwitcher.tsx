@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Globe, Check } from "lucide-react";
 import { LANGUAGES, persistLanguage } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 
 export function LangSwitcher({ compact = false }: { compact?: boolean }) {
   const { i18n } = useTranslation();
@@ -20,31 +22,34 @@ export function LangSwitcher({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className="relative" ref={ref}>
-      <button
+      <Button
+        variant="ghost"
+        size={compact ? "icon" : "default"}
         onClick={() => setOpen((o) => !o)}
         aria-label="Language"
-        className={`inline-flex items-center gap-1.5 rounded-lg text-xs font-medium text-white/70 hover:text-white hover:bg-white/5 transition ${
-          compact ? "h-9 w-9 justify-center" : "px-2.5 h-9"
-        }`}
+        title="Language"
+        aria-expanded={open}
+        className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
       >
         <Globe className="h-4 w-4" />
         {!compact && <span className="uppercase">{current.code}</span>}
-      </button>
+      </Button>
       {open && (
         <div className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-[color:var(--card)] shadow-2xl overflow-hidden z-50 p-1">
           {LANGUAGES.map((l) => (
-            <button
+            <Button
+              variant="ghost"
               key={l.code}
               onClick={() => {
                 void i18n.changeLanguage(l.code);
                 persistLanguage(l.code);
                 setOpen(false);
               }}
-              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition"
+              className="w-full justify-start text-foreground [&>span]:w-full [&>span]:justify-between"
             >
               {l.label}
               {l.code === current.code && <Check className="h-3.5 w-3.5 text-primary" />}
-            </button>
+            </Button>
           ))}
         </div>
       )}
