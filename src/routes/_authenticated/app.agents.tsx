@@ -13,12 +13,18 @@ import { useNavigate } from "@tanstack/react-router";
 import { AGENTS, UPCOMING_AGENTS, type AgentDef } from "@/lib/agents";
 import { AgentAutomations } from "@/components/AgentAutomations";
 import { AssistantHero } from "@/components/assistant/AssistantHero";
+import { KpAgent } from "@/components/KpAgent";
 
 export const Route = createFileRoute("/_authenticated/app/agents")({
   component: AgentsPage,
   head: () => ({
     meta: [
       { title: "AI Agents — Virtual Space" },
+      { name: "description", content: "Workspace AI agents and commercial proposals." },
+      { property: "og:title", content: "AI Agents — Virtual Space" },
+      { property: "og:description", content: "Specialized workspace agents and proposal drafts." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -89,6 +95,7 @@ function AgentsPage() {
       </div>
 
       <AssistantHero teamspaceId={teamspaceId} />
+      <KpAgent workspace={teamspaceId} />
 
       <div className="rounded-xl border border-border bg-card/60 p-3 text-xs text-muted-foreground">
         <span className="text-foreground font-medium">

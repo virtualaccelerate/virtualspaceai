@@ -57,6 +57,7 @@ import { Route as ApiPublicYougileWebhookRouteImport } from './routes/api/public
 import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth.google-calendar.return'
 import { Route as OauthGoogleDriveReturnRouteImport } from './routes/oauth.google-drive.return'
 import { Route as AuthenticatedAppCConversationIdRouteImport } from './routes/_authenticated/app.c.$conversationId'
+import { Route as AuthenticatedAppKpProposalIdRouteImport } from './routes/_authenticated/app.kp.$proposalId'
 import { Route as AuthenticatedAppOnboardingIndexRouteImport } from './routes/_authenticated/app.onboarding.index'
 import { Route as AuthenticatedAppOnboardingProgramIdRouteImport } from './routes/_authenticated/app.onboarding.$programId'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
@@ -322,6 +323,12 @@ const AuthenticatedAppCConversationIdRoute =
     path: '/c/$conversationId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppKpProposalIdRoute =
+  AuthenticatedAppKpProposalIdRouteImport.update({
+    id: '/kp/$proposalId',
+    path: '/kp/$proposalId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppOnboardingIndexRoute =
   AuthenticatedAppOnboardingIndexRouteImport.update({
     id: '/onboarding/',
@@ -429,6 +436,7 @@ export interface FileRoutesByFullPath {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/app/kp/$proposalId': typeof AuthenticatedAppKpProposalIdRoute
   '/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
@@ -487,6 +495,7 @@ export interface FileRoutesByTo {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/app/kp/$proposalId': typeof AuthenticatedAppKpProposalIdRoute
   '/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
@@ -548,6 +557,7 @@ export interface FileRoutesById {
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/c/$conversationId': typeof AuthenticatedAppCConversationIdRoute
+  '/_authenticated/app/kp/$proposalId': typeof AuthenticatedAppKpProposalIdRoute
   '/_authenticated/app/onboarding/$programId': typeof AuthenticatedAppOnboardingProgramIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/finik/webhook': typeof ApiPublicFinikWebhookRoute
@@ -609,6 +619,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app/'
     | '/app/c/$conversationId'
+    | '/app/kp/$proposalId'
     | '/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
@@ -667,6 +678,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/app'
     | '/app/c/$conversationId'
+    | '/app/kp/$proposalId'
     | '/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
@@ -727,6 +739,7 @@ export interface FileRouteTypes {
     | '/oauth/google-drive/return'
     | '/_authenticated/app/'
     | '/_authenticated/app/c/$conversationId'
+    | '/_authenticated/app/kp/$proposalId'
     | '/_authenticated/app/onboarding/$programId'
     | '/api/public/calendar/$token'
     | '/api/public/finik/webhook'
@@ -1111,6 +1124,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCConversationIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/kp/$proposalId': {
+      id: '/_authenticated/app/kp/$proposalId'
+      path: '/kp/$proposalId'
+      fullPath: '/app/kp/$proposalId'
+      preLoaderRoute: typeof AuthenticatedAppKpProposalIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/onboarding/': {
       id: '/_authenticated/app/onboarding/'
       path: '/onboarding'
@@ -1209,6 +1229,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppWhatsappRoute: typeof AuthenticatedAppWhatsappRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppCConversationIdRoute: typeof AuthenticatedAppCConversationIdRoute
+  AuthenticatedAppKpProposalIdRoute: typeof AuthenticatedAppKpProposalIdRoute
   AuthenticatedAppOnboardingProgramIdRoute: typeof AuthenticatedAppOnboardingProgramIdRoute
   AuthenticatedAppOnboardingIndexRoute: typeof AuthenticatedAppOnboardingIndexRoute
 }
@@ -1238,6 +1259,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppWhatsappRoute: AuthenticatedAppWhatsappRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppCConversationIdRoute: AuthenticatedAppCConversationIdRoute,
+  AuthenticatedAppKpProposalIdRoute: AuthenticatedAppKpProposalIdRoute,
   AuthenticatedAppOnboardingProgramIdRoute:
     AuthenticatedAppOnboardingProgramIdRoute,
   AuthenticatedAppOnboardingIndexRoute: AuthenticatedAppOnboardingIndexRoute,

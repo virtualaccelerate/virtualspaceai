@@ -408,6 +408,59 @@ export type Database = {
           },
         ]
       }
+      commercial_proposals: {
+        Row: {
+          brand_color: string
+          client: string
+          created_at: string
+          created_by: string
+          id: string
+          language: string
+          logo_path: string | null
+          pricing: Json
+          slides: Json
+          teamspace_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand_color?: string
+          client?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          language?: string
+          logo_path?: string | null
+          pricing?: Json
+          slides?: Json
+          teamspace_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_color?: string
+          client?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          language?: string
+          logo_path?: string | null
+          pricing?: Json
+          slides?: Json
+          teamspace_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_proposals_teamspace_id_fkey"
+            columns: ["teamspace_id"]
+            isOneToOne: false
+            referencedRelation: "teamspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_purchases: {
         Row: {
           amount: number
@@ -2338,6 +2391,7 @@ export type Database = {
       }
       teamspaces: {
         Row: {
+          brand_color: string
           business_type: Database["public"]["Enums"]["business_type"]
           company_size: string | null
           created_at: string
@@ -2352,6 +2406,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          brand_color?: string
           business_type: Database["public"]["Enums"]["business_type"]
           company_size?: string | null
           created_at?: string
@@ -2366,6 +2421,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          brand_color?: string
           business_type?: Database["public"]["Enums"]["business_type"]
           company_size?: string | null
           created_at?: string
@@ -2516,6 +2572,7 @@ export type Database = {
           daily_digest: boolean
           digest_hour: number
           id: string
+          kp_conversation_id: string | null
           language: string | null
           link_code: string
           linked_at: string | null
@@ -2530,6 +2587,7 @@ export type Database = {
           daily_digest?: boolean
           digest_hour?: number
           id?: string
+          kp_conversation_id?: string | null
           language?: string | null
           link_code?: string
           linked_at?: string | null
@@ -2544,6 +2602,7 @@ export type Database = {
           daily_digest?: boolean
           digest_hour?: number
           id?: string
+          kp_conversation_id?: string | null
           language?: string | null
           link_code?: string
           linked_at?: string | null

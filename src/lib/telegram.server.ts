@@ -239,12 +239,13 @@ type Link = {
   chat_id: number | null;
   language: string | null;
   pending_proof_task_id?: string | null;
+  kp_conversation_id?: string | null;
 };
 
 async function findLink(chatId: number): Promise<Link | null> {
   const { data } = await supabaseAdmin
     .from("telegram_links")
-    .select("user_id, teamspace_id, chat_id, language, pending_proof_task_id")
+    .select("user_id, teamspace_id, chat_id, language, pending_proof_task_id, kp_conversation_id")
     .eq("chat_id", chatId)
     .maybeSingle();
   return (data as Link) ?? null;
@@ -595,6 +596,8 @@ async function aiSummary(lang: Lang, facts: string): Promise<string | null> {
 // ---------------- AI chat ----------------
 
 async function handleAiMessage(link: Link, chatId: number, text: string, lang: Lang) {
+  const { handleKpTelegram } = await import("./kp-telegram.server");
+  if (await handleKpTelegram(link, chatId, text)) return;
   const key = process.env.LOVABLE_API_KEY;
   if (!key) {
     await sendMessage(chatId, t(lang).error);
@@ -1368,6 +1371,16 @@ export async function handleUpdate(update: any) {
     .maybeSingle();
   const lang = pickLang((profile as any)?.language ?? link.language);
 
+  if (cmd === "/cancel" && link.kp_conversation_id) {
+    await supabaseAdmin.from("telegram_links").update({ kp_conversation_id: null }).eq("user_id", link.user_id);
+    await sendMessage(chatId, lang === "en" ? "Proposal chat closed." : "Чат КП закрыт.");
+    return;
+  }
+  if (cmd === "/kp") {
+    const { handleKpTelegram } = await import("./kp-telegram.server");
+    await handleKpTelegram(link, chatId, text);
+    return;
+  }
   switch (cmd) {
     case "/help":
     case "/menu":

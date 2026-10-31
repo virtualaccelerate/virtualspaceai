@@ -16,7 +16,8 @@ export type AgentId =
   | "document"
   | "research"
   | "contracts"
-  | "advisor";
+  | "advisor"
+  | "kp";
 
 export type AgentDef = {
   id: AgentId;
@@ -174,11 +175,18 @@ export const AGENTS: AgentDef[] = [
 
 export const AGENT_IDS = AGENTS.map((a) => a.id);
 
+export const KP_AGENT: AgentDef = {
+  id: "kp", tag: "@kp", icon: "file",
+  title: { ru: "Агент КП", en: "Proposal Agent" },
+  desc: { ru: "Коммерческое предложение из базы знаний вашей компании.", en: "Commercial proposals grounded in your workspace knowledge base." },
+  prompt: "Commercial proposal agent; knowledge base only, never invent prices.",
+};
+
 export const AGENT_PROMPTS: Record<string, string> = Object.fromEntries(
-  AGENTS.map((a) => [a.id, a.prompt]),
+  [...AGENTS, KP_AGENT].map((a) => [a.id, a.prompt]),
 );
 
-export const AGENT_TAG_RE = new RegExp(`@(${AGENT_IDS.join("|")})\\b`, "i");
+export const AGENT_TAG_RE = new RegExp(`@(${[...AGENT_IDS, "kp"].join("|")})\\b`, "i");
 
 /** Agents planned for the next waves — shown as "coming soon". */
 export const UPCOMING_AGENTS: { id: string; title: { ru: string; en: string } }[] = [

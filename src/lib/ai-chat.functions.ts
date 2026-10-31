@@ -70,6 +70,11 @@ export const askZukha = createServerFn({ method: "POST" })
         if (conv.agent_id && (!data.agent_id || data.agent_id === conv.agent_id || !AGENT_PROMPTS[data.agent_id])) data.agent_id = conv.agent_id;
       }
     }
+    if (data.agent_id === "kp") {
+      if (!data.teamspace_id) throw new Error("KP_WORKSPACE_REQUIRED");
+      const { kpChat } = await import("./kp.server");
+      return kpChat(context.userId, data.teamspace_id, data.messages);
+    }
     const currentDate = new Date(Date.now() + 6 * 3600_000).toISOString().slice(0, 10);
 
     // Load knowledge base context for this teamspace (relevance-ranked)

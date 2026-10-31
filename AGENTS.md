@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Workspace roles and access
+- Commercial proposals use isolated knowledge-only chat/PDF services and pure pricing rules; member reads and creator mutations are checked server-side and in RLS, with immutable workspace/creator identity.
 - Main-page icon actions use IconButton for labels/tooltips; destructive actions use ActionConfirm to keep confirmation open during pending UI operations without altering server behavior.
 - Workspace AI reports use a service-only SQL aggregate and report table behind the encrypted application-admin session; workspace roles never grant report access, and generation runs only on explicit clicks.
 - Pilot checks use a dedicated per-workspace table and authenticated evidence RPC; a trigger stamps checker/date, RLS restricts unchecking and finance to managers, and retained unchecked rows prevent automatic rechecking of manager overrides.

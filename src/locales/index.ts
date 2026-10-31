@@ -8,11 +8,12 @@ import clients from "./clients";
 import teamspaceSetup from "./teamspace-setup";
 import pilot from "./pilot";
 import assistant from "./assistant";
+import kp from "./kp";
 
 // Feature translation bundles. Each module exports a GroupResources object
 // keyed by language code, whose values are merged into the `translation`
 // namespace of the main i18n resources.
-const groups: GroupResources[] = [admin, integrations, shell, tasks, workspace, clients, teamspaceSetup, pilot, assistant];
+const groups: GroupResources[] = [admin, integrations, shell, tasks, workspace, clients, teamspaceSetup, pilot, assistant, kp];
 
 export function applyGroupResources(resources: Record<string, { translation: Record<string, unknown> }>) {
   for (const group of groups) {
