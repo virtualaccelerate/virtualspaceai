@@ -203,9 +203,14 @@ function MessageContent({
   const nodes: React.ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
-  const re = new RegExp(FILE_TOKEN.source, "gi");
+  const re = new RegExp(`${FILE_TOKEN.source}|\\[\\[kp:([0-9a-f-]{36})\\]\\]`, "gi");
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) nodes.push(text.slice(last, m.index));
+    if (m[2]) {
+      nodes.push(<Link key={m.index} to="/app/kp/$proposalId" params={{ proposalId: m[2] }} className="inline-flex items-center gap-2 text-primary underline underline-offset-4"><FileText className="h-4 w-4" /><ProposalLinkLabel /></Link>);
+      last = m.index + m[0].length;
+      continue;
+    }
     const { id, name } = parseFileToken(m[1]);
     const isDoc = UUID_RE.test(id);
     // Only suppress the link when we positively know the id doesn't exist.
@@ -237,6 +242,11 @@ function MessageContent({
   }
   if (last < text.length) nodes.push(text.slice(last));
   return <>{nodes}</>;
+}
+
+function ProposalLinkLabel() {
+  const { t } = useTranslation();
+  return <>{t("kp.open")}</>;
 }
 
 
