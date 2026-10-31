@@ -18,4 +18,8 @@ describe("KP rules", () => {
     const slides = buildSlides({client:"Клиент", title:"КП", date:"2026-10-31", company:"Компания", about:"О нас", need:"Задача", solution:"Решение", contacts:"Телефон", next:"Встреча", pricing:{items:[],discount:0,currency:"сом"},language:"ru"});
     strictEqual(slides.length,6); strictEqual(slides[0].body,"Клиент\nКомпания\n2026-10-31"); strictEqual(slides[4].title,"Стоимость"); strictEqual(slides[5].body.includes("Телефон"),true);
   });
+  test("model headings cannot change the standard slide roles", () => {
+    const slides=buildSlides({client:"Клиент",title:"КП",date:"2026-10-31",company:"Компания",about:"",need:"",solution:"",contacts:"",next:"",pricing:{items:[],discount:0,currency:"сом"},language:"ru",headings:["Wrong","Wrong","Wrong","Wrong","Контакты","Wrong"]});
+    strictEqual(slides[4].title,"Стоимость");strictEqual(slides[5].title,"Контакты + следующий шаг");
+  });
 });

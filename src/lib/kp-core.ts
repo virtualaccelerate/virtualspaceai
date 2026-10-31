@@ -27,6 +27,14 @@ export function priceText(p: Pricing, language = "ru") {
     `${en ? "Discount" : "Скидка"}: ${p.discount}%`, `${t.complete ? (en ? "Total" : "Итого") : (en ? "Known subtotal (incomplete)" : "Известная сумма (неполный итог)")}: ${money(t.total)}`].join("\n");
 }
 export function buildSlides(input: { client: string; title: string; date: string; company: string; about: string; need: string; solution: string; contacts: string; next: string; pricing: Pricing; language: string; headings?: string[] }): Slide[] {
-  const h = input.headings ?? (input.language === "en" ? [input.title, "About us", "Your task", "Our solution", "Pricing", "Next step"] : [input.title, "О нас", "Задача клиента", "Решение / услуги", "Стоимость", "Контакты + следующий шаг"]);
+  const titles: Record<string, string[]> = {
+    ru: ["О нас", "Задача клиента", "Решение / услуги", "Стоимость", "Контакты + следующий шаг"],
+    en: ["About us", "Your task", "Solution / services", "Pricing", "Contacts + next step"],
+    ky: ["Биз жөнүндө", "Кардардын милдети", "Чечим / кызматтар", "Баасы", "Байланыш + кийинки кадам"],
+    kk: ["Біз туралы", "Клиенттің міндеті", "Шешім / қызметтер", "Құны", "Байланыс + келесі қадам"],
+    uz: ["Biz haqimizda", "Mijoz vazifasi", "Yechim / xizmatlar", "Narx", "Aloqa + keyingi qadam"],
+    tg: ["Дар бораи мо", "Вазифаи муштарӣ", "Ҳал / хизматҳо", "Арзиш", "Тамос + қадами навбатӣ"],
+  };
+  const h = [input.title, ...(titles[input.language] ?? titles.ru)];
   return [ `${input.client}\n${input.company}\n${input.date}`, input.about, input.need, input.solution, priceText(input.pricing, input.language), `${input.contacts}\n\n${input.next}` ].map((body, i) => SlideSchema.parse({ title: h[i] || input.title, body }));
 }
