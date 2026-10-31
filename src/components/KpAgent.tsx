@@ -1,0 +1,24 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
+import { FileText, Copy, Trash2, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { ActionConfirm } from "@/components/ui/action-confirm";
+import { listProposals, deleteProposal, duplicateProposal, saveProposalBrand } from "@/lib/kp.functions";
+import { createConversation } from "@/lib/chat-history.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+export function KpAgent({workspace}:{workspace?:string}){
+ const {t}=useTranslation(),navigate=useNavigate();const list=useServerFn(listProposals),start=useServerFn(createConversation),remove=useServerFn(deleteProposal),copy=useServerFn(duplicateProposal),brand=useServerFn(saveProposalBrand);
+ const [data,setData]=useState<Awaited<ReturnType<typeof listProposals>>|null>(null),[busy,setBusy]=useState<string|null>(null),[deleting,setDeleting]=useState<string|null>(null),[all,setAll]=useState(false),[color,setColor]=useState("#18866b"),[manager,setManager]=useState(false);
+ const refresh=async()=>{if(workspace)setData(await list({data:{workspace}}));};
+ useEffect(()=>{if(!workspace)return;setData(null);void list({data:{workspace}}).then(setData).catch(e=>toast.error(e.message));void supabase.from("teamspaces").select("brand_color").eq("id",workspace).single().then(({data})=>{if(data)setColor(data.brand_color);});void supabase.auth.getUser().then(async({data})=>{if(!data.user)return;const {data:member}=await supabase.from("teamspace_members").select("role").eq("user_id",data.user.id).eq("teamspace_id",workspace).maybeSingle();setManager(member?.role==="owner"||member?.role==="admin");});},[workspace,list]);
+ const action=async(kind:string,id?:string)=>{if(!workspace)return;setBusy(kind);try{if(kind==="chat"){const row=await start({data:{teamspace_id:workspace,agent_id:"kp",title:t("kp.title")}});await navigate({to:"/app/c/$conversationId",params:{conversationId:row.id}});}else if(kind==="brand"){await brand({data:{workspace,color}});toast.success(t("kp.saved"));}else if(id&&kind==="copy"){const row=await copy({data:{id}});await navigate({to:"/app/kp/$proposalId",params:{proposalId:row.id}});}else if(id){await remove({data:{id}});setDeleting(null);await refresh();}}catch(e){toast.error(e instanceof Error?e.message:t("kp.error"));}finally{setBusy(null);}};
+ return <section className="space-y-5 border-b border-border pb-6"><div className="flex flex-wrap items-center justify-between gap-4"><div className="flex gap-3 items-center"><FileText className="h-8 w-8 text-primary"/><div><h2 className="text-xl font-display">{t("kp.title")}</h2><p className="text-sm text-muted-foreground">{t("kp.desc")}</p></div></div><Button disabled={!workspace||!!busy} loading={busy==="chat"} onClick={()=>void action("chat")}>{t("kp.chat")}<ArrowRight/></Button></div>
+ {manager&&<div className="flex items-center gap-3 text-sm"><label htmlFor="kp-brand">{t("kp.brand")}</label><input id="kp-brand" type="color" value={color} onChange={e=>setColor(e.target.value)} className="h-8 w-10 bg-transparent cursor-pointer"/><Button variant="ghost" size="sm" loading={busy==="brand"} onClick={()=>void action("brand")}>{t("kp.brandSave")}</Button></div>}
+ <div className="flex gap-2"><Button size="sm" variant={!all?"secondary":"ghost"} onClick={()=>setAll(false)}>{t("kp.mine")}</Button><Button size="sm" variant={all?"secondary":"ghost"} onClick={()=>setAll(true)}>{t("kp.all")}</Button></div>
+ <div className="divide-y divide-border">{data?.rows.filter(r=>all||r.created_by===data.userId).map(row=><div key={row.id} className="flex gap-3 items-center py-3"><Link to="/app/kp/$proposalId" params={{proposalId:row.id}} className="min-w-0 flex-1"><p className="font-medium break-words">{row.title}</p><p className="text-sm text-muted-foreground">{row.client} · {new Date(row.created_at).toLocaleDateString()}</p></Link><IconButton label={t("kp.duplicate")} disabled={!!busy} onClick={()=>void action("copy",row.id)}><Copy/></IconButton>{row.created_by===data.userId&&<IconButton label={t("kp.delete")} disabled={!!busy} onClick={()=>setDeleting(row.id)}><Trash2/></IconButton>}</div>)}{data&&!data.rows.filter(r=>all||r.created_by===data.userId).length&&<p className="text-sm text-muted-foreground py-3">{t("kp.empty")}</p>}</div>
+ <ActionConfirm open={!!deleting} onOpenChange={open=>{if(!open)setDeleting(null);}} title={t("kp.confirm")} label={t("kp.delete")} loading={busy==="delete"} onConfirm={()=>deleting?action("delete",deleting):undefined}/></section>;
+}

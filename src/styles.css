@@ -44,6 +44,8 @@
 
 /* Dark theme = Workspace Black #101820 with Virtual Green #73D94F */
 :root {
+  --kp-paper: oklch(0.985 0.005 150);
+  --kp-ink: oklch(0.19 0.02 240);
   --quiz-correct: oklch(0.62 0.17 150);
   --radius: 1rem;
   --background: oklch(0.19 0.02 240);          /* #101820 */
@@ -123,6 +125,10 @@ html.light {
   --glass-shadow: oklch(0.19 0.02 240 / 0.1);
   --glass-shadow-strong: oklch(0.19 0.02 240 / 0.15);
 }
+
+.kp-slide { background: var(--kp-paper); color: var(--kp-ink); }
+.kp-accent { background: var(--kp-brand, var(--brand)); }
+.kp-brand-text { color: var(--kp-brand, var(--brand)); }
 
 @layer base {
   * { border-color: var(--color-border); }
