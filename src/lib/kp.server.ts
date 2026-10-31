@@ -3,7 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { Output, streamText } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayRunIdFetch } from "./kp/run-id.server.ts";
-import { buildSlides, groundPrices, PricingSchema, type Pricing } from "./kp-core";
+import { buildSlides, groundPrices, PricingSchema, priceText, type Pricing } from "./kp-core";
 
 export async function kpMember(userId: string, workspace: string) {
   const { data, error } = await db.from("teamspace_members").select("role").eq("user_id", userId).eq("teamspace_id", workspace).maybeSingle();
@@ -41,10 +41,12 @@ export async function kpChat(userId: string, workspace: string, messages: {role:
     if(!out.ready) return {reply:out.reply};
     const discount=out.discount_evidence && employee.includes(out.discount_evidence) ? out.discount : 0;
     const pricing:Pricing=PricingSchema.parse({items:groundPrices(out.items,knowledge,employee),discount,currency:out.currency});
-    const slides=buildSlides({...out,date:new Date().toISOString().slice(0,10),pricing});
+    // Monetary output is authoritative only in the code-built cost slide, never model prose.
+    const solution = out.solution.split(/(?<=[.!?])\s+|\n/).filter(line=>!/(?:\d[\d\s.,]*\s*(?:сом|руб|сум|тенге|доллар|евро|usd|eur|kgs|kzt|uzs|rub|[$€₽])|(?:итого|стоимость|цена|total|price|cost|скидк|discount)\s*[:—-]?\s*\d)/i.test(line)).join("\n");
+    const slides=buildSlides({...out,solution:solution || pricing.items.map(x=>x.service).join("\n"),date:new Date().toISOString().slice(0,10),pricing});
     const {data:row,error}=await db.from("commercial_proposals").insert({teamspace_id:workspace,created_by:userId,client:out.client,title:out.title,language:out.language,slides,pricing,brand_color:space?.brand_color,logo_path:space?.logo_path}).select("id").single();
     if(error||!row) throw new Error(error?.message??"KP save failed");
-    return {reply:`${out.reply}\n[[kp:${row.id}]]`,proposalId:row.id};
+    return {reply:`${out.reply.split(/(?<=[.!?])\s+|\n/).filter(line=>!/[\d]/.test(line)).join(" ") || out.title}\n${priceText(pricing,out.language)}\n[[kp:${row.id}]]`,proposalId:row.id};
   } catch(error) {
     const e=error as {statusCode?:number;responseBody?:string;message?:string};
     let message=e.message??"AI request failed";

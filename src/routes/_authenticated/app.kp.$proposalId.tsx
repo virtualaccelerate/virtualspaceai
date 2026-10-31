@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Download, Save } from "lucide-react";
@@ -17,6 +17,7 @@ function ProposalPage(){
   const {proposalId}=Route.useParams();const {data}=useSuspenseQuery(options(proposalId));const {t}=useTranslation();
   const save=useServerFn(saveProposal),pdf=useServerFn(exportProposal);
   const [slides,setSlides]=useState<Slide[]>(data.slides),[pricing,setPricing]=useState<Pricing>(data.pricing),[index,setIndex]=useState(0),[busy,setBusy]=useState<string|null>(null),[dirty,setDirty]=useState(false);
+  useEffect(()=>{setSlides(data.slides);setPricing(data.pricing);setIndex(0);setDirty(false);},[proposalId,data]);
   const slide=slides[index],sum=totals(pricing);
   const update=(key:"title"|"body",value:string)=>{setDirty(true);setSlides(prev=>prev.map((s,i)=>i===index?{...s,[key]:value}:s));};
   const persist=async()=>{await save({data:{id:proposalId,slides,pricing}});setDirty(false);};
