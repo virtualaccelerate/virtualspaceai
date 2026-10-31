@@ -1,6 +1,7 @@
 ## Задачи
 - [x] Персональный ассистент Виэй (фаза 1): карточка, знакомство-чат, настройки, напоминания клиентам из таблиц с предпросмотром; реальная отправка не проверялась
-- [ ] Агент КП — фаза 2: шесть слайдов, редактор/PDF, веб-чат/Telegram, права и временный E2E
+- [x] Агент КП — фаза 2: шесть слайдов, редактор/PDF, веб-чат/Telegram, права; временный E2E создания/правки/PDF/изоляции и 142 теста прошли, тестовые данные удалены
+- [ ] Реальная доставка КП в Telegram — ожидает публикации и тестового Telegram-чата; при проверках сообщения не отправлялись
 - [x] Apply UI-only button loading, action hierarchy, confirmations and icon accessibility across tasks, chat, clients, financials, integrations and admin reports; replace LangSwitcher buttons; 16 tests and signed-in page/dialog checks passed (live report generation and pending task save not exercised)
 - [x] Add application-admin workspace AI reports: SQL 30-day metrics, click-only Russian generation, protected history and RU/EN/KY labels; verified live generation/reload, restricted grants and 9 regression tests
 - [x] Add shared pilot checklist, authorized persistence, automatic evidence, six-language UI; verified check/uncheck/result persistence, payroll link and desktop/mobile
