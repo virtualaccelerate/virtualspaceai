@@ -158,20 +158,18 @@ export async function runDeadlineReminders(opts?: { onlyUserId?: string; now?: n
     const { kind, heading } = window;
     if (await alreadySent(task.id, kind)) continue;
 
-    const chatId = opts?.skipTelegram ? null : await chatIdFor(task.assignee_id);
-    if (chatId) {
-      await sendMessage(chatId, `${heading}\n\n${taskCard(task, await spaceName(task.teamspace_id))}`, {
-        reply_markup: assigneeKeyboard(task.id, task.status),
-      });
-    }
-    await notifyInApp({
-      userId: task.assignee_id,
-      teamspaceId: task.teamspace_id,
-      kind: kind.startsWith("overdue") ? "task_overdue" : "task_deadline",
-      title: heading,
-      body: task.title,
-      taskId: task.id,
+    const { loadNoticeTask, prepareTaskNotices, deliverTaskNotices } = await import("./task-notice.server");
+    const noticeKind = kind.startsWith("overdue") ? "overdue" : kind.startsWith("h3") ? "deadline_3h" : kind.startsWith("h1") ? "deadline_1h" : "deadline";
+    const notices = await prepareTaskNotices({
+      userIds: [task.assignee_id as string],
+      kind: noticeKind,
+      notificationKind: noticeKind === "overdue" ? "task_overdue" : "task_deadline",
+      task: await loadNoticeTask(task.id),
+      extraRows: assigneeKeyboard(task.id, task.status)?.inline_keyboard,
+      now,
     });
+    void heading;
+    await deliverTaskNotices(notices, { skipTelegram: opts?.skipTelegram });
     sent++;
   }
   return { sent };
@@ -423,11 +421,12 @@ export async function runOverdueRescheduleOffers(onlyTeamspaceId?: string): Prom
     const chatId = await chatIdFor(task.assignee_id);
     if (!chatId || !task.due_date) continue;
     if (await alreadySent(task.id, `resched_offer:${task.due_date}`)) continue;
-    await sendMessage(
-      chatId,
-      `🔴 Задача просрочена\n\n${taskCard(task, await spaceName(task.teamspace_id))}\n\nПеренести дедлайн?`,
-      { reply_markup: rescheduleKeyboard(task.id) },
-    );
+    const { loadNoticeTask, prepareTaskNotices, sendNoticeTelegram } = await import("./task-notice.server");
+    const [notice] = await prepareTaskNotices({
+      userIds: [task.assignee_id as string], kind: "overdue", notificationKind: "task_overdue",
+      task: await loadNoticeTask(task.id), extraRows: rescheduleKeyboard(task.id).inline_keyboard,
+    });
+    if (notice) await sendNoticeTelegram({ ...notice, html: `${notice.html}\n\nПеренести дедлайн?` });
     sent++;
   }
   return { sent };
