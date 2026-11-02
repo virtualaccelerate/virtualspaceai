@@ -146,7 +146,7 @@ export function overdueDays(due: string, now: number, tz = DEFAULT_TZ) {
 
 function changeValue(c: NoticeChange, v: string | null, d: Dict, lang: NoticeLang, tz: string) {
   if (v == null || v === "") return d.none;
-  if (c.field === "status") return c.named ? v : statusName(v, lang);
+  if (c.field === "status") return statusName(v, lang); // tracker column names pass through unchanged
   if (c.field === "priority") return priorityName(v, lang);
   if (c.field === "due_date") return formatDue(v, tz);
   return v;
