@@ -328,7 +328,12 @@ export async function syncTrelloSource(source: Source) {
         batch: notificationBatch,
       }).catch(() => {});
       if (saved.assignee_id && saved.assignee_id !== before?.assignee_id && saved.assignee_id !== source.created_by) {
-        notificationBatch.push({ userId: saved.assignee_id, teamspaceId: source.teamspace_id, taskId: saved.id, tracker: "Trello", title: "Вам назначена задача", body: saved.title, kind: "task_assigned", actorId: source.created_by });
+        const { loadNoticeTask, prepareTaskNotices } = await import("./task-notice.server");
+        const assigned = await prepareTaskNotices({
+          userIds: [saved.assignee_id], kind: "assigned", notificationKind: "task_assigned", tracker: "Trello",
+          task: await loadNoticeTask(saved.id, { title: saved.title, teamspace_id: source.teamspace_id }),
+        });
+        notificationBatch.push(...assigned.map((n) => ({ ...n, actorId: source.created_by })));
       }
       synced++;
     }

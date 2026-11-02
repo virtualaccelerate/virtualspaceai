@@ -385,7 +385,12 @@ async function mirrorTasks(source: Source, structure: Structure, tasks: YouGileI
         batch: notificationBatch,
       }).catch(() => {});
       if (row.assignee_id && row.assignee_id !== before?.assignee_id && row.assignee_id !== source.created_by) {
-        notificationBatch.push({ userId: row.assignee_id, teamspaceId: source.teamspace_id, taskId: row.id, tracker: "YouGile", title: "Вам назначена задача", body: row.title, kind: "task_assigned", actorId: source.created_by });
+        const { loadNoticeTask, prepareTaskNotices } = await import("./task-notice.server");
+        const assigned = await prepareTaskNotices({
+          userIds: [row.assignee_id], kind: "assigned", notificationKind: "task_assigned", tracker: "YouGile",
+          task: await loadNoticeTask(row.id, { title: row.title, teamspace_id: source.teamspace_id }),
+        });
+        notificationBatch.push(...assigned.map((n) => ({ ...n, actorId: source.created_by })));
       }
       synced++;
     }
