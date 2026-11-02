@@ -220,9 +220,13 @@ export async function updateTaskForUser(userId: string, data: UpdateTaskInput) {
   if (error) throw new Error(error.message);
   await track(userId, current.teamspace_id, "Задачи: изменение", { taskId: row.id });
   const newlyAssigned = row.assignee_id && row.assignee_id !== current.assignee_id;
-  const changed = row.title !== current.title || row.status !== current.status || row.priority !== current.priority || row.due_date !== current.due_date;
-  if (newlyAssigned || (changed && row.assignee_id)) {
-    await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: newlyAssigned ? "assigned" : "updated", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date });
+  const { diffChanges } = await import("./task-notice");
+  const changes = diffChanges(
+    { title: current.title, status: current.status, priority: current.priority, due_date: current.due_date },
+    { title: row.title, status: row.status, priority: row.priority, due_date: row.due_date },
+  );
+  if (newlyAssigned || (changes.length && row.assignee_id)) {
+    await notifyAssignment({ assigneeId: row.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: newlyAssigned ? "assigned" : "updated", taskId: row.id, title: row.title, status: row.status, priority: row.priority, dueDate: row.due_date, project: row.project, changes: newlyAssigned ? undefined : changes });
 
   }
   if (row.status !== current.status) {
@@ -273,7 +277,7 @@ export async function deleteTaskForUser(userId: string, id: string) {
   if (error) throw new Error(error.message);
   await track(userId, current.teamspace_id, "Задачи: удаление", { taskId: id });
   if (current.assignee_id) {
-    await notifyAssignment({ assigneeId: current.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: "deleted", taskId: current.id, title: current.title });
+    await notifyAssignment({ assigneeId: current.assignee_id, actorId: userId, teamspaceId: current.teamspace_id, kind: "deleted", taskId: current.id, title: current.title, status: current.status, priority: current.priority, dueDate: current.due_date, project: current.project });
 
   }
   return { ok: true };
