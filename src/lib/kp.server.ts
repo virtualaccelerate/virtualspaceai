@@ -20,12 +20,10 @@ export async function kpRow(userId: string, id: string, edit = false) {
 const outputSchema = z.object({ reply: z.string(), ready: z.boolean(), client: z.string(), title: z.string(), language: z.string(), company: z.string(), about: z.string(), need: z.string(), solution: z.string(), contacts: z.string(), next: z.string(), headings: z.array(z.string()), items: z.array(z.object({service:z.string(),quantity:z.number(),price:z.number().nullable(),evidence:z.string()})), discount: z.number(), discount_evidence: z.string(), currency: z.string() });
 export async function kpChat(userId: string, workspace: string, messages: {role:"user"|"assistant";content:string}[], signal?: AbortSignal) {
   await kpMember(userId, workspace);
-  const [{data:space},{data:docs},{data:pause}] = await Promise.all([
+  const [{data:space},{data:docs}] = await Promise.all([
     db.from("teamspaces").select("name,logo_path,brand_color").eq("id",workspace).single(),
     db.from("documents").select("name,extracted_text").eq("teamspace_id",workspace).order("created_at",{ascending:false}).limit(60),
-    db.from("notification_service_state").select("reason").eq("key","kp_ai").maybeSingle(),
   ]);
-  if (pause) throw new Error(pause.reason);
   let budget = 120000;
   const knowledge = (docs??[]).map(d => {const chunk=`${d.name}\n${d.extracted_text??""}`.slice(0, Math.min(60000,budget));budget-=chunk.length;return chunk;}).join("\n---\n");
   const employee = messages.filter(m=>m.role==="user").map(m=>m.content).join("\n");
@@ -51,7 +49,7 @@ export async function kpChat(userId: string, workspace: string, messages: {role:
     const e=error as {statusCode?:number;responseBody?:string;message?:string};
     let message=e.message??"AI request failed";
     try {const body=JSON.parse(e.responseBody??"{}");message=body.message??body.error?.message??message;} catch { /* preserve safe SDK message */ }
-    if(e.statusCode===402||e.statusCode===403) await db.from("notification_service_state").upsert({key:"kp_ai",reason:message,requires_owner:true});
+    // Do not write to notification_service_state: any row there pauses all reminders globally.
     throw new Error(message);
   }
 }

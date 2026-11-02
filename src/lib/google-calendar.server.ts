@@ -147,7 +147,7 @@ export async function deleteTaskCalendarEvent(taskId: string, onlyUserId?: strin
   if (onlyUserId) query = query.eq("user_id", onlyUserId);
   const { data: links } = await query;
   for (const link of links ?? []) {
-    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID) && !(await tasksPaused(link.user_id))) {
+    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID)) {
       const res = await calendarFetch(link.user_id, `/calendar/v3/calendars/${encodeURIComponent(link.calendar_id)}/events/${encodeURIComponent(link.event_id)}`, { method: "DELETE" });
       if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Google Calendar delete failed [${res.status}]`);
     }
@@ -237,7 +237,9 @@ export async function deleteGoogleTask(taskId: string, onlyUserId?: string | nul
   if (onlyUserId) query = query.eq("user_id", onlyUserId);
   const { data: links } = await query;
   for (const link of links ?? []) {
-    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID) && !(await tasksPaused(link.user_id))) {
+    if (await getConnectionKeyForUser(link.user_id, CONNECTOR_ID)) {
+      // Keep the link while Tasks is paused so the remote task can still be removed later.
+      if (await tasksPaused(link.user_id)) continue;
       const res = await tasksFetch(link.user_id, `${TASKS_BASE}/${encodeURIComponent(link.google_task_id)}`, { method: "DELETE" });
       if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Google Tasks delete failed [${res.status}]`);
     }
