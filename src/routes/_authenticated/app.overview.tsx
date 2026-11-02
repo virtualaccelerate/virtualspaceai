@@ -300,13 +300,20 @@ function AppDashboard() {
           ) : (
             <ul className="space-y-3">
               {data.notifications.map((n) => (
-                <li key={n.id} className="flex items-start gap-3">
+                <li key={n.id}>
+                  <Link
+                    to="/app/tasks"
+                    search={n.task_id ? { task: n.task_id } : {}}
+                    disabled={!n.task_id}
+                    className={`flex items-start gap-3 rounded-md ${n.task_id ? "hover:bg-white/5 cursor-pointer" : ""}`}
+                  >
                   <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${n.read ? "bg-muted-foreground/40" : "bg-primary"}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">{n.title}</p>
-                    {n.body && <p className="text-[11px] text-[color:var(--muted-foreground)] line-clamp-2">{n.body}</p>}
+                    {n.body && <p className="text-[11px] text-[color:var(--muted-foreground)] line-clamp-4 whitespace-pre-line break-words">{n.body}</p>}
                     <p className="text-[11px] text-[color:var(--muted-foreground)] mt-0.5">{ago(n.created_at, t)}</p>
                   </div>
+                  </Link>
                 </li>
               ))}
             </ul>
