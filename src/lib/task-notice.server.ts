@@ -34,7 +34,11 @@ export async function loadNoticeTask(taskId: string, override?: Partial<NoticeTa
   return { ...row, id: taskId, title: row.title ?? "", space };
 }
 
-/** The recipient's language: app profile first, then the bot link, default Russian. */
+/**
+ * The recipient's language. Stored profile/bot languages default to "en" for almost
+ * everyone (not a real choice), so "en" is ignored and Russian stays the default;
+ * any other supported language is used for both the bell and Telegram.
+ */
 async function languages(userIds: string[]) {
   const db = await admin();
   const [{ data: profiles }, { data: links }] = await Promise.all([
@@ -42,8 +46,9 @@ async function languages(userIds: string[]) {
     db.from("telegram_links").select("user_id, language").in("user_id", userIds),
   ]);
   const map = new Map<string, string>();
-  for (const l of links ?? []) if (l.language) map.set(l.user_id, l.language);
-  for (const p of profiles ?? []) if (p.language) map.set(p.id, p.language);
+  const pick = (id: string, l: string | null) => { if (l && l !== "en") map.set(id, l); };
+  for (const l of links ?? []) pick(l.user_id, l.language);
+  for (const p of profiles ?? []) pick(p.id, p.language);
   return map;
 }
 
