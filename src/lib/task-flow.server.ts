@@ -147,7 +147,6 @@ export async function runDeadlineReminders(opts?: { onlyUserId?: string; now?: n
   if (error) throw new Error(error.message);
 
   const tasks = (data ?? []) as TaskRow[];
-  const { sendMessage } = await tgApi();
   const now = opts?.now ?? Date.now();
   let sent = 0;
 
@@ -155,7 +154,7 @@ export async function runDeadlineReminders(opts?: { onlyUserId?: string; now?: n
     if (!task.due_date) continue;
     const window = deadlineReminderWindow(task.due_date, now);
     if (!window) continue;
-    const { kind, heading } = window;
+    const { kind } = window;
     if (await alreadySent(task.id, kind)) continue;
 
     const { loadNoticeTask, prepareTaskNotices, deliverTaskNotices } = await import("./task-notice.server");
@@ -168,7 +167,6 @@ export async function runDeadlineReminders(opts?: { onlyUserId?: string; now?: n
       extraRows: assigneeKeyboard(task.id, task.status)?.inline_keyboard,
       now,
     });
-    void heading;
     await deliverTaskNotices(notices, { skipTelegram: opts?.skipTelegram });
     sent++;
   }
@@ -415,7 +413,6 @@ export async function runOverdueRescheduleOffers(onlyTeamspaceId?: string): Prom
     .limit(500);
   if (onlyTeamspaceId) query = query.eq("teamspace_id", onlyTeamspaceId);
   const { data } = await query;
-  const { sendMessage } = await tgApi();
   let sent = 0;
   for (const task of (data ?? []) as (TaskRow & { external_source: string | null })[]) {
     const chatId = await chatIdFor(task.assignee_id);
