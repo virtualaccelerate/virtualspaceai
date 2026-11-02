@@ -79,57 +79,6 @@ export async function notifyUserMessage(userId: string, text: string, extra: Rec
   return true;
 }
 
-type TaskNoticeKind = "assigned" | "updated" | "deleted";
-
-export async function notifyTaskAssignee(input: {
-  assigneeId: string | null;
-  actorId: string;
-  actorName?: string | null;
-  kind: TaskNoticeKind;
-  title: string;
-  status?: string | null;
-  priority?: string | null;
-  dueDate?: string | null;
-  taskId?: string | null;
-  teamspaceId?: string | null;
-}) {
-  if (!input.assigneeId || input.assigneeId === input.actorId) return false;
-  const [{ data: link }, { data: profile }] = await Promise.all([
-    supabaseAdmin.from("telegram_links").select("chat_id, language").eq("user_id", input.assigneeId).not("chat_id", "is", null).maybeSingle(),
-    supabaseAdmin.from("profiles").select("email").eq("id", input.assigneeId).maybeSingle(),
-  ]);
-  if (!profile?.email || !link?.chat_id) return false;
-
-  const lang = pickLang(link.language);
-  const heading = lang === "en"
-    ? input.kind === "assigned" ? "📌 A task was assigned to you" : input.kind === "deleted" ? "🗑 Task deleted" : "✏️ Task updated"
-    : input.kind === "assigned" ? "📌 Вам назначена задача" : input.kind === "deleted" ? "🗑 Задача удалена" : "✏️ Задача обновлена";
-  const when = new Date().toLocaleString(lang === "en" ? "en-GB" : "ru-RU", {
-    timeZone: "Asia/Bishkek",
-    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
-  const space = await spaceNameOf(input.teamspaceId).catch(() => null);
-  const details = [
-    space ? `${lang === "en" ? "Workspace" : "Пространство"}: ${space}` : null,
-    input.title,
-    input.actorName ? `${lang === "en" ? "By" : "Кто"}: ${input.actorName}` : null,
-    `${lang === "en" ? "When" : "Когда"}: ${when}`,
-    input.status ? `${lang === "en" ? "Status" : "Статус"}: ${statusTag(input.status, lang)}` : null,
-    input.priority ? `${lang === "en" ? "Priority" : "Приоритет"}: ${input.priority}` : null,
-    input.dueDate ? `${lang === "en" ? "Due" : "Срок"}: ${input.dueDate}` : null,
-  ].filter(Boolean);
-  let reply_markup: Record<string, unknown> | undefined;
-  if (input.taskId && input.kind !== "deleted") {
-    const { assigneeKeyboard } = await import("./task-flow.server");
-    reply_markup = assigneeKeyboard(input.taskId, input.status ?? "backlog");
-  }
-  const response = await sendMessage(Number(link.chat_id), `${heading}\n\n${details.join("\n")}`, {
-    ...(reply_markup ? { reply_markup } : {}),
-  }) as { ok?: boolean };
-  return response.ok === true;
-}
-
-
 // ---------------- i18n (ru default / en) ----------------
 type Lang = "ru" | "en";
 const T = {

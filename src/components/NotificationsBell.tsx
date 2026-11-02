@@ -12,6 +12,7 @@ type Notice = {
   kind: string;
   title: string;
   body: string | null;
+  task_id?: string | null;
   actor_name: string | null;
   read_at: string | null;
   created_at: string;
@@ -28,6 +29,12 @@ export function NotificationsBell() {
   const [items, setItems] = useState<Notice[]>([]);
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+
+  const openNotice = (n: Notice) => {
+    setOpen(false);
+    if (n.task_id) navigate({ to: "/app/tasks", search: { task: n.task_id } });
+    else navigate({ to: "/app/overview", hash: "notifications" });
+  };
 
   const goToNotifications = () => {
     setOpen(false);
@@ -47,7 +54,7 @@ export function NotificationsBell() {
         description: newest.body ? newest.body.split("\n")[0] : undefined,
         action: {
           label: t("app.notifications.open", "Открыть"),
-          onClick: () => navigate({ to: "/app/overview", hash: "notifications" }),
+          onClick: () => openNotice(newest),
         },
       });
     } catch { /* sessionStorage unavailable */ }
@@ -133,12 +140,13 @@ export function NotificationsBell() {
               {items.map((n) => (
                 <li key={n.id}>
                   <button
-                    onClick={goToNotifications}
+                    onClick={() => openNotice(n)}
+                    title={n.task_id ? t("app.notifications.openTask", "Открыть задачу") : undefined}
                     className="w-full text-left px-4 py-3 cursor-pointer hover:bg-white/5 transition"
                   >
                     <div className="text-sm font-medium">{n.title}</div>
                     {n.body && (
-                      <div className="mt-0.5 text-xs text-[color:var(--muted-foreground)] whitespace-pre-line">{n.body}</div>
+                      <div className="mt-0.5 text-xs text-[color:var(--muted-foreground)] whitespace-pre-line line-clamp-4 break-words">{n.body}</div>
                     )}
                     <div className="mt-1 text-[10px] text-[color:var(--muted-foreground)]">
                       {new Date(n.created_at).toLocaleString()}

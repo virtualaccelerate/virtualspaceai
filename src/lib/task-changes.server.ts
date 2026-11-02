@@ -3,6 +3,7 @@
  * history records plus notifications (in-app + Telegram) for the people the
  * change concerns: the assignee and the workspace owner/admins.
  */
+import type { ChangeField } from "./task-notice";
 import { recordTaskEvent } from "./task-events.server";
 import { shouldNotifyRestoration } from "./notification-facts";
 import { flushTrackerNotifications, type TrackerBatch } from "./tracker-notifications.server";
@@ -38,14 +39,6 @@ function label(source: string) {
   return source === "trello" ? "Trello" : source === "yougile" ? "YouGile" : "Virtual Space";
 }
 
-/** Sends one short message to a person, in the app and to Telegram. */
-async function tell(userId: string, teamspaceId: string, taskId: string, title: string, body: string, kind: string) {
-  const { createNotification } = await import("./notifications.server");
-  await createNotification({ userId, teamspaceId, kind, title, body, taskId }).catch(() => {});
-  const { notifyUserMessage } = await import("./telegram.server");
-  await notifyUserMessage(userId, `${title}\n${body}`).catch(() => {});
-}
-
 export async function emitExternalTaskChange(input: {
   source: "trello" | "yougile";
   teamspaceId: string;
@@ -54,6 +47,7 @@ export async function emitExternalTaskChange(input: {
   before: Snapshot | null;
   after: Snapshot;
   batch?: TrackerBatch;
+  actorName?: string | null;
 }) {
   const { source, teamspaceId, taskId, title, before, after } = input;
   const tracker = label(source);
@@ -102,18 +96,21 @@ export async function emitExternalTaskChange(input: {
   if (!notifiable.length) return;
 
   const done = after.status === "done" && before.status !== "done";
-  // Short factual report: what is already done, no long lists.
-  const main = notifiable.find((change) => change.field === "status") ?? notifiable[0];
-  const body = done
-    ? `${title} — выполнено (${tracker})`
-    : `${title} — ${main.text} (${tracker})`;
-  const heading = done ? "Задача выполнена" : "Задача обновлена";
-
   const recipients = new Set<string>(await managerIds(teamspaceId));
   if (after.assignee_id) recipients.add(after.assignee_id);
   if (before.assignee_id) recipients.add(before.assignee_id);
 
-  const notices = [...recipients].map(userId => ({ userId, teamspaceId, taskId, tracker, title: heading, body, kind: done ? "task_external_done" : "task_external_update" }));
+  const { loadNoticeTask, prepareTaskNotices } = await import("./task-notice.server");
+  const task = await loadNoticeTask(taskId, { title, teamspace_id: teamspaceId });
+  const notices = await prepareTaskNotices({
+    userIds: [...recipients],
+    kind: done ? "external_done" : "external_update",
+    notificationKind: done ? "task_external_done" : "task_external_update",
+    task,
+    actorName: input.actorName ?? null,
+    tracker,
+    changes: notifiable.map((c) => ({ field: c.field as ChangeField, from: c.from, to: c.to })),
+  });
   if (input.batch) input.batch.push(...notices);
   else await flushTrackerNotifications(notices);
 }
@@ -145,9 +142,12 @@ export async function emitLocalStatusChange(input: {
   if (!input.teamspaceId) return;
   const managers = (await managerIds(input.teamspaceId)).filter((id) => id !== input.actorId);
   if (!managers.length) return;
-  const who = input.actorName ?? "Участник";
-  const body = `${input.title}\n${input.from ?? "—"} → ${input.to}${input.tracker ? `\nСинхронизировано с ${input.tracker}` : ""}`;
-  for (const userId of managers) {
-    await tell(userId, input.teamspaceId, input.taskId, `${who} изменил статус задачи`, body, "task_status_change");
-  }
+  const { loadNoticeTask, prepareTaskNotices, deliverTaskNotices } = await import("./task-notice.server");
+  const task = await loadNoticeTask(input.taskId, { title: input.title, teamspace_id: input.teamspaceId });
+  const notices = await prepareTaskNotices({
+    userIds: managers, kind: "status", notificationKind: "task_status_change", task,
+    actorId: input.actorId, actorName: input.actorName ?? null, tracker: input.tracker ?? null,
+    changes: [{ field: "status", from: input.from, to: input.to }],
+  });
+  await deliverTaskNotices(notices);
 }

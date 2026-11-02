@@ -34,7 +34,7 @@ export type OverviewData = {
   tasks: OverviewTask[];
   insights: { title: string; body: string; tone: "warn" | "info" }[];
   activity: { id: string; feature: string; kind: string; created_at: string; actor: string }[];
-  notifications: { id: string; title: string; body: string | null; created_at: string; read: boolean }[];
+  notifications: { id: string; title: string; body: string | null; created_at: string; read: boolean; task_id: string | null }[];
   top_members: { id: string; name: string; open: number; done: number; overdue: number }[];
 };
 
@@ -80,7 +80,7 @@ export async function getOverview(userId: string, requested?: string): Promise<O
         .limit(8),
       db
         .from("notifications")
-        .select("id, title, body, created_at, read_at")
+        .select("id, title, body, created_at, read_at, task_id")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(6),
@@ -209,6 +209,7 @@ export async function getOverview(userId: string, requested?: string): Promise<O
       body: n.body,
       created_at: n.created_at,
       read: Boolean(n.read_at),
+      task_id: n.task_id ?? null,
     })),
     top_members,
   };

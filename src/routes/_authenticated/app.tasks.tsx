@@ -48,11 +48,12 @@ import { cn } from "@/lib/utils";
 
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
-  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "projects"; project?: string; department?: string } => ({
+  validateSearch: (search: Record<string, unknown>): Record<string, unknown> & { tab?: "projects"; project?: string; department?: string; task?: string } => ({
     ...search,
     tab: search.tab === "projects" ? "projects" as const : undefined,
     project: typeof search.project === "string" && search.project ? search.project : undefined,
     department: typeof search.department === "string" && search.department ? search.department : undefined,
+    task: typeof search.task === "string" && search.task ? search.task : undefined,
   }),
   component: TaskTabs,
   head: () => ({
@@ -297,6 +298,13 @@ function TasksPage() {
   const search = Route.useSearch();
   const navigateTasks = Route.useNavigate();
   const filterProject = search.project ?? "";
+  // A notification deep link (?task=<id>) opens that task's card once.
+  useEffect(() => {
+    if (!search.task) return;
+    setDetailId(search.task);
+    setDetailOpen(true);
+    void navigateTasks({ search: (prev) => ({ ...prev, task: undefined }), replace: true, resetScroll: false });
+  }, [search.task]);
   const filterDepartment = search.department ?? "";
   const setFilter = (key: "project" | "department", value: string) =>
     void navigateTasks({ search: (prev) => ({ ...prev, [key]: value || undefined }), resetScroll: false });
