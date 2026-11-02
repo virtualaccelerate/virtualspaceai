@@ -36,7 +36,7 @@ async function assigneeName(teamspaceId: string, assigneeId?: string | null) {
   const { data: profile } = await db.from("profiles").select("full_name, email").eq("id", assigneeId).maybeSingle();
   return profile?.full_name || profile?.email || "Team member";
 }
-/** Sends both the in-app notification and the Telegram message to the assignee. */
+/** Sends both the in-app notification and the Telegram message to the assignee (shared detailed format). */
 export async function notifyAssignment(input: {
   assigneeId: string | null;
   actorId: string;
@@ -47,44 +47,29 @@ export async function notifyAssignment(input: {
   status?: string | null;
   priority?: string | null;
   dueDate?: string | null;
+  project?: string | null;
+  changes?: import("./task-notice").NoticeChange[];
 }) {
-  if (!input.assigneeId || input.assigneeId === input.actorId) return;
-  const { createNotification, displayName } = await import("./notifications.server");
+  if (!input.assigneeId || input.assigneeId === input.actorId || !input.taskId) return;
+  if (input.kind === "updated" && !input.changes?.length) return;
+  const { displayName } = await import("./notifications.server");
+  const { loadNoticeTask, prepareTaskNotices, deliverTaskNotices } = await import("./task-notice.server");
   const actorName = await displayName(input.actorId).catch(() => null);
-  const heading =
-    input.kind === "assigned" ? "Вам назначена задача"
-      : input.kind === "deleted" ? "Задача удалена"
-        : "Задача обновлена";
-  const body = [
-    input.title,
-    actorName ? `Кто: ${actorName}` : null,
-    input.status ? `Статус: ${input.status}` : null,
-    input.priority ? `Приоритет: ${input.priority}` : null,
-    input.dueDate ? `Срок: ${input.dueDate}` : null,
-  ].filter(Boolean).join("\n");
-  await createNotification({
-    userId: input.assigneeId,
-    teamspaceId: input.teamspaceId,
-    kind: `task_${input.kind}`,
-    title: heading,
-    body,
-    actorId: input.actorId,
-    actorName,
-    taskId: input.taskId ?? null,
-  }).catch(() => {});
-  const { notifyTaskAssignee } = await import("./telegram.server");
-  await notifyTaskAssignee({
-    assigneeId: input.assigneeId,
-    actorId: input.actorId,
-    actorName,
-    kind: input.kind,
-    taskId: input.taskId ?? null,
-    title: input.title,
-    status: input.status,
-    priority: input.priority,
-    dueDate: input.dueDate,
-    teamspaceId: input.teamspaceId,
-  }).catch(() => {});
+  const task = await loadNoticeTask(input.taskId, {
+    title: input.title, status: input.status ?? undefined, priority: input.priority ?? undefined,
+    due_date: input.dueDate ?? undefined, teamspace_id: input.teamspaceId,
+    ...(input.project !== undefined ? { project: input.project } : {}),
+  });
+  let extraRows: { text: string; callback_data: string }[][] | undefined;
+  if (input.kind !== "deleted") {
+    const { assigneeKeyboard } = await import("./task-flow.server");
+    extraRows = assigneeKeyboard(input.taskId, input.status ?? task.status ?? "backlog")?.inline_keyboard;
+  }
+  const notices = await prepareTaskNotices({
+    userIds: [input.assigneeId], kind: input.kind, notificationKind: `task_${input.kind}`, task,
+    actorId: input.actorId, actorName, changes: input.changes, extraRows,
+  });
+  await deliverTaskNotices(notices);
 }
 
 async function track(userId: string, teamspaceId: string | null, feature: string, meta?: Record<string, unknown>) {
