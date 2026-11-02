@@ -39,14 +39,6 @@ function label(source: string) {
   return source === "trello" ? "Trello" : source === "yougile" ? "YouGile" : "Virtual Space";
 }
 
-/** Sends one short message to a person, in the app and to Telegram. */
-async function tell(userId: string, teamspaceId: string, taskId: string, title: string, body: string, kind: string) {
-  const { createNotification } = await import("./notifications.server");
-  await createNotification({ userId, teamspaceId, kind, title, body, taskId }).catch(() => {});
-  const { notifyUserMessage } = await import("./telegram.server");
-  await notifyUserMessage(userId, `${title}\n${body}`).catch(() => {});
-}
-
 export async function emitExternalTaskChange(input: {
   source: "trello" | "yougile";
   teamspaceId: string;
