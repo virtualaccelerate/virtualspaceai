@@ -1,4 +1,10 @@
-import { describe, expect, test } from "bun:test";
+import { describe, test } from "node:test";
+import { deepStrictEqual, ok } from "node:assert";
+const expect = (actual: unknown) => ({
+  toBe: (v: unknown) => deepStrictEqual(actual, v),
+  toEqual: (v: unknown) => deepStrictEqual(actual, v),
+  toContain: (v: unknown) => ok((actual as string | unknown[]).includes(v as never), `${JSON.stringify(actual)} should contain ${JSON.stringify(v)}`),
+});
 import { formatTaskNotice, diffChanges, overdueDays, formatDue, changeLine } from "./task-notice";
 
 const task = { id: "t1", title: "Отчёт по продажам", project: "Lucky Socks", space: "Nova Clinic", status: "in_progress", priority: "urgent", due_date: "2026-11-03" };
