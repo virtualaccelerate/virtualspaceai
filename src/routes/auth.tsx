@@ -262,6 +262,7 @@ function AuthPage() {
               <p className="mt-2 text-sm text-white/60">
                 {t("shellUi.auth.checkInboxBody", "We sent a confirmation link to {{email}}. Click it to activate your account.", { email })}
               </p>
+              <div className="mt-4">{captchaWidget}</div>
               {info && <p className="mt-3 text-xs text-primary">{info}</p>}
               {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
               <div className="mt-6 flex flex-col gap-2">
@@ -374,11 +375,12 @@ function AuthPage() {
                     </button>
                   </div>
                 )}
+                {captchaWidget}
                 {error && <p className="text-xs text-destructive px-2">{error}</p>}
                 {info && <p className="text-xs text-primary px-2">{info}</p>}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (!!siteKey && !captchaToken)}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? (
