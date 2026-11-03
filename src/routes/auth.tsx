@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { VirtualSpaceLogo } from "@/components/VirtualSpaceLogo";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
+import { useServerFn } from "@tanstack/react-start";
+import { authWithCaptcha, getTurnstileConfig } from "@/lib/turnstile.functions";
+import { TurnstileWidget, type TurnstileHandle } from "@/components/TurnstileWidget";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -68,6 +71,17 @@ function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [siteKey, setSiteKey] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
+  const authFn = useServerFn(authWithCaptcha);
+  const configFn = useServerFn(getTurnstileConfig);
+
+  useEffect(() => {
+    // No keys configured → null → auth works exactly as before.
+    configFn().then((c) => setSiteKey(c.siteKey)).catch(() => setSiteKey(null));
+  }, [configFn]);
+
 
   useEffect(() => {
     let mounted = true;
@@ -93,25 +107,43 @@ function AuthPage() {
     };
   }, [navigate]);
 
+  const captchaMsg = () => t("shellUi.auth.captchaFailed", "Не удалось проверить, что вы не бот. Обновите страницу");
+  /** Captcha path: the server checks the token, then makes the auth call. */
+  const viaServer = async (action: "signin" | "signup" | "forgot" | "resend", redirectTo?: string) => {
+    const r = await authFn({ data: { action, email: email.trim(), password: action === "signin" || action === "signup" ? password : undefined, token: captchaToken ?? undefined, redirectTo } });
+    turnstileRef.current?.reset();
+    if (!r.ok) {
+      if (r.code === "captcha_failed") throw new Error(captchaMsg());
+      throw Object.assign(new Error(r.message), { code: r.code });
+    }
+    if (r.session) await supabase.auth.setSession(r.session);
+    return r.session;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim();
     if (!cleanEmail || loading) return;
     if (mode !== "forgot" && !password) return;
+    if (siteKey && !captchaToken) return;
     setLoading(true);
     setError(null);
     setInfo(null);
     try {
       if (mode === "signup") {
-        const { data, error: err } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}${getNextPath() ?? "/app"}`,
-          },
-        });
-        if (err) throw err;
-        if (!data.session) {
+        const redirectTo = `${window.location.origin}${getNextPath() ?? "/app"}`;
+        let session: unknown;
+        if (siteKey) session = await viaServer("signup", redirectTo);
+        else {
+          const { data, error: err } = await supabase.auth.signUp({
+            email: cleanEmail,
+            password,
+            options: { emailRedirectTo: redirectTo },
+          });
+          if (err) throw err;
+          session = data.session;
+        }
+        if (!session) {
           setSent(true);
         } else {
           const next = getNextPath();
@@ -119,17 +151,22 @@ function AuthPage() {
           else navigate({ to: "/app", replace: true });
         }
       } else if (mode === "signin") {
-        const { error: err } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
-        if (err) throw err;
+        if (siteKey) await viaServer("signin");
+        else {
+          const { error: err } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
+          if (err) throw err;
+        }
       } else {
         // forgot password
-        const { error: err } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-        if (err) throw err;
+        const redirectTo = `${window.location.origin}/reset-password`;
+        if (siteKey) await viaServer("forgot", redirectTo);
+        else {
+          const { error: err } = await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo });
+          if (err) throw err;
+        }
         setInfo(t("shellUi.auth.resetLinkSent", "A password reset link has been sent to your email."));
       }
     } catch (err) {
@@ -144,6 +181,12 @@ function AuthPage() {
     if (!email.trim()) return;
     setError(null);
     setInfo(null);
+    if (siteKey) {
+      if (!captchaToken) { setError(captchaMsg()); return; }
+      try { await viaServer("resend", `${window.location.origin}/app`); setInfo(t("shellUi.auth.resendSent", "Email resent.")); }
+      catch (err) { setError(friendlyAuthError(err)); }
+      return;
+    }
     const { error: err } = await supabase.auth.resend({
       type: "signup",
       email: email.trim(),
@@ -152,6 +195,17 @@ function AuthPage() {
     if (err) setError(friendlyAuthError(err));
     else setInfo(t("shellUi.auth.resendSent", "Email resent."));
   };
+
+  const captchaWidget = siteKey ? (
+    <TurnstileWidget
+      key={siteKey}
+      ref={turnstileRef}
+      siteKey={siteKey}
+      language={i18n.language}
+      onToken={setCaptchaToken}
+      onError={() => setError(captchaMsg())}
+    />
+  ) : null;
 
   const handleGoogle = async () => {
     if (googleLoading) return;
