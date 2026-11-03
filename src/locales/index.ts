@@ -10,11 +10,12 @@ import pilot from "./pilot";
 import assistant from "./assistant";
 import kp from "./kp";
 import notices from "./notices";
+import captcha from "./captcha";
 
 // Feature translation bundles. Each module exports a GroupResources object
 // keyed by language code, whose values are merged into the `translation`
 // namespace of the main i18n resources.
-const groups: GroupResources[] = [admin, integrations, shell, tasks, workspace, clients, teamspaceSetup, pilot, assistant, kp, notices];
+const groups: GroupResources[] = [admin, integrations, shell, tasks, workspace, clients, teamspaceSetup, pilot, assistant, kp, notices, captcha];
 
 export function applyGroupResources(resources: Record<string, { translation: Record<string, unknown> }>) {
   for (const group of groups) {
