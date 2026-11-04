@@ -55,3 +55,13 @@ export async function markNotificationsRead(userId: string, ids?: string[]) {
   if (error) throw new Error(error.message);
   return { ok: true };
 }
+
+/** Delete the user's own notifications; without ids, all of them. Never touches other users' rows. */
+export async function dismissNotifications(userId: string, ids?: string[]) {
+  const db = await admin();
+  let q = db.from("notifications").delete().eq("user_id", userId);
+  if (ids && ids.length) q = q.in("id", ids);
+  const { error } = await q;
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
