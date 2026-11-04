@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles, ArrowUpRight, CheckSquare, Clock, TrendingUp, Users,
-  AlertCircle, Flag, CheckCircle2, Circle, Loader2, FileText, Bell,
+  AlertCircle, Flag, CheckCircle2, Circle, Loader2, FileText, Bell, X,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { loadOverview } from "@/lib/overview.functions";
+import { dismissNotifications } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/_authenticated/app/overview")({
   component: AppDashboard,
@@ -37,11 +38,18 @@ function ago(iso: string, t: (k: string, d: string) => string) {
 function AppDashboard() {
   const { t } = useTranslation();
   const load = useServerFn(loadOverview);
+  const dismiss = useServerFn(dismissNotifications);
   const [data, setData] = useState<Data>(null);
+  const [notices, setNotices] = useState<Data["notifications"]>([]);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [highlightNotifications, setHighlightNotifications] = useState(false);
   const notificationsRef = useRef<HTMLElement>(null);
+
+  const dismissOne = (id: string) => {
+    setNotices((prev) => prev.filter((n) => n.id !== id));
+    void dismiss({ data: { ids: [id] } }).catch(() => {});
+  };
 
   useEffect(() => {
     (async () => {
@@ -55,7 +63,9 @@ function AppDashboard() {
             .maybeSingle();
           setDisplayName(profile?.full_name || (profile?.email ?? auth.user.email ?? "").split("@")[0] || "");
         }
-        setData(await load({ data: active ? { teamspace_id: active } : {} }));
+        const next = await load({ data: active ? { teamspace_id: active } : {} });
+        setData(next);
+        setNotices(next.notifications);
       } finally {
         setLoading(false);
       }
