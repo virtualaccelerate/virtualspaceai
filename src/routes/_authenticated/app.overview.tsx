@@ -40,7 +40,7 @@ function AppDashboard() {
   const load = useServerFn(loadOverview);
   const dismiss = useServerFn(dismissNotifications);
   const [data, setData] = useState<Data>(null);
-  const [notices, setNotices] = useState<Data["notifications"]>([]);
+  const [notices, setNotices] = useState<NonNullable<Data>["notifications"]>([]);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [highlightNotifications, setHighlightNotifications] = useState(false);
@@ -65,7 +65,7 @@ function AppDashboard() {
         }
         const next = await load({ data: active ? { teamspace_id: active } : {} });
         setData(next);
-        setNotices(next.notifications);
+        setNotices(next?.notifications ?? []);
       } finally {
         setLoading(false);
       }
