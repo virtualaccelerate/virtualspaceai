@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { listNotifications, markNotificationsAsRead } from "@/lib/notifications.functions";
+import { listNotifications, markNotificationsAsRead, dismissNotifications } from "@/lib/notifications.functions";
 
 type Notice = {
   id: string;
@@ -26,6 +26,7 @@ export function NotificationsBell() {
   const reduceMotion = useReducedMotion();
   const load = useServerFn(listNotifications);
   const markRead = useServerFn(markNotificationsAsRead);
+  const dismiss = useServerFn(dismissNotifications);
   const [items, setItems] = useState<Notice[]>([]);
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -39,6 +40,16 @@ export function NotificationsBell() {
   const goToNotifications = () => {
     setOpen(false);
     navigate({ to: "/app/overview", hash: "notifications" });
+  };
+
+  const dismissOne = (n: Notice) => {
+    setItems((prev) => prev.filter((x) => x.id !== n.id));
+    void dismiss({ data: { ids: [n.id] } }).catch(() => { refresh(); });
+  };
+
+  const dismissAll = () => {
+    setItems([]);
+    void dismiss({ data: {} }).catch(() => { refresh(); });
   };
 
   const maybeToast = (rows: Notice[]) => {
@@ -128,8 +139,16 @@ export function NotificationsBell() {
 
       {open && (
         <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] shadow-xl z-50">
-          <div className="px-4 py-3 border-b border-[color:var(--border)] text-sm font-medium">
-            {t("app.notifications.title", "Уведомления")}
+          <div className="px-4 py-3 border-b border-[color:var(--border)] text-sm font-medium flex items-center justify-between gap-2">
+            <span>{t("app.notifications.title", "Уведомления")}</span>
+            {items.length > 0 && (
+              <button
+                onClick={dismissAll}
+                className="text-[11px] font-medium text-[color:var(--muted-foreground)] hover:text-foreground transition cursor-pointer"
+              >
+                {t("app.notifications.clearAll", "Очистить все")}
+              </button>
+            )}
           </div>
           {items.length === 0 ? (
             <div className="p-6 text-center text-xs text-[color:var(--muted-foreground)]">
@@ -138,11 +157,11 @@ export function NotificationsBell() {
           ) : (
             <ul className="divide-y divide-[color:var(--border)]">
               {items.map((n) => (
-                <li key={n.id}>
+                <li key={n.id} className="relative group">
                   <button
                     onClick={() => openNotice(n)}
                     title={n.task_id ? t("app.notifications.openTask", "Открыть задачу") : undefined}
-                    className="w-full text-left px-4 py-3 cursor-pointer hover:bg-white/5 transition"
+                    className="w-full text-left px-4 py-3 pr-10 cursor-pointer hover:bg-white/5 transition"
                   >
                     <div className="text-sm font-medium">{n.title}</div>
                     {n.body && (
@@ -151,6 +170,13 @@ export function NotificationsBell() {
                     <div className="mt-1 text-[10px] text-[color:var(--muted-foreground)]">
                       {new Date(n.created_at).toLocaleString()}
                     </div>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); dismissOne(n); }}
+                    aria-label={t("app.notifications.dismiss", "Закрыть")}
+                    className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-md text-[color:var(--muted-foreground)] opacity-0 transition hover:bg-white/10 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </li>
               ))}

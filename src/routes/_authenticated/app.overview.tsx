@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles, ArrowUpRight, CheckSquare, Clock, TrendingUp, Users,
-  AlertCircle, Flag, CheckCircle2, Circle, Loader2, FileText, Bell,
+  AlertCircle, Flag, CheckCircle2, Circle, Loader2, FileText, Bell, X,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTeamspaceId } from "@/lib/active-teamspace";
 import { loadOverview } from "@/lib/overview.functions";
+import { dismissNotifications } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/_authenticated/app/overview")({
   component: AppDashboard,
@@ -37,11 +38,18 @@ function ago(iso: string, t: (k: string, d: string) => string) {
 function AppDashboard() {
   const { t } = useTranslation();
   const load = useServerFn(loadOverview);
+  const dismiss = useServerFn(dismissNotifications);
   const [data, setData] = useState<Data>(null);
+  const [notices, setNotices] = useState<NonNullable<Data>["notifications"]>([]);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [highlightNotifications, setHighlightNotifications] = useState(false);
   const notificationsRef = useRef<HTMLElement>(null);
+
+  const dismissOne = (id: string) => {
+    setNotices((prev) => prev.filter((n) => n.id !== id));
+    void dismiss({ data: { ids: [id] } }).catch(() => {});
+  };
 
   useEffect(() => {
     (async () => {
@@ -55,7 +63,9 @@ function AppDashboard() {
             .maybeSingle();
           setDisplayName(profile?.full_name || (profile?.email ?? auth.user.email ?? "").split("@")[0] || "");
         }
-        setData(await load({ data: active ? { teamspace_id: active } : {} }));
+        const next = await load({ data: active ? { teamspace_id: active } : {} });
+        setData(next);
+        setNotices(next?.notifications ?? []);
       } finally {
         setLoading(false);
       }
@@ -295,25 +305,32 @@ function AppDashboard() {
             <h2 className="font-display text-base">{t("workspaceUi.overview.notifications", "Уведомления")}</h2>
             <Bell className="h-4 w-4 text-[color:var(--muted-foreground)]" />
           </div>
-          {data.notifications.length === 0 ? (
+          {notices.length === 0 ? (
             <p className="text-sm text-[color:var(--muted-foreground)]">{t("workspaceUi.overview.noNotifications", "Новых уведомлений нет")}</p>
           ) : (
             <ul className="space-y-3">
-              {data.notifications.map((n) => (
-                <li key={n.id}>
+              {notices.map((n) => (
+                <li key={n.id} className="relative group">
                   <Link
                     to="/app/tasks"
                     search={n.task_id ? { task: n.task_id } : {}}
                     disabled={!n.task_id}
-                    className={`flex items-start gap-3 rounded-md ${n.task_id ? "hover:bg-white/5 cursor-pointer" : ""}`}
+                    className={`flex items-start gap-3 rounded-md pr-8 ${n.task_id ? "hover:bg-white/5 cursor-pointer" : ""}`}
                   >
-                  <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${n.read ? "bg-muted-foreground/40" : "bg-primary"}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">{n.title}</p>
-                    {n.body && <p className="text-[11px] text-[color:var(--muted-foreground)] line-clamp-4 whitespace-pre-line break-words">{n.body}</p>}
-                    <p className="text-[11px] text-[color:var(--muted-foreground)] mt-0.5">{ago(n.created_at, t)}</p>
-                  </div>
+                    <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${n.read ? "bg-muted-foreground/40" : "bg-primary"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">{n.title}</p>
+                      {n.body && <p className="text-[11px] text-[color:var(--muted-foreground)] line-clamp-4 whitespace-pre-line break-words">{n.body}</p>}
+                      <p className="text-[11px] text-[color:var(--muted-foreground)] mt-0.5">{ago(n.created_at, t)}</p>
+                    </div>
                   </Link>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); dismissOne(n.id); }}
+                    aria-label={t("app.notifications.dismiss", "Закрыть")}
+                    className="absolute top-0 right-0 flex h-6 w-6 items-center justify-center rounded-md text-[color:var(--muted-foreground)] opacity-0 transition hover:bg-white/10 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </li>
               ))}
             </ul>

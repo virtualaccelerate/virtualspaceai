@@ -2,7 +2,7 @@ import type { GroupResources } from "./merge";
 
 const bundle: GroupResources = {
   en: {
-    app: { notifications: { title: "Notifications", empty: "No notifications yet", open: "Open", viewAll: "All notifications" } },
+    app: { notifications: { title: "Notifications", empty: "No notifications yet", open: "Open", viewAll: "All notifications", dismiss: "Close", clearAll: "Clear all" } },
     shellUi: {
       auth: {
         createAccount: "Create account",
@@ -73,7 +73,7 @@ const bundle: GroupResources = {
     },
   },
   ru: {
-    app: { notifications: { title: "Уведомления", empty: "Пока нет уведомлений", open: "Открыть", viewAll: "Все уведомления" } },
+    app: { notifications: { title: "Уведомления", empty: "Пока нет уведомлений", open: "Открыть", viewAll: "Все уведомления", dismiss: "Закрыть", clearAll: "Очистить все" } },
     shellUi: {
       auth: {
         createAccount: "Создать аккаунт",
